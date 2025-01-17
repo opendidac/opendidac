@@ -75,12 +75,6 @@ const switchLegacyProvider = {
     Called on each successful login with an OAuth provider
     */
 
-    const organizationDomain = process.env.NEXTAUTH_SWITCH_ORGANIZATION_DOMAIN
-
-    if (!organizationDomain) {
-      return null
-    }
-
     return {
       id: OAuthProfile.sub,
       name: OAuthProfile.name,
@@ -127,25 +121,24 @@ const switchEduId = {
     text: '#000', // Black text color
   },
   profile(OAuthProfile) {
-    /*
-    Called on each successful login with an OAuth provider
-    */
+    const allowedDomains =
+      process.env.NEXTAUTH_SWITCH_ORGANIZATION_DOMAINS?.split(',').map(
+        (domain) => domain.trim(),
+      )
 
-    const organizationDomain = process.env.NEXTAUTH_SWITCH_ORGANIZATION_DOMAIN
-
-    if (!organizationDomain) {
-      throw new Error('Organization domain is not set.')
+    if (!allowedDomains || allowedDomains.length === 0) {
+      throw new Error('Allowed organization domains are not set.')
     }
 
     const affiliations = OAuthProfile.swissEduIDLinkedAffiliationMail || []
 
     const email = affiliations.find((affiliation) =>
-      affiliation.endsWith(organizationDomain),
+      allowedDomains.some((domain) => affiliation.endsWith(domain)),
     )
 
     if (!email) {
       throw new Error(
-        `User does not have an appropriate affiliation for ${organizationDomain}`,
+        `User does not have an appropriate affiliation for the allowed domains: ${allowedDomains.join(', ')}`,
       )
     }
 
