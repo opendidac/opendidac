@@ -65,7 +65,7 @@ runs:
         echo "NEXTAUTH_KEYCLOAK_CLIENT_SECRET=${{ inputs.NEXTAUTH_KEYCLOAK_CLIENT_SECRET }}" >> web/.env.production
         echo "NEXTAUTH_KEYCLOAK_ISSUER_BASE_URL=${{ inputs.NEXTAUTH_KEYCLOAK_ISSUER_BASE_URL }}" >> web/.env.production
 
-        echo "NEXTAUTH_SWITCH_ORGANIZATION_DOMAIN=heig-vd.ch" >> web/.env.production
+        echo "NEXTAUTH_SWITCH_ORGANIZATION_DOMAINS=heig-vd.ch,hes-so.ch,master.hes-so.ch" >> web/.env.production
         echo "NEXTAUTH_SWITCH_CLIENT_ID=${{ inputs.NEXTAUTH_SWITCH_CLIENT_ID }}" >> web/.env.production
         echo "NEXTAUTH_SWITCH_CLIENT_SECRET=${{ inputs.NEXTAUTH_SWITCH_CLIENT_SECRET }}" >> web/.env.production
         
