@@ -285,7 +285,6 @@ async function linkOrCreateUserForAccount(user, account) {
           ...accountData,
         },
       })
-
       return newUser
     } else {
       await prisma.account.create({
