@@ -28,8 +28,9 @@ import {
 // https://www.npmjs.com/package/testcontainers
 // https://github.com/apocas/dockerode
 
-const EXECUTION_TIMEOUT = 15000
-const MAX_OUTPUT_SIZE_PER_EXEC_KB = 256
+const BEFOREALL_TIMEOUT = 10000
+const EXECUTION_TIMEOUT = 3000
+const MAX_OUTPUT_SIZE_PER_EXEC_KB = 32
 
 export const runSandbox = async ({
   image = 'node:latest',
@@ -39,21 +40,17 @@ export const runSandbox = async ({
 }) => {
   const directory = await prepareContent(files)
 
-  /*
-  console.log("files", util.inspect(files, {showHidden: false, depth: null, breakLength: Infinity}))
-  console.log("beforeAll", util.inspect(beforeAll, {showHidden: false, depth: null, breakLength: Infinity}))
-  console.log("tests", util.inspect(tests, {showHidden: false, depth: null, breakLength: Infinity}))
-  */
-
   let container, beforeAllOutput
 
   try {
+    // Try to start the container
     ;({ container, beforeAllOutput } = await startContainer(
       image,
       directory,
       beforeAll,
     ))
   } catch (initialError) {
+    // Handle missing image
     if (initialError.message.includes('No such image')) {
       const { status, message } = await pullImageIfNotExists(image)
       if (!status) {
@@ -70,6 +67,7 @@ export const runSandbox = async ({
     }
 
     try {
+      // Retry starting the container after pulling the image
       ;({ container, beforeAllOutput } = await startContainer(
         image,
         directory,
@@ -83,29 +81,22 @@ export const runSandbox = async ({
     }
   }
 
-  return new Promise(async (resolve, reject) => {
-    let timeout = setTimeout(() => {
-      container.stop()
-      resolve({
-        beforeAll: 'Execution Timeout',
-        tests: [],
-      })
-    }, EXECUTION_TIMEOUT)
-
-    try {
-      const testsResults = await execTests(container, tests)
-      clearTimeout(timeout) // Clear the timeout if tests finish on time
-      resolve({
-        beforeAll: beforeAllOutput,
-        tests: testsResults,
-      })
-    } catch (error) {
-      clearTimeout(timeout) // Clear the timeout if there's an error
-      reject(error) // This will propagate the error outside if you wish to handle it
-    } finally {
-      await container.stop()
+  try {
+    // Run tests with individual timeouts
+    const testsResults = await execTests(container, tests)
+    return {
+      beforeAll: beforeAllOutput,
+      tests: testsResults,
     }
-  })
+  } catch (error) {
+    return {
+      beforeAll: beforeAllOutput,
+      tests: [],
+    }
+  } finally {
+    // Ensure the container is stopped after execution
+    await container.stop()
+  }
 }
 
 const prepareContent = (files) =>
@@ -148,12 +139,45 @@ const startContainer = async (image, filesDirectory, beforeAll) => {
   await container.exec(['sh', '-c', 'tar -xzf code.tar.gz -C /'], {
     tty: false,
   })
+
   let beforeAllOutput = undefined
+
   if (beforeAll) {
-    let { output } = await container.exec(['sh', '-c', `${beforeAll} 2>&1`], {
-      tty: false,
-    })
-    beforeAllOutput = sanitizeUTF8(cleanUpDockerStreamHeaders(output))
+    const startTime = new Date().getTime() // Start time measurement
+
+    try {
+      // Create a promise for the execution of beforeAll
+      const execPromise = container.exec(
+        [
+          'sh',
+          '-c',
+          `${beforeAll} 2>&1 | head -c ${MAX_OUTPUT_SIZE_PER_EXEC_KB * 1024}`,
+        ],
+        { tty: false },
+      )
+
+      // Create a promise for the timeout
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () =>
+            reject(new Error(`beforeAll Timeout (t > ${BEFOREALL_TIMEOUT}ms)`)),
+          BEFOREALL_TIMEOUT,
+        ),
+      )
+
+      // Wait for either the execution to complete or timeout
+      const { output } = await Promise.race([execPromise, timeoutPromise])
+
+      beforeAllOutput = sanitizeUTF8(cleanUpDockerStreamHeaders(output))
+    } catch (error) {
+      beforeAllOutput = error.message // Capture the timeout or other error
+    }
+
+    const endTime = new Date().getTime() // End time measurement
+    const executionTime = endTime - startTime
+
+    // Log the execution time for debugging purposes
+    console.log(`beforeAll execution time: ${executionTime}ms`)
   }
 
   /* ## CONTENT DELETE */
@@ -170,35 +194,67 @@ const execTests = async (container, tests) => {
 
   for (let index = 0; index < tests.length; index++) {
     const { exec, input, expectedOutput } = tests[index]
-    // time before execution
+
+    // Start measuring execution time
     const startTime = new Date().getTime()
 
-    let { output } = await container.exec(
-      [
-        'sh',
-        '-c',
-        `echo "${input}" | ${exec} 2>&1 | head -c ${
-          MAX_OUTPUT_SIZE_PER_EXEC_KB * 1024
-        }`,
-      ],
-      {
-        tty: false,
-      },
-    )
+    try {
+      // Create a promise for the execution
+      const execPromise = container.exec(
+        [
+          'sh',
+          '-c',
+          `echo "${input}" | ${exec} 2>&1 | head -c ${
+            MAX_OUTPUT_SIZE_PER_EXEC_KB * 1024
+          }`,
+        ],
+        {
+          tty: false,
+        },
+      )
 
-    // time after execution
-    const endTime = new Date().getTime()
-    // time difference
-    const executionTime = endTime - startTime
-    output = sanitizeUTF8(cleanUpDockerStreamHeaders(output))
-    results.push({
-      exec,
-      input,
-      output,
-      expectedOutput,
-      executionTimeMS: executionTime,
-      passed: output === expectedOutput,
-    })
+      // Create a promise for the timeout
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () =>
+            reject(new Error(`Execution Timeout (t > ${EXECUTION_TIMEOUT}ms)`)),
+          EXECUTION_TIMEOUT,
+        ),
+      )
+
+      // Wait for either the exec or the timeout
+      const { output } = await Promise.race([execPromise, timeoutPromise])
+
+      // Measure end time and calculate execution duration
+      const endTime = new Date().getTime()
+      const executionTime = endTime - startTime
+
+      // Process output and push the result
+      const sanitizedOutput = sanitizeUTF8(cleanUpDockerStreamHeaders(output))
+      results.push({
+        exec,
+        input,
+        output: sanitizedOutput,
+        expectedOutput,
+        executionTimeMS: executionTime,
+        passed: sanitizedOutput === expectedOutput,
+        timeout: false, // No timeout occurred
+      })
+    } catch (error) {
+      // Handle timeout or other errors
+      const endTime = new Date().getTime()
+      const executionTime = endTime - startTime
+
+      results.push({
+        exec,
+        input,
+        output: error.message,
+        expectedOutput,
+        executionTimeMS: executionTime,
+        passed: false,
+        timeout: error.message === 'Execution Timeout', // Mark if it was a timeout
+      })
+    }
   }
 
   return results
