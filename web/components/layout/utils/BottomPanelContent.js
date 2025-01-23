@@ -18,7 +18,7 @@ import { useBottomPanel } from '../../../context/BottomPanelContext'
 
 const BottomPanelContent = ({ children, ...props }) => {
   const { isPanelOpen } = useBottomPanel()
-  console.log('isPanelOpen', isPanelOpen)
+
   return (
     <Box {...props}>
       <Collapse in={isPanelOpen}>{children}</Collapse>

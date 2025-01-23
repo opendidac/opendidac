@@ -34,7 +34,6 @@ const RunSnippets = ({ lock, questionId, onBeforeRun, onUpdate }) => {
       headers: { 'Content-Type': 'application/json' },
     }).then((data) => data.json())
     setResult(result)
-    console.log("result", result)
     if (result.beforeAll) {
       openPanel()
     }

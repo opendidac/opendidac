@@ -223,7 +223,6 @@ const GridGrouping = ({
                   enableSelection={enableSelection}
                   selection={groups[groupKey].selection}
                   onSelectionChange={(selection) => {
-                    console.log('onSelectionChange', groupKey, selection)
                     handleSelectionChange(groupKey, selection)
                   }}
                 />

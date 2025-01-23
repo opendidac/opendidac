@@ -24,8 +24,6 @@ export const useBottomPanel = () => {
 export const BottomPanelProvider = ({ open, onChange, children }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(open || false)
 
-  console.log("BottomPanelProvider render, isPanelOpen", isPanelOpen)
-
   const toggleOpen = useCallback(() => {
     const newIsPanelOpen = !isPanelOpen
     setIsPanelOpen(newIsPanelOpen)
@@ -33,7 +31,6 @@ export const BottomPanelProvider = ({ open, onChange, children }) => {
   }, [onChange, isPanelOpen])
 
   const openPanel = useCallback(() => {
-    console.log('openPanel', isPanelOpen)
     
     if (isPanelOpen) return
     

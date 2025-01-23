@@ -172,12 +172,6 @@ const startContainer = async (image, filesDirectory, beforeAll) => {
     } catch (error) {
       beforeAllOutput = error.message // Capture the timeout or other error
     }
-
-    const endTime = new Date().getTime() // End time measurement
-    const executionTime = endTime - startTime
-
-    // Log the execution time for debugging purposes
-    console.log(`beforeAll execution time: ${executionTime}ms`)
   }
 
   /* ## CONTENT DELETE */

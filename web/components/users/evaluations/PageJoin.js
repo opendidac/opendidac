@@ -51,7 +51,6 @@ const PageJoin = () => {
             let data
             try {
               data = await res.json()
-              console.log(data)
             } catch (e) {
               data.message = 'Server error'
             }

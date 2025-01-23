@@ -128,9 +128,9 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
         }),
       )
     },
-    [statuses, mutate],
+    [statuses],
   )
-  console.log("data", data)
+
   return (
     <Loading loading={!data} errors={[error]}>
       <Stack direction={'row'} alignItems={'center'} p={1} justifyContent={'space-between'}>
@@ -168,8 +168,8 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
                     information to the professor.
                   </li>
                   <li>
-                    <strong>Overriding of Manual Edits:</strong> If the "Run
-                    Snippets" functionality is used, any manually edited outputs
+                    <strong>Overriding of Manual Edits:</strong> If the &quot;Run
+                    Snippets&quot; functionality is used, any manually edited outputs
                     will be overridden by the automatic process,
                     discarding manual changes.
                   </li>

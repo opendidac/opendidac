@@ -48,7 +48,6 @@ const QuestionsGrid = ({
       enableSelection={enableSelection}
       selection={selection}
       onSelectionChange={(newSelection) => {
-        console.log(newSelection)
         setSelection(newSelection)
       }}
       actions={actions}

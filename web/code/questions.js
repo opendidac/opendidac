@@ -388,7 +388,6 @@ export const copyQuestion = async (
   source = QuestionSource.EVAL,
   appendCopyInTitle = false,
 ) => {
-  console.log('question.questionToTag', question.questionToTag)
 
   const data = {
     title: appendCopyInTitle ? `Copy of ${question.title}` : question.title,

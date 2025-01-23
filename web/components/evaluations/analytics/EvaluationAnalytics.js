@@ -98,7 +98,6 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
       }
       switch (question.type) {
         case QuestionType.multipleChoice: {
-          console.log('data', data)
           data[question.type] = data[question.type].map((option) => ({
             ...option,
             percentage:
