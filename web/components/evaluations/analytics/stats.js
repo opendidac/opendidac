@@ -117,6 +117,7 @@ export const typeSpecificStats = (question) => {
           label: `O${index + 1}`,
           text: option.text,
           tooltip: option.text,
+          isCorrect: option.isCorrect,
           chosen,
         }
       })
@@ -142,9 +143,11 @@ export const typeSpecificStats = (question) => {
       return {
         true: {
           chosen: trueChosen,
+          isTrue: question.trueFalse.isTrue,
         },
         false: {
           chosen: falseChosen,
+          isTrue: !question.trueFalse.isTrue,
         },
       }
     case QuestionType.code:

@@ -34,6 +34,7 @@ const RunSnippets = ({ lock, questionId, onBeforeRun, onUpdate }) => {
       headers: { 'Content-Type': 'application/json' },
     }).then((data) => data.json())
     setResult(result)
+    console.log("result", result)
     if (result.beforeAll) {
       openPanel()
     }
@@ -57,7 +58,6 @@ const RunSnippets = ({ lock, questionId, onBeforeRun, onUpdate }) => {
         </LoadingButton>
       </BottomPanelHeader>
       <BottomPanelContent>
-        {result && result.beforeAll && (
           <Stack padding={0}>
             <TextField
               variant="filled"
@@ -67,13 +67,12 @@ const RunSnippets = ({ lock, questionId, onBeforeRun, onUpdate }) => {
               focused
               color="info"
               label="Console"
-              value={result.beforeAll}
+              value={result?.beforeAll}
               InputProps={{
                 readOnly: true,
               }}
             />
           </Stack>
-        )}
       </BottomPanelContent>
     </Stack>
   )

@@ -19,14 +19,16 @@ import { fetcher } from '@/code/utils'
 import SnippetEditor from './SnippetEditor'
 import RunSnippets from './RunSnippets'
 import Loading from '@/components/feedback/Loading'
-import { Button, Stack } from '@mui/material'
+import { Alert, AlertTitle, Button, Stack, Typography } from '@mui/material'
 import { useDebouncedCallback } from 'use-debounce'
 import SnippetStatuBar from './SnippetStatuBar'
 import BottomCollapsiblePanel from '@/components/layout/utils/BottomCollapsiblePanel'
+import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 
 const SnippetStatus = {
   SUCCESS: 'SUCCESS',
   ERROR: 'ERROR',
+  NEUTRAL: 'NEUTRAL',
   RUNNING: 'RUNNING',
 }
 
@@ -125,21 +127,64 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
           return SnippetStatus.ERROR
         }),
       )
-      mutate(undefined, true) // Force revalidation
     },
     [statuses, mutate],
   )
-
+  console.log("data", data)
   return (
     <Loading loading={!data} errors={[error]}>
-      <Stack direction={'row'} alignItems={'center'} p={1}>
+      <Stack direction={'row'} alignItems={'center'} p={1} justifyContent={'space-between'}>
         <Button onClick={onAddSnippet}>Add Snippet</Button>
+        <UserHelpPopper
+          label={'Risks related to manual output editing'}
+          mode={'warning'}
+        >
+          <Stack spacing={1}>
+            <Typography variant="body2">
+              It is recommended to (Run Snippets) to make the outputs filled.
+              However, if you need to manually edit the output, please consider
+              the following risks:
+            </Typography>
+            <Alert severity="warning">
+              <AlertTitle>Risks of Manual Output Editing</AlertTitle>
+              <Typography variant="body2">
+                Manually editing the outputs introduces several risks that should
+                be carefully considered:
+                <ul>
+                  <li>
+                    <strong>Mismatch with Snippet:</strong> The manually edited
+                    output might not accurately represent the code snippet&apos;s
+                    actual behavior, leading to inconsistencies.
+                  </li>
+                  <li>
+                    <strong>Forgotten Details:</strong> Minor details like
+                    whitespace, formatting, or special characters might be
+                    overlooked, causing discrepancies in automated checks or
+                    evaluations.
+                  </li>
+                  <li>
+                    <strong>Impact on Grading:</strong> Grading tool rely on
+                    outputs and may fail to award points or provide accurate
+                    information to the professor.
+                  </li>
+                  <li>
+                    <strong>Overriding of Manual Edits:</strong> If the "Run
+                    Snippets" functionality is used, any manually edited outputs
+                    will be overridden by the automatic process,
+                    discarding manual changes.
+                  </li>
+                </ul>
+              </Typography>
+            </Alert>
+          </Stack>
+        </UserHelpPopper>
       </Stack>
 
       <SnippetStatuBar statuses={statuses} />
 
+      
+
       <Stack flex={1}>
-        {data && (
           <BottomCollapsiblePanel
             bottomPanel={
               <RunSnippets
@@ -150,13 +195,14 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
               />
             }
           >
-            {data.map((snippet, index) => (
+            {data?.map((snippet, index) => (
               <SnippetEditor
                 key={index}
                 index={index}
                 snippet={snippet}
                 language={language}
-                onChange={(code) => {
+                isOutputEditable
+                onSnippetChange={(code) => {
                   const updatedStatuses = statuses.map((s, i) => {
                     if (i === index) return SnippetStatus.ERROR
                     return s
@@ -168,11 +214,21 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
                     output: null,
                   })
                 }}
+                onOutputChange={(output) => {
+                  const updatedStatuses = statuses.map((s, i) => {
+                    if (i === index) return SnippetStatus.NEUTRAL
+                    return s
+                  })
+                  setStatuses(updatedStatuses)
+                  debouncedUpdateSnippet(snippet.id, {
+                    ...snippet,
+                    output,
+                  })
+                }}
                 onDelete={onDeleteSnippet}
               />
             ))}
           </BottomCollapsiblePanel>
-        )}
       </Stack>
     </Loading>
   )
