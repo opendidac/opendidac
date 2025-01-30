@@ -83,7 +83,6 @@ const SettingsSchedule = ({
           disabled={!useDuration}
           value={duration}
           onChange={(value) => {
-
             setDuration(value)
             onChange({
               active: true,

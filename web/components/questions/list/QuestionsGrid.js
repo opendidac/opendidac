@@ -137,17 +137,21 @@ const QuestionsGrid = ({
                   onClick={async (ev) => {
                     ev.preventDefault()
                     ev.stopPropagation()
-                    await router.push(`/${groupScope}/questions/${question.id}`)
+                    const currentPath = router.asPath // Capture current relative URL
+                    await router.push(
+                      `/${groupScope}/questions/${question.id}?from=${encodeURIComponent(currentPath)}`,
+                    )
                   }}
                 >
                   <Image
-                    alt={'Update in new page'}
-                    src={'/svg/icons/update.svg'}
+                    alt="Update in new page"
+                    src="/svg/icons/update.svg"
                     width={16}
                     height={16}
                   />
                 </IconButton>
               </Tooltip>
+
               <Tooltip title="Update in overlay">
                 <IconButton
                   onClick={(ev) => {

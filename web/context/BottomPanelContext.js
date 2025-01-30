@@ -31,9 +31,8 @@ export const BottomPanelProvider = ({ open, onChange, children }) => {
   }, [onChange, isPanelOpen])
 
   const openPanel = useCallback(() => {
-    
     if (isPanelOpen) return
-    
+
     setIsPanelOpen(true)
     onChange && onChange(true)
   }, [onChange, isPanelOpen])

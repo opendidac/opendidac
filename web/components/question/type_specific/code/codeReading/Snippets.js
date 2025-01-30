@@ -133,7 +133,12 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
 
   return (
     <Loading loading={!data} errors={[error]}>
-      <Stack direction={'row'} alignItems={'center'} p={1} justifyContent={'space-between'}>
+      <Stack
+        direction={'row'}
+        alignItems={'center'}
+        p={1}
+        justifyContent={'space-between'}
+      >
         <Button onClick={onAddSnippet}>Add Snippet</Button>
         <UserHelpPopper
           label={'Risks related to manual output editing'}
@@ -148,13 +153,13 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
             <Alert severity="warning">
               <AlertTitle>Risks of Manual Output Editing</AlertTitle>
               <Typography variant="body2">
-                Manually editing the outputs introduces several risks that should
-                be carefully considered:
+                Manually editing the outputs introduces several risks that
+                should be carefully considered:
                 <ul>
                   <li>
                     <strong>Mismatch with Snippet:</strong> The manually edited
-                    output might not accurately represent the code snippet&apos;s
-                    actual behavior, leading to inconsistencies.
+                    output might not accurately represent the code
+                    snippet&apos;s actual behavior, leading to inconsistencies.
                   </li>
                   <li>
                     <strong>Forgotten Details:</strong> Minor details like
@@ -168,9 +173,9 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
                     information to the professor.
                   </li>
                   <li>
-                    <strong>Overriding of Manual Edits:</strong> If the &quot;Run
-                    Snippets&quot; functionality is used, any manually edited outputs
-                    will be overridden by the automatic process,
+                    <strong>Overriding of Manual Edits:</strong> If the
+                    &quot;Run Snippets&quot; functionality is used, any manually
+                    edited outputs will be overridden by the automatic process,
                     discarding manual changes.
                   </li>
                 </ul>
@@ -182,53 +187,51 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
 
       <SnippetStatuBar statuses={statuses} />
 
-      
-
       <Stack flex={1}>
-          <BottomCollapsiblePanel
-            bottomPanel={
-              <RunSnippets
-                lock={lock}
-                questionId={questionId}
-                onBeforeRun={onBeforeRun}
-                onUpdate={onAfterRun}
-              />
-            }
-          >
-            {data?.map((snippet, index) => (
-              <SnippetEditor
-                key={index}
-                index={index}
-                snippet={snippet}
-                language={language}
-                isOutputEditable
-                onSnippetChange={(code) => {
-                  const updatedStatuses = statuses.map((s, i) => {
-                    if (i === index) return SnippetStatus.ERROR
-                    return s
-                  })
-                  setStatuses(updatedStatuses)
-                  debouncedUpdateSnippet(snippet.id, {
-                    ...snippet,
-                    snippet: code,
-                    output: null,
-                  })
-                }}
-                onOutputChange={(output) => {
-                  const updatedStatuses = statuses.map((s, i) => {
-                    if (i === index) return SnippetStatus.NEUTRAL
-                    return s
-                  })
-                  setStatuses(updatedStatuses)
-                  debouncedUpdateSnippet(snippet.id, {
-                    ...snippet,
-                    output,
-                  })
-                }}
-                onDelete={onDeleteSnippet}
-              />
-            ))}
-          </BottomCollapsiblePanel>
+        <BottomCollapsiblePanel
+          bottomPanel={
+            <RunSnippets
+              lock={lock}
+              questionId={questionId}
+              onBeforeRun={onBeforeRun}
+              onUpdate={onAfterRun}
+            />
+          }
+        >
+          {data?.map((snippet, index) => (
+            <SnippetEditor
+              key={index}
+              index={index}
+              snippet={snippet}
+              language={language}
+              isOutputEditable
+              onSnippetChange={(code) => {
+                const updatedStatuses = statuses.map((s, i) => {
+                  if (i === index) return SnippetStatus.ERROR
+                  return s
+                })
+                setStatuses(updatedStatuses)
+                debouncedUpdateSnippet(snippet.id, {
+                  ...snippet,
+                  snippet: code,
+                  output: null,
+                })
+              }}
+              onOutputChange={(output) => {
+                const updatedStatuses = statuses.map((s, i) => {
+                  if (i === index) return SnippetStatus.NEUTRAL
+                  return s
+                })
+                setStatuses(updatedStatuses)
+                debouncedUpdateSnippet(snippet.id, {
+                  ...snippet,
+                  output,
+                })
+              }}
+              onDelete={onDeleteSnippet}
+            />
+          ))}
+        </BottomCollapsiblePanel>
       </Stack>
     </Loading>
   )

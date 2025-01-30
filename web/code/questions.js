@@ -388,7 +388,6 @@ export const copyQuestion = async (
   source = QuestionSource.EVAL,
   appendCopyInTitle = false,
 ) => {
-
   const data = {
     title: appendCopyInTitle ? `Copy of ${question.title}` : question.title,
     content: question.content,
