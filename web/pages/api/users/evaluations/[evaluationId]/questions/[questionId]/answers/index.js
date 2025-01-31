@@ -34,7 +34,7 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 
 /*
   get the users answers for a question including related nested data

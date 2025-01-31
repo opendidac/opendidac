@@ -21,7 +21,7 @@ import {
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 
 /*
  endpoint to run the database console query sandbox for a users

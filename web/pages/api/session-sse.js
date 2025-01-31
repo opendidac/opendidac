@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { getUser } from '@/code/auth'
 
-const MESSAGE_INTERVAL = 3000
+import { getUser } from '@/code/auth/auth'
+import { addSSEClient, removeSSEClient } from '@/code/auth/sseClients'
 
 export default async function handler(req, res) {
   console.log('Opening SSE connection')
@@ -23,39 +23,24 @@ export default async function handler(req, res) {
   // Set headers for SSE
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'close') // Disable keep-alive to detect disconnections
-  res.flushHeaders() // Ensure headers are sent immediately to keep the connection open
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
 
-  // Function to send an SSE event with session status
-  const sendSessionStatusEvent = (status) => {
-    res.write(`data: ${JSON.stringify({ status })}\n\n`)
-    res.flush() // Ensure the data is sent to the client immediately
+  // Get user session
+  const user = await getUser(req, res)
+  if (!user) {
+    res.write(`data: ${JSON.stringify({ status: 'unauthenticated' })}\n\n`)
+    res.end()
+    return
   }
 
-  try {
-    // Initial check for the user's session
-    const user = await getUser(req, res)
-    sendSessionStatusEvent(user ? 'authenticated' : 'unauthenticated')
+  // Store the client connection
+  addSSEClient(user.id, res)
 
-    // Check session status every few seconds and send updates
-    const sessionCheckInterval = setInterval(async () => {
-      if (req.socket.destroyed) {
-        clearInterval(sessionCheckInterval)
-        console.log('Connection destroyed, closing SSE.')
-        res.end()
-        return
-      }
-
-      const user = await getUser(req, res)
-      console.log(
-        'Checking session status',
-        user?.email,
-        user ? 'authenticated' : 'unauthenticated',
-      )
-      sendSessionStatusEvent(user ? 'authenticated' : 'unauthenticated')
-    }, MESSAGE_INTERVAL)
-  } catch (error) {
-    console.error('Error handling SSE connection:', error)
-    res.status(500).end()
-  }
+  // Handle client disconnection
+  req.on('close', () => {
+    console.log(`Client disconnected: ${user.email}`)
+    removeSSEClient(user.id, res)
+    res.end()
+  })
 }

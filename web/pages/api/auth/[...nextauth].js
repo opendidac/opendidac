@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 import NextAuth from 'next-auth'
-import KeycloakProvider from 'next-auth/providers/keycloak'
+// import KeycloakProvider from 'next-auth/providers/keycloak'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { Role } from '@prisma/client'
 import { getPrisma } from '@/middleware/withPrisma'
+import { getSSEClients, notifySSEClients } from '@/code/auth/sseClients'
 
 const prisma = getPrisma()
 const prismaAdapter = PrismaAdapter(prisma)
@@ -42,6 +43,19 @@ const MyAdapter = {
     }
   },
 }
+
+/* LEGACY
+const keycloakProvider = KeycloakProvider({
+  clientId: process.env.NEXTAUTH_KEYCLOAK_CLIENT_ID,
+  clientSecret: process.env.NEXTAUTH_KEYCLOAK_CLIENT_SECRET,
+  issuer: process.env.NEXTAUTH_KEYCLOAK_ISSUER_BASE_URL,
+  authorization: {
+    params: {
+      redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/keycloak`,
+    },
+  },
+})
+
 
 const switchLegacyProvider = {
   id: 'switch_legacy',
@@ -71,10 +85,7 @@ const switchLegacyProvider = {
   idToken: true,
   checks: ['pkce', 'state'],
   profile(OAuthProfile) {
-    /*
-    Called on each successful login with an OAuth provider
-    */
-
+    
     return {
       id: OAuthProfile.sub,
       name: OAuthProfile.name,
@@ -89,6 +100,8 @@ const switchLegacyProvider = {
     }
   },
 }
+
+*/
 
 const switchEduId = {
   id: 'switch',
@@ -157,20 +170,9 @@ const switchEduId = {
   },
 }
 
-const keycloakProvider = KeycloakProvider({
-  clientId: process.env.NEXTAUTH_KEYCLOAK_CLIENT_ID,
-  clientSecret: process.env.NEXTAUTH_KEYCLOAK_CLIENT_SECRET,
-  issuer: process.env.NEXTAUTH_KEYCLOAK_ISSUER_BASE_URL,
-  authorization: {
-    params: {
-      redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/keycloak`,
-    },
-  },
-})
-
 export const authOptions = {
   adapter: MyAdapter,
-  providers: [switchLegacyProvider, switchEduId, keycloakProvider],
+  providers: [switchEduId],
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async session({ session, user }) {
@@ -228,17 +230,21 @@ export const authOptions = {
 
 async function handleSingleSessionPerUser(user) {
   const activeSessions = await prisma.session.findMany({
-    where: {
-      userId: user.id,
-    },
+    where: { userId: user.id },
   })
 
   if (activeSessions.length > 0) {
     await prisma.session.deleteMany({
-      where: {
-        userId: user.id,
-      },
+      where: { userId: user.id },
     })
+
+    // Notify all active SSE clients (tabs) for this user
+    notifySSEClients(user.id, { status: 'unauthenticated' })
+
+    // Close all SSE connections
+    for (const res of getSSEClients(user.id)) {
+      res.end()
+    }
   }
 }
 

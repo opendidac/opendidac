@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 import { getPrisma } from './withPrisma'
 
 export function withStudentStatus(allowedStatuses = [], handler) {
