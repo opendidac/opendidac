@@ -58,7 +58,9 @@ const keycloakProvider = KeycloakProvider({
       name: profile.name || profile.preferred_username,
       email: profile.email,
       image: profile.picture,
-      roles: profile.realm_access?.roles?.includes('admin') ? [Role.ADMIN, Role.TEACHER] : [Role.STUDENT],
+      roles: profile.realm_access?.roles?.includes('admin')
+        ? [Role.ADMIN, Role.TEACHER]
+        : [Role.STUDENT],
     }
   },
 })
@@ -231,7 +233,9 @@ async function linkOrCreateUserForAccount(user, account) {
         roles: user.roles,
       },
     })
-  } else if (!existingUser.accounts.some(acc => acc.provider === account.provider)) {
+  } else if (
+    !existingUser.accounts.some((acc) => acc.provider === account.provider)
+  ) {
     await prisma.account.create({
       data: {
         userId: existingUser.id,
