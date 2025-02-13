@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import NextAuth from 'next-auth'
-// import KeycloakProvider from 'next-auth/providers/keycloak'
+import KeycloakProvider from 'next-auth/providers/keycloak'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { Role } from '@prisma/client'
 import { getPrisma } from '@/middleware/withPrisma'
@@ -43,64 +43,25 @@ const MyAdapter = {
   },
 }
 
-/* LEGACY
 const keycloakProvider = KeycloakProvider({
   clientId: process.env.NEXTAUTH_KEYCLOAK_CLIENT_ID,
   clientSecret: process.env.NEXTAUTH_KEYCLOAK_CLIENT_SECRET,
   issuer: process.env.NEXTAUTH_KEYCLOAK_ISSUER_BASE_URL,
   authorization: {
     params: {
-      redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/keycloak`,
+      scope: 'openid profile email',
     },
   },
-})
-
-
-const switchLegacyProvider = {
-  id: 'switch_legacy',
-  name: 'SWITCH edu-ID (legacy)',
-  type: 'oauth',
-  wellKnown: 'https://login.eduid.ch/.well-known/openid-configuration',
-  clientId: process.env.NEXTAUTH_SWITCH_CLIENT_ID,
-  clientSecret: process.env.NEXTAUTH_SWITCH_CLIENT_SECRET,
-  authorization: {
-    params: {
-      scope: 'openid profile email https://login.eduid.ch/authz/User.Read',
-      claims: JSON.stringify({
-        id_token: {
-          name: { essential: true },
-          email: { essential: true },
-          swissEduIDLinkedAffiliation: { essential: true },
-          swissEduIDAssociatedMail: { essential: true },
-          swissEduIDLinkedAffiliationMail: { essential: true },
-          swissEduID: { essential: true },
-          eduPersonEntitlement: { essential: true },
-          eduPersonAffiliation: { essential: true },
-        },
-      }),
-    },
-  },
-
-  idToken: true,
-  checks: ['pkce', 'state'],
-  profile(OAuthProfile) {
-    
+  profile(profile) {
     return {
-      id: OAuthProfile.sub,
-      name: OAuthProfile.name,
-      email: OAuthProfile.email,
-      image: OAuthProfile.picture,
-      roles: [Role.STUDENT],
-      affiliations: OAuthProfile.swissEduIDLinkedAffiliationMail,
-      organizations: OAuthProfile.swissEduIDLinkedAffiliationMail.map(
-        (affiliation) => affiliation.split('@')[1],
-      ),
-      selectedAffiliation: null,
+      id: profile.sub,
+      name: profile.name || profile.preferred_username,
+      email: profile.email,
+      image: profile.picture,
+      roles: profile.realm_access?.roles?.includes('admin') ? [Role.ADMIN, Role.TEACHER] : [Role.STUDENT],
     }
   },
-}
-
-*/
+})
 
 const switchEduId = {
   id: 'switch',
@@ -171,8 +132,12 @@ const switchEduId = {
 
 export const authOptions = {
   adapter: MyAdapter,
-  providers: [switchEduId],
+  providers: [keycloakProvider],
   secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: 'database',
+    maxAge: 24 * 60 * 60, // 24 hours
+  },
   callbacks: {
     async session({ session, user }) {
       if (user) {
@@ -209,11 +174,7 @@ export const authOptions = {
     async signIn({ user, account }) {
       await handleSingleSessionPerUser(user)
 
-      if (
-        account.provider === 'keycloak' ||
-        account.provider === 'switch' ||
-        account.provider === 'switch_legacy'
-      ) {
+      if (account.provider === 'keycloak' || account.provider === 'switch') {
         if (!user.email) {
           return false
         }
@@ -224,7 +185,20 @@ export const authOptions = {
 
       return false
     },
+
+    async jwt({ token, user, account }) {
+      if (account && user) {
+        token.id = user.id
+        token.roles = user.roles
+      }
+      return token
+    },
   },
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
+  },
+  debug: process.env.NODE_ENV === 'development',
 }
 
 async function handleSingleSessionPerUser(user) {
@@ -244,59 +218,35 @@ async function handleSingleSessionPerUser(user) {
 }
 
 async function linkOrCreateUserForAccount(user, account) {
-  const accountData = {
-    type: account.type,
-    provider: account.provider,
-    providerAccountId: account.providerAccountId,
-    refresh_token: account.refresh_token,
-    access_token: account.access_token,
-    expires_at: account.expires_at,
-    refresh_expires_in: account.refresh_expires_in,
-    not_before_policy: account['not-before-policy'],
-    token_type: account.token_type,
-    scope: account.scope,
-    id_token: account.id_token,
-    session_state: account.session_state,
-  }
-
-  const linkedAccount = await prisma.account.findFirst({
-    where: {
-      providerAccountId: account.providerAccountId,
-      provider: account.provider,
-    },
+  const existingUser = await prisma.user.findUnique({
+    where: { email: user.email },
+    include: { accounts: true },
   })
 
-  if (!linkedAccount) {
-    const existingUser = await prisma.user.findUnique({
-      where: { email: user.email },
+  if (!existingUser) {
+    await prisma.user.create({
+      data: {
+        email: user.email,
+        name: user.name,
+        roles: user.roles,
+      },
     })
-
-    if (!existingUser) {
-      const newUser = await prisma.user.create({
-        data: {
-          email: user.email,
-          name: user.name,
-          roles: [Role.STUDENT],
-        },
-      })
-
-      await prisma.account.create({
-        data: {
-          userId: newUser.id,
-          ...accountData,
-        },
-      })
-      return newUser
-    } else {
-      await prisma.account.create({
-        data: {
-          userId: existingUser.id,
-          ...accountData,
-        },
-      })
-
-      return existingUser
-    }
+  } else if (!existingUser.accounts.some(acc => acc.provider === account.provider)) {
+    await prisma.account.create({
+      data: {
+        userId: existingUser.id,
+        type: account.type,
+        provider: account.provider,
+        providerAccountId: account.providerAccountId,
+        refresh_token: account.refresh_token,
+        access_token: account.access_token,
+        expires_at: account.expires_at,
+        token_type: account.token_type,
+        scope: account.scope,
+        id_token: account.id_token,
+        session_state: account.session_state,
+      },
+    })
   }
 }
 
