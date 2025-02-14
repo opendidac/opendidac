@@ -66,6 +66,10 @@ const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
     (event) => {
       // Support both Ctrl and Command (Meta) key
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        // Prevent event from bubbling up
+        event.preventDefault()
+        event.stopPropagation()
+        
         // If CTRL/CMD+Enter is pressed, either sign off or unsign
         if (grading.signedBy) {
           unsignGrading()
