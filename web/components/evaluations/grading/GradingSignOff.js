@@ -69,7 +69,7 @@ const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
         // Prevent event from bubbling up
         event.preventDefault()
         event.stopPropagation()
-        
+
         // If CTRL/CMD+Enter is pressed, either sign off or unsign
         if (grading.signedBy) {
           unsignGrading()
@@ -111,7 +111,9 @@ const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
                 onUnsign={unsignGrading}
               />
             ) : (
-              <Tooltip title={`${navigator.userAgent.includes('Mac') ? '⌘' : 'CTRL'}+Enter`}>
+              <Tooltip
+                title={`${navigator.userAgent.includes('Mac') ? '⌘' : 'CTRL'}+Enter`}
+              >
                 <LoadingButton
                   color="success"
                   variant="contained"
