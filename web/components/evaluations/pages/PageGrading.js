@@ -539,8 +539,16 @@ const GradingNextBack = ({ isFirst, onPrev, onNext }) => {
     (event) => {
       if (event.ctrlKey || event.metaKey) {
         if (event.key === 'ArrowLeft') {
+          // Prevent event from bubbling up
+          event.preventDefault()
+          event.stopPropagation()
+          
           if (!isFirst) onPrev()
         } else if (event.key === 'ArrowRight') {
+          // Prevent event from bubbling up
+          event.preventDefault()
+          event.stopPropagation()
+          
           onNext()
         }
       }
