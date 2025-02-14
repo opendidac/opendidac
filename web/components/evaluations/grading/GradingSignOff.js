@@ -64,8 +64,9 @@ const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
 
   const handleKeyDown = useCallback(
     (event) => {
-      if (event.ctrlKey && event.key === 'Enter') {
-        // If CTRL+Enter is pressed, either sign off or unsign
+      // Support both Ctrl and Command (Meta) key
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        // If CTRL/CMD+Enter is pressed, either sign off or unsign
         if (grading.signedBy) {
           unsignGrading()
         } else {
@@ -106,7 +107,7 @@ const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
                 onUnsign={unsignGrading}
               />
             ) : (
-              <Tooltip title="CTRL+Enter">
+              <Tooltip title={`${navigator.userAgent.includes('Mac') ? '⌘' : 'CTRL'}+Enter`}>
                 <LoadingButton
                   color="success"
                   variant="contained"
