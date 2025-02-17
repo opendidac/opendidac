@@ -537,10 +537,18 @@ const PageGrading = () => {
 const GradingNextBack = ({ isFirst, onPrev, onNext }) => {
   const handleKeyDown = useCallback(
     (event) => {
-      if (event.ctrlKey) {
+      if (event.ctrlKey || event.metaKey) {
         if (event.key === 'ArrowLeft') {
+          // Prevent event from bubbling up
+          event.preventDefault()
+          event.stopPropagation()
+
           if (!isFirst) onPrev()
         } else if (event.key === 'ArrowRight') {
+          // Prevent event from bubbling up
+          event.preventDefault()
+          event.stopPropagation()
+
           onNext()
         }
       }
@@ -559,7 +567,9 @@ const GradingNextBack = ({ isFirst, onPrev, onNext }) => {
   return (
     <Paper>
       <Stack direction="row" justifyContent="space-between">
-        <Tooltip title="CTRL+Left">
+        <Tooltip
+          title={`${navigator.userAgent.includes('Mac') ? '⌘' : 'CTRL'}+Left`}
+        >
           <IconButton
             onClick={onPrev}
             disabled={isFirst}
@@ -568,7 +578,9 @@ const GradingNextBack = ({ isFirst, onPrev, onNext }) => {
             <ArrowBackIosIcon />
           </IconButton>
         </Tooltip>
-        <Tooltip title="CTRL+Right">
+        <Tooltip
+          title={`${navigator.userAgent.includes('Mac') ? '⌘' : 'CTRL'}+Right`}
+        >
           <IconButton
             onClick={onNext}
             sx={{ width: 90, height: 90, borderRadius: 0, borderRight: 0 }}

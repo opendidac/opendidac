@@ -786,6 +786,71 @@
           }
         ]
       }
+    },
+    {
+      "language": "scala",
+      "extension": "scala",
+      "label": "Scala",
+      "icon": "/svg/languages/scala.svg",
+      "sandbox": {
+        "image": "sbtscala/scala-sbt:eclipse-temurin-17.0.13_11_1.10.7_3.6.3",
+        "defaultPath": "/src/Main.scala",
+        "exec": "java -cp /src:/usr/share/scala/maven2/org/scala-lang/scala3-library_3/3.6.3/scala3-library_3-3.6.3.jar:/usr/share/scala/maven2/org/scala-lang/scala-library/2.13.15/scala-library-2.13.15.jar Main",
+        "beforeAll": "cd /src && scalac -classpath /usr/share/scala/maven2/org/scala-lang/scala3-library_3/3.6.3/scala3-library_3-3.6.3.jar:/usr/share/scala/maven2/org/scala-lang/scala-library/2.13.15/scala-library-2.13.15.jar Main.scala"
+      },
+      "codeWriting": [
+        {
+          "label": "Basic",
+          "value": "basic",
+          "description": "Basic program input / output example",
+          "setup": {
+            "testCases": [
+              {
+                "exec": "java -cp /src:/usr/share/scala/maven2/org/scala-lang/scala3-library_3/3.6.3/scala3-library_3-3.6.3.jar:/usr/share/scala/maven2/org/scala-lang/scala-library/2.13.15/scala-library-2.13.15.jar Main",
+                "input": "Hello World1",
+                "expectedOutput": "HELLO WORLD1\n"
+              }
+            ],
+            "files": {
+              "solution": [
+                {
+                  "path": "/src/Main.scala",
+                  "content": "object Main:\n  def main(args: Array[String]): Unit =\n    val stdin = scala.io.Source.stdin.getLines()\n    for line <- stdin do\n      println(line.toUpperCase)"
+                }
+              ],
+              "template": [
+                {
+                  "path": "/src/Main.scala",
+                  "content": "object Main:\n  def main(args: Array[String]): Unit =\n    val stdin = scala.io.Source.stdin.getLines()\n    for line <- stdin do\n      println(line)"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "codeReading": {
+        "context": "import scala.io.StdIn\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\nobject Main:\n  def main(args: Array[String]): Unit =\n    val functionName = StdIn.readLine()\n    {{SNIPPET_FUNCTION_CALLS}}",
+        "snippetWrapperFunctionSignature": "def {{SNIPPET_FUNCTION_NAME}}(): Unit =\n{{SNIPPET_FUNCTION_BODY}}",
+        "snippetFunctionCallTemplate": "if functionName == \"{{SNIPPET_FUNCTION_NAME}}\" then\n  {{SNIPPET_FUNCTION_NAME}}()",
+        "snippets": [
+          {
+            "snippet": "var s = \"hello, world\"\ns = s.toUpperCase\nprintln(s)",
+            "output": "HELLO, WORLD\n"
+          },
+          {
+            "snippet": "for i <- 0 until 3 do\n  println(i)",
+            "output": "0\n1\n2\n"
+          },
+          {
+            "snippet": "var i = 11\nwhile i > 4 do\n  i -= 2\n  print(s\"$i \")",
+            "output": "9 7 5 3 "
+          },
+          {
+            "snippet": "var str = \"\"\nfor c <- 'A' to 'C' do\n  str = str + c + str\nprintln(str)",
+            "output": "ABACABA\n"
+          }
+        ]
+      }
     }
   ],
   "monacoExtensionToLanguage": {
