@@ -220,9 +220,13 @@ const PageAdmin = () => {
     error: errorUsers,
     mutate,
     isValidating,
-  } = useSWR(`/api/users?search=${searchQuery}&page=${page}&pageSize=${pageSize}`, fetcher, {
-    revalidateOnFocus: false,
-  })
+  } = useSWR(
+    `/api/users?search=${searchQuery}&page=${page}&pageSize=${pageSize}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    },
+  )
 
   const users = data?.users || []
   const pagination = data?.pagination || { total: 0, totalPages: 0 }
@@ -347,15 +351,17 @@ const PageAdmin = () => {
                     },
                   }))}
                 />
-                
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 3,
-                  pt: 2,
-                  borderColor: 'divider'
-                }}>
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 3,
+                    pt: 2,
+                    borderColor: 'divider',
+                  }}
+                >
                   <FormControl size="small" sx={{ minWidth: 100 }}>
                     <Select
                       value={pageSize}
@@ -370,17 +376,15 @@ const PageAdmin = () => {
 
                   <Stack direction="row" spacing={2} alignItems="center">
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <IconButton 
+                      <IconButton
                         onClick={() => handlePageChange(page - 1)}
                         disabled={page <= 1}
                         size="small"
                       >
                         <ChevronLeftIcon />
                       </IconButton>
-                      <Typography variant="body2">
-                        Page {page}
-                      </Typography>
-                      <IconButton 
+                      <Typography variant="body2">Page {page}</Typography>
+                      <IconButton
                         onClick={() => handlePageChange(page + 1)}
                         disabled={page >= pagination.totalPages}
                         size="small"

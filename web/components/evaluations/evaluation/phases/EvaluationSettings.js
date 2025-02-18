@@ -74,13 +74,6 @@ const EvaluationSettings = ({ groupScope, evaluation, onSettingsChanged }) => {
     <Stack spacing={2} px={1}>
       <EvaluationTitleBar title="Evaluation settings" />
 
-      <Alert severity="info">
-        <Typography variant="body2">
-          A meaningful name of the evaluation. It will be displayed to the
-          students.
-        </Typography>
-      </Alert>
-
       <TextField
         label="Label"
         id="evaluation-label"
@@ -96,24 +89,22 @@ const EvaluationSettings = ({ groupScope, evaluation, onSettingsChanged }) => {
 
       <Alert severity="info">
         <Typography variant="body2">
-          Toggle the visibility of the solution for the students.
-        </Typography>
-        <Typography variant="body2">
-          The students will be able to view the solution after the evaluation is
-          completed. Thus, they can compare their solution with the correct one.
-        </Typography>
-        <Typography variant="body2">
-          This setting is useful for evaluations that are used for learning /
-          training purposes.
+          A meaningful name of the evaluation. It will be displayed to the
+          students.
         </Typography>
       </Alert>
 
       <ConsultationSettings
         evaluation={evaluation}
-        onChange={(consultationEnabled, showSolutionsWhenFinished) => {
+        onChange={(
+          consultationEnabled,
+          showSolutionsWhenFinished,
+          ipRestrictions,
+        ) => {
           debounceSave({
             consultationEnabled,
             showSolutionsWhenFinished,
+            ipRestrictions,
           })
         }}
       />
