@@ -16,7 +16,7 @@
 import useSWR from 'swr'
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Stack, TextField, Button, Typography } from '@mui/material'
+import { Stack, TextField, Typography } from '@mui/material'
 import MarkdownEditor from '../input/markdown/MarkdownEditor'
 
 import LayoutSplitScreen from '../layout/LayoutSplitScreen'
@@ -29,9 +29,8 @@ import QuestionTagsSelector from './tags/QuestionTagsSelector'
 import { useRouter } from 'next/router'
 import Loading from '../feedback/Loading'
 import { fetcher } from '../../code/utils'
-import DialogFeedback from '../feedback/DialogFeedback'
 
-const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
+const QuestionUpdate = ({ groupScope, questionId, onUpdate }) => {
   const router = useRouter()
   const { show: showSnackbar } = useSnackbar()
 
@@ -46,9 +45,6 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
       revalidateOnFocus: false,
     },
   )
-
-  const [deleteQuestionDialogOpen, setDeleteQuestionDialogOpen] =
-    useState(false)
 
   const [title, setTitle] = useState(question?.title || '')
 
@@ -79,27 +75,6 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
     },
     [groupScope, showSnackbar, onUpdate],
   )
-
-  const deleteQuestion = useCallback(async () => {
-    await fetch(`/api/${groupScope}/questions`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ question }),
-    })
-      .then((res) => res.json())
-      .then(async () => {
-        await mutate()
-        onDelete && onDelete(question)
-        showSnackbar('Question deleted', 'success')
-        await router.push(`/${groupScope}/questions`)
-      })
-      .catch(() => {
-        showSnackbar('Error deleting question', 'error')
-      })
-  }, [question, showSnackbar, router, mutate, onDelete, groupScope])
 
   const onChangeQuestion = useCallback(
     async (question) => {
@@ -159,28 +134,6 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
                 rawContent={question.content}
                 onChange={(content) => onPropertyChange('content', content)}
               />
-
-              <Stack
-                direction="row"
-                justifyContent="flex-end"
-                width={'100%'}
-                pb={1}
-                alignItems={'center'}
-              >
-                <Button
-                  startIcon={
-                    <Image
-                      alt="Delete"
-                      src="/svg/icons/delete.svg"
-                      width="18"
-                      height="18"
-                    />
-                  }
-                  onClick={() => setDeleteQuestionDialogOpen(true)}
-                >
-                  Delete this question
-                </Button>
-              </Stack>
             </Stack>
           )
         }
@@ -201,17 +154,6 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
             </Stack>
           )
         }
-      />
-      <DialogFeedback
-        open={deleteQuestionDialogOpen}
-        title="Delete question"
-        content={
-          <Typography variant="body1">
-            You are about to delete this question. Are you sure?
-          </Typography>
-        }
-        onClose={() => setDeleteQuestionDialogOpen(false)}
-        onConfirm={deleteQuestion}
       />
     </Loading>
   )

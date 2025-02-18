@@ -143,6 +143,9 @@ const PageList = () => {
                       setSelected(q)
                       setOpenSideUpdate(true)
                     }}
+                    onDelete={async () => {
+                      await mutate()
+                    }}
                   />
                   <ResizableDrawer
                     open={openSideUpdate}
@@ -160,11 +163,6 @@ const PageList = () => {
                           onUpdate={async (question) => {
                             await mutate()
                             setSelected(question)
-                          }}
-                          onDelete={async () => {
-                            await mutate()
-                            setSelected(undefined)
-                            setOpenSideUpdate(false)
                           }}
                         />
                       )}
