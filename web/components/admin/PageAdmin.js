@@ -32,6 +32,10 @@ import {
   Stack,
   TextField,
   Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  IconButton,
 } from '@mui/material'
 import LayoutMain from '../layout/LayoutMain'
 import BackButton from '../layout/BackButton'
@@ -44,6 +48,8 @@ import ScrollContainer from '../layout/ScrollContainer'
 import { useSnackbar } from '@/context/SnackbarContext'
 
 import MoreVertIcon from '@mui/icons-material/MoreVert'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 
 const roleToDetails = {
   [Role.STUDENT]: {
@@ -204,24 +210,43 @@ const MaintenancePanel = () => {
 
 const PageAdmin = () => {
   const [searchQuery, setSearchQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const {
-    data: users,
+    data,
     error: errorUsers,
     mutate,
     isValidating,
-  } = useSWR(`/api/users?search=${searchQuery}`, fetcher, {
-    revalidateOnFocus: false,
-  })
+  } = useSWR(
+    `/api/users?search=${searchQuery}&page=${page}&pageSize=${pageSize}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    },
+  )
+
+  const users = data?.users || []
+  const pagination = data?.pagination || { total: 0, totalPages: 0 }
 
   const [search, setSearch] = useState('')
 
   const debouncedSearch = useDebouncedCallback((value) => {
     setSearchQuery(value)
+    setPage(1) // Reset to first page when search changes
   }, 500)
 
   const [selected, setSelected] = useState(null)
   const [manageRolesDialogOpen, setManageRolesDialogOpen] = useState(false)
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage)
+  }
+
+  const handlePageSizeChange = (newPageSize) => {
+    setPageSize(newPageSize)
+    setPage(1) // Reset to first page when page size changes
+  }
 
   return (
     <Authorization allowRoles={[Role.SUPER_ADMIN]}>
@@ -250,7 +275,7 @@ const PageAdmin = () => {
               fullWidth
               onChange={(ev) => {
                 const value = ev.target.value
-                setSearch()
+                setSearch(value)
                 if (value.length >= 2) {
                   debouncedSearch(value)
                 } else {
@@ -258,71 +283,116 @@ const PageAdmin = () => {
                 }
               }}
               endAdornment={
-                <LoadingButton loading={!users && !errorUsers}>
+                <LoadingButton loading={!data && !errorUsers}>
                   loading
                 </LoadingButton>
               }
             />
             <Box minWidth="70px">
-              <Typography variant="h6">{users?.length} users</Typography>
+              <Typography variant="h6">{pagination.total} users</Typography>
             </Box>
           </Stack>
           <Loading loading={isValidating} error={errorUsers}>
             <ScrollContainer>
-              <DataGrid
-                header={{
-                  actions: {
-                    label: 'Actions',
-                    width: '120px',
-                  },
-                  columns: [
-                    {
-                      label: 'User',
-                      column: { minWidth: '220px', flexGrow: 1 },
-                      renderCell: (row) => {
-                        return <UserAvatar user={row} />
-                      },
+              <Stack spacing={2}>
+                <DataGrid
+                  header={{
+                    actions: {
+                      label: 'Actions',
+                      width: '120px',
                     },
-                    {
-                      label: 'Roles',
-                      column: { width: '280px' },
-                      renderCell: (row) => {
-                        return (
-                          <Stack direction="row" spacing={1}>
-                            {row.roles.map((role) => {
-                              return (
-                                <Chip
-                                  key={role}
-                                  label={roleToDetails[role].label}
-                                  color={roleToDetails[role].color}
-                                />
-                              )
-                            })}
-                          </Stack>
-                        )
+                    columns: [
+                      {
+                        label: 'User',
+                        column: { minWidth: '220px', flexGrow: 1 },
+                        renderCell: (row) => {
+                          return <UserAvatar user={row} />
+                        },
                       },
-                    },
-                  ],
-                }}
-                items={users?.map((user) => ({
-                  ...user,
-                  meta: {
-                    key: user.id,
-                    actions: [
-                      <Button
-                        key="edit"
-                        color="info"
-                        onClick={() => {
-                          setSelected(user)
-                          setManageRolesDialogOpen(true)
-                        }}
-                      >
-                        Manage roles
-                      </Button>,
+                      {
+                        label: 'Roles',
+                        column: { width: '280px' },
+                        renderCell: (row) => {
+                          return (
+                            <Stack direction="row" spacing={1}>
+                              {row.roles.map((role) => {
+                                return (
+                                  <Chip
+                                    key={role}
+                                    label={roleToDetails[role].label}
+                                    color={roleToDetails[role].color}
+                                  />
+                                )
+                              })}
+                            </Stack>
+                          )
+                        },
+                      },
                     ],
-                  },
-                }))}
-              />
+                  }}
+                  items={users?.map((user) => ({
+                    ...user,
+                    meta: {
+                      key: user.id,
+                      actions: [
+                        <Button
+                          key="edit"
+                          color="info"
+                          onClick={() => {
+                            setSelected(user)
+                            setManageRolesDialogOpen(true)
+                          }}
+                        >
+                          Manage roles
+                        </Button>,
+                      ],
+                    },
+                  }))}
+                />
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 3,
+                    pt: 2,
+                    borderColor: 'divider',
+                  }}
+                >
+                  <FormControl size="small" sx={{ minWidth: 100 }}>
+                    <Select
+                      value={pageSize}
+                      onChange={(e) => handlePageSizeChange(e.target.value)}
+                      displayEmpty
+                    >
+                      <MenuItem value={10}>10 Rows</MenuItem>
+                      <MenuItem value={25}>25 Rows</MenuItem>
+                      <MenuItem value={50}>50 Rows</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <IconButton
+                        onClick={() => handlePageChange(page - 1)}
+                        disabled={page <= 1}
+                        size="small"
+                      >
+                        <ChevronLeftIcon />
+                      </IconButton>
+                      <Typography variant="body2">Page {page}</Typography>
+                      <IconButton
+                        onClick={() => handlePageChange(page + 1)}
+                        disabled={page >= pagination.totalPages}
+                        size="small"
+                      >
+                        <ChevronRightIcon />
+                      </IconButton>
+                    </Stack>
+                  </Stack>
+                </Box>
+              </Stack>
             </ScrollContainer>
           </Loading>
         </Stack>
@@ -336,9 +406,13 @@ const PageAdmin = () => {
         }}
         onChange={(updatedUser) => {
           mutate(
-            users.map((user) =>
-              user.id === updatedUser.id ? updatedUser : user,
-            ),
+            {
+              ...data,
+              users: users.map((user) =>
+                user.id === updatedUser.id ? updatedUser : user,
+              ),
+            },
+            false,
           )
         }}
       />
