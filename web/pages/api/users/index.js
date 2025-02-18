@@ -27,7 +27,9 @@ import { getUser } from '@/code/auth'
  * Used by SuperAdmin page and  AutoComplete Search Component when adding a professor to a group
  */
 const get = async (req, res, prisma) => {
-  const { search, role } = req.query
+  const { search, role, page = 1, pageSize = 10 } = req.query
+  const pageNumber = parseInt(page)
+  const itemsPerPage = parseInt(pageSize)
 
   if (!role) {
     // only super admin can view all users
@@ -71,24 +73,39 @@ const get = async (req, res, prisma) => {
         }
       : {}
 
-  const users = await prisma.user.findMany({
-    where: {
-      ...roleCondition,
-      ...searchCondition,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      image: true,
-      roles: true,
-    },
-    orderBy: {
-      name: 'asc',
+  const where = {
+    ...roleCondition,
+    ...searchCondition,
+  }
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        roles: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+      skip: (pageNumber - 1) * itemsPerPage,
+      take: itemsPerPage,
+    }),
+    prisma.user.count({ where }),
+  ])
+
+  res.status(200).json({
+    users,
+    pagination: {
+      total,
+      page: pageNumber,
+      pageSize: itemsPerPage,
+      totalPages: Math.ceil(total / itemsPerPage),
     },
   })
-
-  res.status(200).json(users)
 }
 
 export default withMethodHandler({
