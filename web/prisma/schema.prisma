@@ -131,6 +131,7 @@ model Question {
 
   title   String
   content String?
+  addendum String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

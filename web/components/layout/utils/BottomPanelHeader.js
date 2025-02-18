@@ -53,7 +53,7 @@ const BottomPanelHeader = ({ children, ...props }) => {
           size={'small'}
           onClick={toggleOpen}
           endIcon={
-            isPanelOpen ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />
+            <KeyboardArrowDownIcon />
           }
         >
           Hide

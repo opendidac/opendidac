@@ -30,6 +30,10 @@ import {
   IconButton,
   Tooltip,
   Box,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Button,
 } from '@mui/material'
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos'
@@ -65,6 +69,103 @@ import ResizableDrawer from '@/components/layout/utils/ResizableDrawer'
 import StudentResultsGrid from '../evaluation/phases/results/StudentResultsGrid'
 import ExportCSV from '../evaluation/phases/results/ExportCSV'
 import { saveGrading } from '../grading/utils'
+
+import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
+import BottomCollapsiblePanel from '@/components/layout/utils/BottomCollapsiblePanel'
+import BottomPanelHeader from '@/components/layout/utils/BottomPanelHeader'
+import BottomPanelContent from '@/components/layout/utils/BottomPanelContent'
+import { useBottomPanel } from '@/context/BottomPanelContext'
+import { BottomPanelProvider } from '@/context/BottomPanelContext'
+import UserHelpPopper from '@/components/feedback/UserHelpPopper'
+
+const QuestionViewWithAddendum = ({ 
+  order, 
+  points, 
+  question, 
+  totalPages,
+  groupScope,
+  onAddendumChange 
+}) => {
+  const [addendum, setAddendum] = useState(question.addendum || '')
+
+ 
+  const handleAddendumChange = useCallback((value) => {
+    setAddendum(value)
+    onAddendumChange(value)
+  }, [onAddendumChange])
+
+  return (
+    <BottomCollapsiblePanel
+      open={addendum?.length > 0}
+      width={"100%"}
+      bottomPanel={
+        <Stack>
+          <BottomAddendumPanel 
+            addendum={addendum} 
+            onAddendumChange={handleAddendumChange} 
+          />
+          <AddendumPanelContent 
+            groupScope={groupScope} 
+            addendum={addendum} 
+            onAddendumChange={handleAddendumChange} 
+          />
+        </Stack>
+      }
+    >
+      <QuestionView
+        order={order}
+        points={points}
+        question={question}
+        totalPages={totalPages}
+      />
+    </BottomCollapsiblePanel>
+  )
+}
+
+const BottomAddendumPanel = ({ addendum, onAddendumChange }) => {
+
+  const { openPanel } = useBottomPanel()
+
+  return (
+  <BottomPanelHeader>
+    <Stack direction="row" alignItems="center" justifyContent={"space-between"}>
+      <Button onClick={openPanel}>
+        {!addendum && <Typography variant="caption">Add new addendum</Typography>}
+      </Button> 
+      <UserHelpPopper label="What is an addendum?">
+        <Typography>
+          The purpose of the addendum is to provide additional information to the students after the grading.
+        </Typography>
+        <Typography>
+          The same addendum is visible to all students. It can be considered as a group feedback.
+        </Typography>
+      </UserHelpPopper>
+  
+    </Stack>
+  </BottomPanelHeader>
+  )
+}
+
+const AddendumPanelContent = ({ groupScope, addendum, onAddendumChange }) => {
+    
+  const { isPanelOpen } = useBottomPanel()
+
+  console.log("isPanelOpen", isPanelOpen)
+  
+  return (
+    <BottomPanelContent>
+      <Stack minHeight={"400px"} height={"100%"} pl={1} pr={1}>
+        <MarkdownEditor
+          title="Addendum"
+          groupScope={groupScope}
+          rawContent={addendum}
+          onChange={onAddendumChange}
+        />
+      </Stack>
+      </BottomPanelContent>
+  )
+}
+
 
 const PageGrading = () => {
   const router = useRouter()
@@ -212,19 +313,6 @@ const PageGrading = () => {
     await mutate(newEvaluationToQuestions, false)
   }, [groupScope, evaluationToQuestions, mutate, session])
 
-  const endGrading = useCallback(async () => {
-    setSaving(true)
-    await update(groupScope, evaluationId, {
-      phase: EvaluationPhase.FINISHED,
-    })
-      .then(() => {
-        router.push(`/${groupScope}/evaluations/${evaluationId}/finished`)
-      })
-      .catch(() => {
-        showSnackbar('Error', 'error')
-      })
-    setSaving(false)
-  }, [groupScope, evaluationId, router, showSnackbar])
 
   const nextParticipantOrQuestion = useCallback(async () => {
     let nextParticipantIndex =
@@ -351,127 +439,171 @@ const PageGrading = () => {
     [evaluationToQuestion, ready],
   )
 
+  const handleAddendumChange = useCallback(async (addendum) => {
+    if (!evaluationToQuestion) return
+
+    try {
+      const response = await fetch(
+        `/api/${groupScope}/evaluations/${evaluationId}/questions/${evaluationToQuestion.question.id}/addendum`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ addendum }),
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to update addendum')
+      }
+
+      // Update local state
+      const newEvaluationToQuestions = evaluationToQuestions.map(q => {
+        if (q.question.id === evaluationToQuestion.question.id) {
+          return {
+            ...q,
+            question: {
+              ...q.question,
+              addendum
+            }
+          }
+        }
+        return q
+      })
+      setEvaluationToQuestions(newEvaluationToQuestions)
+    } catch (error) {
+      showSnackbar('Failed to save addendum', 'error')
+    }
+  }, [evaluationToQuestion, evaluationToQuestions, groupScope, evaluationId, showSnackbar])
+
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
       <Loading
         errors={[errorEvaluation, errorQuestions]}
         loading={!evaluation || !data}
       >
-        <LayoutMain
-          hideLogo
-          header={
-            <Stack direction="row" alignItems="center">
-              <BackButton
-                backUrl={`/${groupScope}/evaluations/${evaluationId}`}
-              />
-              <Stack flex={1} sx={{ overflow: 'hidden' }}>
-                {ready && (
-                  <Paging
-                    items={questionPages}
-                    active={evaluationToQuestion.question}
-                    link={(_, index) =>
-                      `/${groupScope}/evaluations/${evaluationId}/grading/${
-                        index + 1
-                      }?participantId=${participantId}`
-                    }
-                  />
-                )}
-              </Stack>
-            </Stack>
-          }
-          padding={0}
-          spacing={2}
-        >
-          <LayoutSplitScreen
-            header={<MainMenu />}
-            leftPanel={
-              <Stack
-                direction="row"
-                sx={{ position: 'relative', height: '100%' }}
-              >
-                {evaluationToQuestion && (
-                  <QuestionView
-                    order={evaluationToQuestion.order}
-                    points={evaluationToQuestion.points}
-                    question={evaluationToQuestion.question}
-                    totalPages={evaluationToQuestions.length}
-                  />
-                )}
+        <BottomPanelProvider>
+          <LayoutMain
+            hideLogo
+            header={
+              <Stack direction="row" alignItems="center">
+                <BackButton
+                  backUrl={`/${groupScope}/evaluations/${evaluationId}`}
+                />
+                <Stack flex={1} sx={{ overflow: 'hidden' }}>
+                  {ready && (
+                    <Paging
+                      items={questionPages}
+                      active={evaluationToQuestion.question}
+                      link={(_, index) =>
+                        `/${groupScope}/evaluations/${evaluationId}/grading/${
+                          index + 1
+                        }?participantId=${participantId}`
+                      }
+                    />
+                  )}
+                </Stack>
               </Stack>
             }
-            rightWidth={75}
-            rightPanel={
-              <Stack
-                direction="row"
-                padding={1}
-                position="relative"
-                height="100%"
-              >
-                {ready && (
-                  <>
-                    <ParticipantNav
-                      participants={participants}
-                      active={participants.find(
-                        (participant) => participant.id === participantId,
-                      )}
-                      onParticipantClick={(participant) => {
-                        router.push(
-                          `/${groupScope}/evaluations/${evaluationId}/grading/${activeQuestion}?participantId=${participant.id}`,
-                        )
-                      }}
-                      isParticipantFilled={isParticipantFilled}
-                    />
-                    <Divider orientation="vertical" flexItem />
-                    <AnswerCompare
-                      student={student}
-                      evaluationToQuestion={evaluationToQuestion}
-                      solution={solution}
-                      answer={studentAnswer}
-                    />
-                  </>
-                )}
-              </Stack>
-            }
-            footer={
-              ready && (
+            padding={0}
+            spacing={2}
+          >
+            <LayoutSplitScreen
+              header={<MainMenu />}
+              leftPanel={
                 <Stack
                   direction="row"
-                  justifyContent="space-between"
-                  height="100px"
+                  position="relative"
+                  height="100%"
+                  width="100%"
                 >
-                  <GradingNextBack
-                    isFirst={
-                      participants.findIndex((p) => p.id === participantId) ===
-                        0 && parseInt(activeQuestion) === 0
-                    }
-                    onPrev={prevParticipantOrQuestion}
-                    onNext={nextParticipantOrQuestion}
-                  />
-                  <GradingSignOff
-                    loading={loading}
-                    answer={evaluationToQuestion.question.studentAnswer.find(
-                      (ans) => ans.user.id === participantId,
-                    )}
-                    maxPoints={evaluationToQuestion.points}
-                    onChange={onChangeGrading}
-                  />
-
-                  <SuccessRate
-                    value={getSignedSuccessRate(evaluationToQuestions)}
-                  />
-
-                  <GradingActions
-                    stats={getGradingStats(evaluationToQuestions)}
-                    loading={loading || saving}
-                    signOffAllAutograded={() =>
-                      setAutoGradeSignOffDialogOpen(true)
-                    }
-                  />
+                  {evaluationToQuestion && (
+                    <QuestionViewWithAddendum
+                      order={evaluationToQuestion.order}
+                      points={evaluationToQuestion.points}
+                      question={evaluationToQuestion.question}
+                      totalPages={evaluationToQuestions.length}
+                      groupScope={groupScope}
+                      onAddendumChange={handleAddendumChange}
+                    />
+                  )}
                 </Stack>
-              )
-            }
-          />
-        </LayoutMain>
+              }
+              rightWidth={75}
+              rightPanel={
+                <Stack
+                  direction="row"
+                  padding={1}
+                  position="relative"
+                  height="100%"
+                >
+                  {ready && (
+                    <>
+                      <ParticipantNav
+                        participants={participants}
+                        active={participants.find(
+                          (participant) => participant.id === participantId,
+                        )}
+                        onParticipantClick={(participant) => {
+                          router.push(
+                            `/${groupScope}/evaluations/${evaluationId}/grading/${activeQuestion}?participantId=${participant.id}`,
+                          )
+                        }}
+                        isParticipantFilled={isParticipantFilled}
+                      />
+                      <Divider orientation="vertical" flexItem />
+                      <AnswerCompare
+                        student={student}
+                        evaluationToQuestion={evaluationToQuestion}
+                        solution={solution}
+                        answer={studentAnswer}
+                      />
+                    </>
+                  )}
+                </Stack>
+              }
+              footer={
+                ready && (
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    height="100px"
+                  >
+                    <GradingNextBack
+                      isFirst={
+                        participants.findIndex((p) => p.id === participantId) ===
+                          0 && parseInt(activeQuestion) === 0
+                      }
+                      onPrev={prevParticipantOrQuestion}
+                      onNext={nextParticipantOrQuestion}
+                    />
+                    <GradingSignOff
+                      loading={loading}
+                      answer={evaluationToQuestion.question.studentAnswer.find(
+                        (ans) => ans.user.id === participantId,
+                      )}
+                      maxPoints={evaluationToQuestion.points}
+                      onChange={onChangeGrading}
+                    />
+
+                    <SuccessRate
+                      value={getSignedSuccessRate(evaluationToQuestions)}
+                    />
+
+                    <GradingActions
+                      stats={getGradingStats(evaluationToQuestions)}
+                      loading={loading || saving}
+                      signOffAllAutograded={() =>
+                        setAutoGradeSignOffDialogOpen(true)
+                      }
+                    />
+                  </Stack>
+                )
+              }
+            />
+          </LayoutMain>
+        </BottomPanelProvider>
         <DialogFeedback
           open={autoGradeSignOffDialogOpen}
           onClose={() => setAutoGradeSignOffDialogOpen(false)}
