@@ -31,6 +31,7 @@ import AnswerCompare from '../../answer/AnswerCompare'
 import GradingSignOff from '../grading/GradingSignOff'
 import { saveGrading } from '../grading/utils'
 import { useDebouncedCallback } from 'use-debounce'
+import QuestionAddendum from '../addendum/QuestionAddendum'
 
 const getFilledStatus = (studentAnswerStatus) => {
   switch (studentAnswerStatus) {
@@ -177,12 +178,30 @@ const PageProfConsult = () => {
             <LayoutSplitScreen
               leftPanel={
                 selected && (
-                  <QuestionView
-                    order={selected.order}
-                    points={selected.points}
-                    question={selected.question}
-                    totalPages={evaluationToQuestions.length}
-                  />
+                  <QuestionAddendum
+                    evaluationId={evaluationId}
+                    evaluationToQuestion={selected}
+                    groupScope={groupScope}
+                    onAddendumChanged={(value) => {
+                      const newEvaluationToQuestions = evaluationToQuestions.map(q => {
+                        if (q.questionId === selected.questionId) {
+                          return { 
+                            ...q, 
+                            addendum: value
+                          }
+                        }
+                        return q
+                      })
+                      setEvaluationToQuestions(newEvaluationToQuestions)
+                    }}
+                  >
+                    <QuestionView
+                      order={selected.order}
+                      points={selected.points}
+                      question={selected.question}
+                      totalPages={evaluationToQuestions.length}
+                    />
+                  </QuestionAddendum>
                 )
               }
               rightWidth={65}

@@ -18,7 +18,6 @@ import useSWR from 'swr'
 import { useRouter } from 'next/router'
 import {
   StudentQuestionGradingStatus,
-  EvaluationPhase,
   Role,
 } from '@prisma/client'
 
@@ -30,10 +29,6 @@ import {
   IconButton,
   Tooltip,
   Box,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Button,
 } from '@mui/material'
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos'
@@ -57,10 +52,6 @@ import Authorization from '@/components/security/Authorization'
 import QuestionView from '@/components/question/QuestionView'
 import AnswerCompare from '@/components/answer/AnswerCompare'
 
-import { useSnackbar } from '@/context/SnackbarContext'
-
-import { update } from './crud'
-
 import { getGradingStats, getSignedSuccessRate } from '../analytics/stats'
 
 import GradingSignOff from '../grading/GradingSignOff'
@@ -70,101 +61,9 @@ import StudentResultsGrid from '../evaluation/phases/results/StudentResultsGrid'
 import ExportCSV from '../evaluation/phases/results/ExportCSV'
 import { saveGrading } from '../grading/utils'
 
-import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
-import BottomCollapsiblePanel from '@/components/layout/utils/BottomCollapsiblePanel'
-import BottomPanelHeader from '@/components/layout/utils/BottomPanelHeader'
-import BottomPanelContent from '@/components/layout/utils/BottomPanelContent'
-import { useBottomPanel } from '@/context/BottomPanelContext'
 import { BottomPanelProvider } from '@/context/BottomPanelContext'
-import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 
-const QuestionViewWithAddendum = ({ 
-  order, 
-  points, 
-  question, 
-  totalPages,
-  groupScope,
-  onAddendumChange 
-}) => {
-  const [addendum, setAddendum] = useState(question.addendum || '')
-
- 
-  const handleAddendumChange = useCallback((value) => {
-    setAddendum(value)
-    onAddendumChange(value)
-  }, [onAddendumChange])
-
-  return (
-    <BottomCollapsiblePanel
-      open={addendum?.length > 0}
-      width={"100%"}
-      bottomPanel={
-        <Stack>
-          <BottomAddendumPanel 
-            addendum={addendum} 
-            onAddendumChange={handleAddendumChange} 
-          />
-          <AddendumPanelContent 
-            groupScope={groupScope} 
-            addendum={addendum} 
-            onAddendumChange={handleAddendumChange} 
-          />
-        </Stack>
-      }
-    >
-      <QuestionView
-        order={order}
-        points={points}
-        question={question}
-        totalPages={totalPages}
-      />
-    </BottomCollapsiblePanel>
-  )
-}
-
-const BottomAddendumPanel = ({ addendum, onAddendumChange }) => {
-
-  const { openPanel } = useBottomPanel()
-
-  return (
-  <BottomPanelHeader>
-    <Stack direction="row" alignItems="center" justifyContent={"space-between"}>
-      <Button onClick={openPanel}>
-        {!addendum && <Typography variant="caption">Add new addendum</Typography>}
-      </Button> 
-      <UserHelpPopper label="What is an addendum?">
-        <Typography>
-          The purpose of the addendum is to provide additional information to the students after the grading.
-        </Typography>
-        <Typography>
-          The same addendum is visible to all students. It can be considered as a group feedback.
-        </Typography>
-      </UserHelpPopper>
-  
-    </Stack>
-  </BottomPanelHeader>
-  )
-}
-
-const AddendumPanelContent = ({ groupScope, addendum, onAddendumChange }) => {
-    
-  const { isPanelOpen } = useBottomPanel()
-
-  console.log("isPanelOpen", isPanelOpen)
-  
-  return (
-    <BottomPanelContent>
-      <Stack minHeight={"400px"} height={"100%"} pl={1} pr={1}>
-        <MarkdownEditor
-          title="Addendum"
-          groupScope={groupScope}
-          rawContent={addendum}
-          onChange={onAddendumChange}
-        />
-      </Stack>
-      </BottomPanelContent>
-  )
-}
+import QuestionAddendum from '../addendum/QuestionAddendum'
 
 
 const PageGrading = () => {
@@ -173,7 +72,7 @@ const PageGrading = () => {
     router.query
 
   const { data: session } = useSession()
-  const { show: showSnackbar } = useSnackbar()
+
 
   const { data: evaluation, error: errorEvaluation } = useSWR(
     `/api/${groupScope}/evaluations/${evaluationId}`,
@@ -195,7 +94,7 @@ const PageGrading = () => {
 
   const [evaluationToQuestion, setEvaluationEvaluationToQuestion] = useState()
 
-  const [saving, setSaving] = useState(false)
+  
   const [loading, setLoading] = useState(false)
 
   const [autoGradeSignOffDialogOpen, setAutoGradeSignOffDialogOpen] =
@@ -439,44 +338,22 @@ const PageGrading = () => {
     [evaluationToQuestion, ready],
   )
 
-  const handleAddendumChange = useCallback(async (addendum) => {
-    if (!evaluationToQuestion) return
-
-    try {
-      const response = await fetch(
-        `/api/${groupScope}/evaluations/${evaluationId}/questions/${evaluationToQuestion.question.id}/addendum`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ addendum }),
+  const onAddendumChanged = useCallback((value) => {
+    const newEvaluationToQuestions = evaluationToQuestions.map(q => {
+      if (q.questionId === evaluationToQuestion.questionId) {
+        return { 
+          ...q, 
+          addendum: value
         }
-      )
-
-      if (!response.ok) {
-        throw new Error('Failed to update addendum')
       }
+      return q
+    })
+    setEvaluationToQuestions(newEvaluationToQuestions)
+  }, [evaluationToQuestion, evaluationToQuestions])
 
-      // Update local state
-      const newEvaluationToQuestions = evaluationToQuestions.map(q => {
-        if (q.question.id === evaluationToQuestion.question.id) {
-          return {
-            ...q,
-            question: {
-              ...q.question,
-              addendum
-            }
-          }
-        }
-        return q
-      })
-      setEvaluationToQuestions(newEvaluationToQuestions)
-    } catch (error) {
-      showSnackbar('Failed to save addendum', 'error')
-    }
-  }, [evaluationToQuestion, evaluationToQuestions, groupScope, evaluationId, showSnackbar])
+   
 
+  
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
       <Loading
@@ -519,14 +396,30 @@ const PageGrading = () => {
                   width="100%"
                 >
                   {evaluationToQuestion && (
-                    <QuestionViewWithAddendum
-                      order={evaluationToQuestion.order}
-                      points={evaluationToQuestion.points}
-                      question={evaluationToQuestion.question}
-                      totalPages={evaluationToQuestions.length}
+                    <QuestionAddendum
+                      evaluationId={evaluationId}
+                      evaluationToQuestion={evaluationToQuestion}
                       groupScope={groupScope}
-                      onAddendumChange={handleAddendumChange}
-                    />
+                      onAddendumChanged={(value) => {
+                        const newEvaluationToQuestions = evaluationToQuestions.map(q => {
+                          if (q.questionId === evaluationToQuestion.questionId) {
+                            return { 
+                              ...q, 
+                              addendum: value
+                            }
+                          }
+                          return q
+                        })
+                        setEvaluationToQuestions(newEvaluationToQuestions)
+                      }}
+                    >
+                      <QuestionView
+                        order={evaluationToQuestion.order}
+                        points={evaluationToQuestion.points}
+                        question={evaluationToQuestion.question}
+                        totalPages={evaluationToQuestions.length}
+                      />
+                    </QuestionAddendum>
                   )}
                 </Stack>
               }
@@ -593,7 +486,7 @@ const PageGrading = () => {
 
                     <GradingActions
                       stats={getGradingStats(evaluationToQuestions)}
-                      loading={loading || saving}
+                      loading={loading}
                       signOffAllAutograded={() =>
                         setAutoGradeSignOffDialogOpen(true)
                       }

@@ -131,7 +131,6 @@ model Question {
 
   title   String
   content String?
-  addendum String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -590,6 +589,7 @@ model EvaluationToQuestion {
 
   points Float @default(0)
   order  Int   @default(0)
+  addendum String?
 
   @@id([evaluationId, questionId])
 }

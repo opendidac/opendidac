@@ -19,9 +19,8 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { useBottomPanel } from '../../../context/BottomPanelContext'
 import { useTheme } from '@emotion/react'
 
-const BottomPanelHeader = ({ children, ...props }) => {
+const BottomPanelHeader = ({ children, showOpenButton = false, maxHeight, ...props }) => {
   const theme = useTheme()
-
   const { isPanelOpen, toggleOpen } = useBottomPanel()
 
   return (
@@ -34,6 +33,7 @@ const BottomPanelHeader = ({ children, ...props }) => {
       width={'100%'}
       pr={1}
       borderTop={`1px solid ${theme.palette.divider}`}
+      maxHeight={maxHeight}
       {...props}
     >
       <Box onClick={(e) => e.stopPropagation()}>
@@ -48,15 +48,15 @@ const BottomPanelHeader = ({ children, ...props }) => {
           {children}
         </Stack>
       </Box>
-      {isPanelOpen && (
+      {(isPanelOpen || showOpenButton) && (
         <Button
           size={'small'}
           onClick={toggleOpen}
           endIcon={
-            <KeyboardArrowDownIcon />
+            isPanelOpen ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />
           }
         >
-          Hide
+          {isPanelOpen ? 'Hide' : 'Open'}
         </Button>
       )}
     </Stack>

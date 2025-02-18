@@ -32,6 +32,7 @@ import { fetcher } from '../../../code/utils'
 import AnswerCompare from '@/components/answer/AnswerCompare'
 import Overlay from '@/components/ui/Overlay'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
+import QuestionAddendum from '../../evaluations/addendum/QuestionAddendum'
 
 const getFilledStatus = (studentAnswerStatus) => {
   switch (studentAnswerStatus) {
@@ -137,12 +138,18 @@ const PageConsult = () => {
                   <LayoutSplitScreen
                     leftPanel={
                       selected && (
-                        <QuestionView
-                          order={selected.order}
-                          points={selected.points}
-                          question={selected.question}
-                          totalPages={evaluationToQuestions.length}
-                        />
+                        <QuestionAddendum
+                          evaluationId={evaluationId}
+                          evaluationToQuestion={selected}
+                          readOnly={true}
+                        >
+                          <QuestionView
+                            order={selected.order}
+                            points={selected.points}
+                            question={selected.question}
+                            totalPages={evaluationToQuestions.length}
+                          />
+                        </QuestionAddendum>
                       )
                     }
                     rightWidth={65}
