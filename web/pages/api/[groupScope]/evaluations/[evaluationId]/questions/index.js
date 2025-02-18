@@ -39,7 +39,7 @@ const get = async (req, res, prisma) => {
       type: true,
       title: true,
       content: true,
-    }
+    },
   }
 
   if (withGradings === 'true') {
@@ -61,9 +61,9 @@ const get = async (req, res, prisma) => {
     include: {
       question: {
         include: questionIncludeClause(questionIncludeOptions),
-      }
+      },
     },
-    
+
     orderBy: {
       order: 'asc',
     },

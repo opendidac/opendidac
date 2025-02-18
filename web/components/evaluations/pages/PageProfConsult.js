@@ -183,15 +183,16 @@ const PageProfConsult = () => {
                     evaluationToQuestion={selected}
                     groupScope={groupScope}
                     onAddendumChanged={(value) => {
-                      const newEvaluationToQuestions = evaluationToQuestions.map(q => {
-                        if (q.questionId === selected.questionId) {
-                          return { 
-                            ...q, 
-                            addendum: value
+                      const newEvaluationToQuestions =
+                        evaluationToQuestions.map((q) => {
+                          if (q.questionId === selected.questionId) {
+                            return {
+                              ...q,
+                              addendum: value,
+                            }
                           }
-                        }
-                        return q
-                      })
+                          return q
+                        })
                       setEvaluationToQuestions(newEvaluationToQuestions)
                     }}
                   >

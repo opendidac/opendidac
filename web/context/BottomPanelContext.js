@@ -21,10 +21,10 @@ export const useBottomPanel = () => {
   return useContext(BottomPanelContext)
 }
 
-export const BottomPanelProvider = ({ 
-  initialOpen = false, 
-  onChange, 
-  children 
+export const BottomPanelProvider = ({
+  initialOpen = false,
+  onChange,
+  children,
 }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(initialOpen)
 

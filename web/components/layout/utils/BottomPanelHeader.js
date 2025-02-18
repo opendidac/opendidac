@@ -19,7 +19,12 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { useBottomPanel } from '../../../context/BottomPanelContext'
 import { useTheme } from '@emotion/react'
 
-const BottomPanelHeader = ({ children, showOpenButton = false, maxHeight, ...props }) => {
+const BottomPanelHeader = ({
+  children,
+  showOpenButton = false,
+  maxHeight,
+  ...props
+}) => {
   const theme = useTheme()
   const { isPanelOpen, toggleOpen } = useBottomPanel()
 

@@ -16,10 +16,7 @@
 import { useCallback, useEffect, useState, useMemo } from 'react'
 import useSWR from 'swr'
 import { useRouter } from 'next/router'
-import {
-  StudentQuestionGradingStatus,
-  Role,
-} from '@prisma/client'
+import { StudentQuestionGradingStatus, Role } from '@prisma/client'
 
 import {
   Stack,
@@ -65,14 +62,12 @@ import { BottomPanelProvider } from '@/context/BottomPanelContext'
 
 import QuestionAddendum from '../addendum/QuestionAddendum'
 
-
 const PageGrading = () => {
   const router = useRouter()
   const { groupScope, evaluationId, participantId, activeQuestion } =
     router.query
 
   const { data: session } = useSession()
-
 
   const { data: evaluation, error: errorEvaluation } = useSWR(
     `/api/${groupScope}/evaluations/${evaluationId}`,
@@ -94,7 +89,6 @@ const PageGrading = () => {
 
   const [evaluationToQuestion, setEvaluationEvaluationToQuestion] = useState()
 
-  
   const [loading, setLoading] = useState(false)
 
   const [autoGradeSignOffDialogOpen, setAutoGradeSignOffDialogOpen] =
@@ -211,7 +205,6 @@ const PageGrading = () => {
     setEvaluationToQuestions(newEvaluationToQuestions)
     await mutate(newEvaluationToQuestions, false)
   }, [groupScope, evaluationToQuestions, mutate, session])
-
 
   const nextParticipantOrQuestion = useCallback(async () => {
     let nextParticipantIndex =
@@ -338,22 +331,22 @@ const PageGrading = () => {
     [evaluationToQuestion, ready],
   )
 
-  const onAddendumChanged = useCallback((value) => {
-    const newEvaluationToQuestions = evaluationToQuestions.map(q => {
-      if (q.questionId === evaluationToQuestion.questionId) {
-        return { 
-          ...q, 
-          addendum: value
+  const onAddendumChanged = useCallback(
+    (value) => {
+      const newEvaluationToQuestions = evaluationToQuestions.map((q) => {
+        if (q.questionId === evaluationToQuestion.questionId) {
+          return {
+            ...q,
+            addendum: value,
+          }
         }
-      }
-      return q
-    })
-    setEvaluationToQuestions(newEvaluationToQuestions)
-  }, [evaluationToQuestion, evaluationToQuestions])
+        return q
+      })
+      setEvaluationToQuestions(newEvaluationToQuestions)
+    },
+    [evaluationToQuestion, evaluationToQuestions],
+  )
 
-   
-
-  
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
       <Loading
@@ -401,15 +394,18 @@ const PageGrading = () => {
                       evaluationToQuestion={evaluationToQuestion}
                       groupScope={groupScope}
                       onAddendumChanged={(value) => {
-                        const newEvaluationToQuestions = evaluationToQuestions.map(q => {
-                          if (q.questionId === evaluationToQuestion.questionId) {
-                            return { 
-                              ...q, 
-                              addendum: value
+                        const newEvaluationToQuestions =
+                          evaluationToQuestions.map((q) => {
+                            if (
+                              q.questionId === evaluationToQuestion.questionId
+                            ) {
+                              return {
+                                ...q,
+                                addendum: value,
+                              }
                             }
-                          }
-                          return q
-                        })
+                            return q
+                          })
                         setEvaluationToQuestions(newEvaluationToQuestions)
                       }}
                     >
@@ -465,8 +461,9 @@ const PageGrading = () => {
                   >
                     <GradingNextBack
                       isFirst={
-                        participants.findIndex((p) => p.id === participantId) ===
-                          0 && parseInt(activeQuestion) === 0
+                        participants.findIndex(
+                          (p) => p.id === participantId,
+                        ) === 0 && parseInt(activeQuestion) === 0
                       }
                       onPrev={prevParticipantOrQuestion}
                       onNext={nextParticipantOrQuestion}
