@@ -60,7 +60,7 @@ import { saveGrading } from '../grading/utils'
 
 import { BottomPanelProvider } from '@/context/BottomPanelContext'
 
-import QuestionAddendum from '../addendum/QuestionAddendum'
+import Addendum from '../addendum/Addendum'
 
 const PageGrading = () => {
   const router = useRouter()
@@ -389,33 +389,20 @@ const PageGrading = () => {
                   width="100%"
                 >
                   {evaluationToQuestion && (
-                    <QuestionAddendum
-                      evaluationId={evaluationId}
-                      evaluationToQuestion={evaluationToQuestion}
-                      groupScope={groupScope}
-                      onAddendumChanged={(value) => {
-                        const newEvaluationToQuestions =
-                          evaluationToQuestions.map((q) => {
-                            if (
-                              q.questionId === evaluationToQuestion.questionId
-                            ) {
-                              return {
-                                ...q,
-                                addendum: value,
-                              }
-                            }
-                            return q
-                          })
-                        setEvaluationToQuestions(newEvaluationToQuestions)
-                      }}
-                    >
-                      <QuestionView
-                        order={evaluationToQuestion.order}
-                        points={evaluationToQuestion.points}
-                        question={evaluationToQuestion.question}
-                        totalPages={evaluationToQuestions.length}
-                      />
-                    </QuestionAddendum>
+                    <QuestionView
+                      order={evaluationToQuestion.order}
+                      points={evaluationToQuestion.points}
+                      question={evaluationToQuestion.question}
+                      totalPages={evaluationToQuestions.length}
+                      above={
+                        <Addendum
+                          groupScope={groupScope}
+                          evaluationId={evaluationId}
+                          evaluationToQuestion={evaluationToQuestion}
+                          onAddendumChanged={onAddendumChanged}
+                        />
+                      }
+                    />
                   )}
                 </Stack>
               }

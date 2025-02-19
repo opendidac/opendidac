@@ -19,7 +19,14 @@ import Column from '../layout/utils/Column'
 import ScrollContainer from '../layout/ScrollContainer'
 import MarkdownViewer from '../input/markdown/MarkdownViewer'
 
-const QuestionView = ({ order, points, question, totalPages }) => {
+const QuestionView = ({
+  order,
+  points,
+  question,
+  totalPages,
+  above,
+  below,
+}) => {
   return (
     <Stack
       height={'100%'}
@@ -53,11 +60,13 @@ const QuestionView = ({ order, points, question, totalPages }) => {
       <Stack flex={1} spacing={1}>
         <Typography variant="h6">{question.title}</Typography>
         <ScrollContainer>
+          {above}
           <MarkdownViewer
             id={'questions-view-' + question.id}
             readOnly
             content={question.content}
           />
+          {below}
         </ScrollContainer>
       </Stack>
     </Stack>
