@@ -99,7 +99,9 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "testMatch": ["**/*.test.js"],
+    "testMatch": [
+      "**/*.test.js"
+    ],
     "collectCoverageFrom": [
       "**/*.{js,jsx}",
       "!**/node_modules/**",

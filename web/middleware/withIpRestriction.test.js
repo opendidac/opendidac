@@ -15,6 +15,7 @@
  */
 
 import { withIpRestriction } from './withIpRestriction'
+import { Role } from '@prisma/client'
 
 describe('withIpRestriction Middleware', () => {
   let mockHandler
@@ -42,7 +43,7 @@ describe('withIpRestriction Middleware', () => {
 
   it('should call handler for non-student users regardless of IP', async () => {
     mockReq.evaluation = { ipRestrictions: '192.168.1.0/24' }
-    mockReq.user = { roles: ['TEACHER'] }
+    mockReq.user = { roles: [Role.PROFESSOR] }
     mockReq.socket.remoteAddress = '10.0.0.1'
 
     await withIpRestriction(mockHandler)(mockReq, mockRes)
@@ -51,7 +52,7 @@ describe('withIpRestriction Middleware', () => {
 
   describe('IP Restrictions', () => {
     beforeEach(() => {
-      mockReq.user = { roles: ['STUDENT'] }
+      mockReq.user = { roles: [Role.STUDENT] }
     })
 
     it('should allow access when IP matches single IP restriction', async () => {
@@ -95,7 +96,8 @@ describe('withIpRestriction Middleware', () => {
       await withIpRestriction(mockHandler)(mockReq, mockRes)
       expect(mockRes.status).toHaveBeenCalledWith(403)
       expect(mockRes.json).toHaveBeenCalledWith({
-        message: 'Access denied: Your IP address is not allowed to access this evaluation',
+        message:
+          'Access denied: Your IP address is not allowed to access this evaluation',
       })
       expect(mockHandler).not.toHaveBeenCalled()
     })
@@ -108,4 +110,4 @@ describe('withIpRestriction Middleware', () => {
       expect(mockHandler).toHaveBeenCalledWith(mockReq, mockRes)
     })
   })
-}) 
+})
