@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { withIpRestriction } from './withIpRestriction'
 import { Role } from '@prisma/client'
 
@@ -23,10 +24,10 @@ describe('withIpRestriction Middleware', () => {
   let mockRes
 
   beforeEach(() => {
-    mockHandler = jest.fn()
+    mockHandler = vi.fn()
     mockRes = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn(),
     }
     mockReq = {
       headers: {},
