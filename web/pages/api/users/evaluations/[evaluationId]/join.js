@@ -18,6 +18,7 @@ import {
   withMethodHandler,
   withAuthorization,
 } from '@/middleware/withAuthorization'
+import { withIpRestriction } from '@/middleware/withIpRestriction'
 import {
   Role,
   EvaluationPhase,
@@ -326,5 +327,7 @@ const createDatabaseTypeSpecificData = async (
 }
 
 export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR, Role.STUDENT]),
+  POST: withIpRestriction(
+    withAuthorization(withPrisma(post), [Role.PROFESSOR, Role.STUDENT]),
+  ),
 })

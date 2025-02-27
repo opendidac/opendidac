@@ -19,6 +19,7 @@ import {
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
+import { withIpRestriction } from '@/middleware/withIpRestriction'
 
 import { getUser } from '@/code/auth'
 import { questionIncludeClause, IncludeStrategy } from '@/code/questions'
@@ -97,5 +98,7 @@ const get = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  GET: withIpRestriction(
+    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  ),
 })
