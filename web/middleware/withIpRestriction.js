@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { Role } from '@prisma/client'
+
 const isIpInRange = (ip, range) => {
   // Handle CIDR notation
   if (range.includes('/')) {
@@ -63,7 +65,7 @@ export const withIpRestriction = (handler) => {
     }
 
     // Skip IP check for non-student users
-    if (req.user && req.user.roles && !req.user.roles.includes('STUDENT')) {
+    if (req.user && req.user.roles && !req.user.roles.includes(Role.STUDENT)) {
       return handler(req, res)
     }
 
