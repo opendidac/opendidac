@@ -26,7 +26,6 @@ const ExportCSV = ({ evaluation, results, attendance }) => {
 
   console.log('ExportCSV participants', participants)
   console.log('ExportCSV results', results)
-  const dotToComma = (value) => value.toString().replace('.', ',')
 
   const exportAsCSV = useCallback(() => {
     let csv = `Name${COLUMN_SEPARATOR}Email${COLUMN_SEPARATOR}Success Rate${COLUMN_SEPARATOR}Total Points${COLUMN_SEPARATOR}Obtained Points${COLUMN_SEPARATOR}`
@@ -42,9 +41,7 @@ const ExportCSV = ({ evaluation, results, attendance }) => {
 
       csv += `${participant.name}${COLUMN_SEPARATOR}${
         participant.email
-      }${COLUMN_SEPARATOR}${`${participantSuccessRate} %`}${COLUMN_SEPARATOR}${dotToComma(
-        totalPoints,
-      )}${COLUMN_SEPARATOR}${dotToComma(obtainedPoints)}${COLUMN_SEPARATOR}`
+      }${COLUMN_SEPARATOR}${`${participantSuccessRate} %`}${COLUMN_SEPARATOR}${totalPoints}${COLUMN_SEPARATOR}${obtainedPoints}${COLUMN_SEPARATOR}`
 
       results.forEach((jstq) => {
         const studentAnswer = jstq.question.studentAnswer.find(
@@ -53,9 +50,7 @@ const ExportCSV = ({ evaluation, results, attendance }) => {
 
         let pointsObtained = '-'
         if (studentAnswer?.studentGrading) {
-          pointsObtained = dotToComma(
-            studentAnswer.studentGrading.pointsObtained,
-          )
+          pointsObtained = studentAnswer.studentGrading.pointsObtained
         }
 
         csv += `"${pointsObtained}"${COLUMN_SEPARATOR}`
