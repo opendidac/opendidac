@@ -29,7 +29,7 @@ const get = async (req, res, prisma) => {
   const { email } = await getUser(req, res)
 
   if (!(await isFinished(evaluationId, prisma))) {
-    res.status(400).json({ message: 'Exam session is not yet finished' })
+    res.status(400).json({ message: 'Exam session is not finished' })
     return
   }
 
