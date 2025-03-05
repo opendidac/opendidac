@@ -15,6 +15,7 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { Box, Button, Stack, TextField, Typography } from '@mui/material'
+import ToggleWithLabel from '../input/ToggleWithLabel'
 
 import { toArray as typesToArray } from './types.js'
 import languages from '../../code/languages.json'
@@ -28,6 +29,7 @@ const types = typesToArray()
 const initialFilters = {
   search: '',
   tags: [],
+  includeArchived: false,
   questionTypes: types
     .map((type) => type.value)
     .reduce((obj, type) => ({ ...obj, [type]: true }), {}),
@@ -41,6 +43,9 @@ const applyFilter = async (toApply) => {
   query.questionTypes = Object.keys(query.questionTypes).filter(
     (key) => query.questionTypes[key],
   )
+  if (query.includeArchived) {
+    query.includeArchived = 'true'
+  }
   if (!toApply.questionTypes.code) {
     delete query.codeLanguages
   }
@@ -61,6 +66,7 @@ const queryStringToFilter = (queryString) => {
     tags: params.get('tags')
       ? params.get('tags').split(',')
       : initialFilters.tags,
+    includeArchived: params.get('includeArchived') === 'true',
     questionTypes: { ...initialFilters.questionTypes },
     codeLanguages: { ...initialFilters.codeLanguages },
   }
@@ -157,6 +163,8 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
           onChange={(e) => updateFilter('search', e.target.value)}
         />
 
+        
+
         <TagsSelector
           label={'Tags'}
           size={'small'}
@@ -168,6 +176,11 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
 
         <QuestionTypeSelection filter={filter} updateFilter={updateFilter} />
         <LanguageSelection filter={filter} updateFilter={updateFilter} />
+        <ToggleWithLabel
+          label="Show archived"
+          checked={filter.includeArchived}
+          onChange={(e) => updateFilter('includeArchived', e.target.checked)}
+        />
         <Stack direction={'row'} spacing={2}>
           <Button variant="contained" color="info" fullWidth type="submit">
             {' '}

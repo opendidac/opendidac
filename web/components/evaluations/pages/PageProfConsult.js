@@ -53,7 +53,7 @@ const PageProfConsult = () => {
   const {
     data: evaluation,
     error,
-    mutate,
+    mutate, 
   } = useSWR(
     `/api/${groupScope}/evaluations/${evaluationId}/consult/${userEmail}`,
     groupScope && evaluationId && userEmail ? fetcher : null,

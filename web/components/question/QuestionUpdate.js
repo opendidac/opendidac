@@ -16,7 +16,7 @@
 import useSWR from 'swr'
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Stack, TextField, Button, Typography } from '@mui/material'
+import { Stack, TextField, Button, Typography, Tooltip } from '@mui/material'
 import MarkdownEditor from '../input/markdown/MarkdownEditor'
 
 import LayoutSplitScreen from '../layout/LayoutSplitScreen'
@@ -30,6 +30,7 @@ import { useRouter } from 'next/router'
 import Loading from '../feedback/Loading'
 import { fetcher } from '../../code/utils'
 import DialogFeedback from '../feedback/DialogFeedback'
+import { QuestionStatus } from '@prisma/client'
 
 const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
   const router = useRouter()
@@ -47,8 +48,8 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
     },
   )
 
-  const [deleteQuestionDialogOpen, setDeleteQuestionDialogOpen] =
-    useState(false)
+  const [archiveQuestionDialogOpen, setArchiveQuestionDialogOpen] = useState(false)
+  const [deleteQuestionDialogOpen, setDeleteQuestionDialogOpen] = useState(false)
 
   const [title, setTitle] = useState(question?.title || '')
 
@@ -80,7 +81,7 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
     [groupScope, showSnackbar, onUpdate],
   )
 
-  const deleteQuestion = useCallback(async () => {
+  const archiveQuestion = useCallback(async () => {
     await fetch(`/api/${groupScope}/questions`, {
       method: 'DELETE',
       headers: {
@@ -93,7 +94,27 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
       .then(async () => {
         await mutate()
         onDelete && onDelete(question)
-        showSnackbar('Question deleted', 'success')
+        showSnackbar('Question archived', 'success')
+        await router.push(`/${groupScope}/questions`)
+      })
+      .catch(() => {
+        showSnackbar('Error archiving question', 'error')
+      })
+  }, [question, showSnackbar, router, mutate, onDelete, groupScope])
+
+  const deleteQuestion = useCallback(async () => {
+    await fetch(`/api/${groupScope}/questions`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ question }),
+    })
+      .then((res) => res.json())
+      .then(async () => {
+        onDelete && onDelete(question)
+        showSnackbar('Question permanently deleted', 'success')
         await router.push(`/${groupScope}/questions`)
       })
       .catch(() => {
@@ -166,20 +187,42 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
                 width={'100%'}
                 pb={1}
                 alignItems={'center'}
+                spacing={2}
               >
-                <Button
-                  startIcon={
-                    <Image
-                      alt="Delete"
-                      src="/svg/icons/delete.svg"
-                      width="18"
-                      height="18"
-                    />
-                  }
-                  onClick={() => setDeleteQuestionDialogOpen(true)}
-                >
-                  Delete this question
-                </Button>
+                {question.status === QuestionStatus.ACTIVE ? (
+                  <Tooltip title="Add to archive">
+                    <Button
+                      startIcon={
+                        <Image
+                          alt="Archive"
+                          src="/svg/icons/archive.svg"
+                          width="18"
+                          height="18"
+                        />
+                      }
+                      onClick={() => setArchiveQuestionDialogOpen(true)}
+                    >
+                      Archive this question
+                    </Button>
+                  </Tooltip>
+                ) : (
+                  <Tooltip title="Delete permanently">
+                    <Button
+                      color="error"
+                      startIcon={
+                        <Image
+                          alt="Delete"
+                          src="/svg/icons/delete.svg"
+                          width="18"
+                          height="18"
+                        />
+                      }
+                      onClick={() => setDeleteQuestionDialogOpen(true)}
+                    >
+                      Delete permanently
+                    </Button>
+                  </Tooltip>
+                )}
               </Stack>
             </Stack>
           )
@@ -203,11 +246,22 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
         }
       />
       <DialogFeedback
-        open={deleteQuestionDialogOpen}
-        title="Delete question"
+        open={archiveQuestionDialogOpen}
+        title="Archive question"
         content={
           <Typography variant="body1">
-            You are about to delete this question. Are you sure?
+            You are about to archive this question. Are you sure?
+          </Typography>
+        }
+        onClose={() => setArchiveQuestionDialogOpen(false)}
+        onConfirm={archiveQuestion}
+      />
+      <DialogFeedback
+        open={deleteQuestionDialogOpen}
+        title="Delete question permanently"
+        content={
+          <Typography variant="body1">
+            You are about to permanently delete this question. This action cannot be undone. Are you sure?
           </Typography>
         }
         onClose={() => setDeleteQuestionDialogOpen(false)}

@@ -38,6 +38,7 @@ const DataGrid = ({
   enableSelection = false,
   selection = [],
   onSelectionChange,
+  rowStyle,
 }) => {
   const all = items.every((item) => selection?.includes(item.id))
   const intermediate =
@@ -89,6 +90,7 @@ const DataGrid = ({
             enableSelection={enableSelection}
             selection={selection}
             onSelectionChange={onSelectionChange}
+            rowStyle={rowStyle}
           />
         ))}
     </List>
@@ -101,6 +103,7 @@ const ChosenListItemContent = ({
   enableSelection,
   selection,
   onSelectionChange,
+  rowStyle,
 }) => {
   if (item.meta?.onClick) {
     return (
@@ -112,6 +115,7 @@ const ChosenListItemContent = ({
         onSelectionChange={onSelectionChange}
         onClick={item.meta.onClick}
         key={item.meta.key}
+        rowStyle={rowStyle}
       />
     )
   } else if (item.meta?.linkHref) {
@@ -124,6 +128,7 @@ const ChosenListItemContent = ({
         onSelectionChange={onSelectionChange}
         href={item.meta.linkHref}
         key={item.meta.key}
+        rowStyle={rowStyle}
       />
     )
   } else {
@@ -135,6 +140,7 @@ const ChosenListItemContent = ({
         enableSelection={enableSelection}
         selection={selection}
         onSelectionChange={onSelectionChange}
+        rowStyle={rowStyle}
       />
     )
   }
@@ -147,11 +153,16 @@ const LinkHrefListItem = ({
   enableSelection,
   selection,
   onSelectionChange,
+  rowStyle,
 }) => {
   const router = useRouter()
 
   return (
-    <ListItemButton divider onClick={async () => await router.push(href)}>
+    <ListItemButton 
+      divider 
+      onClick={async () => await router.push(href)}
+      sx={rowStyle ? rowStyle(item) : undefined}
+    >
       <ListItemContent
         item={item}
         header={header}
@@ -170,9 +181,16 @@ const ClickableListItem = ({
   enableSelection,
   selection,
   onSelectionChange,
+  rowStyle,
 }) => (
   <Box onClick={onClick}>
-    <ListItemButton divider sx={{ cursor: 'pointer' }}>
+    <ListItemButton 
+      divider 
+      sx={{ 
+        cursor: 'pointer',
+        ...(rowStyle ? rowStyle(item) : {}),
+      }}
+    >
       <ListItemContent
         item={item}
         header={header}
@@ -190,8 +208,12 @@ const NormalListItem = ({
   enableSelection,
   selection,
   onSelectionChange,
+  rowStyle,
 }) => (
-  <ListItem divider>
+  <ListItem 
+    divider
+    sx={rowStyle ? rowStyle(item) : undefined}
+  >
     <ListItemContent
       item={item}
       header={header}

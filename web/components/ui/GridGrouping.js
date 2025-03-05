@@ -116,6 +116,7 @@ const GridGrouping = ({
   selection = [],
   enableSelection,
   onSelectionChange,
+  rowStyle,
 }) => {
   const theme = useTheme()
 
@@ -222,6 +223,7 @@ const GridGrouping = ({
                   header={header}
                   enableSelection={enableSelection}
                   selection={groups[groupKey].selection}
+                  rowStyle={rowStyle}
                   onSelectionChange={(selection) => {
                     handleSelectionChange(groupKey, selection)
                   }}

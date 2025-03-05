@@ -86,6 +86,7 @@ const put = async (req, res, prisma) => {
     data: {
       title: question.title,
       content: question.content,
+      status: question.status,
       [question.type]: {
         update: questionTypeSpecific(question.type, question),
       },
@@ -104,9 +105,14 @@ const put = async (req, res, prisma) => {
   res.status(200).json(updatedQuestion)
 }
 
+const del = async (req, res, prisma) => {
+  // Implementation of delete function
+}
+
 export default withGroupScope(
   withMethodHandler({
     GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
     PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
+    DELETE: withAuthorization(withPrisma(del), [Role.PROFESSOR]),
   }),
 )

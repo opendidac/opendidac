@@ -21,7 +21,7 @@ import LanguageIcon from '@/components/question/type_specific/code/LanguageIcon'
 import GridGrouping from '@/components/ui/GridGrouping'
 import { IconButton, Tooltip, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
-import { QuestionType } from '@prisma/client'
+import { QuestionType, QuestionStatus } from '@prisma/client'
 import { useRouter } from 'next/router'
 import React from 'react'
 import { weeksAgo } from './utils'
@@ -51,6 +51,10 @@ const QuestionsGrid = ({
         setSelection(newSelection)
       }}
       actions={actions}
+      rowStyle={(item) => ({
+        borderLeft: item.status === QuestionStatus.ARCHIVED ? '4px solid' : 'none',
+        borderLeftColor: item.status === QuestionStatus.ARCHIVED ? 'error.main' : 'none',
+      })}
       header={{
         actions: {
           label: 'Actions',
