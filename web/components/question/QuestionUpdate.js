@@ -82,13 +82,12 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
   )
 
   const archiveQuestion = useCallback(async () => {
-    await fetch(`/api/${groupScope}/questions`, {
-      method: 'DELETE',
+    await fetch(`/api/${groupScope}/questions/${question.id}/archive`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify({ question }),
     })
       .then((res) => res.json())
       .then(async () => {
@@ -103,13 +102,12 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
   }, [question, showSnackbar, router, mutate, onDelete, groupScope])
 
   const deleteQuestion = useCallback(async () => {
-    await fetch(`/api/${groupScope}/questions`, {
+    await fetch(`/api/${groupScope}/questions/${question.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify({ question }),
     })
       .then((res) => res.json())
       .then(async () => {
@@ -120,7 +118,7 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
       .catch(() => {
         showSnackbar('Error deleting question', 'error')
       })
-  }, [question, showSnackbar, router, mutate, onDelete, groupScope])
+  }, [question, showSnackbar, router, onDelete, groupScope])
 
   const onChangeQuestion = useCallback(
     async (question) => {

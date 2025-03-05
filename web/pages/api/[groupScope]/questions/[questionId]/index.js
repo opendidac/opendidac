@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Role } from '@prisma/client'
+import {
+  Role,
+  QuestionStatus,
+} from '@prisma/client'
 import { questionIncludeClause, questionTypeSpecific } from '@/code/questions'
 import {
   withAuthorization,
@@ -54,18 +57,7 @@ const put = async (req, res, prisma) => {
   const { groupScope } = req.query
   const { question } = req.body
 
-  /*
-    TODO : Think of how to refactor this and reuse across all group scoped endpoints
-    This is an example of checking the group scope for a question. The same mechanism can be used for:
-    - multiple choice options
-    - code files
-    - code tests
-    - database queries
-    - etc..
-    Other top level resources that are group scoped are:
-    - collections
-    - evaluation
-  */
+  
   // Step 1: Retrieve the question
   const questionToBeUpdated = await prisma.question.findUnique({
     where: { id: question.id },
@@ -106,7 +98,29 @@ const put = async (req, res, prisma) => {
 }
 
 const del = async (req, res, prisma) => {
-  // Implementation of delete function
+  const { questionId } = req.query
+  const question = await prisma.question.findUnique({
+    where: { id: questionId },
+  })
+
+  if (!question) {
+    res.status(404).json({ message: 'Question not found' })
+    return
+  }
+
+  if (question.status === QuestionStatus.ACTIVE) {
+    res.status(400).json({ message: 'Cannot delete active question. Archive it first.' })
+    return
+  }
+  
+  // Permanently delete the archived question
+  const deletedQuestion = await prisma.question.delete({
+    where: {
+      id: questionId,
+    },
+  })
+
+  res.status(200).json(deletedQuestion)
 }
 
 export default withGroupScope(

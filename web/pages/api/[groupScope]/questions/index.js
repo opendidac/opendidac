@@ -202,79 +202,6 @@ const post = async (req, res, prisma) => {
   res.status(200).json(createdQuestion)
 }
 
-const del = async (req, res, prisma) => {
-  const { question } = req.body
-
-  if (!question?.id) {
-    res.status(400).json({ message: 'Bad Request' })
-    return
-  }
-
-  if (question.status === QuestionStatus.ACTIVE) {
-    // Archive the question
-    const archivedQuestion = await prisma.question.update({
-      where: {
-        id: question.id,
-      },
-      data: {
-        status: QuestionStatus.ARCHIVED,
-      },
-    })
-    res.status(200).json(archivedQuestion)
-  } else {
-    // Permanently delete the archived question
-    // find all the collections that contain this question
-    const collections = await prisma.collection.findMany({
-      where: {
-        collectionToQuestions: {
-          some: {
-            questionId: question.id,
-          },
-        },
-      },
-      include: {
-        collectionToQuestions: true,
-      },
-    })
-
-    let deletedQuestion = undefined
-    await prisma.$transaction(async (prisma) => {
-      // decrease the order of CollectionToQuestion for all orders greater than the order of the question in the collection
-      for (const collection of collections) {
-        // filter the collectionToQuestions that have a greater order than the question
-        const collectionToQuestions = collection.collectionToQuestions.filter(
-          (ctq) =>
-            ctq.order >
-            collection.collectionToQuestions.find(
-              (ctq) => ctq.questionId === question.id,
-            ).order,
-        )
-        for (const ctq of collectionToQuestions) {
-          await prisma.collectionToQuestion.update({
-            where: {
-              collectionId_questionId: {
-                collectionId: ctq.collectionId,
-                questionId: ctq.questionId,
-              },
-            },
-            data: {
-              order: ctq.order - 1,
-            },
-          })
-        }
-      }
-      // delete the question
-      deletedQuestion = await prisma.question.delete({
-        where: {
-          id: question.id,
-        },
-      })
-    })
-
-    res.status(200).json(deletedQuestion)
-  }
-}
-
 const defaultCodeBasedOnLanguageAndType = (
   language,
   codeQuestionType,
@@ -324,6 +251,5 @@ export default withGroupScope(
   withMethodHandler({
     GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
     POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
-    DELETE: withAuthorization(withPrisma(del), [Role.PROFESSOR]),
   }),
 )

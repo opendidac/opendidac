@@ -52,7 +52,7 @@ const QuestionsGrid = ({
       }}
       actions={actions}
       rowStyle={(item) => ({
-        borderLeft: item.status === QuestionStatus.ARCHIVED ? '3px solid' : 'none',
+        borderLeft: item.status === QuestionStatus.ARCHIVED ? '2px solid' : 'none',
         borderLeftColor: item.status === QuestionStatus.ARCHIVED ? 'error.main' : 'none',
       })}
       header={{

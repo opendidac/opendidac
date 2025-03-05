@@ -109,7 +109,7 @@ const queryStringToFilter = (queryString) => {
   return filter
 }
 
-const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
+const QuestionFilter = ({ withArchived, filters: initial, onApplyFilter }) => {
   const tagsContext = useTags() // Get the whole context first
 
   const { tags: allTags = [] } = tagsContext // Destructure safely
@@ -176,11 +176,13 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
 
         <QuestionTypeSelection filter={filter} updateFilter={updateFilter} />
         <LanguageSelection filter={filter} updateFilter={updateFilter} />
-        <ToggleWithLabel
-          label="Show archived"
-          checked={filter.includeArchived}
+        {withArchived && (
+          <ToggleWithLabel
+            label="Show Archive"
+            checked={filter.includeArchived}
           onChange={(e) => updateFilter('includeArchived', e.target.checked)}
-        />
+          />
+        )}
         <Stack direction={'row'} spacing={2}>
           <Button variant="contained" color="info" fullWidth type="submit">
             {' '}
