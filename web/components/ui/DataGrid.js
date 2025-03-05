@@ -158,8 +158,8 @@ const LinkHrefListItem = ({
   const router = useRouter()
 
   return (
-    <ListItemButton 
-      divider 
+    <ListItemButton
+      divider
       onClick={async () => await router.push(href)}
       sx={rowStyle ? rowStyle(item) : undefined}
     >
@@ -184,9 +184,9 @@ const ClickableListItem = ({
   rowStyle,
 }) => (
   <Box onClick={onClick}>
-    <ListItemButton 
-      divider 
-      sx={{ 
+    <ListItemButton
+      divider
+      sx={{
         cursor: 'pointer',
         ...(rowStyle ? rowStyle(item) : {}),
       }}
@@ -210,10 +210,7 @@ const NormalListItem = ({
   onSelectionChange,
   rowStyle,
 }) => (
-  <ListItem 
-    divider
-    sx={rowStyle ? rowStyle(item) : undefined}
-  >
+  <ListItem divider sx={rowStyle ? rowStyle(item) : undefined}>
     <ListItemContent
       item={item}
       header={header}

@@ -114,7 +114,7 @@ const PageList = () => {
           <LayoutSplitScreen
             leftPanel={
               <QuestionFilter
-                withArchived={true} 
+                withArchived={true}
                 filters={queryString}
                 onApplyFilter={setQueryString}
               />

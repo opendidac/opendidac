@@ -46,7 +46,14 @@ const environments = languages.environments
  */
 
 const get = async (req, res, prisma) => {
-  let { groupScope, search, tags, questionTypes, codeLanguages, includeArchived } = req.query
+  let {
+    groupScope,
+    search,
+    tags,
+    questionTypes,
+    codeLanguages,
+    includeArchived,
+  } = req.query
 
   questionTypes = questionTypes
     ? questionTypes.split(',').map((type) => QuestionType[type])
@@ -63,9 +70,10 @@ const get = async (req, res, prisma) => {
       source: {
         in: [QuestionSource.BANK, QuestionSource.COPY],
       },
-      status: includeArchived === 'true' 
-        ? { in: [QuestionStatus.ACTIVE, QuestionStatus.ARCHIVED] }
-        : QuestionStatus.ACTIVE,
+      status:
+        includeArchived === 'true'
+          ? { in: [QuestionStatus.ACTIVE, QuestionStatus.ARCHIVED] }
+          : QuestionStatus.ACTIVE,
       AND: [],
     },
   }

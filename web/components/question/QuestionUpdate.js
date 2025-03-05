@@ -48,8 +48,10 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
     },
   )
 
-  const [archiveQuestionDialogOpen, setArchiveQuestionDialogOpen] = useState(false)
-  const [deleteQuestionDialogOpen, setDeleteQuestionDialogOpen] = useState(false)
+  const [archiveQuestionDialogOpen, setArchiveQuestionDialogOpen] =
+    useState(false)
+  const [deleteQuestionDialogOpen, setDeleteQuestionDialogOpen] =
+    useState(false)
 
   const [title, setTitle] = useState(question?.title || '')
 
@@ -259,7 +261,8 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
         title="Delete question permanently"
         content={
           <Typography variant="body1">
-            You are about to permanently delete this question. This action cannot be undone. Are you sure?
+            You are about to permanently delete this question. This action
+            cannot be undone. Are you sure?
           </Typography>
         }
         onClose={() => setDeleteQuestionDialogOpen(false)}

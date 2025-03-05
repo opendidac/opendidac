@@ -13,11 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  Role,
-  QuestionStatus,
-  EvaluationPhase,
-} from '@prisma/client'
+import { Role, QuestionStatus, EvaluationPhase } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
@@ -87,7 +83,7 @@ const archive = async (req, res, prisma) => {
         })
       }
     }
-    
+
     // Remove from evaluations in allowed phases
     await prisma.evaluationToQuestion.deleteMany({
       where: {
@@ -120,4 +116,4 @@ export default withGroupScope(
   withMethodHandler({
     POST: withAuthorization(withPrisma(archive), [Role.PROFESSOR]),
   }),
-) 
+)

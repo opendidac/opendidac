@@ -163,8 +163,6 @@ const QuestionFilter = ({ withArchived, filters: initial, onApplyFilter }) => {
           onChange={(e) => updateFilter('search', e.target.value)}
         />
 
-        
-
         <TagsSelector
           label={'Tags'}
           size={'small'}
@@ -180,7 +178,7 @@ const QuestionFilter = ({ withArchived, filters: initial, onApplyFilter }) => {
           <ToggleWithLabel
             label="Show Archive"
             checked={filter.includeArchived}
-          onChange={(e) => updateFilter('includeArchived', e.target.checked)}
+            onChange={(e) => updateFilter('includeArchived', e.target.checked)}
           />
         )}
         <Stack direction={'row'} spacing={2}>

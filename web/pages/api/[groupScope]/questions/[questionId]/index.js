@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  Role,
-  QuestionStatus,
-} from '@prisma/client'
+import { Role, QuestionStatus } from '@prisma/client'
 import { questionIncludeClause, questionTypeSpecific } from '@/code/questions'
 import {
   withAuthorization,
@@ -57,7 +54,6 @@ const put = async (req, res, prisma) => {
   const { groupScope } = req.query
   const { question } = req.body
 
-  
   // Step 1: Retrieve the question
   const questionToBeUpdated = await prisma.question.findUnique({
     where: { id: question.id },
@@ -109,10 +105,12 @@ const del = async (req, res, prisma) => {
   }
 
   if (question.status === QuestionStatus.ACTIVE) {
-    res.status(400).json({ message: 'Cannot delete active question. Archive it first.' })
+    res
+      .status(400)
+      .json({ message: 'Cannot delete active question. Archive it first.' })
     return
   }
-  
+
   // Permanently delete the archived question
   const deletedQuestion = await prisma.question.delete({
     where: {
