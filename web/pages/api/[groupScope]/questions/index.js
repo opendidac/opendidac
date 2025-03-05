@@ -90,14 +90,16 @@ const get = async (req, res, prisma) => {
 
   if (tags.length > 0) {
     where.where.AND.push({
-      questionToTag: {
-        some: {
-          label: {
-            in: tags,
-            mode: 'insensitive',
+      AND: tags.map(tag => ({
+        questionToTag: {
+          some: {
+            label: {
+              equals: tag,
+              mode: 'insensitive',
+            },
           },
         },
-      },
+      })),
     })
   }
 
