@@ -35,7 +35,7 @@ const TestCaseResults = ({ tests }) => {
                   <Typography
                     sx={{ color: t.passed ? 'success.main' : 'error.main' }}
                   >
-                    {'Test Case ' + (i + 1)}
+                    {'Test ' + (i + 1)}
                   </Typography>
                 }
                 value={i}

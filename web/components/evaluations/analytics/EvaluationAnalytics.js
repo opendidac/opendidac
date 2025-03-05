@@ -54,10 +54,12 @@ const EvaluationAnalytics = ({
 
 const questionTypeToLegend = {
   [QuestionType.multipleChoice]: [
-    { color: 'info', tooltip: 'Students chose this option' },
+    { color: 'success', tooltip: 'Correct option chosen by students' },
+    { color: 'error', tooltip: 'Incorrect option chosen by students' },
   ],
   [QuestionType.trueFalse]: [
-    { color: 'info', tooltip: 'Students chose this option' },
+    { color: 'success', tooltip: 'Correct answer chosen by students' },
+    { color: 'error', tooltip: 'Incorrect answer chosen by students' },
   ],
   [QuestionType.code]: {
     [CodeQuestionType.codeWriting]: [
@@ -100,6 +102,7 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
             ...option,
             percentage:
               maxValue > 0 ? Math.round((option.chosen / maxValue) * 100) : 0,
+            color: option.isCorrect ? 'success' : 'error',
           }))
           break
         }
@@ -112,6 +115,14 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
             maxValue > 0
               ? Math.round((data[question.type].false.chosen / maxValue) * 100)
               : 0
+
+          // Assign colors to true/false based on correctness
+          data[question.type].true.color = data[question.type].true.isTrue
+            ? 'success'
+            : 'error'
+          data[question.type].false.color = data[question.type].false.isTrue
+            ? 'success'
+            : 'error'
           break
         }
         case QuestionType.code: {
@@ -288,7 +299,7 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
                   segments={[
                     {
                       percent: option.percentage,
-                      color: 'info',
+                      color: option.color,
                       tooltip: `${option.text} [${option.chosen}]`,
                     },
                   ]}
@@ -304,7 +315,7 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
                   segments={[
                     {
                       percent: questionData[questionData.type].true.percentage,
-                      color: 'info',
+                      color: questionData[questionData.type].true.color,
                       tooltip: 'Students chose true',
                     },
                   ]}
@@ -315,7 +326,7 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
                   segments={[
                     {
                       percent: questionData[questionData.type].false.percentage,
-                      color: 'info',
+                      color: questionData[questionData.type].false.color,
                       tooltip: 'Students chose false',
                     },
                   ]}

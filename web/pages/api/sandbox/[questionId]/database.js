@@ -51,40 +51,56 @@ const post = async (req, res, prisma) => {
     (dbToSolQuery) => dbToSolQuery.query.content,
   )
 
+  // Run sandbox DB first
   const result = await runSandboxDB({
     image: database.image,
     queries: queries,
   })
 
+  // Run SQLFluff for all queries that need linting before the transaction
+  const lintResults = await Promise.all(
+    database.solutionQueries.map(async ({ query }) => {
+      if (!query.lintActive) return null
+
+      try {
+        const lintResult = await runSQLFluffSandbox({
+          sql: query.content,
+          rules: query.lintRules,
+        })
+        return {
+          queryId: query.id,
+          lintResult: lintResult.violations,
+        }
+      } catch (e) {
+        console.log('Lint Sandbox Error', e)
+        return {
+          queryId: query.id,
+          lintResult: Prisma.JsonNull,
+        }
+      }
+    }),
+  )
+
+  // Now run the transaction with all results ready
   await prisma.$transaction(async (prisma) => {
-    // for each query, upsert the DatabaseQueryOutput in the database
+    // Update lint results first
+    for (const lintResult of lintResults) {
+      if (!lintResult) continue
+
+      await prisma.databaseQuery.update({
+        where: {
+          id: lintResult.queryId,
+        },
+        data: {
+          lintResult: lintResult.lintResult,
+        },
+      })
+    }
+
+    // Then handle sandbox outputs
     for (let i = 0; i < database.solutionQueries.length; i++) {
       const query = database.solutionQueries[i].query
       const output = result[i]
-
-      if (query.lintActive) {
-        let lintResult
-
-        try {
-          // run the lint sandbox
-          lintResult = await runSQLFluffSandbox({
-            sql: query.content,
-            rules: query.lintRules,
-          })
-        } catch (e) {
-          console.log('Lint Sandbox Error', e)
-        }
-
-        // update the DatabaseQuery with the lint result
-        await prisma.databaseQuery.update({
-          where: {
-            id: query.id,
-          },
-          data: {
-            lintResult: !lintResult ? Prisma.JsonNull : lintResult.violations,
-          },
-        })
-      }
 
       const databaseToSolutionQuery =
         await prisma.databaseToSolutionQuery.findUnique({
@@ -102,25 +118,20 @@ const post = async (req, res, prisma) => {
       const existingOutput = databaseToSolutionQuery.output
 
       if (output) {
-        // output can be null if some of the previous queries failed
         const outputData = {
           output: output,
           type: output.type,
           status: output.status,
         }
-        // we got an output for this query
+
         if (existingOutput) {
-          // update existing output
           await prisma.databaseQueryOutput.update({
             where: {
               id: existingOutput.id,
             },
-            data: {
-              ...outputData,
-            },
+            data: outputData,
           })
         } else {
-          // create new output and connect it to the solution query
           await prisma.databaseQueryOutput.create({
             data: {
               ...outputData,
@@ -133,7 +144,6 @@ const post = async (req, res, prisma) => {
                 },
               },
               query: {
-                // this relation is needed for the output to be deleted when the query is deleted
                 connect: {
                   id: query.id,
                 },
@@ -141,15 +151,12 @@ const post = async (req, res, prisma) => {
             },
           })
         }
-      } else {
-        // some previous queries failed, lets delete the output of the next queries
-        if (existingOutput) {
-          await prisma.databaseQueryOutput.delete({
-            where: {
-              id: existingOutput.id,
-            },
-          })
-        }
+      } else if (existingOutput) {
+        await prisma.databaseQueryOutput.delete({
+          where: {
+            id: existingOutput.id,
+          },
+        })
       }
     }
   })

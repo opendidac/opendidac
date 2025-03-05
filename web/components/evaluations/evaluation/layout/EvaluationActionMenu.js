@@ -136,7 +136,6 @@ const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
       },
       body: JSON.stringify({ phase: nextPhase }),
     }).then((response) => {
-      console.log('response', response)
       if (response.ok) {
         onPhaseChange()
         showSnackbar('Phase changed', 'success')

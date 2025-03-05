@@ -101,7 +101,15 @@ export const StudentOnEvaluationProvider = ({ children }) => {
     if (evaluationToQuestions) {
       const pages = evaluationToQuestions.map((jtq) => ({
         id: jtq.question.id,
-        label: `Q${jtq.order + 1}`,
+        label: (
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <span>{`Q${jtq.order + 1}`}</span>
+            <Typography
+              variant="caption"
+              sx={{ textTransform: 'none' }}
+            >{`(${jtq.points} pts)`}</Typography>
+          </Stack>
+        ),
         tooltip: `${jtq.question.type} "${jtq.question.title}" - ${jtq.points} points`,
         fillable: true,
         state: getFilledStatus(jtq.question.studentAnswer[0].status),

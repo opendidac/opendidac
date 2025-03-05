@@ -18,8 +18,7 @@ import { runSandbox } from './runSandboxTC.js'
 
 export const runSQLFluffSandbox = async ({ sql, rules = '' }) => {
   const response = await runSandbox({
-    image:
-      'ghcr.io/heigvd-teaching-tools/database-sandbox-image/sqlfluff-linter',
+    image: 'ghcr.io/opendidac/database-sandbox-image/sqlfluff-linter',
     files: [
       {
         path: '.sqlfluff',

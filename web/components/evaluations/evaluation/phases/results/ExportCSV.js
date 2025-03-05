@@ -24,8 +24,6 @@ const LINE_SEPARATOR = '\r'
 const ExportCSV = ({ evaluation, results, attendance }) => {
   const participants = attendance.registered.map((r) => r.user)
 
-  console.log('ExportCSV participants', participants)
-  console.log('ExportCSV results', results)
   const dotToComma = (value) => value.toString().replace('.', ',')
 
   const exportAsCSV = useCallback(() => {

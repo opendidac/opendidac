@@ -31,6 +31,7 @@ import AnswerCompare from '../../answer/AnswerCompare'
 import GradingSignOff from '../grading/GradingSignOff'
 import { saveGrading } from '../grading/utils'
 import { useDebouncedCallback } from 'use-debounce'
+import Addendum from '../addendum/Addendum'
 
 const getFilledStatus = (studentAnswerStatus) => {
   switch (studentAnswerStatus) {
@@ -47,7 +48,6 @@ const getFilledStatus = (studentAnswerStatus) => {
 
 const PageProfConsult = () => {
   const router = useRouter()
-
   const { groupScope, evaluationId, userEmail, questionPage } = router.query
 
   const {
@@ -144,6 +144,20 @@ const PageProfConsult = () => {
     [evaluationToQuestions, selected],
   )
 
+  const onAddendumChanged = useCallback(
+    (value) => {
+      setEvaluationToQuestions(
+        evaluationToQuestions.map((q) => {
+          if (q.questionId === selected.questionId) {
+            return { ...q, addendum: value }
+          }
+          return q
+        }),
+      )
+    },
+    [evaluationToQuestions, selected],
+  )
+
   const readOnly = evaluation?.phase === EvaluationPhase.IN_PROGRESS
 
   return (
@@ -182,6 +196,14 @@ const PageProfConsult = () => {
                     points={selected.points}
                     question={selected.question}
                     totalPages={evaluationToQuestions.length}
+                    above={
+                      <Addendum
+                        groupScope={groupScope}
+                        evaluationId={evaluationId}
+                        evaluationToQuestion={selected}
+                        onAddendumChanged={onAddendumChanged}
+                      />
+                    }
                   />
                 )
               }

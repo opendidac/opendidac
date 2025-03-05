@@ -28,7 +28,15 @@ const MonoSpaceTextField = styled(TextField)({
   },
 })
 
-const SnippetEditor = ({ index, snippet, language, onChange, onDelete }) => {
+const SnippetEditor = ({
+  index,
+  snippet,
+  language,
+  isOutputEditable,
+  onSnippetChange,
+  onOutputChange,
+  onDelete,
+}) => {
   const [code, setCode] = useState(snippet.snippet)
   const [output, setOutput] = useState(snippet.output)
 
@@ -59,7 +67,7 @@ const SnippetEditor = ({ index, snippet, language, onChange, onDelete }) => {
         onChange={(code) => {
           setCode(code)
           setOutput('')
-          onChange(code)
+          onSnippetChange(code)
         }}
       />
       <Box px={1}>
@@ -72,9 +80,13 @@ const SnippetEditor = ({ index, snippet, language, onChange, onDelete }) => {
           required
           fullWidth
           InputProps={{
-            readOnly: true,
+            readOnly: !isOutputEditable,
           }}
           error={output === '' || output == null}
+          onChange={(ev) => {
+            setOutput(ev.target.value)
+            onOutputChange(ev.target.value)
+          }}
           helperText={
             output === '' || output == null
               ? 'Dont forget to run the snippets to get the output'

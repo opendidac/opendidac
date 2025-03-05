@@ -20,7 +20,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 import { questionIncludeClause, IncludeStrategy } from '@/code/questions'
 import { isFinished } from './questions/[questionId]/answers/utils'
 
@@ -29,7 +29,7 @@ const get = async (req, res, prisma) => {
   const { email } = await getUser(req, res)
 
   if (!(await isFinished(evaluationId, prisma))) {
-    res.status(400).json({ message: 'Exam session is not yet finished' })
+    res.status(400).json({ message: 'Exam session is not finished' })
     return
   }
 

@@ -44,8 +44,6 @@ export const getSignedSuccessRate = (evaluationToQuestions) => {
 }
 
 export const getObtainedPoints = (evaluationToQuestions, participant) => {
-  console.log('getObtainedPoints evaluationToQuestions', participant)
-
   return evaluationToQuestions.reduce((acc, { question }) => {
     let studentGrading = question.studentAnswer.find(
       (sa) => sa.user.id === participant.id,
@@ -117,6 +115,7 @@ export const typeSpecificStats = (question) => {
           label: `O${index + 1}`,
           text: option.text,
           tooltip: option.text,
+          isCorrect: option.isCorrect,
           chosen,
         }
       })
@@ -142,9 +141,11 @@ export const typeSpecificStats = (question) => {
       return {
         true: {
           chosen: trueChosen,
+          isTrue: question.trueFalse.isTrue,
         },
         false: {
           chosen: falseChosen,
+          isTrue: !question.trueFalse.isTrue,
         },
       }
     case QuestionType.code:

@@ -19,7 +19,7 @@ import {
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 
 /** Create the annotation for a student answer
  *
