@@ -28,8 +28,8 @@ import {
 // https://www.npmjs.com/package/testcontainers
 // https://github.com/apocas/dockerode
 
-const BEFOREALL_TIMEOUT = 10000
-const EXECUTION_TIMEOUT = 3000
+const BEFOREALL_TIMEOUT = 30000
+const EXECUTION_TIMEOUT = 5000
 const MAX_OUTPUT_SIZE_PER_EXEC_KB = 32
 
 export const runSandbox = async ({
