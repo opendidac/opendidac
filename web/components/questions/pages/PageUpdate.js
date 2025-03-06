@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 import { useRouter } from 'next/router'
-
 import { Box } from '@mui/material'
-
 import LayoutMain from '../../layout/LayoutMain'
-
 import { Role } from '@prisma/client'
 import Authorization from '../../security/Authorization'
 import QuestionUpdate from '../../question/QuestionUpdate'
-
 import BackButton from '../../layout/BackButton'
 
 const PageUpdate = () => {
   const router = useRouter()
-  const { groupScope } = router.query
+  const { groupScope, from } = router.query
+
+  // Ensure a safe relative URL
+  const backUrl =
+    from && from.startsWith('/')
+      ? decodeURIComponent(from)
+      : `/${groupScope}/questions`
+
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
-      <LayoutMain
-        hideLogo
-        header={<BackButton backUrl={`/${groupScope}/questions`} />}
-      >
+      <LayoutMain hideLogo header={<BackButton backUrl={backUrl} />}>
         <Box width="100%" height="100%" pt={1}>
           <QuestionUpdate
-            groupScope={router.query.groupScope}
+            groupScope={groupScope}
             questionId={router.query.questionId}
           />
         </Box>

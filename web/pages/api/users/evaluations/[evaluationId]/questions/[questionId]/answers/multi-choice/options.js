@@ -30,7 +30,7 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 
 const addOrRemoveOption = withEvaluationPhase(
   [EvaluationPhase.IN_PROGRESS],

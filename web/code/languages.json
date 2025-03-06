@@ -48,7 +48,7 @@
           "value": "unitTests",
           "description": "Validate the student code with standard I/O tests, CUnit tests and regular expressions",
           "setup": {
-            "image": "ghcr.io/heigvd-teaching-tools/code-check-image/cpp-cunit:latest",
+            "image": "ghcr.io/opendidac/code-check-image/cpp-cunit:latest",
             "beforeAll": "cd src && make all -s",
             "testCases": [
               {
@@ -205,7 +205,7 @@
           "value": "unitTests",
           "description": "Validate the student code with standard I/O tests, CUnit tests and regular expressions",
           "setup": {
-            "image": "ghcr.io/heigvd-teaching-tools/code-check-image/cpp-cunit:latest",
+            "image": "ghcr.io/opendidac/code-check-image/cpp-cunit:latest",
             "beforeAll": "cd src && make all -s",
             "testCases": [
               {
@@ -295,7 +295,7 @@
       "codeReading": {
         "context": "#include <stdio.h>\n#include <string.h>\n#include <ctype.h>\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\nint main() {\n    char functionName[100];\n    scanf(\"%s\", functionName);\n    {{SNIPPET_FUNCTION_CALLS}}\n    return 0;\n}",
         "snippetWrapperFunctionSignature": "void {{SNIPPET_FUNCTION_NAME}}(){\n{{SNIPPET_FUNCTION_BODY}}\n}",
-        "snippetFunctionCallTemplate": "if (strcmp(functionName, \"{{SNIPPET_FUNCTION_NAME}}\") == 0) { {{SNIPPET_FUNCTION_NAME}}(); }",
+        "snippetFunctionCallTemplate": "if (strcmp(functionName, \"{{SNIPPET_FUNCTION_NAME}}\") == 0) { {{SNIPPET_FUNCTION_NAME}}(); }\n",
         "snippets": [
           {
             "snippet": "char s[] = \"hello, world\";\nfor (int i = 0; s[i]; i++) s[i] = toupper(s[i]);\nprintf(\"%s\", s);",
@@ -361,7 +361,7 @@
           "value": "unitTests",
           "description": "Validate the student code with standard I/O tests, JUnit tests and regular expressions",
           "setup": {
-            "image": "ghcr.io/heigvd-teaching-tools/code-check-image/java-junit:latest",
+            "image": "ghcr.io/opendidac/code-check-image/java-junit:latest",
             "beforeAll": "cd src && javac -cp .:/opt/java/junit-4.13.2.jar:/opt/java/hamcrest-core-1.3.jar *.java",
             "testCases": [
               {
@@ -435,7 +435,7 @@
         }
       ],
       "codeReading": {
-        "context": "import java.util.Scanner;\n\npublic class Main {\n  \n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\n   public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        String functionName = scanner.nextLine();\n        {{SNIPPET_FUNCTION_CALLS}}\n        scanner.close();\n    }\n}",
+        "context": "import java.util.Scanner;\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\npublic class Main {\n  \n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\n   public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        String functionName = scanner.nextLine();\n        {{SNIPPET_FUNCTION_CALLS}}\n        scanner.close();\n    }\n}",
         "snippetWrapperFunctionSignature": "private static void {{SNIPPET_FUNCTION_NAME}}(){\n{{SNIPPET_FUNCTION_BODY}}\n}",
         "snippetFunctionCallTemplate": "if (functionName.equals(\"{{SNIPPET_FUNCTION_NAME}}\")) { {{SNIPPET_FUNCTION_NAME}}(); }\n",
         "snippets": [
@@ -503,7 +503,7 @@
           "value": "unitTests",
           "description": "Validate the student code with standard I/O tests, nodejs unit tests, and regular expressions",
           "setup": {
-            "image": "ghcr.io/heigvd-teaching-tools/code-check-image/node-test:latest",
+            "image": "ghcr.io/opendidac/code-check-image/node-test:latest",
             "testCases": [
               {
                 "exec": "node /src/main.js",
@@ -569,10 +569,10 @@
       "codeReading": {
         "context": "\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\nfunction main() {\n    const readline = require('readline');\n    const rl = readline.createInterface({\n        input: process.stdin,\n        output: process.stdout\n    });\n    rl.on('line', (functionName) => {\n        {{SNIPPET_FUNCTION_CALLS}}\n        rl.close();\n    });\n}\nmain();",
         "snippetWrapperFunctionSignature": "function {{SNIPPET_FUNCTION_NAME}}(){\n{{SNIPPET_FUNCTION_BODY}}\n}",
-        "snippetFunctionCallTemplate": "if (functionName === '{{SNIPPET_FUNCTION_NAME}}') { {{SNIPPET_FUNCTION_NAME}}(); }\n",
+        "snippetFunctionCallTemplate": "if functionName === '{{SNIPPET_FUNCTION_NAME}}') { {{SNIPPET_FUNCTION_NAME}}(); }\n",
         "snippets": [
           {
-            "snippet": "let s = 'hello, world';\ns = s.toUpperCase();\nconsole.log(s);",
+            "snippet": "let s = 'hello, world'\ns = s.toUpperCase();\nconsole.log(s);",
             "output": "HELLO, WORLD\n"
           },
           {
@@ -580,11 +580,11 @@
             "output": "0\n1\n2\n"
           },
           {
-            "snippet": "let i = 11;\nwhile (i > 4) {\n    i -= 2;\n    console.log(i + ' ');\n}",
-            "output": "9 \n7 \n5 \n3 \n"
+            "snippet": "let i = 11\nwhile i > 4 do\n  i -= 2\n  console.log(i + ' ')",
+            "output": "9 7 5 3 "
           },
           {
-            "snippet": "let str = '';\nfor (let c = 'A'; c <= 'C'; c = String.fromCharCode(c.charCodeAt(0) + 1)) {\n    str = str + c + str;\n}\nconsole.log(str);",
+            "snippet": "let str = ''\nfor (let c = 'A'; c <= 'C'; c = String.fromCharCode(c.charCodeAt(0) + 1)) {\n    str = str + c + str\n}\nconsole.log(str)",
             "output": "ABACABA\n"
           }
         ]
@@ -635,7 +635,7 @@
           "value": "unitTests",
           "description": "Validate the student code with standard I/O tests, pytest unit tests, and regular expressions",
           "setup": {
-            "image": "ghcr.io/heigvd-teaching-tools/code-check-image/python-pytest:latest",
+            "image": "ghcr.io/opendidac/code-check-image/python-pytest:latest",
             "testCases": [
               {
                 "exec": "python /src/main.py",
@@ -701,7 +701,7 @@
       "codeReading": {
         "context": "import sys\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\ndef main():\n   functionName = sys.stdin.read().strip()\n   {{SNIPPET_FUNCTION_CALLS}}\n\nif __name__ == '__main__':\n   main()",
         "snippetWrapperFunctionSignature": "def {{SNIPPET_FUNCTION_NAME}}():\n{{SNIPPET_FUNCTION_BODY}}",
-        "snippetFunctionCallTemplate": "if functionName == '{{SNIPPET_FUNCTION_NAME}}':\n   {{SNIPPET_FUNCTION_NAME}}()\n",
+        "snippetFunctionCallTemplate": "if functionName == \"{{SNIPPET_FUNCTION_NAME}}\" then\n  {{SNIPPET_FUNCTION_NAME}}()",
         "snippets": [
           {
             "snippet": "s = 'hello, world'\ns = s.upper()\nprint(s)",
@@ -777,7 +777,7 @@
             "output": "0\n1\n2\n"
           },
           {
-            "snippet": "i := 11\nfor i > 4 {\n\ti -= 2\n\tfmt.Printf(\"%d \", i)\n}",
+            "snippet": "i := 11\nwhile i > 4 do\n  i -= 2\n  fmt.Printf(\"%d \", i)",
             "output": "9 7 5 3 "
           },
           {
@@ -842,7 +842,7 @@
             "output": "0\n1\n2\n"
           },
           {
-            "snippet": "var i = 11\nwhile i > 4 do\n  i -= 2\n  print(s\"$i \")",
+            "snippet": "var i = 11\nwhile i > 4 do\n  i -= 2\n  fmt.Printf(\"%d \", i)",
             "output": "9 7 5 3 "
           },
           {

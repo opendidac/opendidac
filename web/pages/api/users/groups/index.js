@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Role } from '@prisma/client'
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 import {
   withAuthorization,
   withMethodHandler,
