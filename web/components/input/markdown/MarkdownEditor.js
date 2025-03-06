@@ -136,10 +136,7 @@ const MarkdownEditor = ({
         alignItems="center"
         justifyContent={'space-between'}
       >
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="body1">{title}</Typography>
-          <Typography variant="caption">(markdown)</Typography>
-        </Stack>
+        {title && <Typography variant="body1">{title}</Typography>}
         {withUpload && <UserHelp />}
       </Stack>
       <Stack flex={1}>

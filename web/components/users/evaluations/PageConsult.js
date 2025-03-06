@@ -32,6 +32,7 @@ import { fetcher } from '../../../code/utils'
 import AnswerCompare from '@/components/answer/AnswerCompare'
 import Overlay from '@/components/ui/Overlay'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
+import Addendum from '@/components/evaluations/addendum/Addendum'
 
 const getFilledStatus = (studentAnswerStatus) => {
   switch (studentAnswerStatus) {
@@ -142,6 +143,12 @@ const PageConsult = () => {
                           points={selected.points}
                           question={selected.question}
                           totalPages={evaluationToQuestions.length}
+                          above={
+                            <Addendum
+                              evaluationToQuestion={selected}
+                              readOnly={true}
+                            />
+                          }
                         />
                       )
                     }

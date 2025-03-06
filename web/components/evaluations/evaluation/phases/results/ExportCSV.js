@@ -18,14 +18,11 @@ import { Button } from '@mui/material'
 import Image from 'next/image'
 import { useCallback } from 'react'
 
-const COLUMN_SEPARATOR = ';'
+const COLUMN_SEPARATOR = ','
 const LINE_SEPARATOR = '\r'
 
 const ExportCSV = ({ evaluation, results, attendance }) => {
   const participants = attendance.registered.map((r) => r.user)
-
-  console.log('ExportCSV participants', participants)
-  console.log('ExportCSV results', results)
 
   const exportAsCSV = useCallback(() => {
     let csv = `Name${COLUMN_SEPARATOR}Email${COLUMN_SEPARATOR}Success Rate${COLUMN_SEPARATOR}Total Points${COLUMN_SEPARATOR}Obtained Points${COLUMN_SEPARATOR}`

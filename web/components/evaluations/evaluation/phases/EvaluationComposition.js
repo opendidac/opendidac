@@ -35,6 +35,7 @@ import { EvaluationPhase } from '@prisma/client'
 import QuestionIncludeDrawer from './composition/QuestionIncludeDrawer'
 import { useTheme } from '@emotion/react'
 import EvaluationTitleBar from '../layout/EvaluationTitleBar'
+import { useRouter } from 'next/router'
 
 const EvaluationComposition = ({
   groupScope,
@@ -220,6 +221,8 @@ const QuestionItem = ({
   onDelete,
   readOnly = false,
 }) => {
+  const router = useRouter()
+
   const deleteCollectionToQuestion = useCallback(
     async (toDelete) => {
       if (readOnly) return // prevent deletion in read-only mode
@@ -302,26 +305,54 @@ const QuestionItem = ({
       </Stack>
       {indicator && indicator}
 
-      <Stack minWidth={70} width={70} justifyContent={'flex-end'}>
+      <Stack
+        minWidth={100}
+        width={100}
+        justifyContent={'flex-end'}
+        direction={'row'}
+        spacing={1}
+        alignItems={'center'}
+      >
         {readOnly ? (
           <Typography variant="body2">
             {evaluationToQuestion.points} pts
           </Typography>
         ) : (
-          <DecimalInput
-            value={evaluationToQuestion.points}
-            variant="standard"
-            rightAdornement={'pts'}
-            onChange={async (value) => {
-              await debounceSaveCollectionToQuestion(
-                evaluationToQuestion.order,
-                {
-                  ...evaluationToQuestion,
-                  points: value,
-                },
-              )
-            }}
-          />
+          <>
+            <Tooltip title="Update in new page">
+              <IconButton
+                onClick={async (ev) => {
+                  ev.preventDefault()
+                  ev.stopPropagation()
+                  const currentPath = router.asPath // Capture current relative URL
+                  await router.push(
+                    `/${groupScope}/questions/${evaluationToQuestion?.question.id}?from=${encodeURIComponent(currentPath)}`,
+                  )
+                }}
+              >
+                <Image
+                  alt="Update in new page"
+                  src="/svg/icons/update.svg"
+                  width={16}
+                  height={16}
+                />
+              </IconButton>
+            </Tooltip>
+            <DecimalInput
+              value={evaluationToQuestion.points}
+              variant="standard"
+              rightAdornement={'pts'}
+              onChange={async (value) => {
+                await debounceSaveCollectionToQuestion(
+                  evaluationToQuestion.order,
+                  {
+                    ...evaluationToQuestion,
+                    points: value,
+                  },
+                )
+              }}
+            />
+          </>
         )}
       </Stack>
       {!readOnly && (

@@ -25,7 +25,7 @@ import {
 } from '@/middleware/withAuthorization'
 
 import { phaseGT } from '@/code/phase'
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 
 /*
 fetch the informations necessary to decide where the users should be redirected

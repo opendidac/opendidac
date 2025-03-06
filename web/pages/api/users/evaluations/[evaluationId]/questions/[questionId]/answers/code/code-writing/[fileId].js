@@ -29,7 +29,7 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 /*
   Student updated his answer to a code wiritng file during an evaluation
 

@@ -13,6 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import PageProfConsult from '@/components/evaluations/pages/PageProfConsult'
+import { useEffect } from 'react'
+import { useRouter } from 'next/router'
 
-export default PageProfConsult
+export default function ConsultRedirect() {
+  const router = useRouter()
+  const { groupScope, evaluationId, userEmail } = router.query
+
+  useEffect(() => {
+    if (groupScope && evaluationId && userEmail) {
+      router.replace(
+        `/${groupScope}/evaluations/${evaluationId}/consult/${userEmail}/1`,
+      )
+    }
+  }, [groupScope, evaluationId, userEmail, router])
+
+  return null
+}
