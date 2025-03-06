@@ -127,6 +127,7 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
           return SnippetStatus.ERROR
         }),
       )
+      
     },
     [statuses],
   )
