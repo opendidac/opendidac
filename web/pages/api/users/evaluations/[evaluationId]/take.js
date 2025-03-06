@@ -27,6 +27,7 @@ import {
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
 import { isStudentAllowed } from './utils'
+import { withIpRestriction } from '@/middleware/withIpRestriction'
 
 /*
 Get the details about thr evaluation for a users
@@ -108,5 +109,7 @@ const get = withEvaluationPhase(
 )
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  GET: withIpRestriction(
+    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  ),
 })
