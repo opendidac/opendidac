@@ -18,13 +18,11 @@ import { Button } from '@mui/material'
 import Image from 'next/image'
 import { useCallback } from 'react'
 
-const COLUMN_SEPARATOR = ';'
+const COLUMN_SEPARATOR = ','
 const LINE_SEPARATOR = '\r'
 
 const ExportCSV = ({ evaluation, results, attendance }) => {
   const participants = attendance.registered.map((r) => r.user)
-
-  const dotToComma = (value) => value.toString().replace('.', ',')
 
   const exportAsCSV = useCallback(() => {
     let csv = `Name${COLUMN_SEPARATOR}Email${COLUMN_SEPARATOR}Success Rate${COLUMN_SEPARATOR}Total Points${COLUMN_SEPARATOR}Obtained Points${COLUMN_SEPARATOR}`
@@ -40,9 +38,7 @@ const ExportCSV = ({ evaluation, results, attendance }) => {
 
       csv += `${participant.name}${COLUMN_SEPARATOR}${
         participant.email
-      }${COLUMN_SEPARATOR}${`${participantSuccessRate} %`}${COLUMN_SEPARATOR}${dotToComma(
-        totalPoints,
-      )}${COLUMN_SEPARATOR}${dotToComma(obtainedPoints)}${COLUMN_SEPARATOR}`
+      }${COLUMN_SEPARATOR}${`${participantSuccessRate} %`}${COLUMN_SEPARATOR}${totalPoints}${COLUMN_SEPARATOR}${obtainedPoints}${COLUMN_SEPARATOR}`
 
       results.forEach((jstq) => {
         const studentAnswer = jstq.question.studentAnswer.find(
@@ -51,9 +47,7 @@ const ExportCSV = ({ evaluation, results, attendance }) => {
 
         let pointsObtained = '-'
         if (studentAnswer?.studentGrading) {
-          pointsObtained = dotToComma(
-            studentAnswer.studentGrading.pointsObtained,
-          )
+          pointsObtained = studentAnswer.studentGrading.pointsObtained
         }
 
         csv += `"${pointsObtained}"${COLUMN_SEPARATOR}`
