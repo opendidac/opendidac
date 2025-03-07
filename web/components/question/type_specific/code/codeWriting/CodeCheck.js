@@ -26,7 +26,11 @@ import BottomPanelContent from '@/components/layout/utils/BottomPanelContent'
 
 import TestCaseResults from './TestCaseResults'
 
-const CodeCheck = ({ codeCheckAction, lockCodeCheck = false }) => {
+const CodeCheck = ({
+  codeCheckAction,
+  lockCodeCheck = false,
+  enabled = true,
+}) => {
   const { show: showSnackbar } = useSnackbar()
 
   const [beforeAll, setBeforeAll] = useState(null)
@@ -55,7 +59,7 @@ const CodeCheck = ({ codeCheckAction, lockCodeCheck = false }) => {
       })
   }, [codeCheckAction, showSnackbar, openPanel])
 
-  return (
+  return enabled ? (
     <Stack maxHeight={'calc(100% - 90px)'}>
       <BottomPanelHeader>
         <LoadingButton
@@ -115,7 +119,7 @@ const CodeCheck = ({ codeCheckAction, lockCodeCheck = false }) => {
         )}
       </BottomPanelContent>
     </Stack>
-  )
+  ) : null
 }
 
 export default CodeCheck
