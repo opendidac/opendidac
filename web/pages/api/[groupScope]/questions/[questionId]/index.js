@@ -97,6 +97,13 @@ const del = async (req, res, prisma) => {
   const { questionId } = req.query
   const question = await prisma.question.findUnique({
     where: { id: questionId },
+    include: {
+      questionToTag: {
+        include: {
+          tag: true
+        }
+      }
+    }
   })
 
   if (!question) {
@@ -111,11 +118,44 @@ const del = async (req, res, prisma) => {
     return
   }
 
-  // Permanently delete the archived question
-  const deletedQuestion = await prisma.question.delete({
-    where: {
-      id: questionId,
-    },
+  // Start a transaction to handle both question deletion and tag cleanup
+  const deletedQuestion = await prisma.$transaction(async (tx) => {
+    // Get the tags used by this question
+    const tagsToCheck = question.questionToTag.map(qt => ({
+      groupId: qt.tag.groupId,
+      label: qt.tag.label
+    }))
+
+    // Delete the question (this will cascade delete QuestionToTag entries)
+    const deleted = await tx.question.delete({
+      where: {
+        id: questionId,
+      },
+    })
+
+    // For each tag, check if it's still used by other questions
+    for (const tag of tagsToCheck) {
+      const usageCount = await tx.questionToTag.count({
+        where: {
+          groupId: tag.groupId,
+          label: tag.label
+        }
+      })
+
+      // If tag is no longer used, delete it
+      if (usageCount === 0) {
+        await tx.tag.delete({
+          where: {
+            groupId_label: {
+              groupId: tag.groupId,
+              label: tag.label
+            }
+          }
+        })
+      }
+    }
+
+    return deleted
   })
 
   res.status(200).json(deletedQuestion)
