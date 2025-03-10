@@ -100,10 +100,10 @@ const del = async (req, res, prisma) => {
     include: {
       questionToTag: {
         include: {
-          tag: true
-        }
-      }
-    }
+          tag: true,
+        },
+      },
+    },
   })
 
   if (!question) {
@@ -121,9 +121,9 @@ const del = async (req, res, prisma) => {
   // Start a transaction to handle both question deletion and tag cleanup
   const deletedQuestion = await prisma.$transaction(async (tx) => {
     // Get the tags used by this question
-    const tagsToCheck = question.questionToTag.map(qt => ({
+    const tagsToCheck = question.questionToTag.map((qt) => ({
       groupId: qt.tag.groupId,
-      label: qt.tag.label
+      label: qt.tag.label,
     }))
 
     // Delete the question (this will cascade delete QuestionToTag entries)
@@ -138,8 +138,8 @@ const del = async (req, res, prisma) => {
       const usageCount = await tx.questionToTag.count({
         where: {
           groupId: tag.groupId,
-          label: tag.label
-        }
+          label: tag.label,
+        },
       })
 
       // If tag is no longer used, delete it
@@ -148,9 +148,9 @@ const del = async (req, res, prisma) => {
           where: {
             groupId_label: {
               groupId: tag.groupId,
-              label: tag.label
-            }
-          }
+              label: tag.label,
+            },
+          },
         })
       }
     }
