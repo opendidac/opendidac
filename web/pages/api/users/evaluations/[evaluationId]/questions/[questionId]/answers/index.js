@@ -105,6 +105,11 @@ const get = withEvaluationPhase(
                   studentOutputTest: true,
                 },
               },
+              codeWriting: {
+                select: {
+                  codeCheckEnabled: true,
+                },
+              },
             },
           },
         },

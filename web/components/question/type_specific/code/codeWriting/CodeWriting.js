@@ -17,10 +17,10 @@ import React, { useState } from 'react'
 import { Tab, Tabs, Typography } from '@mui/material'
 import TabPanel from '@/components/layout/utils/TabPanel'
 import TabContent from '@/components/layout/utils/TabContent'
-import TestCases from './TestCases'
+
 import SolutionFilesManager from './files/SolutionFilesManager'
 import TemplateFilesManager from './files/TemplateFilesManager'
-import Sandbox from '../Sandbox'
+import CodeWritingSetup from './CodeWritingSetup'
 
 const CodeWriting = ({ groupScope, questionId, language, onUpdate }) => {
   const [tab, setTab] = useState(1)
@@ -47,13 +47,7 @@ const CodeWriting = ({ groupScope, questionId, language, onUpdate }) => {
       </Tabs>
       <TabPanel id="setup" value={tab} index={0}>
         <TabContent padding={2} spacing={4}>
-          <Sandbox
-            groupScope={groupScope}
-            questionId={questionId}
-            onUpdate={onUpdate}
-          />
-
-          <TestCases
+          <CodeWritingSetup
             groupScope={groupScope}
             questionId={questionId}
             language={language}

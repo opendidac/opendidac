@@ -25,6 +25,7 @@ import { useDebouncedCallback } from 'use-debounce'
 const AnswerCodeWriting = ({
   evaluationId,
   questionId,
+  question,
   answer,
   onAnswerChange,
 }) => {
@@ -53,11 +54,16 @@ const AnswerCodeWriting = ({
 
   const debouncedOnChange = useDebouncedCallback(onFileChange, 500)
 
+  const codeCheckEnabled = question?.code?.codeWriting?.codeCheckEnabled ?? true
+
+  console.log('codeCheckEnabled', codeCheckEnabled)
+
   return (
     answer?.code && (
       <BottomCollapsiblePanel
         bottomPanel={
           <CodeCheck
+            enabled={codeCheckEnabled}
             lockCodeCheck={lockCodeCheck}
             codeCheckAction={() =>
               fetch(
