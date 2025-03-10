@@ -60,11 +60,19 @@ const Addendum = ({
           if (!response.ok) {
             throw new Error('Failed to update addendum')
           }
+          // Call parent callback only after successful API update
+          onAddendumChanged?.(addendum)
         } catch (error) {
           showSnackbar('Failed to save addendum', 'error')
         }
       },
-      [groupScope, evaluationId, showSnackbar, evaluationToQuestion],
+      [
+        groupScope,
+        evaluationId,
+        showSnackbar,
+        evaluationToQuestion,
+        onAddendumChanged,
+      ],
     ),
     500,
   )
@@ -72,10 +80,9 @@ const Addendum = ({
   const handleAddendumChange = useCallback(
     (value) => {
       setAddendum(value)
-      onAddendumChanged?.(value)
       debounceAddendumChange(value)
     },
-    [onAddendumChanged, debounceAddendumChange],
+    [debounceAddendumChange],
   )
 
   // Return null if in readonly mode and no addendum

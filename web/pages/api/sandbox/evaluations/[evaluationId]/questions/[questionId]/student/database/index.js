@@ -273,11 +273,7 @@ const post = async (req, res, prisma) => {
       create: {
         userEmail: studentEmail,
         questionId: questionId,
-        ...grading(
-          studentAnswer.question,
-          totalPoints,
-          updatedStudentAnswer,
-        ),
+        ...grading(studentAnswer.question, totalPoints, updatedStudentAnswer),
       },
     })
   })
