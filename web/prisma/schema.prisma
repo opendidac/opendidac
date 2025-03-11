@@ -273,6 +273,8 @@ model CodeWriting {
   question   Code   @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
   questionId String @id
 
+  codeCheckEnabled Boolean @default(true)
+
   testCases TestCase[]
 
   solutionFiles CodeToSolutionFile[]

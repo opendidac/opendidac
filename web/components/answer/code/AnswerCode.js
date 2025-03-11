@@ -37,6 +37,7 @@ const AnswerCode = ({ evaluationId, questionId, onAnswerChange }) => {
         <AnswerCodeWriting
           evaluationId={evaluationId}
           questionId={questionId}
+          question={question}
           answer={studentAnswer}
           onAnswerChange={onAnswerChange}
         />

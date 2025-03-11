@@ -55,6 +55,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
             codeType: true,
             codeWriting: {
               select: {
+                codeCheckEnabled: true,
                 ...(includeOfficialAnswers
                   ? {
                       solutionFiles: {
@@ -455,6 +456,8 @@ export const copyQuestion = async (
       case CodeQuestionType.codeWriting: {
         query.data.code.create.codeWriting = {
           create: {
+            codeCheckEnabled:
+              question.code.codeWriting.codeCheckEnabled ?? true,
             testCases: {
               create: question.code.codeWriting.testCases.map((testCase) => ({
                 index: testCase.index,
@@ -628,8 +631,12 @@ export const copyQuestion = async (
   }
 }
 
-const buildCodeWritingUpdate = (questionId, { testCases, files }) => ({
+const buildCodeWritingUpdate = (
+  questionId,
+  { testCases, files, codeCheckEnabled },
+) => ({
   create: {
+    codeCheckEnabled: codeCheckEnabled ?? true,
     testCases: {
       create: testCases.map(({ exec, input, expectedOutput }, index) => ({
         index: index + 1,

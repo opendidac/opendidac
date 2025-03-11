@@ -15,11 +15,12 @@
  */
 import React, { useCallback, useEffect, useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
-import { Stack, TextField, Typography } from '@mui/material'
+import { Stack, TextField } from '@mui/material'
 import useSWR from 'swr'
 import Loading from '@/components/feedback/Loading'
 import { fetcher } from '@/code/utils'
 import DockerImageField from '@/components/input/DockerImageField'
+
 const Sandbox = ({ groupScope, questionId, onUpdate }) => {
   const { data: sandbox, error } = useSWR(
     `/api/${groupScope}/questions/${questionId}/code/sandbox`,
@@ -58,7 +59,6 @@ const Sandbox = ({ groupScope, questionId, onUpdate }) => {
   return (
     <Loading loading={!sandbox} errors={[error]}>
       <Stack spacing={2}>
-        <Typography variant="h6">Sandbox</Typography>
         <Stack direction="row" spacing={2}>
           <DockerImageField
             image={image}
