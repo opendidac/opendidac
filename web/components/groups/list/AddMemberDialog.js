@@ -24,10 +24,6 @@ import UserAvatar from '@/components/layout/UserAvatar'
 import { Role } from '@prisma/client'
 
 const AddMemberDialog = ({ group, open, onClose, onSuccess }) => {
-
-
-
-
   const { show: showSnackbar } = useSnackbar()
 
   const [search, setSearch] = useState('')
@@ -80,7 +76,7 @@ const AddMemberDialog = ({ group, open, onClose, onSuccess }) => {
     }
   }
 
-  console.log("members", members)
+  console.log('members', members)
 
   return (
     group && (

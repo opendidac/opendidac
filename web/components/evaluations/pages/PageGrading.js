@@ -91,7 +91,7 @@ const PageGrading = () => {
 
   const [autoGradeSignOffDialogOpen, setAutoGradeSignOffDialogOpen] =
     useState(false)
-  
+
   useEffect(() => {
     if (data) {
       setEvaluationToQuestions(data)
@@ -493,7 +493,7 @@ const PageGrading = () => {
             </>
           }
           onConfirm={signOffAllAutograded}
-        />        
+        />
       </Loading>
     </Authorization>
   )

@@ -6,7 +6,7 @@
     "seed": "node ./prisma/seed.js"
   },
   "scripts": {
-    "dev:https": "next dev --experimental-https --hostname 127.0.0.1", 
+    "dev:https": "next dev --experimental-https --hostname 127.0.0.1",
     "dev": "next dev",
     "dev:migration": "npx prisma migrate dev && npx next dev",
     "build": "next build",
