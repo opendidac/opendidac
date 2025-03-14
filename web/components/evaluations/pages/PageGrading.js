@@ -53,9 +53,7 @@ import { getGradingStats, getSignedSuccessRate } from '../analytics/stats'
 
 import GradingSignOff from '../grading/GradingSignOff'
 import ParticipantNav from '../grading/ParticipantNav'
-import ResizableDrawer from '@/components/layout/utils/ResizableDrawer'
-import StudentResultsGrid from '../evaluation/phases/results/StudentResultsGrid'
-import ExportCSV from '../evaluation/phases/results/ExportCSV'
+
 import { saveGrading } from '../grading/utils'
 
 import { BottomPanelProvider } from '@/context/BottomPanelContext'
@@ -93,8 +91,6 @@ const PageGrading = () => {
 
   const [autoGradeSignOffDialogOpen, setAutoGradeSignOffDialogOpen] =
     useState(false)
-  const [someUnsignedDialogOpen, setSomeUnsignedDialogOpen] = useState(false)
-  const [studentGridOpen, setStudentGridOpen] = useState(false)
 
   useEffect(() => {
     if (data) {
@@ -498,46 +494,6 @@ const PageGrading = () => {
           }
           onConfirm={signOffAllAutograded}
         />
-        <DialogFeedback
-          open={someUnsignedDialogOpen}
-          onClose={() => setSomeUnsignedDialogOpen(false)}
-          title="End grading"
-          content={
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              The signoff process is not complete.
-            </Typography>
-          }
-        />
-        <ResizableDrawer
-          open={studentGridOpen}
-          width={80}
-          onClose={() => setStudentGridOpen(false)}
-        >
-          <Box ml={1}>
-            <ExportCSV
-              evaluation={evaluation}
-              evaluationToQuestions={evaluationToQuestions}
-              participants={participants}
-            />
-          </Box>
-          <StudentResultsGrid
-            evaluationToQuestions={evaluationToQuestions}
-            selectedQuestionCell={{
-              questionId: evaluationToQuestion?.question.id,
-              participantId: participantId,
-            }}
-            questionCellClick={async (questionId, participantId) => {
-              const questionOrder =
-                evaluationToQuestions.findIndex(
-                  (jstq) => jstq.question.id === questionId,
-                ) + 1
-              setStudentGridOpen(false)
-              await router.push(
-                `/${groupScope}/evaluations/${evaluationId}/grading/${questionOrder}?participantId=${participantId}`,
-              )
-            }}
-          />
-        </ResizableDrawer>
       </Loading>
     </Authorization>
   )
