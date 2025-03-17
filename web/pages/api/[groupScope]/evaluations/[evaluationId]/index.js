@@ -125,6 +125,7 @@ const patch = async (req, res, prisma) => {
     showSolutionsWhenFinished,
     accessMode,
     accessList,
+    ipRestrictions,
   } = req.body
 
   let data = {}
@@ -197,6 +198,10 @@ const patch = async (req, res, prisma) => {
     if (currentEvaluation.consultationEnabled) {
       data.showSolutionsWhenFinished = showSolutionsWhenFinished
     }
+  }
+
+  if (ipRestrictions !== undefined) {
+    data.ipRestrictions = ipRestrictions
   }
 
   if (accessMode !== undefined) {
