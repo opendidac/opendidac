@@ -1,7 +1,7 @@
 # Use an official Temurin (Eclipse) OpenJDK image from the Docker Hub
 FROM eclipse-temurin:latest
 
-LABEL org.opencontainers.image.source="https://github.com/heigvd-teaching-tools/online-test-platform"
+LABEL org.opencontainers.image.source="https://github.com/opendidac/code-check-image"
 
 # Install necessary tools and libraries
 RUN apt-get update && apt-get install -y \
