@@ -793,7 +793,7 @@
       "label": "Scala",
       "icon": "/svg/languages/scala.svg",
       "sandbox": {
-        "image": "bchapuis/docker-scala3:latest",
+        "image": "ghcr.io/opendidac/code-check-image/scala3:latest",
         "defaultPath": "/src/Main.scala",
         "exec": "scala /src/Main.scala",
         "beforeAll": ""
