@@ -22,6 +22,7 @@ import { getPrisma } from '@/middleware/withPrisma'
  */
 const __clients = new Map()
 
+
 /**
  * Logs the current state of SSE connections for debugging purposes.
  * Shows which users are connected and what actions are being performed.
