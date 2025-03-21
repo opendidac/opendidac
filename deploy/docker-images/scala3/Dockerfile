@@ -1,5 +1,5 @@
 # Use the official Alpine base image
-FROM alpine:latest
+FROM openjdk:17-slim
 
 # Set the maintainer label
 LABEL org.opencontainers.image.source="https://github.com/opendidac/code-check-image"
@@ -9,7 +9,7 @@ ENV SCALA_VERSION=3.2.0 \
     SCALA_HOME=/usr/share/scala
 
 # Install necessary packages: bash, curl, and OpenJDK 17
-RUN apk add --no-cache bash curl openjdk17-jdk
+RUN apt-get update && apt-get install -y bash curl
 
 # Download and install Scala
 RUN mkdir -p "$SCALA_HOME" && \
