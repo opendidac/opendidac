@@ -28,8 +28,8 @@ import {
 // https://www.npmjs.com/package/testcontainers
 // https://github.com/apocas/dockerode
 
-const BEFOREALL_TIMEOUT = 10000
-const EXECUTION_TIMEOUT = 3000
+const BEFOREALL_TIMEOUT = 15000
+const EXECUTION_TIMEOUT = 5000
 const MAX_OUTPUT_SIZE_PER_EXEC_KB = 32
 
 export const runSandbox = async ({
@@ -40,17 +40,15 @@ export const runSandbox = async ({
 }) => {
   const directory = await prepareContent(files)
 
-  let container, beforeAllOutput
+  let container, beforeAllOutput, beforeAllTime
 
   try {
-    // Try to start the container
-    ;({ container, beforeAllOutput } = await startContainer(
+    ;({ container, beforeAllOutput, beforeAllTime } = await startContainer(
       image,
       directory,
       beforeAll,
     ))
   } catch (initialError) {
-    // Handle missing image
     if (initialError.message.includes('No such image')) {
       const { status, message } = await pullImageIfNotExists(image)
       if (!status) {
@@ -67,8 +65,7 @@ export const runSandbox = async ({
     }
 
     try {
-      // Retry starting the container after pulling the image
-      ;({ container, beforeAllOutput } = await startContainer(
+      ;({ container, beforeAllOutput, beforeAllTime } = await startContainer(
         image,
         directory,
         beforeAll,
@@ -82,19 +79,19 @@ export const runSandbox = async ({
   }
 
   try {
-    // Run tests with individual timeouts
     const testsResults = await execTests(container, tests)
     return {
       beforeAll: beforeAllOutput,
+      beforeAllTimeMS: beforeAllTime,
       tests: testsResults,
     }
   } catch (error) {
     return {
       beforeAll: beforeAllOutput,
+      beforeAllTimeMS: beforeAllTime,
       tests: [],
     }
   } finally {
-    // Ensure the container is stopped after execution
     await container.stop()
   }
 }
@@ -124,10 +121,7 @@ const prepareContent = (files) =>
 
 const startContainer = async (image, filesDirectory, beforeAll) => {
   let container = await new GenericContainer(image)
-    .withResourcesQuota({
-      cpu: 0.3, //a CPU core
-      memory: 0.25,
-    })
+    .withResourcesQuota({ cpu: 0.3, memory: 0.25 })
     .withWorkingDir('/')
     .withEnvironment('NODE_NO_WARNINGS', '1')
     .withCopyFilesToContainer([
@@ -136,27 +130,21 @@ const startContainer = async (image, filesDirectory, beforeAll) => {
     .withCommand(['sleep', 'infinity'])
     .start()
 
-  await container.exec(['sh', '-c', 'tar -xzf code.tar.gz -C /'], {
-    tty: false,
-  })
+  await container.exec(['sh', '-c', 'tar -xzf code.tar.gz -C /'])
 
   let beforeAllOutput = undefined
+  let beforeAllTime = 0
 
   if (beforeAll) {
-    const startTime = new Date().getTime() // Start time measurement
-
     try {
-      // Create a promise for the execution of beforeAll
-      const execPromise = container.exec(
-        [
-          'sh',
-          '-c',
-          `${beforeAll} 2>&1 | head -c ${MAX_OUTPUT_SIZE_PER_EXEC_KB * 1024}`,
-        ],
-        { tty: false },
-      )
+      const startTime = new Date().getTime()
 
-      // Create a promise for the timeout
+      const execPromise = container.exec([
+        'sh',
+        '-c',
+        `${beforeAll} 2>&1 | head -c ${MAX_OUTPUT_SIZE_PER_EXEC_KB * 1024}`,
+      ])
+
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(
           () =>
@@ -165,22 +153,19 @@ const startContainer = async (image, filesDirectory, beforeAll) => {
         ),
       )
 
-      // Wait for either the execution to complete or timeout
       const { output } = await Promise.race([execPromise, timeoutPromise])
-
       beforeAllOutput = sanitizeUTF8(cleanUpDockerStreamHeaders(output))
+
+      const endTime = new Date().getTime()
+      beforeAllTime = endTime - startTime
     } catch (error) {
-      beforeAllOutput = error.message // Capture the timeout or other error
+      beforeAllOutput = error.message
     }
   }
 
-  /* ## CONTENT DELETE */
   fs.rmSync(filesDirectory, { recursive: true, force: true })
 
-  return {
-    beforeAllOutput,
-    container,
-  }
+  return { beforeAllOutput, beforeAllTime, container }
 }
 
 const execTests = async (container, tests) => {

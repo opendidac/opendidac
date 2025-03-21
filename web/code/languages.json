@@ -117,7 +117,7 @@
                 },
                 {
                   "path": "/src/test_main.cpp",
-                  "content": "#include <CUnit/Basic.h>\r\n#include \"string_utils.h\"\r\n\r\nvoid test_toUpperCase() {\r\n    CU_ASSERT_STRING_EQUAL(\"HELLO WORLD\", toUpperCase(\"hello world\").c_str());\r\n    CU_ASSERT_STRING_EQUAL(\"123\", toUpperCase(\"123\").c_str());\r\n    CU_ASSERT_STRING_EQUAL(\"\", toUpperCase(\"\").c_str());\r\n}\r\n\r\nvoid custom_test_runner(CU_pSuite suite) {\r\n    CU_pTest test = suite->pTest;\r\n    while (test != NULL) {\r\n        unsigned int failed_tests_before = CU_get_number_of_tests_failed();\r\n        CU_run_test(suite, test);\r\n        unsigned int failed_tests_after = CU_get_number_of_tests_failed();\r\n        printf(\"Test: %s ...%s\\n\", test->pName, (failed_tests_after == failed_tests_before) ? \"passed\" : \"failed\");\r\n        test = test->pNext;\r\n    }\r\n}\r\n\r\nint main() {\r\n    if (CU_initialize_registry() != CUE_SUCCESS)\r\n        return CU_get_error();\r\n\r\n    CU_pSuite suite = CU_add_suite(\"toUpperCase_suite\", 0, 0);\r\n    if (!suite) {\r\n        CU_cleanup_registry();\r\n        return CU_get_error();\r\n    }\r\n\r\n    if (!CU_add_test(suite, \"test of toUpperCase\", test_toUpperCase)) {\r\n        CU_cleanup_registry();\r\n        return CU_get_error();\r\n    }\r\n\r\n    custom_test_runner(suite);\r\n\r\n    CU_cleanup_registry();\r\n    return CU_get_error();\r\n}\r\n",
+                  "content": "#include <CUnit/Basic.h>\r\n#include \"string_utils.h\"\r\n\r\nvoid test_toUpperCase() {\r\n    CU_ASSERT_STRING_EQUAL(\"HELLO WORLD\", toUpperCase(\"hello world\").c_str());\r\n    CU_ASSERT_STRING_EQUAL(\"123\", toUpperCase(\"123\").c_str());\r\n    CU_ASSERT_STRING_EQUAL(\"\", toUpperCase(\"\").c_str());\r\n}\r\n\r\nvoid custom_test_runner(CU_pSuite suite) {\r\n    CU_pTest test = suite->pTest;\r\n    while (test != NULL) {\r\n        unsigned int failed_tests_before = CU_get_number_of_tests_failed();\r\n        CU_run_test(suite, test);\n        unsigned int failed_tests_after = CU_get_number_of_tests_failed();\r\n        printf(\"Test: %s ...%s\\n\", test->pName, (failed_tests_after == failed_tests_before) ? \"passed\" : \"failed\");\r\n        test = test->pNext;\r\n    }\r\n}\r\n\r\nint main() {\r\n    if (CU_initialize_registry() != CUE_SUCCESS)\r\n        return CU_get_error();\r\n    CU_pSuite suite = CU_add_suite(\"toUpperCase_suite\", 0, 0);\r\n    if (!suite) {\r\n        CU_cleanup_registry();\r\n        return CU_get_error();\r\n    }\r\n    if (!CU_add_test(suite, \"test of toUpperCase\", test_toUpperCase)) {\r\n        CU_cleanup_registry();\r\n        return CU_get_error();\r\n    }\r\n    custom_test_runner(suite);\r\n    CU_cleanup_registry();\r\n    return CU_get_error();\r\n}\r\n",
                   "studentPermission": "HIDDEN"
                 },
                 {
@@ -795,33 +795,48 @@
       "sandbox": {
         "image": "ghcr.io/opendidac/code-check-image/scala3:latest",
         "defaultPath": "/src/Main.scala",
-        "exec": "scala /src/Main.scala",
-        "beforeAll": ""
+        "beforeAll": "scalac /src/Main.scala",
+        "exec": "scala Main"
       },
       "codeWriting": [
         {
-          "label": "Basic",
+          "label": "Quick Sort",
           "value": "basic",
-          "description": "Basic program input / output example",
+          "description": "Quick sort algorithm implementation",
           "setup": {
             "testCases": [
               {
-                "exec": "scala /src/Main.scala",
-                "input": "Hello World1",
-                "expectedOutput": "HELLO WORLD1\n"
+                "exec": "scala Main",
+                "input": "[5,3,8,1,2,9,4]",
+                "expectedOutput": "1, 2, 3, 4, 5, 8, 9\n"
+              },
+              {
+                "exec": "scala Main",
+                "input": "[20,15,10,5]",
+                "expectedOutput": "5, 10, 15, 20\n"
+              },
+              {
+                "exec": "scala Main",
+                "input": "[100,1,1000,0,-1]",
+                "expectedOutput": "-1, 0, 1, 100, 1000\n"
+              },
+              {
+                "exec": "scala Main",
+                "input": "[-24,-697,21,-30,-800,-11,-990,-622,-444,-165,637,-191,833,965,922,-261,-816,356,460,652,-531,61,-450,-263,934,-422,-602,-946,-53,194,-419,-927,-549,513,161,985,292,-297,89,958,382,-660,724,-773,-580,361,-790,867,986,-977,-465,-484,-734,952,729,-659,413,967,-712,693,903,338,-740,894,-380,-246,102,-860,620,-456,754,-226,388,-483,-128,-612,-269,72,-295,-933,225,-123,-159,276,558,536,-184,-690,509,283,-238,682,-548,778,816,-364,-186,60,-36,328]",
+                "expectedOutput": "-990, -977, -946, -933, -927, -860, -816, -800, -790, -773, -740, -734, -712, -697, -690, -660, -659, -622, -612, -602, -580, -549, -548, -531, -484, -483, -465, -456, -450, -444, -422, -419, -380, -364, -297, -295, -269, -263, -261, -246, -238, -226, -191, -186, -184, -165, -159, -128, -123, -53, -36, -30, -24, -11, 21, 60, 61, 72, 89, 102, 161, 194, 225, 276, 283, 292, 328, 338, 356, 361, 382, 388, 413, 460, 509, 513, 536, 558, 620, 637, 652, 682, 693, 724, 729, 754, 778, 816, 833, 867, 894, 903, 922, 934, 952, 958, 965, 967, 985, 986\n"
               }
             ],
             "files": {
               "solution": [
                 {
                   "path": "/src/Main.scala",
-                  "content": "object Main:\n  def main(args: Array[String]): Unit =\n    val stdin = scala.io.Source.stdin.getLines()\n    for line <- stdin do\n      println(line.toUpperCase)"
+                  "content": "object Main:\n  def main(args: Array[String]): Unit =\n    val stdin = scala.io.Source.stdin.getLines().mkString\n\n    if stdin.isEmpty then\n      println(\"Please provide an array in the format: [1,2,3,4]\")\n    else\n      val input = stdin.stripPrefix(\"[\").stripSuffix(\"]\")\n      val numbers = input.split(\",\").map(_.trim.toInt).toList\n\n      val sortedNumbers = quickSort(numbers)\n      println(sortedNumbers.mkString(\", \"))\n\n  def quickSort(list: List[Int]): List[Int] = list match\n    case Nil => Nil\n    case pivot :: tail =>\n      val (less, greater) = tail.partition(_ <= pivot)\n      quickSort(less) ::: pivot :: quickSort(greater)"
                 }
               ],
               "template": [
                 {
                   "path": "/src/Main.scala",
-                  "content": "object Main:\n  def main(args: Array[String]): Unit =\n    val stdin = scala.io.Source.stdin.getLines()\n    for line <- stdin do\n      println(line)"
+                  "content": "object Main:\n  def main(args: Array[String]): Unit =\n    val stdin = scala.io.Source.stdin.getLines().mkString\n\n    if stdin.isEmpty then\n      println(\"Please provide an array in the format: [1,2,3,4]\")\n    else\n      val input = stdin.stripPrefix(\"[\").stripSuffix(\"]\")\n      val numbers = input.split(\",\").map(_.trim.toInt).toList\n\n      println(numbers)"
                 }
               ]
             }
