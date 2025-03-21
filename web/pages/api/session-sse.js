@@ -15,7 +15,7 @@
  */
 
 import { getUser } from '@/code/auth/auth'
-import { addSSEClient, removeSSEClient } from '@/code/auth/sseClients'
+import { addSSEClient } from '@/code/auth/sseClients'
 
 export default async function handler(req, res) {
   console.log('Opening SSE connection')
@@ -34,13 +34,6 @@ export default async function handler(req, res) {
     return
   }
 
-  // Store the client connection
+  // Store the client connection, the close handler is managed in sseClients.js
   addSSEClient(user.id, res)
-
-  // Handle client disconnection
-  req.on('close', () => {
-    console.log(`Client disconnected: ${user.email}`)
-    removeSSEClient(user.id, res)
-    res.end()
-  })
 }
