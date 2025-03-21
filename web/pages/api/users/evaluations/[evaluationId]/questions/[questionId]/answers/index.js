@@ -281,7 +281,7 @@ const put = withEvaluationPhase(
         return
       }
 
-      const status =
+      let status =
         answer === undefined
           ? StudentAnswerStatus.MISSING
           : StudentAnswerStatus.IN_PROGRESS

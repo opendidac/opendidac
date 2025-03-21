@@ -22,7 +22,6 @@ import { Button, Stack, Typography } from '@mui/material'
 import { fetcher } from '@/code/utils'
 
 import TrueFalse from '@/components/question/type_specific/TrueFalse'
-import Essay from '@/components/question/type_specific/Essay'
 import Loading from '@/components/feedback/Loading'
 import WebEditor from '@/components/question/type_specific/web/WebEditor'
 import ResizePanel from '@/components/layout/utils/ResizePanel'
@@ -36,6 +35,7 @@ import { useSnackbar } from '@/context/SnackbarContext'
 import Overlay from '../ui/Overlay'
 
 import AnswerMultipleChoice from './multipleChoice/AnswerMultipleChoice'
+import MarkdownEditor from '../input/markdown/MarkdownEditor'
 
 const SubmittedOverlay = ({ onUnsubmit }) => {
   return (
@@ -335,12 +335,12 @@ const AnswerEssay = ({ answer, evaluationId, questionId, onAnswerChange }) => {
 
   return (
     answer?.essay && (
-      <Essay
+      <MarkdownEditor
         id={`answer-editor-${questionId}`}
-        mode="split"
-        title={'Your Answer'}
-        content={answer.essay.content}
-        onChange={debouncedOnChange}
+        rawContent={answer.essay.content}
+        onChange={(newContent) => {
+          debouncedOnChange(newContent)
+        }}
       />
     )
   )

@@ -140,6 +140,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
         essay: {
           select: {
             questionId: true,
+            template: true,
             ...(includeOfficialAnswers ? { solution: true } : {}),
           },
         },
@@ -337,6 +338,7 @@ export const questionTypeSpecific = (
     case QuestionType.essay:
       return {
         solution: question?.essay.solution ?? '',
+        template: question?.essay.template ?? '',
       }
     case QuestionType.multipleChoice:
       // console.log(utils.inspect(question, { showHidden: false, depth: null }))
