@@ -32,7 +32,7 @@ async function logConnectedClients(action, userId) {
   })
 
   console.log(`\n=== SSE Clients Update ===`)
-  console.log(`📢 Action: ${action} - User Email: ${user.email}`)
+  console.log(`📢 Action: ${action} - User Email: ${user?.email || 'Unknown'}`)
 
   if (users.length > 0) {
     console.log(`🔗 Currently Connected Clients:`)
@@ -52,6 +52,11 @@ export function addSSEClient(userId, res) {
   }
   __clients.get(userId).add(res)
 
+  // Handle client disconnection
+  res.on('close', () => {
+    removeSSEClient(userId, res)
+  })
+
   logConnectedClients('Added', userId)
 }
 
@@ -62,9 +67,8 @@ export function removeSSEClient(userId, res) {
     if (connections.size === 0) {
       __clients.delete(userId) // Remove user entry if no connections remain
     }
+    logConnectedClients('Removed', userId)
   }
-
-  logConnectedClients('Removed', userId)
 }
 
 export function getSSEClients(userId) {
@@ -78,9 +82,25 @@ export function getAllSSEClients() {
 export function notifySSEClients(userId, message) {
   if (__clients.has(userId)) {
     const connections = __clients.get(userId)
+    const deadConnections = new Set()
+
+    // Try to send to each client and track failed ones
     for (const res of connections) {
-      res.write(`data: ${JSON.stringify(message)}\n\n`)
+      try {
+        res.write(`data: ${JSON.stringify(message)}\n\n`)
+      } catch (error) {
+        // If writing fails, mark connection for removal
+        deadConnections.add(res)
+      }
     }
+
+    // Clean up dead connections
+    if (deadConnections.size > 0) {
+      for (const res of deadConnections) {
+        removeSSEClient(userId, res)
+      }
+    }
+
+    logConnectedClients('Notified', userId)
   }
-  logConnectedClients('Notified', userId)
 }
