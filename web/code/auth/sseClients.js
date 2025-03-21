@@ -74,6 +74,7 @@ export function addSSEClient(userId, res) {
   __clients.get(userId).add(res)
 
   // Automatically remove client when connection closes (browser close/navigation)
+
   res.on('close', () => {
     removeSSEClient(userId, res)
   })
@@ -132,6 +133,7 @@ export function notifySSEClients(userId, message) {
     const deadConnections = new Set()
 
     // Attempt to send message to each client connection
+
     for (const res of connections) {
       try {
         res.write(`data: ${JSON.stringify(message)}\n\n`)
@@ -142,6 +144,7 @@ export function notifySSEClients(userId, message) {
     }
 
     // Clean up any connections that failed to receive the message
+
     if (deadConnections.size > 0) {
       for (const res of deadConnections) {
         removeSSEClient(userId, res)
