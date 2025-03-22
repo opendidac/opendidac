@@ -24,7 +24,7 @@ const CompareEssay = ({ solution, answer }) => {
         leftPanel={
           <MarkdownEditor
             readOnly
-            title={"Student's answer"}
+            title={'Answer'}
             id={`answer-compare-essay`}
             rawContent={answer || ''}
           />
