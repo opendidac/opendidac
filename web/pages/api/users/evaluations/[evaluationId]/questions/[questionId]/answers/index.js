@@ -277,7 +277,7 @@ const put = withEvaluationPhase(
       )
 
       if (!(await isInProgress(evaluationId, prisma))) {
-        res.status(400).json({ message: 'Exam session is not in progress' })
+        res.status(400).json({ message: 'Evaluation is not in progress' })
         return
       }
 
