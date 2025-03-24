@@ -17,7 +17,7 @@ import React from 'react'
 import MarkdownEditor from '../../input/markdown/MarkdownEditor'
 import { Stack } from '@mui/material'
 
-const Essay = ({ id = 'essay', groupScope, title, content, onChange }) => {
+const Essay = ({ id = 'essay', groupScope, solution, template, onChange }) => {
   return (
     <Stack
       spacing={1}
@@ -29,12 +29,22 @@ const Essay = ({ id = 'essay', groupScope, title, content, onChange }) => {
     >
       <MarkdownEditor
         id={id}
-        title={title}
+        title={'Solution Answer'}
         groupScope={groupScope}
-        rawContent={content}
+        rawContent={solution}
         onChange={(newContent) => {
-          if (newContent === content) return
-          onChange(newContent === '' ? undefined : newContent)
+          if (newContent === solution) return
+          onChange('solution', newContent === '' ? undefined : newContent)
+        }}
+      />
+      <MarkdownEditor
+        id={id}
+        title={'Student Starting Template'}
+        groupScope={groupScope}
+        rawContent={template}
+        onChange={(newContent) => {
+          if (newContent === template) return
+          onChange('template', newContent === '' ? undefined : newContent)
         }}
       />
     </Stack>

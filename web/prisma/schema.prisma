@@ -200,8 +200,8 @@ model TrueFalse {
 model Essay {
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionId String   @id
-
-  solution String?
+  solution   String?
+  template   String?
 }
 
 model SandBox {
