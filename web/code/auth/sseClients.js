@@ -73,7 +73,7 @@ export function addSSEClient(userId, res) {
   __clients.get(userId).add(res)
 
   // Automatically remove client when connection closes (browser close/navigation)
-  
+
   res.on('close', () => {
     removeSSEClient(userId, res)
   })
