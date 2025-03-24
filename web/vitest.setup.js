@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import '@testing-library/jest-dom'
 
 // Mock the process.env if needed
