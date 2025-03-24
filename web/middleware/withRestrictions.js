@@ -15,6 +15,9 @@
  */
 
 import { Role } from '@prisma/client'
+import { getPrisma } from './withPrisma'
+import { UserOnEvaluationAccessMode } from '@prisma/client'
+import { getUser } from '@/code/auth/auth'
 
 const isIpInRange = (ip, range) => {
   // Handle CIDR notation
@@ -56,9 +59,38 @@ const isIpAllowed = (ip, restrictions) => {
   return ranges.some((range) => isIpInRange(ip, range))
 }
 
-export const withIpRestriction = (handler) => {
+export const isUserInAccessList = async (userEmail, evaluation, prisma) => {
+  if (
+    evaluation.accessMode === UserOnEvaluationAccessMode.LINK_AND_ACCESS_LIST &&
+    !evaluation.accessList?.includes(userEmail)
+  ) {
+    await prisma.userOnEvaluationDeniedAccessAttempt.upsert({
+      where: {
+        userEmail_evaluationId: {
+          userEmail,
+          evaluationId: evaluation.id,
+        },
+      },
+      update: {},
+      create: {
+        userEmail,
+        evaluationId: evaluation.id,
+      },
+    })
+    return false
+  }
+  return true
+}
+
+export const withRestrictions = (handler) => {
   return async (req, res) => {
-    const evaluation = req.evaluation // Assuming evaluation is attached by a previous middleware
+    const prisma = getPrisma()
+    const { evaluationId } = req.query
+    const user = await getUser(req, res)
+
+    const evaluation = await prisma.evaluation.findUnique({
+      where: { id: evaluationId },
+    })
 
     if (!evaluation) {
       return handler(req, res)
@@ -75,9 +107,27 @@ export const withIpRestriction = (handler) => {
       evaluation.ipRestrictions &&
       !isIpAllowed(clientIp, evaluation.ipRestrictions)
     ) {
-      return res.status(403).json({
+      return res.status(401).json({
+        type: 'error',
+        id: 'ip-restriction',
+        message: `Access denied: Your IP address ${clientIp} is not allowed to access this evaluation`,
+      })
+    }
+
+    const userEmail = user.email
+    console.log('userEmail', userEmail)
+    // Check if user is in access list
+    const isAllowedAccessList = await isUserInAccessList(
+      userEmail,
+      evaluation,
+      prisma,
+    )
+    if (!isAllowedAccessList) {
+      return res.status(401).json({
+        type: 'info',
+        id: 'access-list',
         message:
-          'Access denied: Your IP address is not allowed to access this evaluation',
+          'Your attempt to access this evaluation has been registered. Awaiting approval.',
       })
     }
 

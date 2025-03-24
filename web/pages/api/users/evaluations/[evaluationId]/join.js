@@ -18,13 +18,12 @@ import {
   withMethodHandler,
   withAuthorization,
 } from '@/middleware/withAuthorization'
-import { withIpRestriction } from '@/middleware/withIpRestriction'
+import { withRestrictions } from '@/middleware/withRestrictions'
 import {
   Role,
   EvaluationPhase,
   QuestionType,
   StudentPermission,
-  UserOnEvaluationAccessMode,
   CodeQuestionType,
 } from '@prisma/client'
 import { phaseGT } from '@/code/phase'
@@ -51,33 +50,6 @@ const post = async (req, res, prisma) => {
   if (phaseGT(evaluation.phase, EvaluationPhase.IN_PROGRESS)) {
     res.status(400).json({ message: 'Too late' })
     return
-  }
-
-  // Check if the user is in the evaluation access list in case the evaluation has restricted access
-  // The check is done previously in the endpoint /api/users/evaluations/%5BevaluationId%5D/dispatch.js
-  if (
-    evaluation.accessMode === UserOnEvaluationAccessMode.LINK_AND_ACCESS_LIST
-  ) {
-    if (!evaluation.accessList?.find((email) => email === studentEmail)) {
-      // keep track of the users who were denied access to the evaluation
-      await prisma.userOnEvaluationDeniedAccessAttempt.upsert({
-        where: {
-          userEmail_evaluationId: {
-            userEmail: user.email,
-            evaluationId: evaluationId,
-          },
-        },
-        update: {},
-        create: {
-          userEmail: user.email,
-          evaluationId: evaluationId,
-        },
-      })
-      res
-        .status(403)
-        .json({ message: 'You are not allowed to access this evaluatio' })
-      return
-    }
   }
 
   // Is users already connected to the evaluation?
@@ -340,7 +312,7 @@ const createDatabaseTypeSpecificData = async (
 }
 
 export default withMethodHandler({
-  POST: withIpRestriction(
+  POST: withRestrictions(
     withAuthorization(withPrisma(post), [Role.PROFESSOR, Role.STUDENT]),
   ),
 })

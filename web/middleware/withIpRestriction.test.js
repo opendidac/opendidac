@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { withIpRestriction } from './withIpRestriction'
+import { withRestrictions } from './withRestrictions'
 import { Role } from '@prisma/client'
 
 describe('withIpRestriction Middleware', () => {
@@ -38,7 +38,7 @@ describe('withIpRestriction Middleware', () => {
   })
 
   it('should call handler when no evaluation is present', async () => {
-    await withIpRestriction(mockHandler)(mockReq, mockRes)
+    await withRestrictions(mockHandler)(mockReq, mockRes)
     expect(mockHandler).toHaveBeenCalledWith(mockReq, mockRes)
   })
 
@@ -47,7 +47,7 @@ describe('withIpRestriction Middleware', () => {
     mockReq.user = { roles: [Role.PROFESSOR] }
     mockReq.socket.remoteAddress = '10.0.0.1'
 
-    await withIpRestriction(mockHandler)(mockReq, mockRes)
+    await withRestrictions(mockHandler)(mockReq, mockRes)
     expect(mockHandler).toHaveBeenCalledWith(mockReq, mockRes)
   })
 
@@ -60,7 +60,7 @@ describe('withIpRestriction Middleware', () => {
       mockReq.evaluation = { ipRestrictions: '192.168.1.1' }
       mockReq.socket.remoteAddress = '192.168.1.1'
 
-      await withIpRestriction(mockHandler)(mockReq, mockRes)
+      await withRestrictions(mockHandler)(mockReq, mockRes)
       expect(mockHandler).toHaveBeenCalledWith(mockReq, mockRes)
     })
 
@@ -68,7 +68,7 @@ describe('withIpRestriction Middleware', () => {
       mockReq.evaluation = { ipRestrictions: '192.168.1.0/24' }
       mockReq.socket.remoteAddress = '192.168.1.100'
 
-      await withIpRestriction(mockHandler)(mockReq, mockRes)
+      await withRestrictions(mockHandler)(mockReq, mockRes)
       expect(mockHandler).toHaveBeenCalledWith(mockReq, mockRes)
     })
 
@@ -76,7 +76,7 @@ describe('withIpRestriction Middleware', () => {
       mockReq.evaluation = { ipRestrictions: '192.168.1.1-192.168.1.10' }
       mockReq.socket.remoteAddress = '192.168.1.5'
 
-      await withIpRestriction(mockHandler)(mockReq, mockRes)
+      await withRestrictions(mockHandler)(mockReq, mockRes)
       expect(mockHandler).toHaveBeenCalledWith(mockReq, mockRes)
     })
 
@@ -86,7 +86,7 @@ describe('withIpRestriction Middleware', () => {
       }
       mockReq.socket.remoteAddress = '10.10.10.10'
 
-      await withIpRestriction(mockHandler)(mockReq, mockRes)
+      await withRestrictions(mockHandler)(mockReq, mockRes)
       expect(mockHandler).toHaveBeenCalledWith(mockReq, mockRes)
     })
 
@@ -94,7 +94,7 @@ describe('withIpRestriction Middleware', () => {
       mockReq.evaluation = { ipRestrictions: '192.168.1.0/24' }
       mockReq.socket.remoteAddress = '10.0.0.1'
 
-      await withIpRestriction(mockHandler)(mockReq, mockRes)
+      await withRestrictions(mockHandler)(mockReq, mockRes)
       expect(mockRes.status).toHaveBeenCalledWith(403)
       expect(mockRes.json).toHaveBeenCalledWith({
         message:
@@ -107,7 +107,7 @@ describe('withIpRestriction Middleware', () => {
       mockReq.evaluation = { ipRestrictions: '192.168.1.0/24' }
       mockReq.headers['x-forwarded-for'] = '192.168.1.100'
 
-      await withIpRestriction(mockHandler)(mockReq, mockRes)
+      await withRestrictions(mockHandler)(mockReq, mockRes)
       expect(mockHandler).toHaveBeenCalledWith(mockReq, mockRes)
     })
   })

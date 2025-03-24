@@ -28,6 +28,7 @@ import Overlay from '@/components/ui/Overlay'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
 import { Stack, Typography } from '@mui/material'
 import StudentPhaseRedirect from '@/components/users/evaluations/StudentPhaseRedirect'
+import ConsoleLog from '@/components/layout/utils/ConsoleLog'
 
 const getFilledStatus = (studentAnswerStatus) => {
   switch (studentAnswerStatus) {
@@ -52,6 +53,8 @@ export const StudentOnEvaluationProvider = ({ children }) => {
 
   const { evaluationId, pageIndex } = router.query
 
+  console.log('StudentOnEvaluationProvider evaluationId', evaluationId)
+
   const {
     data: evaluation,
     error: errorEvaluationStatus,
@@ -68,8 +71,6 @@ export const StudentOnEvaluationProvider = ({ children }) => {
     [evaluation],
   )
 
-  const isStudentAllowed = useCallback(() => evaluation?.allowed, [evaluation])
-
   const {
     data: evaluationToQuestions,
     error: errorUserOnEvaluation,
@@ -79,6 +80,22 @@ export const StudentOnEvaluationProvider = ({ children }) => {
     hasStudentFinished() ? null : fetcher,
     { revalidateOnFocus: false },
   )
+
+  const isStudentNotInAccessList = useCallback(
+    () => errorUserOnEvaluation?.id === 'access-list',
+    [errorUserOnEvaluation],
+  )
+  const isStudentIpRestricted = useCallback(
+    () => errorUserOnEvaluation?.id === 'ip-restriction',
+    [errorUserOnEvaluation],
+  )
+
+  const errorMessage = errorUserOnEvaluation?.message
+
+  console.log('isStudentNotInAccessList', isStudentNotInAccessList())
+  console.log('isStudentIpRestricted', isStudentIpRestricted())
+
+  console.log('errorEvaluationStatus', errorEvaluationStatus)
 
   /*
   evaluationToQuestions: 
@@ -204,10 +221,13 @@ export const StudentOnEvaluationProvider = ({ children }) => {
       }}
     >
       <StudentPhaseRedirect phase={evaluation?.evaluation?.phase}>
+        <ConsoleLog>test</ConsoleLog>
         {hasStudentFinished() ? (
           <EvaluationCompletedDialog />
-        ) : !isStudentAllowed() ? (
-          <StudentNotAllowedDialog />
+        ) : isStudentNotInAccessList() ? (
+          <StudentNotAllowedDialog message={errorMessage} />
+        ) : isStudentIpRestricted() ? (
+          <StudentIpRestrictedDialog message={errorMessage} />
         ) : (
           children
         )}
@@ -233,15 +253,29 @@ const EvaluationCompletedDialog = () => (
   </Overlay>
 )
 
-const StudentNotAllowedDialog = () => (
+const StudentNotAllowedDialog = ({ message }) => (
   <Overlay>
     <AlertFeedback severity="warning">
       <Stack spacing={1}>
         <Typography variant="h5">You are not allowed to participate</Typography>
-        <Typography variant="body2">
-          Please reach out to your professor if you believe this is an error.
-        </Typography>
+        <Typography variant="body2">{message}</Typography>
       </Stack>
     </AlertFeedback>
   </Overlay>
+)
+
+const StudentIpRestrictedDialog = ({ message }) => (
+  console.log('StudentIpRestrictedDialog message', message),
+  (
+    <Overlay>
+      <AlertFeedback severity="warning">
+        <Stack spacing={1}>
+          <Typography variant="h5">
+            You are not allowed to participate
+          </Typography>
+          <Typography variant="body2">{message}</Typography>
+        </Stack>
+      </AlertFeedback>
+    </Overlay>
+  )
 )
