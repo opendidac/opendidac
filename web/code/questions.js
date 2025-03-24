@@ -55,6 +55,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
             codeType: true,
             codeWriting: {
               select: {
+                codeCheckEnabled: true,
                 ...(includeOfficialAnswers
                   ? {
                       solutionFiles: {
@@ -139,6 +140,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
         essay: {
           select: {
             questionId: true,
+            template: true,
             ...(includeOfficialAnswers ? { solution: true } : {}),
           },
         },
@@ -336,6 +338,7 @@ export const questionTypeSpecific = (
     case QuestionType.essay:
       return {
         solution: question?.essay.solution ?? '',
+        template: question?.essay.template ?? '',
       }
     case QuestionType.multipleChoice:
       // console.log(utils.inspect(question, { showHidden: false, depth: null }))
@@ -388,8 +391,6 @@ export const copyQuestion = async (
   source = QuestionSource.EVAL,
   appendCopyInTitle = false,
 ) => {
-  console.log('question.questionToTag', question.questionToTag)
-
   const data = {
     title: appendCopyInTitle ? `Copy of ${question.title}` : question.title,
     content: question.content,
@@ -457,6 +458,8 @@ export const copyQuestion = async (
       case CodeQuestionType.codeWriting: {
         query.data.code.create.codeWriting = {
           create: {
+            codeCheckEnabled:
+              question.code.codeWriting.codeCheckEnabled ?? true,
             testCases: {
               create: question.code.codeWriting.testCases.map((testCase) => ({
                 index: testCase.index,
@@ -630,8 +633,12 @@ export const copyQuestion = async (
   }
 }
 
-const buildCodeWritingUpdate = (questionId, { testCases, files }) => ({
+const buildCodeWritingUpdate = (
+  questionId,
+  { testCases, files, codeCheckEnabled },
+) => ({
   create: {
+    codeCheckEnabled: codeCheckEnabled ?? true,
     testCases: {
       create: testCases.map(({ exec, input, expectedOutput }, index) => ({
         index: index + 1,

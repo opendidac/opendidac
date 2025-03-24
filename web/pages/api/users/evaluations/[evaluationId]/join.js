@@ -30,7 +30,7 @@ import {
 import { phaseGT } from '@/code/phase'
 import { questionIncludeClause } from '@/code/questions'
 import { grading } from '@/code/grading/engine'
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 
 const post = async (req, res, prisma) => {
   const { evaluationId } = req.query
@@ -169,6 +169,19 @@ const post = async (req, res, prisma) => {
 
         // Handle type-specific data
         switch (question.type) {
+          case QuestionType.essay:
+            await prisma.studentAnswerEssay.update({
+              where: {
+                userEmail_questionId: {
+                  userEmail: studentEmail,
+                  questionId: question.id,
+                },
+              },
+              data: {
+                content: question.essay.template || '',
+              },
+            })
+            break
           case QuestionType.web:
             await prisma.studentAnswerWeb.update({
               where: {

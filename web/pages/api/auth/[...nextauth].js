@@ -18,6 +18,7 @@ import NextAuth from 'next-auth'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { Role } from '@prisma/client'
 import { getPrisma } from '@/middleware/withPrisma'
+import { getSSEClients, notifySSEClients } from '@/code/auth/sseClients'
 
 const prisma = getPrisma()
 const prismaAdapter = PrismaAdapter(prisma)
@@ -229,17 +230,21 @@ export const authOptions = {
 
 async function handleSingleSessionPerUser(user) {
   const activeSessions = await prisma.session.findMany({
-    where: {
-      userId: user.id,
-    },
+    where: { userId: user.id },
   })
 
   if (activeSessions.length > 0) {
     await prisma.session.deleteMany({
-      where: {
-        userId: user.id,
-      },
+      where: { userId: user.id },
     })
+
+    // Notify all active SSE clients (tabs) for this user
+    notifySSEClients(user.id, { status: 'unauthenticated' })
+
+    // Close all SSE connections
+    for (const res of getSSEClients(user.id)) {
+      res.end()
+    }
   }
 }
 

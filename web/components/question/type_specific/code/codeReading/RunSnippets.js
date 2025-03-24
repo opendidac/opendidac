@@ -57,23 +57,21 @@ const RunSnippets = ({ lock, questionId, onBeforeRun, onUpdate }) => {
         </LoadingButton>
       </BottomPanelHeader>
       <BottomPanelContent>
-        {result && result.beforeAll && (
-          <Stack padding={0}>
-            <TextField
-              variant="filled"
-              fullWidth
-              multiline
-              maxRows={12}
-              focused
-              color="info"
-              label="Console"
-              value={result.beforeAll}
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-          </Stack>
-        )}
+        <Stack padding={0}>
+          <TextField
+            variant="filled"
+            fullWidth
+            multiline
+            maxRows={12}
+            focused
+            color="info"
+            label="Console"
+            value={result?.beforeAll}
+            InputProps={{
+              readOnly: true,
+            }}
+          />
+        </Stack>
       </BottomPanelContent>
     </Stack>
   )

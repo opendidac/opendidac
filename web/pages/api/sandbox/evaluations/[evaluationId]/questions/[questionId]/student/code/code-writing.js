@@ -25,7 +25,7 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 
 /*
  endpoint to run the code sandbox for a users (generally students) answers

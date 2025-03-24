@@ -87,6 +87,11 @@ enum QuestionType {
   database
 }
 
+enum QuestionStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 model Group {
   id    String @id @default(cuid())
   label String @unique
@@ -128,6 +133,7 @@ model Question {
   id     String         @id @default(cuid())
   type   QuestionType
   source QuestionSource @default(BANK)
+  status QuestionStatus @default(ACTIVE)
 
   title   String
   content String?
@@ -194,8 +200,8 @@ model TrueFalse {
 model Essay {
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionId String   @id
-
-  solution String?
+  solution   String?
+  template   String?
 }
 
 model SandBox {
@@ -266,6 +272,8 @@ model CodeReadingSnippet {
 model CodeWriting {
   question   Code   @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
   questionId String @id
+
+  codeCheckEnabled Boolean @default(true)
 
   testCases TestCase[]
 
@@ -591,6 +599,7 @@ model EvaluationToQuestion {
 
   points Float @default(0)
   order  Int   @default(0)
+  addendum String?
 
   @@id([evaluationId, questionId])
 }

@@ -34,7 +34,7 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 
 /*
   get the users answers for a question including related nested data
@@ -103,6 +103,11 @@ const get = withEvaluationPhase(
               codeReading: {
                 select: {
                   studentOutputTest: true,
+                },
+              },
+              codeWriting: {
+                select: {
+                  codeCheckEnabled: true,
                 },
               },
             },
@@ -272,11 +277,11 @@ const put = withEvaluationPhase(
       )
 
       if (!(await isInProgress(evaluationId, prisma))) {
-        res.status(400).json({ message: 'Exam session is not in progress' })
+        res.status(400).json({ message: 'Evaluation is not in progress' })
         return
       }
 
-      const status =
+      let status =
         answer === undefined
           ? StudentAnswerStatus.MISSING
           : StudentAnswerStatus.IN_PROGRESS

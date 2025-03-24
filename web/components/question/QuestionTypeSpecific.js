@@ -82,13 +82,18 @@ const QuestionTypeSpecific = ({
         break
       case QuestionType.essay:
         if (question.essay) {
+          console.log(question.essay)
           return (
             <Essay
               title={'Solution Answer'}
               groupScope={groupScope}
-              content={question.essay.solution}
-              onChange={(newContent) =>
-                onTypeSpecificChange(question.type, { solution: newContent })
+              solution={question.essay.solution}
+              template={question.essay.template}
+              onChange={(property, newContent) =>
+                onTypeSpecificChange(question.type, {
+                  ...question.essay,
+                  [property]: newContent,
+                })
               }
             />
           )

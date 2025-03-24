@@ -67,14 +67,16 @@ const AddMemberDialog = ({ group, open, onClose, onSuccess }) => {
       },
     )
 
+    const data = await response.json()
+
     if (response.status === 200) {
-      const users = await response.json()
-      setMembers(users)
+      setMembers(data.users)
     } else {
-      const data = await response.json()
       showSnackbar(data.message, 'error')
     }
   }
+
+  console.log('members', members)
 
   return (
     group && (

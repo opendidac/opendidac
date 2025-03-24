@@ -24,7 +24,7 @@ import {
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
-import { getUser } from '@/code/auth'
+import { getUser } from '@/code/auth/auth'
 
 /*
  endpoint to run the database sandbox for a users answers
@@ -255,6 +255,8 @@ const post = async (req, res, prisma) => {
       questionId,
     )
 
+    const totalPoints = studentAnswer.question.evaluation?.[0]?.points || 0
+
     // code questions grading
     await prisma.studentQuestionGrading.upsert({
       where: {
@@ -265,17 +267,13 @@ const post = async (req, res, prisma) => {
       },
       update: grading(
         studentAnswer.question,
-        studentAnswer.question.evaluation.points,
+        totalPoints,
         updatedStudentAnswer,
       ),
       create: {
         userEmail: studentEmail,
         questionId: questionId,
-        ...grading(
-          studentAnswer.question,
-          studentAnswer.question.evaluation.points,
-          updatedStudentAnswer,
-        ),
+        ...grading(studentAnswer.question, totalPoints, updatedStudentAnswer),
       },
     })
   })

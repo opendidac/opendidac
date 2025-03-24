@@ -105,11 +105,25 @@ runs:
         cd /home/heiguser/db_dumps
         backup_date=$(date +"%Y-%m-%d_%H-%M-%S")
         backup_filename="pg_workflow_backup_$backup_date.sql"
-        
-        # Connect to the 'db' service container and run pg_dump to create a dump
+
+        # Get the database container ID
         container_db_id=$(docker ps -qf "name=eval-db-")
-        docker exec $container_db_id pg_dump -U ${{ inputs.POSTGRES_USER }} -d ${{ inputs.POSTGRES_DB }} -F c > $backup_filename
+
+        if [ -z "$container_db_id" ]; then
+          echo "Database container is not running! Skipping backup step."
+          exit 0  # Continue execution even if this step fails
+        fi
+
+        # Try to dump the database
+        if ! docker exec $container_db_id pg_dump -U ${{ inputs.POSTGRES_USER }} -d ${{ inputs.POSTGRES_DB }} -F c > $backup_filename; then
+          echo "Database dump failed. This might be the first run."
+          exit 0  # Continue even if dumping fails
+        fi
+
+        echo "Database dump completed successfully."
       shell: bash
+      continue-on-error: true  # Ensures the workflow continues
+
 
     - name: Run Prisma Migrations
       run: |

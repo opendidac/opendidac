@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import PageProfConsult from '../../../../../../components/evaluations/pages/PageProfConsult'
+import PageProfConsult from '@/components/evaluations/pages/PageProfConsult'
 
-const ProfessorConsultEvaluation = () => <PageProfConsult />
-
-export default ProfessorConsultEvaluation
+export default PageProfConsult
