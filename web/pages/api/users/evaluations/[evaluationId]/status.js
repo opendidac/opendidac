@@ -19,6 +19,7 @@ import {
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
+import { withRestrictions } from '@/middleware/withRestrictions'
 import {
   withEvaluationPhase,
   withStudentStatus,
@@ -174,6 +175,10 @@ const put = withEvaluationPhase(
 )
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
-  PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR, Role.STUDENT]),
+  GET: withRestrictions(
+    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  ),
+  PUT: withRestrictions(
+    withAuthorization(withPrisma(put), [Role.PROFESSOR, Role.STUDENT]),
+  ),
 })

@@ -62,7 +62,11 @@ export const StudentOnEvaluationProvider = ({ children }) => {
   } = useSWR(
     `/api/users/evaluations/${evaluationId}/status`,
     evaluationId ? fetcher : null,
-    { refreshInterval: 1000 },
+    {
+      refreshInterval: 1000,
+      revalidateOnFocus: true,
+      onError: (err) => console.error('Error fetching evaluation status:', err),
+    },
   )
 
   const hasStudentFinished = useCallback(
@@ -78,7 +82,11 @@ export const StudentOnEvaluationProvider = ({ children }) => {
   } = useSWR(
     `/api/users/evaluations/${evaluationId}/take`,
     hasStudentFinished() ? null : fetcher,
-    { revalidateOnFocus: false },
+    {
+      revalidateOnFocus: true,
+      onError: (err) =>
+        console.error('Error fetching evaluation questions:', err),
+    },
   )
 
   const isStudentNotInAccessList = useCallback(
