@@ -145,8 +145,8 @@ import EditIcon from '@mui/icons-material/Edit'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
 import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
 import EvaluationTitleBar from '../layout/EvaluationTitleBar'
-import ConsultationSettings from '../../grading/ConsultationSettings'
-import SecuritySettings from '../../security/SecuritySettings'
+import ConsultationSettings from './settings/SettingsConsultation'
+import SecuritySettings from './settings/SettingsSecurity'
 
 const ConditionSettings = ({ groupScope, conditions, onChange }) => {
   const [conditionsEditing, setConditionsEditing] = useState(false)

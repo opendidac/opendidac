@@ -28,148 +28,152 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
+import { withRestrictions } from '@/middleware/withRestrictions'
 import { getUser } from '@/code/auth/auth'
 /*
   Student checked his answer to a code reading snippet during an evaluation
 
 */
-const post = withEvaluationPhase(
-  [EvaluationPhase.IN_PROGRESS],
-  withStudentStatus(
-    [UserOnEvaluationStatus.IN_PROGRESS],
-    async (req, res, prisma) => {
-      const user = await getUser(req, res)
-      const studentEmail = user.email
-      const { evaluationId, questionId } = req.query
+const post = withRestrictions(
+  withEvaluationPhase(
+    [EvaluationPhase.IN_PROGRESS],
+    withStudentStatus(
+      [UserOnEvaluationStatus.IN_PROGRESS],
+      async (req, res, prisma) => {
+        const user = await getUser(req, res)
+        const studentEmail = user.email
+        const { evaluationId, questionId } = req.query
 
-      const evaluationToQuestion = await prisma.evaluationToQuestion.findUnique(
-        {
-          where: {
-            evaluationId_questionId: {
-              evaluationId: evaluationId,
-              questionId: questionId,
+        const evaluationToQuestion =
+          await prisma.evaluationToQuestion.findUnique({
+            where: {
+              evaluationId_questionId: {
+                evaluationId: evaluationId,
+                questionId: questionId,
+              },
             },
-          },
-          include: {
-            question: {
-              select: {
-                code: {
-                  select: {
-                    codeReading: {
-                      select: {
-                        studentOutputTest: true,
+            include: {
+              question: {
+                select: {
+                  code: {
+                    select: {
+                      codeReading: {
+                        select: {
+                          studentOutputTest: true,
+                        },
                       },
                     },
                   },
                 },
               },
             },
+          })
+
+        if (!evaluationToQuestion) {
+          res.status(400).json({ message: 'Question not found' })
+          return
+        }
+
+        if (
+          !evaluationToQuestion.question?.code?.codeReading?.studentOutputTest
+        ) {
+          res.status(400).json({
+            message: 'Outpout testing is not enabled for this question',
+          })
+          return
+        }
+
+        // Get all student and official outputs
+        const studentAnswer = await prisma.studentAnswerCodeReading.findUnique({
+          where: {
+            userEmail_questionId: {
+              questionId: questionId,
+              userEmail: studentEmail,
+            },
           },
-        },
-      )
-
-      if (!evaluationToQuestion) {
-        res.status(400).json({ message: 'Question not found' })
-        return
-      }
-
-      if (
-        !evaluationToQuestion.question?.code?.codeReading?.studentOutputTest
-      ) {
-        res
-          .status(400)
-          .json({ message: 'Outpout testing is not enabled for this question' })
-        return
-      }
-
-      // Get all student and official outputs
-      const studentAnswer = await prisma.studentAnswerCodeReading.findUnique({
-        where: {
-          userEmail_questionId: {
-            questionId: questionId,
-            userEmail: studentEmail,
-          },
-        },
-        select: {
-          outputs: {
-            select: {
-              output: true,
-              codeReadingSnippet: {
-                select: {
-                  id: true,
-                  order: true,
-                  output: true,
+          select: {
+            outputs: {
+              select: {
+                output: true,
+                codeReadingSnippet: {
+                  select: {
+                    id: true,
+                    order: true,
+                    output: true,
+                  },
                 },
               },
+              orderBy: {
+                codeReadingSnippet: {
+                  order: 'asc',
+                },
+              },
+            },
+          },
+        })
+
+        if (!studentAnswer) {
+          res.status(400).json({ message: 'Student answer not found' })
+          return
+        }
+
+        // Compare the student output with the official output
+        for (const studentAnswerOutput of studentAnswer.outputs) {
+          const snippetId = studentAnswerOutput.codeReadingSnippet.id
+          const officialOutput = studentAnswerOutput.codeReadingSnippet.output
+          const studentOutput = studentAnswerOutput.output
+          const passed = studentOutput === officialOutput
+
+          // Update the student output status
+          await prisma.studentAnswerCodeReadingOutput.update({
+            where: {
+              questionId_userEmail_snippetId: {
+                questionId: questionId,
+                userEmail: studentEmail,
+                snippetId: snippetId,
+              },
+            },
+            data: {
+              status: passed
+                ? StudentAnswerCodeReadingOutputStatus.MATCH
+                : StudentAnswerCodeReadingOutputStatus.MISMATCH,
+            },
+          })
+        }
+
+        // Select the outputs with the status
+        const studentOutputs =
+          await prisma.studentAnswerCodeReadingOutput.findMany({
+            where: {
+              questionId: questionId,
+              userEmail: studentEmail,
+            },
+            select: {
+              codeReadingSnippet: {
+                select: {
+                  order: true,
+                },
+              },
+              status: true,
             },
             orderBy: {
               codeReadingSnippet: {
                 order: 'asc',
               },
             },
-          },
-        },
-      })
+          })
 
-      if (!studentAnswer) {
-        res.status(400).json({ message: 'Student answer not found' })
-        return
-      }
+        // wait to simulate a long processing
+        await new Promise((resolve) => setTimeout(resolve, 200))
 
-      // Compare the student output with the official output
-      for (const studentAnswerOutput of studentAnswer.outputs) {
-        const snippetId = studentAnswerOutput.codeReadingSnippet.id
-        const officialOutput = studentAnswerOutput.codeReadingSnippet.output
-        const studentOutput = studentAnswerOutput.output
-        const passed = studentOutput === officialOutput
-
-        // Update the student output status
-        await prisma.studentAnswerCodeReadingOutput.update({
-          where: {
-            questionId_userEmail_snippetId: {
-              questionId: questionId,
-              userEmail: studentEmail,
-              snippetId: snippetId,
-            },
-          },
-          data: {
-            status: passed
-              ? StudentAnswerCodeReadingOutputStatus.MATCH
-              : StudentAnswerCodeReadingOutputStatus.MISMATCH,
-          },
-        })
-      }
-
-      // Select the outputs with the status
-      const studentOutputs =
-        await prisma.studentAnswerCodeReadingOutput.findMany({
-          where: {
-            questionId: questionId,
-            userEmail: studentEmail,
-          },
-          select: {
-            codeReadingSnippet: {
-              select: {
-                order: true,
-              },
-            },
-            status: true,
-          },
-          orderBy: {
-            codeReadingSnippet: {
-              order: 'asc',
-            },
-          },
-        })
-
-      // wait to simulate a long processing
-      await new Promise((resolve) => setTimeout(resolve, 200))
-
-      res.status(200).json(studentOutputs)
-    },
+        res.status(200).json(studentOutputs)
+      },
+    ),
   ),
 )
 
 export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR, Role.STUDENT]),
+  POST: withRestrictions(
+    withAuthorization(withPrisma(post), [Role.PROFESSOR, Role.STUDENT]),
+  ),
 })

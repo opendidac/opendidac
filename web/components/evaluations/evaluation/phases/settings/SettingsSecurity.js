@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import { Typography } from '@mui/material'
-import SettingsIPRestriction from '../evaluation/phases/settings/SettingsIPRestriction'
-import SettingsAccessMode from '../evaluation/phases/settings/SettingsAccessMode'
+import SettingsIPRestriction from './SettingsIPRestriction'
+import SettingsAccessMode from './SettingsAccessMode'
 
-const SecuritySettings = ({ evaluation, onChange }) => {
+const SettingsSecurity = ({ evaluation, onChange }) => {
   return (
     <>
       <Typography variant="h5">Security Settings</Typography>
@@ -39,4 +39,4 @@ const SecuritySettings = ({ evaluation, onChange }) => {
   )
 }
 
-export default SecuritySettings
+export default SettingsSecurity

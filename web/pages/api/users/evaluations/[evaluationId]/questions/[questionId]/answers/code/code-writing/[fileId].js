@@ -29,145 +29,149 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
+import { withRestrictions } from '@/middleware/withRestrictions'
 import { getUser } from '@/code/auth/auth'
 /*
   Student updated his answer to a code wiritng file during an evaluation
 
 */
-const put = withEvaluationPhase(
-  [EvaluationPhase.IN_PROGRESS],
-  withStudentStatus(
-    [UserOnEvaluationStatus.IN_PROGRESS],
-    async (req, res, prisma) => {
-      const user = await getUser(req, res)
-      const studentEmail = user.email
-      const { evaluationId, questionId, fileId } = req.query
+const put = withRestrictions(
+  withEvaluationPhase(
+    [EvaluationPhase.IN_PROGRESS],
+    withStudentStatus(
+      [UserOnEvaluationStatus.IN_PROGRESS],
+      async (req, res, prisma) => {
+        const user = await getUser(req, res)
+        const studentEmail = user.email
+        const { evaluationId, questionId, fileId } = req.query
 
-      const { file } = req.body
+        const { file } = req.body
 
-      const evaluationToQuestion = await prisma.evaluationToQuestion.findUnique(
-        {
-          where: {
-            evaluationId_questionId: {
-              evaluationId: evaluationId,
-              questionId: questionId,
+        const evaluationToQuestion =
+          await prisma.evaluationToQuestion.findUnique({
+            where: {
+              evaluationId_questionId: {
+                evaluationId: evaluationId,
+                questionId: questionId,
+              },
             },
-          },
-          include: {
-            question: {
-              select: {
-                code: {
-                  select: {
-                    codeType: true,
+            include: {
+              question: {
+                select: {
+                  code: {
+                    select: {
+                      codeType: true,
+                    },
                   },
+                  type: true,
                 },
-                type: true,
               },
             },
-          },
-        },
-      )
+          })
 
-      if (!evaluationToQuestion) {
-        res.status(400).json({ message: 'Question not found' })
-        return
-      }
+        if (!evaluationToQuestion) {
+          res.status(400).json({ message: 'Question not found' })
+          return
+        }
 
-      const transaction = [] // to do in single transaction, queries are done in order
+        const transaction = [] // to do in single transaction, queries are done in order
 
-      // update the status of the users answers
-      transaction.push(
-        prisma.studentAnswer.update({
-          where: {
-            userEmail_questionId: {
-              userEmail: studentEmail,
-              questionId: questionId,
-            },
-          },
-          data: {
-            status: StudentAnswerStatus.IN_PROGRESS,
-          },
-        }),
-      )
-
-      // update the users answers file for code question
-      transaction.push(
-        prisma.studentAnswerCodeToFile.update({
-          where: {
-            userEmail_questionId_fileId: {
-              userEmail: studentEmail,
-              questionId: questionId,
-              fileId: fileId,
-            },
-          },
-          data: {
-            file: {
-              update: {
-                content: file.content,
+        // update the status of the users answers
+        transaction.push(
+          prisma.studentAnswer.update({
+            where: {
+              userEmail_questionId: {
+                userEmail: studentEmail,
+                questionId: questionId,
               },
             },
-          },
-        }),
-      )
+            data: {
+              status: StudentAnswerStatus.IN_PROGRESS,
+            },
+          }),
+        )
 
-      // grade question
-      transaction.push(
-        prisma.studentQuestionGrading.upsert({
-          where: {
-            userEmail_questionId: {
+        // update the users answers file for code question
+        transaction.push(
+          prisma.studentAnswerCodeToFile.update({
+            where: {
+              userEmail_questionId_fileId: {
+                userEmail: studentEmail,
+                questionId: questionId,
+                fileId: fileId,
+              },
+            },
+            data: {
+              file: {
+                update: {
+                  content: file.content,
+                },
+              },
+            },
+          }),
+        )
+
+        // grade question
+        transaction.push(
+          prisma.studentQuestionGrading.upsert({
+            where: {
+              userEmail_questionId: {
+                userEmail: studentEmail,
+                questionId: questionId,
+              },
+            },
+            create: {
               userEmail: studentEmail,
               questionId: questionId,
+              ...grading(
+                evaluationToQuestion.question,
+                evaluationToQuestion.points,
+                undefined,
+              ),
             },
-          },
-          create: {
-            userEmail: studentEmail,
-            questionId: questionId,
-            ...grading(
+            update: grading(
               evaluationToQuestion.question,
               evaluationToQuestion.points,
               undefined,
             ),
-          },
-          update: grading(
-            evaluationToQuestion.question,
-            evaluationToQuestion.points,
-            undefined,
-          ),
-        }),
-      )
+          }),
+        )
 
-      // prisma transaction
-      await prisma.$transaction(transaction)
+        // prisma transaction
+        await prisma.$transaction(transaction)
 
-      const updatedAnswer = await prisma.studentAnswer.findUnique({
-        where: {
-          userEmail_questionId: {
-            userEmail: studentEmail,
-            questionId: questionId,
+        const updatedAnswer = await prisma.studentAnswer.findUnique({
+          where: {
+            userEmail_questionId: {
+              userEmail: studentEmail,
+              questionId: questionId,
+            },
           },
-        },
-        select: {
-          status: true,
-          code: {
-            select: {
-              codeWriting: {
-                select: {
-                  files: {
-                    select: {
-                      file: true,
+          select: {
+            status: true,
+            code: {
+              select: {
+                codeWriting: {
+                  select: {
+                    files: {
+                      select: {
+                        file: true,
+                      },
                     },
                   },
                 },
               },
             },
           },
-        },
-      })
-      res.status(200).json(updatedAnswer)
-    },
+        })
+        res.status(200).json(updatedAnswer)
+      },
+    ),
   ),
 )
 
 export default withMethodHandler({
-  PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR, Role.STUDENT]),
+  PUT: withRestrictions(
+    withAuthorization(withPrisma(put), [Role.PROFESSOR, Role.STUDENT]),
+  ),
 })
