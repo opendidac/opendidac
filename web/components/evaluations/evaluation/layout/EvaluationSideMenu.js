@@ -260,11 +260,17 @@ const EvaluationMenuItem = ({
     </>
   )
 }
+
 const SettingsSummary = ({ evaluation }) => {
-  const isRestricted =
+  const isAccessListRestricted =
     evaluation.accessMode === UserOnEvaluationAccessMode.LINK_AND_ACCESS_LIST
 
+  const isIpRestricted =
+    evaluation.ipRestrictions && evaluation.ipRestrictions.length > 0
+
   const isLabelDefined = evaluation.label && evaluation.label.length > 0
+
+  const isAccessRestricted = isAccessListRestricted || isIpRestricted
 
   return (
     <Stack spacing={0}>
@@ -273,16 +279,26 @@ const SettingsSummary = ({ evaluation }) => {
           - Label is required.
         </Typography>
       )}
-      {isRestricted ? (
+      {isAccessRestricted ? (
         <Typography variant="caption">- Restricted access</Typography>
       ) : (
         <Typography variant="caption">
           - Anyone with the link can access
         </Typography>
       )}
-      {isRestricted && evaluation.accessList?.length > 0 && (
+      {isAccessListRestricted && (
+        <Typography variant="caption" pl={2}>
+          - Access list restriction is active.
+        </Typography>
+      )}
+      {isAccessListRestricted && evaluation.accessList?.length > 0 && (
         <Typography variant="caption" pl={2}>
           - Access list contains {evaluation.accessList.length} students
+        </Typography>
+      )}
+      {evaluation.ipRestrictions && (
+        <Typography variant="caption" pl={2}>
+          - IP restrictions are active.
         </Typography>
       )}
       {evaluation.conditions ? (

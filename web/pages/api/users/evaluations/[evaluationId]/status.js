@@ -19,13 +19,12 @@ import {
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
+import { withRestrictions } from '@/middleware/withRestrictions'
 import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
 import { EvaluationPhase, Role, UserOnEvaluationStatus } from '@prisma/client'
-
-import { isStudentAllowed } from './utils'
 
 // This function handles session tracking and session change detection for a user in an evaluation
 async function trackSessionChanges(
@@ -91,6 +90,7 @@ const get = async (req, res, prisma) => {
       id: evaluationId,
     },
     select: {
+      id: true,
       phase: true,
       durationActive: true,
       startAt: true,
@@ -121,26 +121,6 @@ const get = async (req, res, prisma) => {
     res.status(404).json({ message: 'User not found in evaluation' })
     return
   }
-
-  const allowed = isStudentAllowed(evaluation, studentEmail)
-
-  if (!allowed) {
-    // Track denied access attempt if the user is not allowed
-    await prisma.userOnEvaluationDeniedAccessAttempt.upsert({
-      where: {
-        userEmail_evaluationId: {
-          userEmail: studentEmail,
-          evaluationId: evaluationId,
-        },
-      },
-      update: {},
-      create: {
-        userEmail: studentEmail,
-        evaluationId: evaluationId,
-      },
-    })
-  }
-
   // Check if the evaluation is in the "IN_PROGRESS" phase
   if (evaluation.phase === EvaluationPhase.IN_PROGRESS) {
     // Call the session tracking function
@@ -155,7 +135,6 @@ const get = async (req, res, prisma) => {
 
   // Return the evaluation and user status
   res.status(200).json({
-    allowed: allowed,
     evaluation: {
       phase: evaluation.phase,
       durationActive: evaluation.durationActive,
@@ -196,6 +175,10 @@ const put = withEvaluationPhase(
 )
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
-  PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR, Role.STUDENT]),
+  GET: withRestrictions(
+    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  ),
+  PUT: withRestrictions(
+    withAuthorization(withPrisma(put), [Role.PROFESSOR, Role.STUDENT]),
+  ),
 })

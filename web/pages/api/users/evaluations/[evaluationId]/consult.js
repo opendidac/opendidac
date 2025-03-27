@@ -19,6 +19,7 @@ import {
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
+import { withRestrictions } from '@/middleware/withRestrictions'
 
 import { getUser } from '@/code/auth/auth'
 import { questionIncludeClause, IncludeStrategy } from '@/code/questions'
@@ -89,7 +90,7 @@ const get = async (req, res, prisma) => {
 
   if (!userOnEvaluation) {
     res.status(403).json({
-      message: 'You are not allowed to access this collections session',
+      message: 'You are not allowed to access this evaluation',
     })
     return
   }
@@ -97,5 +98,7 @@ const get = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  GET: withRestrictions(
+    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  ),
 })

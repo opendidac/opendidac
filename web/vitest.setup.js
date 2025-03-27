@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { UserOnEvaluationAccessMode } from '@prisma/client'
 
-export const isStudentAllowed = (evaluation, studentEmail) =>
-  evaluation.accessMode === UserOnEvaluationAccessMode.LINK_AND_ACCESS_LIST
-    ? evaluation.accessList?.includes(studentEmail)
-    : true
+import '@testing-library/jest-dom'
+
+// Mock the process.env if needed
+process.env = {
+  ...process.env,
+  // Add any environment variables needed for tests
+}

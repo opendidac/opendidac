@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 import {
+  EvaluationPhase,
   Role,
   StudentAnswerStatus,
-  EvaluationPhase,
   UserOnEvaluationStatus,
 } from '@prisma/client'
 
+import { getUser } from '@/code/auth/auth'
 import {
   withAuthorization,
   withMethodHandler,
@@ -29,8 +30,7 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth/auth'
-
+import { withRestrictions } from '@/middleware/withRestrictions'
 /*
  endpoint to handle users answers submission status
   PUT : Set the answer status to SUBMITTED
@@ -93,6 +93,10 @@ const del = withEvaluationPhase(
 )
 
 export default withMethodHandler({
-  PUT: withAuthorization(withPrisma(put), [Role.STUDENT, Role.PROFESSOR]),
-  DELETE: withAuthorization(withPrisma(del), [Role.STUDENT, Role.PROFESSOR]),
+  PUT: withRestrictions(
+    withAuthorization(withPrisma(put), [Role.STUDENT, Role.PROFESSOR]),
+  ),
+  DELETE: withRestrictions(
+    withAuthorization(withPrisma(del), [Role.STUDENT, Role.PROFESSOR]),
+  ),
 })
