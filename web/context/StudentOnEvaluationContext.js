@@ -100,11 +100,6 @@ export const StudentOnEvaluationProvider = ({ children }) => {
 
   const errorMessage = errorUserOnEvaluation?.message
 
-  console.log('isStudentNotInAccessList', isStudentNotInAccessList())
-  console.log('isStudentIpRestricted', isStudentIpRestricted())
-
-  console.log('errorEvaluationStatus', errorEvaluationStatus)
-
   /*
   evaluationToQuestions: 
   - contains the list of questions linked to the evaluation

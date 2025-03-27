@@ -97,8 +97,8 @@ describe('withIpRestriction Middleware', () => {
       await withRestrictions(mockHandler)(mockReq, mockRes)
       expect(mockRes.status).toHaveBeenCalledWith(403)
       expect(mockRes.json).toHaveBeenCalledWith({
-        message:
-          'Access denied: Your IP address is not allowed to access this evaluation',
+        type: 'error',
+        id: 'ip-restriction',
       })
       expect(mockHandler).not.toHaveBeenCalled()
     })
