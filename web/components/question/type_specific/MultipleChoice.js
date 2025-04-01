@@ -150,7 +150,7 @@ const MultipleChoiceOptionUpdate = ({
       alignItems="center"
       spacing={2}
       sx={getDragStyles(index)}
-      p={1}
+      p={2}
       borderRadius={2}
       onDragOver={(e) => handleDragOver(e, index)}
       onDragEnd={(e) => handleDragEnd(e, index)}
