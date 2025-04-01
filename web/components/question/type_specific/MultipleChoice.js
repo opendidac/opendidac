@@ -24,6 +24,7 @@ import DragHandleSVG from '@/components/layout/utils/DragHandleSVG'
 import ReorderableList from '@/components/layout/utils/ReorderableList'
 import { useDebouncedCallback } from 'use-debounce'
 import ScrollContainer from '@/components/layout/ScrollContainer'
+import { useReorderable } from '@/components/layout/utils/ReorderableList'
 
 const MultipleChoice = ({
   id = 'multi_choice',
@@ -83,6 +84,7 @@ const MultipleChoice = ({
         {options?.map((option, index) => (
           <MultipleChoiceOptionUpdate
             key={index}
+            index={index}
             round={round}
             option={option}
             onSelect={(id) => selectOption(id)}
@@ -113,8 +115,17 @@ const MultipleChoiceOptionUpdate = ({
   onSelect,
   onChangeOption,
   onDelete,
+  index,
 }) => {
   const [text, setText] = useState(option.text)
+  const {
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    disabled,
+    isDragging,
+    getDragStyles,
+  } = useReorderable()
 
   useEffect(() => {
     setText(option.text)
@@ -123,8 +134,25 @@ const MultipleChoiceOptionUpdate = ({
   const debounceOnChange = useDebouncedCallback(onChangeOption, 1000)
 
   return (
-    <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1 }}>
-      <Stack justifyContent={'center'} sx={{ cursor: 'move' }}>
+    <Stack
+      direction="row"
+      alignItems="center"
+      spacing={2}
+      sx={getDragStyles(index)}
+      onDragOver={(e) => handleDragOver(e, index)}
+      onDragEnd={(e) => handleDragEnd(e, index)}
+    >
+      <Stack
+        justifyContent={'center'}
+        sx={{
+          cursor: disabled ? 'not-allowed' : 'grab',
+          '&:active': {
+            cursor: 'grabbing',
+          },
+        }}
+        draggable={!disabled}
+        onDragStart={(e) => handleDragStart(e, index)}
+      >
         <DragHandleSVG />
       </Stack>
 
@@ -134,6 +162,7 @@ const MultipleChoiceOptionUpdate = ({
         color="success"
         size="small"
         onChange={(e) => onSelect(option.id)}
+        disabled={isDragging}
         sx={
           round && {
             borderRadius: '50%',
@@ -151,6 +180,7 @@ const MultipleChoiceOptionUpdate = ({
         value={text}
         fullWidth
         error={text.length === 0}
+        disabled={isDragging}
         onChange={(e) => {
           setText(e.target.value)
           debounceOnChange(e.target.value)
@@ -159,6 +189,7 @@ const MultipleChoiceOptionUpdate = ({
       <IconButton
         variant="small"
         color="error"
+        disabled={isDragging}
         onClick={() => {
           onDelete(option)
         }}

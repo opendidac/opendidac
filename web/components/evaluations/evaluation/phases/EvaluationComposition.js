@@ -38,6 +38,7 @@ import { useTheme } from '@emotion/react'
 import EvaluationTitleBar from '../layout/EvaluationTitleBar'
 import { useRouter } from 'next/router'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
+import { useReorderable } from '@/components/layout/utils/ReorderableList'
 
 const EvaluationComposition = ({
   groupScope,
@@ -387,6 +388,13 @@ const QuestionItem = ({
   readOnly = false,
 }) => {
   const router = useRouter()
+  const {
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    disabled,
+    getDragStyles,
+  } = useReorderable()
 
   const deleteCollectionToQuestion = useCallback(
     async (toDelete) => {
@@ -446,9 +454,22 @@ const QuestionItem = ({
       height={50}
       pl={1}
       borderBottom={`1px solid ${theme.palette.divider}`}
+      sx={getDragStyles(evaluationToQuestion.order)}
+      onDragOver={(e) => handleDragOver(e, evaluationToQuestion.order)}
+      onDragEnd={(e) => handleDragEnd(e, evaluationToQuestion.order)}
     >
       {!readOnly && (
-        <Stack justifyContent={'center'} sx={{ cursor: 'move' }}>
+        <Stack
+          justifyContent={'center'}
+          sx={{
+            cursor: disabled ? 'not-allowed' : 'grab',
+            '&:active': {
+              cursor: 'grabbing',
+            },
+          }}
+          draggable={!disabled}
+          onDragStart={(e) => handleDragStart(e, evaluationToQuestion.order)}
+        >
           <DragHandleSVG />
         </Stack>
       )}
