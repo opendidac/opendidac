@@ -33,6 +33,7 @@ import {
 } from '@/code/questions'
 
 import languages from '@/code/languages.json'
+import databaseTemplate from '@/code/database.json'
 
 const environments = languages.environments
 
@@ -181,31 +182,75 @@ const post = async (req, res, prisma) => {
       include: questionIncludeClause(true, true),
     })
 
-    if (questionType === QuestionType.code) {
-      // this must be done in a separate query because the files must be connected to the already existing code question
-      const language = options?.language
-      const codeQuestionType = options?.codeQuestionType
-      // get the default code for the language
-      const defaultCode = defaultCodeBasedOnLanguageAndType(
-        language,
-        codeQuestionType,
-        options,
-      )
-
-      // update the empty initial code with the default code
-      await prisma.code.update(
-        codeInitialUpdateQuery(
-          createdQuestion.id,
-          defaultCode,
+    switch (questionType) {
+      /* Code Question starting environment */
+      case QuestionType.code: {
+        const language = options?.language
+        const codeQuestionType = options?.codeQuestionType
+        const defaultCode = defaultCodeBasedOnLanguageAndType(
+          language,
           codeQuestionType,
-        ),
-      )
-      createdQuestion = await prisma.question.findUnique({
-        where: {
-          id: createdQuestion.id,
-        },
-        include: questionIncludeClause(true, true),
-      })
+          options,
+        )
+
+        await prisma.code.update(
+          codeInitialUpdateQuery(
+            createdQuestion.id,
+            defaultCode,
+            codeQuestionType,
+          ),
+        )
+        createdQuestion = await prisma.question.findUnique({
+          where: {
+            id: createdQuestion.id,
+          },
+          include: questionIncludeClause(true, true),
+        })
+        break
+      }
+      /* Database Question starting environment */
+      case QuestionType.database: {
+        // First update the database with the image and create queries
+        await prisma.database.update({
+          where: {
+            questionId: createdQuestion.id,
+          },
+          data: {
+            image: databaseTemplate.image,
+            databaseQueries: {
+              create: databaseTemplate.queries.map((query) => ({
+                order: query.order,
+                title: query.title,
+                description: query.description,
+                content: query.content,
+                lintActive: query.lintActive,
+                testQuery: query.testQuery,
+                studentPermission: query.studentPermission,
+                databaseToSolutionQuery: {
+                  create: {
+                    database: {
+                      connect: {
+                        questionId: createdQuestion.id,
+                      },
+                    },
+                  },
+                },
+              })),
+            },
+          },
+        })
+
+        createdQuestion = await prisma.question.findUnique({
+          where: {
+            id: createdQuestion.id,
+          },
+          include: questionIncludeClause(true, true),
+        })
+        break
+      }
+      default:
+        // No additional initialization needed for other question types
+        break
     }
   })
 
@@ -252,7 +297,7 @@ const defaultCodeBasedOnLanguageAndType = (
       contextExec: environment.sandbox.exec,
       contextPath: environment.sandbox.defaultPath,
       context: environment.codeReading.context,
-      snippets: environment.codeReading.snippets, // This is hypothetical; adjust based on your actual structure
+      snippets: environment.codeReading.snippets,
     }
   }
 }

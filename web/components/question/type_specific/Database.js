@@ -30,7 +30,7 @@ const Database = ({ groupScope, questionId, onUpdate }) => {
     { revalidateOnFocus: false },
   )
 
-  const [tab, setTab] = useState(0)
+  const [tab, setTab] = useState(1)
 
   return (
     <Loading loading={!database} errors={[error]}>
