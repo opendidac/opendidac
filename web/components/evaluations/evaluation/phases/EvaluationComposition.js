@@ -18,6 +18,7 @@ import Image from 'next/image'
 import { useDebouncedCallback } from 'use-debounce'
 import {
   Alert,
+  AlertTitle,
   Button,
   IconButton,
   Stack,
@@ -45,7 +46,6 @@ const EvaluationComposition = ({
   onCompositionChanged,
 }) => {
   const evaluationId = evaluation.id
-  const [hasWarnings, setHasWarnings] = useState(false)
 
   const readOnly = phaseGreaterThan(
     evaluation.phase,
@@ -99,38 +99,13 @@ const EvaluationComposition = ({
           </Button>
         }
       />
-      {hasWarnings && (
-        <Alert severity="warning" sx={{ mb: 1 }}>
-          <Typography variant="body2">
-            Some questions have compliance warnings. Hover over the warning icon
-            next to the questions to see details.
-          </Typography>
-        </Alert>
-      )}
-      {readOnly ? (
-        <Alert severity="info">
-          <Typography variant="body2">
-            This evaluation is locked for composition. The full list of
-            questions has been copied to the evaluation.
-          </Typography>
-        </Alert>
-      ) : (
-        <Alert severity="info">
-          <Typography variant="body2">
-            Once you move beyond this phase, the composition will be locked. At
-            that stage, the full list of questions will be copied to the
-            evaluation.
-          </Typography>
-        </Alert>
-      )}
-      <ScrollContainer spacing={1} padding={1} pb={24}>
+      <ScrollContainer spacing={1} px={1} pb={24}>
         <EvaluationCompositionQuestions
           groupScope={groupScope}
           evaluationId={evaluationId}
           composition={composition}
           readOnly={readOnly}
           onCompositionChanged={onCompositionChanged}
-          onWarningsChange={setHasWarnings}
         />
       </ScrollContainer>
       <QuestionIncludeDrawer
@@ -148,77 +123,129 @@ const EvaluationComposition = ({
   )
 }
 
-const codeQuestionComplianceCheck = (collectionToQuestions) => {
-  const warnings = {}
-
-  for (const collectionToQuestion of collectionToQuestions) {
-    // find other question of the type code of opposite code type and same language
-    if (collectionToQuestion.question.type == QuestionType.code) {
-      const warning =
-        'The students may use the code writing code check feature to execute code reading snippets and get the outputs. This can lead to cheating. It is recommended to avoid mixing code reading and code writing questions of the same language in the same collection.'
-
-      const codeType = collectionToQuestion.question.code.codeType
-      const language = collectionToQuestion.question.code.language
-      const oppositeCodeType =
-        codeType === CodeQuestionType.codeWriting
-          ? CodeQuestionType.codeReading
-          : CodeQuestionType.codeWriting
-
-      const oppositeCodeQuestion = collectionToQuestions.filter(
-        (item) =>
-          item.question.type === 'code' &&
-          item.question.code.codeType === oppositeCodeType &&
-          item.question.code.language === language,
-      )
-
-      if (oppositeCodeQuestion.length > 0) {
-        warnings[collectionToQuestion.question.id] = warning
-        for (const oppositeQuestion of oppositeCodeQuestion) {
-          warnings[oppositeQuestion.question.id] = warning
-        }
-      }
-    }
-  }
-  return warnings
-}
-
-export const complianceCheck = (evaluationToQuestions) => {
-  const warnings = {}
-
-  for (const eq of evaluationToQuestions) {
-    switch (eq.question.type) {
-      case QuestionType.code:
-        Object.assign(
-          warnings,
-          codeQuestionComplianceCheck(evaluationToQuestions),
-        )
-        break
-      default:
-        break
-    }
-  }
-
-  return warnings
-}
-
 const EvaluationCompositionQuestions = ({
   groupScope,
   evaluationId,
   composition,
   readOnly,
   onCompositionChanged,
-  onWarningsChange,
 }) => {
   const [questions, setQuestions] = useState(composition)
+  const [hasWarnings, setHasWarnings] = useState(false)
+  const [warnings, setWarnings] = useState({})
+  const [pointsWarnings, setPointsWarnings] = useState({})
+  const [globalWarnings, setGlobalWarnings] = useState([])
 
   useEffect(() => {
     setQuestions(composition)
   }, [composition])
 
+  const checkGlobalCompliance = useCallback((evaluationToQuestions) => {
+    const warnings = []
+    const totalPoints = evaluationToQuestions.reduce(
+      (sum, eq) => sum + (eq.points || 0),
+      0,
+    )
+
+    if (totalPoints === 0) {
+      warnings.push(
+        'The total points for all questions is 0. Please set points for at least one question.',
+      )
+    }
+
+    return warnings
+  }, [])
+
+  const codeQuestionComplianceCheck = useCallback((collectionToQuestions) => {
+    const warnings = {}
+
+    for (const collectionToQuestion of collectionToQuestions) {
+      // find other question of the type code of opposite code type and same language
+      if (collectionToQuestion.question.type == QuestionType.code) {
+        const warning =
+          'The students may use the code writing code check feature to execute code reading snippets and get the outputs. This can lead to cheating. It is recommended to avoid mixing code reading and code writing questions of the same language in the same collection.'
+
+        const codeType = collectionToQuestion.question.code.codeType
+        const language = collectionToQuestion.question.code.language
+        const oppositeCodeType =
+          codeType === CodeQuestionType.codeWriting
+            ? CodeQuestionType.codeReading
+            : CodeQuestionType.codeWriting
+
+        const oppositeCodeQuestion = collectionToQuestions.filter(
+          (item) =>
+            item.question.type === 'code' &&
+            item.question.code.codeType === oppositeCodeType &&
+            item.question.code.language === language,
+        )
+
+        if (oppositeCodeQuestion.length > 0) {
+          warnings[collectionToQuestion.question.id] = warning
+          for (const oppositeQuestion of oppositeCodeQuestion) {
+            warnings[oppositeQuestion.question.id] = warning
+          }
+        }
+      }
+    }
+    return warnings
+  }, [])
+
+  const pointsComplianceCheck = useCallback((evaluationToQuestions) => {
+    const warnings = {}
+
+    // Individual warnings for questions with 0 points
+    evaluationToQuestions.forEach((eq) => {
+      if (!eq.points || eq.points === 0) {
+        warnings[eq.question.id] =
+          'This question has no points assigned. Please set a value greater than 0.'
+      }
+    })
+
+    return warnings
+  }, [])
+
+  const complianceCheck = useCallback(
+    (evaluationToQuestions) => {
+      const warnings = {}
+
+      // Check code question compliance
+      for (const eq of evaluationToQuestions) {
+        switch (eq.question.type) {
+          case QuestionType.code:
+            Object.assign(
+              warnings,
+              codeQuestionComplianceCheck(evaluationToQuestions),
+            )
+            break
+          default:
+            break
+        }
+      }
+
+      return warnings
+    },
+    [codeQuestionComplianceCheck],
+  )
+
   useEffect(() => {
-    const warnings = complianceCheck(composition)
-    onWarningsChange?.(Object.keys(warnings).length > 0)
-  }, [composition, onWarningsChange])
+    const newWarnings = complianceCheck(composition)
+    const newPointsWarnings = pointsComplianceCheck(composition)
+    const newGlobalWarnings = checkGlobalCompliance(composition)
+
+    setWarnings(newWarnings)
+    setPointsWarnings(newPointsWarnings)
+    setGlobalWarnings(newGlobalWarnings)
+    setHasWarnings(
+      Object.keys(newWarnings).length > 0 ||
+        Object.keys(newPointsWarnings).length > 0 ||
+        newGlobalWarnings.length > 0,
+    )
+  }, [
+    composition,
+    complianceCheck,
+    pointsComplianceCheck,
+    checkGlobalCompliance,
+  ])
 
   const saveReOrder = useCallback(
     async (reordered) => {
@@ -265,36 +292,89 @@ const EvaluationCompositionQuestions = ({
 
   const getIndicator = useCallback(
     (questionId) => {
-      const warnings = complianceCheck(composition)
-      const warningMessage = warnings[questionId]
-      if (warningMessage) {
+      const questionWarnings = []
+
+      // Add individual question warnings
+      if (warnings[questionId]) {
+        questionWarnings.push(warnings[questionId])
+      }
+
+      // Add points warning if applicable
+      if (pointsWarnings[questionId]) {
+        questionWarnings.push(pointsWarnings[questionId])
+      }
+
+      if (questionWarnings.length > 0) {
         return (
-          <UserHelpPopper mode={'warning'}>{warningMessage}</UserHelpPopper>
+          <Stack direction="row" spacing={0}>
+            {questionWarnings.map((warning, index) => (
+              <UserHelpPopper key={index} mode={'warning'}>
+                {warning}
+              </UserHelpPopper>
+            ))}
+          </Stack>
         )
       }
       return null
     },
-    [composition],
+    [warnings, pointsWarnings],
   )
 
   return (
-    <ReorderableList disabled={readOnly} onChangeOrder={onChangeOrder}>
-      {questions.map((eToQ, index) => (
-        <QuestionItem
-          key={eToQ.id}
-          groupScope={groupScope}
-          evaluationToQuestion={eToQ}
-          readOnly={readOnly}
-          indicator={getIndicator(eToQ.question.id)}
-          onChange={(index, updated) => {
-            onCompositionChanged()
-          }}
-          onDelete={() => {
-            onCompositionChanged()
-          }}
-        />
-      ))}
-    </ReorderableList>
+    <Stack spacing={1}>
+      {hasWarnings && (
+        <Alert severity="warning" sx={{ mb: 1 }}>
+          <AlertTitle>Compliance warnings</AlertTitle>
+          <Stack spacing={1}>
+            <Typography variant="body2">
+              Click on the warning icon next to the questions to see details.
+            </Typography>
+            {globalWarnings.map((warning, index) => (
+              <Typography key={index} variant="body2">
+                {warning}
+              </Typography>
+            ))}
+            <Typography variant="body1">
+              These warnings can be ignored. You may proceed if you have
+              carefully considered the implications.
+            </Typography>
+          </Stack>
+        </Alert>
+      )}
+      {readOnly ? (
+        <Alert severity="info">
+          <Typography variant="body2">
+            This evaluation is locked for composition. The full list of
+            questions has been copied to the evaluation.
+          </Typography>
+        </Alert>
+      ) : (
+        <Alert severity="info">
+          <Typography variant="body2">
+            Once you move beyond this phase, the composition will be locked. At
+            that stage, the full list of questions will be copied to the
+            evaluation.
+          </Typography>
+        </Alert>
+      )}
+      <ReorderableList disabled={readOnly} onChangeOrder={onChangeOrder}>
+        {questions.map((eToQ, index) => (
+          <QuestionItem
+            key={eToQ.id}
+            groupScope={groupScope}
+            evaluationToQuestion={eToQ}
+            readOnly={readOnly}
+            indicator={getIndicator(eToQ.question.id)}
+            onChange={(index, updated) => {
+              onCompositionChanged()
+            }}
+            onDelete={() => {
+              onCompositionChanged()
+            }}
+          />
+        ))}
+      </ReorderableList>
+    </Stack>
   )
 }
 
