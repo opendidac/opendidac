@@ -31,11 +31,12 @@ import QuestionTypeIcon from '@/components/question/QuestionTypeIcon'
 import ScrollContainer from '@/components/layout/ScrollContainer'
 import ReorderableList from '@/components/layout/utils/ReorderableList'
 import { phaseGreaterThan } from '../phases'
-import { EvaluationPhase } from '@prisma/client'
+import { CodeQuestionType, EvaluationPhase, QuestionType } from '@prisma/client'
 import QuestionIncludeDrawer from './composition/QuestionIncludeDrawer'
 import { useTheme } from '@emotion/react'
 import EvaluationTitleBar from '../layout/EvaluationTitleBar'
 import { useRouter } from 'next/router'
+import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 
 const EvaluationComposition = ({
   groupScope,
@@ -44,6 +45,7 @@ const EvaluationComposition = ({
   onCompositionChanged,
 }) => {
   const evaluationId = evaluation.id
+  const [hasWarnings, setHasWarnings] = useState(false)
 
   const readOnly = phaseGreaterThan(
     evaluation.phase,
@@ -97,6 +99,14 @@ const EvaluationComposition = ({
           </Button>
         }
       />
+      {hasWarnings && (
+        <Alert severity="warning" sx={{ mb: 1 }}>
+          <Typography variant="body2">
+            Some questions have compliance warnings. Hover over the warning icon
+            next to the questions to see details.
+          </Typography>
+        </Alert>
+      )}
       {readOnly ? (
         <Alert severity="info">
           <Typography variant="body2">
@@ -120,6 +130,7 @@ const EvaluationComposition = ({
           composition={composition}
           readOnly={readOnly}
           onCompositionChanged={onCompositionChanged}
+          onWarningsChange={setHasWarnings}
         />
       </ScrollContainer>
       <QuestionIncludeDrawer
@@ -137,18 +148,77 @@ const EvaluationComposition = ({
   )
 }
 
+const codeQuestionComplianceCheck = (collectionToQuestions) => {
+  const warnings = {}
+
+  for (const collectionToQuestion of collectionToQuestions) {
+    // find other question of the type code of opposite code type and same language
+    if (collectionToQuestion.question.type == QuestionType.code) {
+      const warning =
+        'The students may use the code writing code check feature to execute code reading snippets and get the outputs. This can lead to cheating. It is recommended to avoid mixing code reading and code writing questions of the same language in the same collection.'
+
+      const codeType = collectionToQuestion.question.code.codeType
+      const language = collectionToQuestion.question.code.language
+      const oppositeCodeType =
+        codeType === CodeQuestionType.codeWriting
+          ? CodeQuestionType.codeReading
+          : CodeQuestionType.codeWriting
+
+      const oppositeCodeQuestion = collectionToQuestions.filter(
+        (item) =>
+          item.question.type === 'code' &&
+          item.question.code.codeType === oppositeCodeType &&
+          item.question.code.language === language,
+      )
+
+      if (oppositeCodeQuestion.length > 0) {
+        warnings[collectionToQuestion.question.id] = warning
+        for (const oppositeQuestion of oppositeCodeQuestion) {
+          warnings[oppositeQuestion.question.id] = warning
+        }
+      }
+    }
+  }
+  return warnings
+}
+
+export const complianceCheck = (evaluationToQuestions) => {
+  const warnings = {}
+
+  for (const eq of evaluationToQuestions) {
+    switch (eq.question.type) {
+      case QuestionType.code:
+        Object.assign(
+          warnings,
+          codeQuestionComplianceCheck(evaluationToQuestions),
+        )
+        break
+      default:
+        break
+    }
+  }
+
+  return warnings
+}
+
 const EvaluationCompositionQuestions = ({
   groupScope,
   evaluationId,
   composition,
   readOnly,
   onCompositionChanged,
+  onWarningsChange,
 }) => {
   const [questions, setQuestions] = useState(composition)
 
   useEffect(() => {
     setQuestions(composition)
   }, [composition])
+
+  useEffect(() => {
+    const warnings = complianceCheck(composition)
+    onWarningsChange?.(Object.keys(warnings).length > 0)
+  }, [composition, onWarningsChange])
 
   const saveReOrder = useCallback(
     async (reordered) => {
@@ -193,6 +263,20 @@ const EvaluationCompositionQuestions = ({
     [debounceSaveOrdering, questions, setQuestions],
   )
 
+  const getIndicator = useCallback(
+    (questionId) => {
+      const warnings = complianceCheck(composition)
+      const warningMessage = warnings[questionId]
+      if (warningMessage) {
+        return (
+          <UserHelpPopper mode={'warning'}>{warningMessage}</UserHelpPopper>
+        )
+      }
+      return null
+    },
+    [composition],
+  )
+
   return (
     <ReorderableList disabled={readOnly} onChangeOrder={onChangeOrder}>
       {questions.map((eToQ, index) => (
@@ -201,6 +285,7 @@ const EvaluationCompositionQuestions = ({
           groupScope={groupScope}
           evaluationToQuestion={eToQ}
           readOnly={readOnly}
+          indicator={getIndicator(eToQ.question.id)}
           onChange={(index, updated) => {
             onCompositionChanged()
           }}
