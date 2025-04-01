@@ -211,6 +211,9 @@ export const StudentOnEvaluationProvider = ({ children }) => {
     [evaluationToQuestions],
   )
 
+  console.log('isStudentNotInAccessList', isStudentNotInAccessList())
+  console.log('isStudentIpRestricted', isStudentIpRestricted())
+
   return (
     <StudentOnEvaluationContext.Provider
       value={{
