@@ -49,6 +49,7 @@ export const themeOptions = {
     },
   },
   typography: {
+    fontFamily: 'Roboto',
     fontSize: 12,
     fontWeightLight: 400,
     fontWeightRegular: 400,
