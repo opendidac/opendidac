@@ -66,7 +66,7 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
             {
               label: 'Questions',
               column: { width: '80px' },
-              renderCell: (row) => row.evaluationToQuestions.length,
+              renderCell: (row) => row._count?.evaluationToQuestions || 'N/A',
             },
             {
               label: 'Students',

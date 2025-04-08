@@ -37,18 +37,9 @@ const get = async (req, res, prisma) => {
       },
     },
     include: {
-      evaluationToQuestions: {
+      _count: {
         select: {
-          question: {
-            include: {
-              sourceQuestion: true,
-            },
-          },
-          points: true,
-          order: true,
-        },
-        orderBy: {
-          order: 'asc',
+          evaluationToQuestions: true,
         },
       },
       students: true,

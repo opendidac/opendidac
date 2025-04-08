@@ -13,10 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useRef, useState } from 'react'
+import { createContext, useCallback, useRef, useState, useContext } from 'react'
+import { useTheme } from '@mui/material/styles'
+
+const ReorderableContext = createContext(null)
+
+export const useReorderable = () => {
+  const context = useContext(ReorderableContext)
+  if (!context) {
+    throw new Error('useReorderable must be used within a ReorderableList')
+  }
+  return context
+}
 
 const ReorderableList = ({ children, onChangeOrder, onOrderEnd, disabled }) => {
+  const theme = useTheme()
   const [sourceIndex, setSourceIndex] = useState(null)
+  const [isDragging, setIsDragging] = useState(false)
   const lastTargetIndex = useRef(null)
 
   const handleOrderChange = useCallback(
@@ -41,6 +54,7 @@ const ReorderableList = ({ children, onChangeOrder, onOrderEnd, disabled }) => {
     (e, index) => {
       if (!disabled) {
         setSourceIndex(index)
+        setIsDragging(true)
         lastTargetIndex.current = null // Reset the last target index on drag start
       }
     },
@@ -60,26 +74,56 @@ const ReorderableList = ({ children, onChangeOrder, onOrderEnd, disabled }) => {
   const handleDragEnd = useCallback(() => {
     if (!disabled) {
       setSourceIndex(null)
+      setIsDragging(false)
       if (onOrderEnd) {
         onOrderEnd(lastTargetIndex.current) // Use lastTargetIndex.current for the final position
       }
     }
   }, [onOrderEnd, disabled])
 
+  const getDragStyles = useCallback(
+    (index) => {
+      if (!isDragging) return {}
+
+      const isBeingDragged = sourceIndex === index
+
+      return {
+        opacity: isBeingDragged ? 0.75 : 1,
+        transition: 'transform 0.2s ease, opacity 0.2s ease',
+        transform: isBeingDragged ? 'scale(0.99)' : 'scale(1)',
+        position: 'relative',
+        '&::after': isBeingDragged
+          ? {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              border: `2px dashed ${theme.palette.primary.main}`,
+              borderRadius: '4px',
+              pointerEvents: 'none',
+            }
+          : {},
+      }
+    },
+    [isDragging, sourceIndex, theme.palette.primary.main],
+  )
+
+  const value = {
+    sourceIndex,
+    isDragging,
+    disabled,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    getDragStyles,
+  }
+
   return (
-    children &&
-    children.map((child, index) => (
-      <div
-        key={index}
-        draggable={!disabled} // Disable dragging if disabled
-        onDragStart={(e) => handleDragStart(e, index)}
-        onDragOver={(e) => handleDragOver(e, index)}
-        onDragEnd={(e) => handleDragEnd(e, index)}
-        style={{ cursor: disabled ? 'not-allowed' : 'grab' }} // Optional: Change cursor to indicate disabled state
-      >
-        {child}
-      </div>
-    ))
+    <ReorderableContext.Provider value={value}>
+      {children}
+    </ReorderableContext.Provider>
   )
 }
 

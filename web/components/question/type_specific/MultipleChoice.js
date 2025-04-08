@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Stack, TextField, IconButton, ToggleButton } from '@mui/material'
+import { Stack, IconButton, ToggleButton } from '@mui/material'
 
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
@@ -24,11 +24,16 @@ import DragHandleSVG from '@/components/layout/utils/DragHandleSVG'
 import ReorderableList from '@/components/layout/utils/ReorderableList'
 import { useDebouncedCallback } from 'use-debounce'
 import ScrollContainer from '@/components/layout/ScrollContainer'
+import { useReorderable } from '@/components/layout/utils/ReorderableList'
+import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
+import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
+import { useTheme } from '@emotion/react'
 
 const MultipleChoice = ({
   id = 'multi_choice',
   limiterActivated,
   options: initial,
+  previewMode = false,
   onChangeOption,
   onChangeOrder,
   onDelete,
@@ -78,53 +83,89 @@ const MultipleChoice = ({
   )
 
   return (
-    <ScrollContainer spacing={1} pb={8}>
-      <ReorderableList onChangeOrder={onReorder}>
-        {options?.map((option, index) => (
-          <MultipleChoiceOptionUpdate
-            key={index}
-            round={round}
-            option={option}
-            onSelect={(id) => selectOption(id)}
-            onChangeOption={(value) => {
-              const newOptions = [...options]
-              const option = newOptions[index]
-              option.text = value
-              setOptions(newOptions)
-              onChangeOption(option)
-            }}
-            onDelete={(option) => {
-              let newOptions = [...options]
-              const deleted = newOptions.find((opt) => opt.id === option.id)
-              newOptions.splice(index, 1)
-              setOptions(newOptions)
-              onDelete(deleted)
-            }}
-          />
-        ))}
-      </ReorderableList>
-    </ScrollContainer>
+    <Stack spacing={2} height="100%">
+      <Stack flex={1} minHeight={0}>
+        <ScrollContainer spacing={1}>
+          <ReorderableList onChangeOrder={onReorder}>
+            {options?.map((option, index) => (
+              <MultipleChoiceOptionUpdate
+                key={index}
+                index={index}
+                round={round}
+                option={option}
+                previewMode={previewMode}
+                onSelect={(id) => selectOption(id)}
+                onChangeOption={(value) => {
+                  const newOptions = [...options]
+                  const option = newOptions[index]
+                  option.text = value
+                  setOptions(newOptions)
+                  onChangeOption(option)
+                }}
+                onDelete={(option) => {
+                  let newOptions = [...options]
+                  const deleted = newOptions.find((opt) => opt.id === option.id)
+                  newOptions.splice(index, 1)
+                  setOptions(newOptions)
+                  onDelete(deleted)
+                }}
+              />
+            ))}
+          </ReorderableList>
+        </ScrollContainer>
+      </Stack>
+    </Stack>
   )
 }
 
 const MultipleChoiceOptionUpdate = ({
   round = false,
   option,
+  previewMode = false,
   onSelect,
   onChangeOption,
   onDelete,
+  index,
 }) => {
   const [text, setText] = useState(option.text)
+  const {
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    disabled,
+    isDragging,
+    getDragStyles,
+  } = useReorderable()
 
   useEffect(() => {
     setText(option.text)
   }, [option?.text])
 
   const debounceOnChange = useDebouncedCallback(onChangeOption, 1000)
+  const theme = useTheme()
 
   return (
-    <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1 }}>
-      <Stack justifyContent={'center'} sx={{ cursor: 'move' }}>
+    <Stack
+      direction="row"
+      alignItems="center"
+      spacing={2}
+      sx={getDragStyles(index)}
+      p={2}
+      borderRadius={2}
+      onDragOver={(e) => handleDragOver(e, index)}
+      onDragEnd={(e) => handleDragEnd(e, index)}
+      bgcolor={theme.palette.background.default}
+    >
+      <Stack
+        sx={{
+          cursor: disabled ? 'not-allowed' : 'grab',
+          '&:active': {
+            cursor: 'grabbing',
+          },
+        }}
+        draggable={!disabled}
+        onDragStart={(e) => handleDragStart(e, index)}
+      >
         <DragHandleSVG />
       </Stack>
 
@@ -134,6 +175,7 @@ const MultipleChoiceOptionUpdate = ({
         color="success"
         size="small"
         onChange={(e) => onSelect(option.id)}
+        disabled={isDragging}
         sx={
           round && {
             borderRadius: '50%',
@@ -143,25 +185,32 @@ const MultipleChoiceOptionUpdate = ({
         {option.isCorrect ? <CheckIcon /> : <ClearIcon />}
       </ToggleButton>
 
-      <TextField
-        id="outlined-text"
-        label={`Option ${option.order + 1}`}
-        variant="standard"
-        size="small"
-        value={text}
-        fullWidth
-        error={text.length === 0}
-        onChange={(e) => {
-          setText(e.target.value)
-          debounceOnChange(e.target.value)
-        }}
-      />
+      <Stack width={'100%'} height={'100%'}>
+        {previewMode ? (
+          <MarkdownViewer content={text} />
+        ) : (
+          <Stack minHeight={250} bgcolor={theme.palette.background.paper} p={1}>
+            <MarkdownEditor
+              title={`Option ${option.order + 1} (markdown)`}
+              rawContent={text}
+              onChange={(value) => {
+                setText(value)
+                debounceOnChange(value)
+              }}
+              withUpload={false}
+            />
+          </Stack>
+        )}
+      </Stack>
+
       <IconButton
         variant="small"
         color="error"
+        disabled={isDragging}
         onClick={() => {
           onDelete(option)
         }}
+        sx={{ mt: 1 }}
       >
         <DeleteIcon />
       </IconButton>

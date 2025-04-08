@@ -26,7 +26,7 @@ const MarkdownViewer = ({ content, bgColor = 'transparent' }) => {
         '&[data-color-mode="light"] .wmde-markdown': {
           '--color-canvas-default': bgColor,
           backgroundColor: 'var(--color-canvas-default)',
-          fontSize: '13px',
+          fontFamily: 'Monserrat',
         },
       }}
     >

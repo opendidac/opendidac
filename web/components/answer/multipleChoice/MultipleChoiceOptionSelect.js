@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Stack, ToggleButton, Typography } from '@mui/material'
+import { Stack, ToggleButton } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
 import ClearIcon from '@mui/icons-material/Clear'
+import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
+import { useTheme } from '@emotion/react'
 
 const MultipleChoiceOptionSelect = ({
   round = false,
@@ -23,16 +25,16 @@ const MultipleChoiceOptionSelect = ({
   onSelect,
   disabled = false,
 }) => {
+  const theme = useTheme()
+
   return (
     <Stack
       direction="row"
       alignItems="center"
-      spacing={2}
-      sx={{
-        flex: 1,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
-      }}
+      spacing={1}
+      flex={1}
+      cursor={disabled ? 'not-allowed' : 'pointer'}
+      opacity={disabled ? 0.5 : 1}
       onClick={(ev) => {
         if (!disabled) {
           ev.stopPropagation()
@@ -63,7 +65,12 @@ const MultipleChoiceOptionSelect = ({
         {option.isCorrect ? <CheckIcon /> : <ClearIcon />}
       </ToggleButton>
 
-      <Typography variant="body1">{option.text}</Typography>
+      <Stack flex={1} bgcolor={theme.palette.background.paper}>
+        <MarkdownViewer
+          content={option.text}
+          bgColor={theme.palette.background.paper}
+        />
+      </Stack>
     </Stack>
   )
 }

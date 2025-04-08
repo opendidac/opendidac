@@ -26,7 +26,7 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { isStudentAllowed } from './utils'
+import { withRestrictions } from '@/middleware/withRestrictions'
 
 /*
 Get the details about thr evaluation for a users
@@ -95,18 +95,13 @@ const get = withEvaluationPhase(
         return
       }
 
-      if (!isStudentAllowed(userOnEvaluation.evaluation, email)) {
-        res
-          .status(403)
-          .json({ message: 'You are not allowed to access this evaluation' })
-        return
-      }
-
       res.status(200).json(userOnEvaluation.evaluation.evaluationToQuestions)
     },
   ),
 )
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  GET: withRestrictions(
+    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  ),
 })
