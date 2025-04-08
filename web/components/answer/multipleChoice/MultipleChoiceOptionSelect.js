@@ -30,13 +30,11 @@ const MultipleChoiceOptionSelect = ({
   return (
     <Stack
       direction="row"
-      alignItems="flex-start"
-      spacing={2}
-      sx={{
-        flex: 1,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
-      }}
+      alignItems="center"
+      spacing={1}
+      flex={1}
+      cursor={disabled ? 'not-allowed' : 'pointer'}
+      opacity={disabled ? 0.5 : 1}
       onClick={(ev) => {
         if (!disabled) {
           ev.stopPropagation()
