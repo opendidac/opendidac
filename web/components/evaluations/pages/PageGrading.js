@@ -329,19 +329,17 @@ const PageGrading = () => {
 
   const onAddendumChanged = useCallback(
     (value) => {
-      const newEvaluationToQuestions = evaluationToQuestions.map((q) => {
-        if (q.questionId === evaluationToQuestion.questionId) {
-          return {
-            ...q,
-            addendum: value,
-          }
-        }
-        return q
-      })
-      setEvaluationToQuestions(newEvaluationToQuestions)
+      setEvaluationToQuestions(prevQuestions => 
+        prevQuestions.map(q => 
+          q.questionId === evaluationToQuestion.questionId
+            ? { ...q, addendum: value }
+            : q
+        )
+      )
     },
-    [evaluationToQuestion, evaluationToQuestions],
+    [evaluationToQuestion]
   )
+  
 
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>

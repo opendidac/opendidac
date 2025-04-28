@@ -32,19 +32,23 @@ const Addendum = ({
   onAddendumChanged,
 }) => {
   const theme = useTheme()
-
   const { show: showSnackbar } = useSnackbar()
-  const [addendum, setAddendum] = useState(evaluationToQuestion?.addendum || '')
+  const [localAddendum, setLocalAddendum] = useState(evaluationToQuestion?.addendum || '')
+  const [isSaving, setIsSaving] = useState(false)
 
+  // Only update local state when evaluationToQuestion changes from parent
   useEffect(() => {
-    setAddendum(evaluationToQuestion?.addendum || '')
-  }, [evaluationToQuestion])
+    if (evaluationToQuestion?.addendum !== localAddendum) {
+      setLocalAddendum(evaluationToQuestion?.addendum || '')
+    }
+  }, [evaluationToQuestion?.addendum])
 
   const debounceAddendumChange = useDebouncedCallback(
     useCallback(
-      async (addendum) => {
-        if (!evaluationToQuestion) return
+      async (newAddendum) => {
+        if (!evaluationToQuestion || isSaving) return
 
+        setIsSaving(true)
         try {
           const response = await fetch(
             `/api/${groupScope}/evaluations/${evaluationId}/questions/${evaluationToQuestion.questionId}/`,
@@ -53,40 +57,39 @@ const Addendum = ({
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ addendum }),
+              body: JSON.stringify({ addendum: newAddendum }),
             },
           )
 
           if (!response.ok) {
             throw new Error('Failed to update addendum')
           }
-          // Call parent callback only after successful API update
-          onAddendumChanged?.(addendum)
+          
+          // Only call parent callback after successful API update
+          onAddendumChanged?.(newAddendum)
         } catch (error) {
           showSnackbar('Failed to save addendum', 'error')
+          // Revert to previous state on error
+          setLocalAddendum(evaluationToQuestion?.addendum || '')
+        } finally {
+          setIsSaving(false)
         }
       },
-      [
-        groupScope,
-        evaluationId,
-        showSnackbar,
-        evaluationToQuestion,
-        onAddendumChanged,
-      ],
+      [groupScope, evaluationId, evaluationToQuestion, onAddendumChanged, isSaving],
     ),
-    500,
+    1000,
   )
 
   const handleAddendumChange = useCallback(
     (value) => {
-      setAddendum(value)
+      setLocalAddendum(value)
       debounceAddendumChange(value)
     },
     [debounceAddendumChange],
   )
 
   // Return null if in readonly mode and no addendum
-  if (readOnly && (!addendum || addendum.length === 0)) {
+  if (readOnly && (!localAddendum || localAddendum.length === 0)) {
     return null
   }
 
@@ -107,13 +110,13 @@ const Addendum = ({
       <AddendumHeader readOnly={readOnly} />
       {readOnly ? (
         <Box pb={1}>
-          <MarkdownViewer content={addendum} />
+          <MarkdownViewer content={localAddendum} />
         </Box>
       ) : (
         <MarkdownEditor
           groupScope={groupScope}
           readOnly={readOnly}
-          rawContent={addendum}
+          rawContent={localAddendum}
           onChange={handleAddendumChange}
         />
       )}
