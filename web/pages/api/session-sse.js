@@ -15,10 +15,18 @@
  */
 
 import { getUser } from '@/code/auth/auth'
-import { addSSEClient } from '@/code/auth/sseClients'
+import { addSSEClient, getSSEClientCount } from '@/code/auth/sseClients'
 
 export default async function handler(req, res) {
   console.log('Opening SSE connection')
+
+  // Check connection limit
+  const clientCount = getSSEClientCount()
+  if (clientCount >= 5) { // Leave one slot for other requests
+    res.write(`data: ${JSON.stringify({ status: 'error', message: 'Connection limit reached' })}\n\n`)
+    res.end()
+    return
+  }
 
   // Set headers for SSE
   res.setHeader('Content-Type', 'text/event-stream')
@@ -34,6 +42,12 @@ export default async function handler(req, res) {
     return
   }
 
-  // Store the client connection, the close handler is managed in sseClients.js
+  // Store the client connection
   addSSEClient(user.id, res)
+
+  // Handle client disconnect
+  req.on('close', () => {
+    console.log('Client disconnected')
+    // The cleanup is handled in sseClients.js
+  })
 }

@@ -151,3 +151,12 @@ export function notifySSEClients(userId, message) {
     logConnectedClients('Notified', userId)
   }
 }
+
+/**
+ * Returns the number of active SSE connections.
+ *
+ * @returns {number} The total number of active SSE connections
+ */
+export function getSSEClientCount() {
+  return Array.from(__clients.values()).reduce((acc, connections) => acc + connections.size, 0)
+}
