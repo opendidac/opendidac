@@ -94,6 +94,7 @@ const CompareMultipleChoice = ({
                       key={index}
                       option={option}
                       round={radio}
+                      isCorrect={option.isCorrect}
                       isFilled={answer.options.some(
                         (opt) => opt.id === option.id,
                       )}
