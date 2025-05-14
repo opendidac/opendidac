@@ -21,6 +21,8 @@ import DialogFeedback from '@/components/feedback/DialogFeedback'
 import { useEffect, useState } from 'react'
 import CardSelector from '@/components/input/CardSelector'
 import { QuestionSource, UserOnEvaluationAccessMode } from '@prisma/client'
+import useSWR from 'swr'
+import { fetcher } from '@/code/utils'
 const Presets = [
   {
     value: 'exam',
@@ -172,9 +174,8 @@ const AddEvaluationDialog = ({ existingEvaluations, open, onClose }) => {
             <PresetSummary preset={getPresetSettings(preset)} />
 
             <EvaluationSummary
-              evaluation={existingEvaluations.find(
-                (e) => e.id === templateEvaluation?.id,
-              )}
+              groupScope={groupScope}
+              evaluationId={templateEvaluation?.id}
             />
           </Stack>
         </Stack>
@@ -184,13 +185,22 @@ const AddEvaluationDialog = ({ existingEvaluations, open, onClose }) => {
   )
 }
 
-const EvaluationSummary = ({ evaluation }) => {
+const EvaluationSummary = ({ groupScope, evaluationId }) => {
+  const { data: evaluation } = useSWR(
+    `/api/${groupScope}/evaluations/${evaluationId}`,
+    fetcher,
+  )
+  const { data: composition } = useSWR(
+    `/api/${groupScope}/evaluations/${evaluationId}/composition`,
+    fetcher,
+  )
+
   // Check if evaluation exists
   if (!evaluation) return null
 
-  const hasQuestions = Boolean(evaluation.evaluationToQuestions?.length)
+  const hasQuestions = Boolean(composition?.length)
 
-  const countMissingQuestions = evaluation.evaluationToQuestions.filter(
+  const countMissingQuestions = composition?.filter(
     (q) =>
       q.question?.source !== QuestionSource.BANK && !q.question?.sourceQuestion,
   ).length
@@ -214,7 +224,7 @@ const EvaluationSummary = ({ evaluation }) => {
 
       {hasQuestions && (
         <Typography variant="body2">
-          Contains <b>{evaluation.evaluationToQuestions.length} questions</b>.
+          Contains <b>{composition.length} questions</b>.
         </Typography>
       )}
 
