@@ -115,7 +115,6 @@ export const withRestrictions = (handler) => {
     }
 
     const userEmail = user.email
-    console.log('userEmail', userEmail)
     // Check if user is in access list
     const isAllowedAccessList = await isUserInAccessList(
       userEmail,
