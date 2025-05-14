@@ -13,11 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  Role,
-  EvaluationPhase,
-  UserOnEvaluationAccessMode,
-} from '@prisma/client'
+import { Role, EvaluationPhase } from '@prisma/client'
 import { withPrisma } from '@/middleware/withPrisma'
 import {
   withMethodHandler,
@@ -26,6 +22,7 @@ import {
 
 import { phaseGT } from '@/code/phase'
 import { getUser } from '@/code/auth/auth'
+import { withRestrictions } from '@/middleware/withRestrictions'
 
 /*
 fetch the informations necessary to decide where the users should be redirected
@@ -53,35 +50,6 @@ const get = async (req, res, prisma) => {
     // something fishy is going on
     res.status(401).json({ type: 'error', message: 'Unauthorized' })
     return
-  }
-
-  // Check if the user is in the evaluation access list in case the evaluation has restricted access
-  if (
-    evaluation.accessMode === UserOnEvaluationAccessMode.LINK_AND_ACCESS_LIST
-  ) {
-    if (!evaluation.accessList?.find((email) => email === user.email)) {
-      // keep track of the users who were denied access to the evaluation
-      await prisma.userOnEvaluationDeniedAccessAttempt.upsert({
-        where: {
-          userEmail_evaluationId: {
-            userEmail: user.email,
-            evaluationId: evaluationId,
-          },
-        },
-        update: {},
-        create: {
-          userEmail: user.email,
-          evaluationId: evaluationId,
-        },
-      })
-
-      res.status(401).json({
-        type: 'info',
-        message:
-          'Your attempt to access this evaluation has been registered. Awaiting approval.',
-      })
-      return
-    }
   }
 
   const userOnEvaluation = await prisma.userOnEvaluation.findFirst({
@@ -119,5 +87,7 @@ const get = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  GET: withRestrictions(
+    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  ),
 })

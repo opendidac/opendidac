@@ -20,6 +20,8 @@ import ScrollContainer from '../layout/ScrollContainer'
 import { useMemo } from 'react'
 import MultipleChoiceConfig from './multipleChoice/MultipleChoiceConfig'
 import GradingPolicyBreakdown from '../evaluations/grading/policy/GradingPolicyBreakdown'
+import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
+import { useTheme } from '@emotion/react'
 
 const StudentSelectionSummary = ({ solution, answer }) => {
   const missedCorrect = solution.options.filter(
@@ -131,22 +133,29 @@ const CompareMultipleChoice = ({
   )
 }
 
-const MultipleChoiceOptionSelect = ({ round = false, option, isFilled }) => {
+const MultipleChoiceOptionSelect = ({
+  round = false,
+  option,
+  isFilled,
+  isCorrect,
+}) => {
+  const theme = useTheme()
+
   return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      spacing={2}
-      sx={{ flex: 1, cursor: 'pointer' }}
-    >
+    <Stack direction="row" alignItems="flex-start" spacing={2} sx={{ flex: 1 }}>
       <RadioViewer
         mode={'compare'}
         round={round}
-        isCorrect={option.isCorrect}
+        isCorrect={isCorrect}
         isFilled={isFilled}
       />
 
-      <Typography variant="body1">{option.text}</Typography>
+      <Stack flex={1} bgcolor={theme.palette.background.paper}>
+        <MarkdownViewer
+          content={option.text}
+          bgColor={theme.palette.background.paper}
+        />
+      </Stack>
     </Stack>
   )
 }

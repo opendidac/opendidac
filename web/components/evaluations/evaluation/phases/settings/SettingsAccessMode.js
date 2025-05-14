@@ -47,7 +47,7 @@ const SettingsAccessMode = ({
 
   return (
     <>
-      <Typography variant="h5">Access mode</Typography>
+      <Typography variant="h6">Access mode</Typography>
       <Alert severity="info">
         <Typography variant="body2">
           With the restricted access enabled, students with an email address in

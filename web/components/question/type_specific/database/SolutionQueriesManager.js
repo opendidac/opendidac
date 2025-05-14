@@ -51,6 +51,60 @@ const SolutionQueriesManager = ({ groupScope, questionId, onUpdate }) => {
     setOutputs(data.map((q) => q.output))
   }, [data])
 
+  const runAllQueries = useCallback(async () => {
+    // erase eventual previous outputs
+    setOutputs(
+      queries.map((q, index) => ({
+        ...outputs[index],
+        output: {
+          ...outputs[index]?.output,
+          result: null,
+          status: 'RUNNING',
+        },
+      })) || [],
+    )
+
+    // erase eventual lintResults
+    setQueries(
+      queries.map((q, index) => ({
+        ...q,
+        lintResult: null,
+      })) || [],
+    )
+
+    const newSolutionQueries = await fetch(
+      `/api/sandbox/${questionId}/database`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      },
+    ).then((res) => res.json())
+
+    // update the queries with the new lint results
+    setQueries(
+      queries.map((q, index) => ({
+        ...q,
+        lintResult: newSolutionQueries[index].query.lintResult,
+      })) || [],
+    )
+
+    // set all query outputs
+    setOutputs(newSolutionQueries.map((q) => q.output))
+
+    onUpdate && onUpdate()
+  }, [questionId, outputs, queries, onUpdate])
+
+  // Add effect to automatically run queries if outputs are not defined
+  useEffect(() => {
+    if (queries && (!outputs || outputs.every((output) => output === null))) {
+      runAllQueries()
+      console.log('running queries')
+    }
+  }, [queries, outputs, runAllQueries])
+
   const onAddQuery = useCallback(async () => {
     await fetch(`/api/${groupScope}/questions/${questionId}/database/queries`, {
       method: 'POST',
@@ -131,52 +185,6 @@ const SolutionQueriesManager = ({ groupScope, questionId, onUpdate }) => {
     },
     [groupScope, mutate, questionId, onUpdate],
   )
-
-  const runAllQueries = useCallback(async () => {
-    // erase eventual previous outputs
-    setOutputs(
-      queries.map((q, index) => ({
-        ...outputs[index],
-        output: {
-          ...outputs[index]?.output,
-          result: null,
-          status: 'RUNNING',
-        },
-      })) || [],
-    )
-
-    // erase eventual lintResults
-    setQueries(
-      queries.map((q, index) => ({
-        ...q,
-        lintResult: null,
-      })) || [],
-    )
-
-    const newSolutionQueries = await fetch(
-      `/api/sandbox/${questionId}/database`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      },
-    ).then((res) => res.json())
-
-    // update the queries with the new lint results
-    setQueries(
-      queries.map((q, index) => ({
-        ...q,
-        lintResult: newSolutionQueries[index].query.lintResult,
-      })) || [],
-    )
-
-    // set all query outputs
-    setOutputs(newSolutionQueries.map((q) => q.output))
-
-    onUpdate && onUpdate()
-  }, [questionId, outputs, queries, onUpdate])
 
   const getBorderStyle = useCallback(
     (index) => {

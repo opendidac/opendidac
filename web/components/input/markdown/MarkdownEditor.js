@@ -129,6 +129,13 @@ const MarkdownEditor = ({
 }) => {
   const { show: showSnackbar } = useSnackbar()
 
+  const customPreviewOptions = {
+    ...previewOptions,
+    style: {
+      fontFamily: 'Monserrat',
+    },
+  }
+
   return (
     <Stack data-color-mode="light" height={'100%'} overflow={'hidden'}>
       <Stack
@@ -148,7 +155,7 @@ const MarkdownEditor = ({
               ...defaultEditorOptions,
               preview: readOnly ? 'preview' : 'live',
             }}
-            previewOptions={previewOptions}
+            previewOptions={customPreviewOptions}
             commands={readOnly ? [] : mainCommands}
             extraCommands={extraCommands}
             withUpload={!readOnly && withUpload}

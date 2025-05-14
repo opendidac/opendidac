@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Box, Stack, TextField, Typography } from '@mui/material'
+import { Box, Stack, TextField } from '@mui/material'
 import RadioViewer from '@/components/input/RadioViewer'
 import MultipleChoiceConfig from './multipleChoice/MultipleChoiceConfig'
 import { useMemo } from 'react'
+import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
+import { useTheme } from '@emotion/react'
 
 const ConsultMultipleChoice = ({ multipleChoice, answer }) => {
   const radio = useMemo(
@@ -25,6 +27,7 @@ const ConsultMultipleChoice = ({ multipleChoice, answer }) => {
       multipleChoice.selectionLimit === 1,
     [multipleChoice],
   )
+  const theme = useTheme()
 
   return (
     <Box height={'100%'}>
@@ -36,7 +39,7 @@ const ConsultMultipleChoice = ({ multipleChoice, answer }) => {
           <Stack
             key={index}
             direction="row"
-            alignItems="center"
+            alignItems="flex-start"
             spacing={2}
             sx={{ flex: 1 }}
           >
@@ -47,9 +50,12 @@ const ConsultMultipleChoice = ({ multipleChoice, answer }) => {
               isCorrect={option.isCorrect}
               isFilled={answer.options.some((opt) => opt.id === option.id)}
             />
-            <Box>
-              <Typography variant="body1">{option.text}</Typography>
-            </Box>
+            <Stack flex={1} bgcolor={theme.palette.background.paper}>
+              <MarkdownViewer
+                content={option.text}
+                bgColor={theme.palette.background.paper}
+              />
+            </Stack>
           </Stack>
         ))}
         {multipleChoice.activateStudentComment && (

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import useSWR from 'swr'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import MultipleChoice from './MultipleChoice'
 import Loading from '../../feedback/Loading'
 import { fetcher } from '../../../code/utils'
@@ -23,8 +23,10 @@ import { Stack } from '@mui/system'
 import { Button } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import MultipleChoiceConfig from './multiple-choice/MultipleChoiceConfig'
+import ToggleWithLabel from '@/components/input/ToggleWithLabel'
 
 const ManageMultipleChoice = ({ groupScope, questionId, onUpdate }) => {
+  const [previewMode, setPreviewMode] = useState(false)
   const {
     data: multipleChoice,
     mutate,
@@ -184,7 +186,13 @@ const ManageMultipleChoice = ({ groupScope, questionId, onUpdate }) => {
             onUpdate={() => onUpdate()} // trigger parent update
           />
         </Stack>
-        <Stack alignItems={'center'}>
+        <Stack
+          direction="row"
+          px={1}
+          justifyContent="space-between"
+          alignItems="center"
+          spacing={2}
+        >
           <Button
             color="primary"
             startIcon={<AddIcon />}
@@ -193,12 +201,18 @@ const ManageMultipleChoice = ({ groupScope, questionId, onUpdate }) => {
           >
             Add Option
           </Button>
+          <ToggleWithLabel
+            label="Preview Mode"
+            checked={previewMode}
+            onChange={(e) => setPreviewMode(e.target.checked)}
+          />
         </Stack>
 
         <Stack px={2} spacing={2} flex={1}>
           <MultipleChoice
             limiterActivated={multipleChoice?.activateSelectionLimit}
             options={multipleChoice?.options}
+            previewMode={previewMode}
             onAdd={onAddOption}
             onChangeOption={async (newOption) => {
               await onChangeOption(newOption)

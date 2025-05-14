@@ -1,0 +1,35 @@
+{
+  "comment": "Database question template configuration for PostgreSQL",
+  "image": "ghcr.io/opendidac/database-sandbox-image/postgres-sakila:latest",
+  "queries": [
+    {
+      "order": 1,
+      "title": "Write a Create Function",
+      "description": "Create a function that converts text to uppercase",
+      "lintActive": false,
+      "content": "CREATE OR REPLACE FUNCTION uppercase_text(input_text TEXT) \nRETURNS TEXT AS $$\nBEGIN\n    RETURN UPPER(input_text);\nEND;\n$$ LANGUAGE plpgsql;"
+    },
+    {
+      "order": 2,
+      "title": "Use the function to uppercase hello world",
+      "content": "SELECT uppercase_text('hello world');",
+      "testQuery": true
+    },
+    {
+      "order": 3,
+      "title": "View Actor Names",
+      "description": "View the first and last names of all actors",
+      "content": "SELECT first_name, last_name FROM actor;",
+      "studentPermission": "VIEW"
+    },
+    {
+      "order": 4,
+      "title": "Test Uppercase Function on Actors",
+      "description": "Use the uppercase function on actor first names",
+      "content": "SELECT\n    last_name,\n    uppercase_text(first_name) AS first_name\nFROM actor;",
+      "testQuery": true,
+      "lintActive": true,
+      "studentPermission": "UPDATE"
+    }
+  ]
+}
