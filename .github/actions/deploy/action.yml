@@ -131,3 +131,7 @@ runs:
         docker exec $container_id npx prisma migrate deploy
       shell: bash
 
+    - name: Restart Nginx container - To reload the SSL certificates
+      run: |
+        docker compose restart nginx
+      shell: bash
