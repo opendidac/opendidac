@@ -130,6 +130,7 @@ runs:
         container_id=$(docker ps -qf "name=eval-web-")
         docker exec $container_id npx prisma migrate deploy
       shell: bash
+      
 
     - name: Restart Nginx container - To reload the SSL certificates
       run: |
