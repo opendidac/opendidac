@@ -25,6 +25,7 @@ import GridGrouping from '@/components/ui/GridGrouping'
 import { weeksAgo } from '@/components/questions/list/utils'
 import DateTimeAgo from '@/components/feedback/DateTimeAgo'
 import AddEvaluationDialog from './AddEvaluationDialog'
+import { isJoinable } from '@/code/phase'
 
 const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
   const [addDialogOpen, setAddDialogOpen] = useState(false)
@@ -108,29 +109,31 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
             linkHref: `/${groupScope}/evaluations/${evaluation.id}`,
             actions: [
               <React.Fragment key="actions">
-                <Tooltip
-                  title="Copy student link to clipboard"
-                  key="add-link-to-clipboard"
-                >
-                  <IconButton
-                    onClick={(ev) => {
-                      ev.preventDefault()
-                      ev.stopPropagation()
-                      ;(async () => {
-                        await navigator.clipboard.writeText(
-                          getStudentEntryLink(evaluation.id),
-                        )
-                      })()
-                    }}
+                {isJoinable(evaluation.phase) && (
+                  <Tooltip
+                    title="Copy student link to clipboard"
+                    key="add-link-to-clipboard"
                   >
-                    <Image
-                      alt="Copy link"
-                      src="/svg/icons/link.svg"
-                      width="18"
-                      height="18"
-                    />
-                  </IconButton>
-                </Tooltip>
+                    <IconButton
+                      onClick={(ev) => {
+                        ev.preventDefault()
+                        ev.stopPropagation()
+                        ;(async () => {
+                          await navigator.clipboard.writeText(
+                            getStudentEntryLink(evaluation.id),
+                          )
+                        })()
+                      }}
+                    >
+                      <Image
+                        alt="Copy link"
+                        src="/svg/icons/link.svg"
+                        width="18"
+                        height="18"
+                      />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 <Link
                   href={`/${groupScope}/evaluations/${evaluation.id}/analytics`}
                   passHref

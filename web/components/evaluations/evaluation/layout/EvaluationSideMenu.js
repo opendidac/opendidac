@@ -39,6 +39,7 @@ import StatusDisplay from '@/components/feedback/StatusDisplay'
 import Image from 'next/image'
 import { getStudentEntryLink } from '@/code/utils'
 import Link from 'next/link'
+import { isJoinable } from '@/code/phase'
 
 const EvaluationSideMenu = ({
   groupScope,
@@ -134,9 +135,7 @@ const EvaluationSideMenu = ({
                     )
                   })()
                 }}
-                disabled={
-                  !phaseGreaterThan(currentPhase, EvaluationPhase.COMPOSITION)
-                }
+                disabled={!isJoinable(evaluation.phase)}
               >
                 <Image
                   alt="Copy link"

@@ -15,7 +15,7 @@
  */
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import LoadingAnimation from '../../feedback/LoadingAnimation'
 import { studentPhaseRedirect } from '../../../code/phase'
 
@@ -29,51 +29,72 @@ const PageJoin = () => {
 
   const { data: session, status } = useSession()
   const [error, setError] = useState(null)
+  const [isRetrying, setIsRetrying] = useState(false)
+
+  const attemptJoin = useCallback(async () => {
+    if (!evaluationId || !session || status !== 'authenticated') {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/users/evaluations/${evaluationId}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          studentEmail: session.user.email,
+        }),
+      })
+
+      let data
+      try {
+        data = await res.json()
+      } catch (e) {
+        data = { message: 'Server error' }
+      }
+
+      if (!res.ok) {
+        // Always show the API response message for non-200 status
+        setError(data.message)
+
+        if (res.status !== 200) {
+          // 400 errors are potentially retryable (phase not ready, etc.)
+          setIsRetrying(true)
+          setTimeout(() => {
+            attemptJoin()
+          }, 2000)
+          return
+        } else {
+          // Other errors (401, 403, 404, 500, etc.) - don't retry
+          setIsRetrying(false)
+          return
+        }
+      }
+
+      // Success - redirect to appropriate phase
+      setError(null)
+      setIsRetrying(false)
+      const phase = data?.evaluation.phase
+      await studentPhaseRedirect(evaluationId, phase, router)
+    } catch (err) {
+      setError(err.message)
+      setIsRetrying(false)
+    }
+  }, [evaluationId, session, status, router])
 
   useEffect(() => {
-    /*
-     * users is joining the evaluation (it must be in draft or in-progress phase)
-     * */
     setError(null)
-    if (evaluationId && session && status === 'authenticated') {
-      ;(async () => {
-        await fetch(`/api/users/evaluations/${evaluationId}/join`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            studentEmail: session.user.email,
-          }),
-        })
-          .then(async (res) => {
-            let data
-            try {
-              data = await res.json()
-            } catch (e) {
-              data.message = 'Server error'
-            }
-            if (!res.ok) {
-              throw new Error(data.message)
-            }
-            return data
-          })
-          .then(async (data) => {
-            setError(null)
-            const phase = data?.evaluation.phase
-            ;(async () => {
-              studentPhaseRedirect(evaluationId, phase, router)
-            })()
-          })
-          .catch((err) => {
-            setError(err.message)
-          })
-      })()
-    }
-  }, [evaluationId, router, session, status])
+    setIsRetrying(false)
+    attemptJoin()
+  }, [attemptJoin])
 
-  return <LoadingAnimation content={error || 'joining...'} failed={error} />
+  const displayMessage = error || 'Joining...'
+
+  return (
+    <LoadingAnimation content={displayMessage} failed={!isRetrying && error} />
+  )
 }
 
 export default PageJoin

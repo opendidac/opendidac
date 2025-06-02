@@ -149,7 +149,7 @@ const StudentResultsGrid = ({
       results.forEach((jstq) => {
         const grading = jstq.question.studentAnswer.find(
           (sa) => sa.user.email === participant.email,
-        ).studentGrading
+        )?.studentGrading
 
         let pointsObtained = grading ? grading.pointsObtained : 0
         let totalPoints = jstq.points
