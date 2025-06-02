@@ -25,7 +25,7 @@ import GridGrouping from '@/components/ui/GridGrouping'
 import { weeksAgo } from '@/components/questions/list/utils'
 import DateTimeAgo from '@/components/feedback/DateTimeAgo'
 import AddEvaluationDialog from './AddEvaluationDialog'
-import { isJoinable } from '@/code/phase'
+import { phaseGT } from '@/code/phase'
 
 const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
   const [addDialogOpen, setAddDialogOpen] = useState(false)
@@ -109,7 +109,7 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
             linkHref: `/${groupScope}/evaluations/${evaluation.id}`,
             actions: [
               <React.Fragment key="actions">
-                {isJoinable(evaluation.phase) && (
+                {phaseGT(evaluation.phase, EvaluationPhase.COMPOSITION) && (
                   <Tooltip
                     title="Copy student link to clipboard"
                     key="add-link-to-clipboard"
