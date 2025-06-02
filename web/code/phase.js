@@ -52,3 +52,10 @@ export const studentPhaseRedirect = async (evaluationId, phase, router) => {
       return
   }
 }
+
+export const isJoinable = (phase) => {
+  return (
+    phaseGT(phase, EvaluationPhase.COMPOSITION) &&
+    !phaseGT(phase, EvaluationPhase.IN_PROGRESS)
+  )
+}

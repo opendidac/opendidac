@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Role, EvaluationPhase } from '@prisma/client'
+import { Role } from '@prisma/client'
 import { useRouter } from 'next/router'
 import Authentication from '../../security/Authentication'
 import Authorization from '../../security/Authorization'
 import useSWR from 'swr'
 import { useEffect } from 'react'
-import { phaseGT, studentPhaseRedirect } from '../../../code/phase'
+import { studentPhaseRedirect } from '../../../code/phase'
 import { fetcher } from '../../../code/utils'
 import Loading from '../../feedback/Loading'
 
@@ -36,15 +36,15 @@ const PageDispatch = () => {
   useEffect(() => {
     if (data && !dispatchError) {
       const { evaluation, userOnEvaluation } = data
+
       if (!userOnEvaluation) {
-        // the users is not yet on the evaluation
-        // check if the current phase of the Evaluation allow the users to join
-        if (!phaseGT(evaluation.phase, EvaluationPhase.IN_PROGRESS)) {
-          ;(async () => {
-            await router.push(`/users/evaluations/${evaluationId}/join`)
-          })()
-        }
+        // User is not on the evaluation - redirect to join
+        // Let the join API handle all validation (phase, access list, etc.)
+        ;(async () => {
+          await router.push(`/users/evaluations/${evaluationId}/join`)
+        })()
       } else {
+        // User is already on the evaluation - redirect based on phase
         ;(async () => {
           await studentPhaseRedirect(evaluationId, evaluation.phase, router)
         })()
@@ -55,7 +55,7 @@ const PageDispatch = () => {
   return (
     <Authentication>
       <Authorization allowRoles={[Role.STUDENT, Role.PROFESSOR]}>
-        <Loading errors={[dispatchError]} loading={!data} />
+        <Loading errors={[dispatchError].filter(Boolean)} loading={!data} />
       </Authorization>
     </Authentication>
   )

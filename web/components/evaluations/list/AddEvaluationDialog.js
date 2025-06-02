@@ -20,9 +20,15 @@ import { useSnackbar } from '@/context/SnackbarContext'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
 import { useEffect, useState } from 'react'
 import CardSelector from '@/components/input/CardSelector'
-import { QuestionSource, UserOnEvaluationAccessMode } from '@prisma/client'
+import {
+  EvaluationPhase,
+  QuestionSource,
+  UserOnEvaluationAccessMode,
+} from '@prisma/client'
 import useSWR from 'swr'
 import { fetcher } from '@/code/utils'
+import { phaseGT } from '@/code/phase'
+
 const Presets = [
   {
     value: 'exam',
@@ -173,10 +179,12 @@ const AddEvaluationDialog = ({ existingEvaluations, open, onClose }) => {
             )}
             <PresetSummary preset={getPresetSettings(preset)} />
 
-            <EvaluationSummary
-              groupScope={groupScope}
-              evaluationId={templateEvaluation?.id}
-            />
+            {templateEvaluation && (
+              <EvaluationSummary
+                groupScope={groupScope}
+                evaluationId={templateEvaluation?.id}
+              />
+            )}
           </Stack>
         </Stack>
       }
@@ -198,11 +206,18 @@ const EvaluationSummary = ({ groupScope, evaluationId }) => {
   // Check if evaluation exists
   if (!evaluation) return null
 
+  const afterComposition = phaseGT(
+    evaluation.phase,
+    EvaluationPhase.COMPOSITION,
+  )
+
   const hasQuestions = Boolean(composition?.length)
 
   const countMissingQuestions = composition?.filter(
     (q) =>
-      q.question?.source !== QuestionSource.BANK && !q.question?.sourceQuestion,
+      afterComposition &&
+      q.question?.source === QuestionSource.EVAL &&
+      !q.question.sourceQuestion,
   ).length
 
   const hasAccessList =

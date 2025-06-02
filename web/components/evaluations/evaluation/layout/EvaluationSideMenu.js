@@ -134,9 +134,6 @@ const EvaluationSideMenu = ({
                     )
                   })()
                 }}
-                disabled={
-                  !phaseGreaterThan(currentPhase, EvaluationPhase.COMPOSITION)
-                }
               >
                 <Image
                   alt="Copy link"
