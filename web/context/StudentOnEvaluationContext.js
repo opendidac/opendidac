@@ -266,16 +266,12 @@ const StudentNotAllowedDialog = ({ message }) => (
 )
 
 const StudentIpRestrictedDialog = ({ message }) => (
-  (
-    <Overlay>
-      <AlertFeedback severity="warning">
-        <Stack spacing={1}>
-          <Typography variant="h5">
-            You are not allowed to participate
-          </Typography>
-          <Typography variant="body2">{message}</Typography>
-        </Stack>
-      </AlertFeedback>
-    </Overlay>
-  )
+  <Overlay>
+    <AlertFeedback severity="warning">
+      <Stack spacing={1}>
+        <Typography variant="h5">You are not allowed to participate</Typography>
+        <Typography variant="body2">{message}</Typography>
+      </Stack>
+    </AlertFeedback>
+  </Overlay>
 )
