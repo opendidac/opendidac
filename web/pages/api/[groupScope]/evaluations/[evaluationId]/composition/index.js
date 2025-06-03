@@ -57,6 +57,10 @@ const get = async (req, res, prisma) => {
     },
   })
 
+  for (const question of evaluation.evaluationToQuestions) {
+    console.log('question', question)
+  }
+
   if (!evaluation) {
     res.status(404).json({ message: 'Evaluation not found' })
     return
