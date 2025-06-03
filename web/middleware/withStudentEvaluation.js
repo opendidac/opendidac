@@ -22,7 +22,6 @@ export function withStudentStatus(allowedStatuses = [], handler) {
   return async (req, res) => {
     const user = await getUser(req, res)
     if (!user) {
-      console.log('Access denied due to missing user.')
       return res.status(403).json({ message: 'Access denied.' })
     }
     const { evaluationId } = req.query // or get these from the session/user context
@@ -40,7 +39,9 @@ export function withStudentStatus(allowedStatuses = [], handler) {
       !userOnEvaluation ||
       !allowedStatuses.includes(userOnEvaluation.status)
     ) {
-      return res.status(403).json({ message: 'Access denied.' })
+      return res
+        .status(403)
+        .json({ message: 'The student has finished the evaluation' })
     }
 
     // Continue with the original handler

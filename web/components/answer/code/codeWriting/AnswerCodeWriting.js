@@ -56,8 +56,6 @@ const AnswerCodeWriting = ({
 
   const codeCheckEnabled = question?.code?.codeWriting?.codeCheckEnabled ?? true
 
-  console.log('codeCheckEnabled', codeCheckEnabled)
-
   return (
     answer?.code && (
       <BottomCollapsiblePanel
