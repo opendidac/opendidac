@@ -53,7 +53,7 @@ const get = async (req, res, prisma) => {
     tags,
     questionTypes,
     codeLanguages,
-    includeArchived,
+    questionStatus,
   } = req.query
 
   questionTypes = questionTypes
@@ -63,6 +63,9 @@ const get = async (req, res, prisma) => {
 
   tags = tags ? tags.split(',') : []
 
+  // Set default status to ACTIVE if not provided, otherwise use the provided status
+  const status = questionStatus || QuestionStatus.ACTIVE
+
   let where = {
     where: {
       group: {
@@ -71,10 +74,7 @@ const get = async (req, res, prisma) => {
       source: {
         in: [QuestionSource.BANK, QuestionSource.COPY],
       },
-      status:
-        includeArchived === 'true'
-          ? { in: [QuestionStatus.ACTIVE, QuestionStatus.ARCHIVED] }
-          : QuestionStatus.ACTIVE,
+      status: status,
       AND: [],
     },
   }

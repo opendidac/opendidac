@@ -71,7 +71,7 @@ const QuestionIncludeDrawer = ({
                             color={'primary'}
                             size={'small'}
                             onClick={() => {
-                              onInclude(selection)
+                              onInclude(selection.map((q) => q.id))
                               setSelection([])
                               onClose()
                             }}
