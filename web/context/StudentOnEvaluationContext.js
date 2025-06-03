@@ -53,8 +53,6 @@ export const StudentOnEvaluationProvider = ({ children }) => {
 
   const { evaluationId, pageIndex } = router.query
 
-  console.log('StudentOnEvaluationProvider evaluationId', evaluationId)
-
   const {
     data: evaluation,
     error: errorEvaluationStatus,
@@ -99,11 +97,6 @@ export const StudentOnEvaluationProvider = ({ children }) => {
   )
 
   const errorMessage = errorUserOnEvaluation?.message
-
-  console.log('isStudentNotInAccessList', isStudentNotInAccessList())
-  console.log('isStudentIpRestricted', isStudentIpRestricted())
-
-  console.log('errorEvaluationStatus', errorEvaluationStatus)
 
   /*
   evaluationToQuestions: 
@@ -210,9 +203,6 @@ export const StudentOnEvaluationProvider = ({ children }) => {
     },
     [evaluationToQuestions],
   )
-
-  console.log('isStudentNotInAccessList', isStudentNotInAccessList())
-  console.log('isStudentIpRestricted', isStudentIpRestricted())
 
   return (
     <StudentOnEvaluationContext.Provider

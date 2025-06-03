@@ -47,6 +47,9 @@ const post = async (req, res, prisma) => {
   }
 
   if (!isJoinable(evaluation.phase)) {
+    // useRestrictions checks if the evaluation phase is after composition phase
+    // the join endpoint is also restricted after the IN-PROGRESS phase,
+    // while the students that already joined the evaluation are allowed to consult
     res.status(400).json({ message: 'This evaluation is not joinable' })
     return
   }
