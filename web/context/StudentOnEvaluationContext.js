@@ -266,7 +266,6 @@ const StudentNotAllowedDialog = ({ message }) => (
 )
 
 const StudentIpRestrictedDialog = ({ message }) => (
-  console.log('StudentIpRestrictedDialog message', message),
   (
     <Overlay>
       <AlertFeedback severity="warning">
