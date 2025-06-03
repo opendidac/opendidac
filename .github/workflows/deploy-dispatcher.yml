@@ -64,6 +64,7 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          NEXTAUTH_URL: https://eval-secured.iict-heig-vd.in
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_SWITCH_CLIENT_ID: hes-so_open_didac
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
