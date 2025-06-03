@@ -23,7 +23,7 @@ import { IconButton, Tooltip, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
 import { QuestionType, QuestionStatus } from '@prisma/client'
 import { useRouter } from 'next/router'
-import React from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { weeksAgo } from './utils'
 import { getTextByType } from '@/components/question/types'
 import Image from 'next/image'
@@ -42,14 +42,48 @@ const QuestionsGrid = ({
 }) => {
   const router = useRouter()
 
+  // The mechanism to keep the selection persistent when the questions are filtered
+  const [persistentSelection, setPersistentSelection] = useState([])
+
+  useEffect(() => {
+    setPersistentSelection(selection ?? [])
+  }, [selection])
+
+  const currentQuestionIds = useMemo(
+    () => new Set(questions.map((q) => q.id)),
+    [questions],
+  )
+
+  const visibleSelection = useMemo(
+    () =>
+      persistentSelection
+        .filter((item) => currentQuestionIds.has(item.id))
+        .map((item) => item.id),
+    [persistentSelection, currentQuestionIds],
+  )
+
+  const handleSelectionChange = useCallback(
+    (newSelectionIds) => {
+      const selectedVisible = questions.filter((q) =>
+        newSelectionIds.includes(q.id),
+      )
+      const hiddenSelections = persistentSelection.filter(
+        (q) => !currentQuestionIds.has(q.id),
+      )
+      const merged = [...hiddenSelections, ...selectedVisible]
+
+      setPersistentSelection(merged)
+      setSelection?.(merged)
+    },
+    [questions, currentQuestionIds, persistentSelection, setSelection],
+  )
+
   return (
     <GridGrouping
       label="Questions"
       enableSelection={enableSelection}
-      selection={selection}
-      onSelectionChange={(newSelection) => {
-        setSelection(newSelection)
-      }}
+      selection={visibleSelection}
+      onSelectionChange={handleSelectionChange}
       actions={actions}
       rowStyle={(item) => ({
         borderLeft:

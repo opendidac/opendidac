@@ -33,7 +33,6 @@ import {
 import PiePercent from '@/components/feedback/PiePercent'
 import QuestionTypeIcon from '@/components/question/QuestionTypeIcon'
 import FilledBullet from '@/components/feedback/FilledBullet'
-import ConsoleLog from '@/components/layout/utils/ConsoleLog'
 
 const EvaluationAnalytics = ({
   evaluationToQuestions,
@@ -336,7 +335,6 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
             )) ||
             (questionData.type === QuestionType.code && (
               <>
-                <ConsoleLog data={questionData[questionData.type]} />
                 {questionData[questionData.type].codeType ===
                   CodeQuestionType.codeWriting && (
                   <AnalyticsRow
