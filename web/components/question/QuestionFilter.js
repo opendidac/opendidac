@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { Box, Button, Stack, TextField, Typography, Radio, RadioGroup, FormControlLabel } from '@mui/material'
+import {
+  Box,
+  Button,
+  Stack,
+  TextField,
+  Typography,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+} from '@mui/material'
 
 import { toArray as typesToArray } from './types.js'
 import languages from '../../code/languages.json'
@@ -64,7 +73,8 @@ const queryStringToFilter = (queryString) => {
     tags: params.get('tags')
       ? params.get('tags').split(',')
       : initialFilters.tags,
-    questionStatus: params.get('questionStatus') || initialFilters.questionStatus,
+    questionStatus:
+      params.get('questionStatus') || initialFilters.questionStatus,
     questionTypes: { ...initialFilters.questionTypes },
     codeLanguages: { ...initialFilters.codeLanguages },
   }
@@ -153,7 +163,6 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      
       <Stack spacing={2} padding={2}>
         <TextField
           label={'Search'}
@@ -175,25 +184,24 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
         />
 
         <Stack direction="row" justifyContent="flex-start">
-          <RadioGroup 
+          <RadioGroup
             row
             value={questionStatus}
             onChange={(e) => setQuestionStatus(e.target.value)}
             aria-label="question status"
           >
-            <FormControlLabel 
-              value={QuestionStatus.ACTIVE} 
-              control={
-              <Radio color="info" size="small" />} 
+            <FormControlLabel
+              value={QuestionStatus.ACTIVE}
+              control={<Radio color="info" size="small" />}
               label={
                 <Typography variant="caption" color="info">
                   Active
                 </Typography>
               }
             />
-            <FormControlLabel 
-              value={QuestionStatus.ARCHIVED} 
-              control={<Radio color="info" size="small" />} 
+            <FormControlLabel
+              value={QuestionStatus.ARCHIVED}
+              control={<Radio color="info" size="small" />}
               label={
                 <Typography variant="caption" color="info">
                   Archived
@@ -216,7 +224,12 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
             onClick={async () => {
               setFilter(initialFilters)
               setQuestionStatus(initialFilters.questionStatus)
-              onApplyFilter && onApplyFilter(new URLSearchParams(await applyFilter(initialFilters)).toString())
+              onApplyFilter &&
+                onApplyFilter(
+                  new URLSearchParams(
+                    await applyFilter(initialFilters),
+                  ).toString(),
+                )
             }}
           >
             {' '}
@@ -224,7 +237,6 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
           </Button>
         </Stack>
       </Stack>
-      
     </form>
   )
 }

@@ -52,4 +52,4 @@ export default withGroupScope(
   withMethodHandler({
     POST: withAuthorization(withPrisma(unarchive), [Role.PROFESSOR]),
   }),
-) 
+)
