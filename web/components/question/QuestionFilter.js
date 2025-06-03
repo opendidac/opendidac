@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { Box, Button, Stack, TextField, Typography } from '@mui/material'
-import ToggleWithLabel from '../input/ToggleWithLabel'
+import { Box, Button, Stack, TextField, Typography, Radio, RadioGroup, FormControlLabel } from '@mui/material'
 
 import { toArray as typesToArray } from './types.js'
 import languages from '../../code/languages.json'
 import { useTags } from '../../context/TagContext'
 import TagsSelector from '../input/TagsSelector'
 import CheckboxLabel from '../input/CheckboxLabel.js'
+import { QuestionStatus } from '@prisma/client'
 
 const environments = languages.environments
 const types = typesToArray()
@@ -29,7 +29,7 @@ const types = typesToArray()
 const initialFilters = {
   search: '',
   tags: [],
-  includeArchived: false,
+  questionStatus: QuestionStatus.ACTIVE,
   questionTypes: types
     .map((type) => type.value)
     .reduce((obj, type) => ({ ...obj, [type]: true }), {}),
@@ -43,9 +43,6 @@ const applyFilter = async (toApply) => {
   query.questionTypes = Object.keys(query.questionTypes).filter(
     (key) => query.questionTypes[key],
   )
-  if (query.includeArchived) {
-    query.includeArchived = 'true'
-  }
   if (!toApply.questionTypes.code) {
     delete query.codeLanguages
   }
@@ -54,6 +51,7 @@ const applyFilter = async (toApply) => {
       (key) => query.codeLanguages[key],
     )
   }
+  query.questionStatus = toApply.questionStatus
   return query
 }
 
@@ -66,7 +64,7 @@ const queryStringToFilter = (queryString) => {
     tags: params.get('tags')
       ? params.get('tags').split(',')
       : initialFilters.tags,
-    includeArchived: params.get('includeArchived') === 'true',
+    questionStatus: params.get('questionStatus') || initialFilters.questionStatus,
     questionTypes: { ...initialFilters.questionTypes },
     codeLanguages: { ...initialFilters.codeLanguages },
   }
@@ -109,10 +107,12 @@ const queryStringToFilter = (queryString) => {
   return filter
 }
 
-const QuestionFilter = ({ withArchived, filters: initial, onApplyFilter }) => {
+const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
   const tagsContext = useTags() // Get the whole context first
 
   const { tags: allTags = [] } = tagsContext // Destructure safely
+
+  const [questionStatus, setQuestionStatus] = useState(QuestionStatus.ACTIVE)
 
   const [filter, setFilter] = useState(queryStringToFilter(initial))
 
@@ -134,6 +134,7 @@ const QuestionFilter = ({ withArchived, filters: initial, onApplyFilter }) => {
       filter.title !== initialFilters.title ||
       filter.content !== initialFilters.content ||
       JSON.stringify(filter.tags) !== JSON.stringify(initialFilters.tags) ||
+      filter.questionStatus !== initialFilters.questionStatus ||
       JSON.stringify(filter.questionTypes) !==
         JSON.stringify(initialFilters.questionTypes) ||
       JSON.stringify(filter.codeLanguages) !==
@@ -144,14 +145,15 @@ const QuestionFilter = ({ withArchived, filters: initial, onApplyFilter }) => {
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault() // Prevent default form submission which reloads the page
-      const newFilter = await applyFilter(filter)
+      const newFilter = await applyFilter({ ...filter, questionStatus })
       onApplyFilter && onApplyFilter(new URLSearchParams(newFilter).toString())
     },
-    [filter, onApplyFilter],
+    [filter, questionStatus, onApplyFilter],
   )
 
   return (
     <form onSubmit={handleSubmit}>
+      
       <Stack spacing={2} padding={2}>
         <TextField
           label={'Search'}
@@ -172,15 +174,37 @@ const QuestionFilter = ({ withArchived, filters: initial, onApplyFilter }) => {
           onChange={(tags) => updateFilter('tags', tags)}
         />
 
+        <Stack direction="row" justifyContent="flex-start">
+          <RadioGroup 
+            row
+            value={questionStatus}
+            onChange={(e) => setQuestionStatus(e.target.value)}
+            aria-label="question status"
+          >
+            <FormControlLabel 
+              value={QuestionStatus.ACTIVE} 
+              control={
+              <Radio color="info" size="small" />} 
+              label={
+                <Typography variant="caption" color="info">
+                  Active
+                </Typography>
+              }
+            />
+            <FormControlLabel 
+              value={QuestionStatus.ARCHIVED} 
+              control={<Radio color="info" size="small" />} 
+              label={
+                <Typography variant="caption" color="info">
+                  Archived
+                </Typography>
+              }
+            />
+          </RadioGroup>
+        </Stack>
+
         <QuestionTypeSelection filter={filter} updateFilter={updateFilter} />
         <LanguageSelection filter={filter} updateFilter={updateFilter} />
-        {withArchived && (
-          <ToggleWithLabel
-            label="Show Archive"
-            checked={filter.includeArchived}
-            onChange={(e) => updateFilter('includeArchived', e.target.checked)}
-          />
-        )}
         <Stack direction={'row'} spacing={2}>
           <Button variant="contained" color="info" fullWidth type="submit">
             {' '}
@@ -191,7 +215,8 @@ const QuestionFilter = ({ withArchived, filters: initial, onApplyFilter }) => {
             disabled={!isFilterApplied()}
             onClick={async () => {
               setFilter(initialFilters)
-              onApplyFilter && onApplyFilter(await applyFilter(initialFilters))
+              setQuestionStatus(initialFilters.questionStatus)
+              onApplyFilter && onApplyFilter(new URLSearchParams(await applyFilter(initialFilters)).toString())
             }}
           >
             {' '}
@@ -199,6 +224,7 @@ const QuestionFilter = ({ withArchived, filters: initial, onApplyFilter }) => {
           </Button>
         </Stack>
       </Stack>
+      
     </form>
   )
 }

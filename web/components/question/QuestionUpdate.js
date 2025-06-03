@@ -50,6 +50,8 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
 
   const [archiveQuestionDialogOpen, setArchiveQuestionDialogOpen] =
     useState(false)
+  const [unarchiveQuestionDialogOpen, setUnarchiveQuestionDialogOpen] =
+    useState(false)
   const [deleteQuestionDialogOpen, setDeleteQuestionDialogOpen] =
     useState(false)
 
@@ -102,6 +104,25 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
         showSnackbar('Error archiving question', 'error')
       })
   }, [question, showSnackbar, router, mutate, onDelete, groupScope])
+
+  const unarchiveQuestion = useCallback(async () => {
+    await fetch(`/api/${groupScope}/questions/${question.id}/unarchive`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    })
+      .then((res) => res.json())
+      .then(async () => {
+        await mutate()
+        onUpdate && onUpdate(question)
+        showSnackbar('Question unarchived', 'success')
+      })
+      .catch(() => {
+        showSnackbar('Error unarchiving question', 'error')
+      })
+  }, [question, showSnackbar, mutate, onUpdate, groupScope])
 
   const deleteQuestion = useCallback(async () => {
     await fetch(`/api/${groupScope}/questions/${question.id}`, {
@@ -206,22 +227,40 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
                     </Button>
                   </Tooltip>
                 ) : (
-                  <Tooltip title="Delete permanently">
-                    <Button
-                      color="error"
-                      startIcon={
-                        <Image
-                          alt="Delete"
-                          src="/svg/icons/delete.svg"
-                          width="18"
-                          height="18"
-                        />
-                      }
-                      onClick={() => setDeleteQuestionDialogOpen(true)}
-                    >
-                      Delete permanently
-                    </Button>
-                  </Tooltip>
+                  <>
+                    <Tooltip title="Restore from archive">
+                      <Button
+                        color="info"
+                        startIcon={
+                          <Image
+                            alt="Unarchive"
+                            src="/svg/icons/archive-blue.svg"
+                            width="18"
+                            height="18"
+                          />
+                        }
+                        onClick={() => setUnarchiveQuestionDialogOpen(true)}
+                      >
+                        Unarchive
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title="Delete permanently">
+                      <Button
+                        color="error"
+                        startIcon={
+                          <Image
+                            alt="Delete"
+                            src="/svg/icons/delete.svg"
+                            width="18"
+                            height="18"
+                          />
+                        }
+                        onClick={() => setDeleteQuestionDialogOpen(true)}
+                      >
+                        Delete permanently
+                      </Button>
+                    </Tooltip>
+                  </>
                 )}
               </Stack>
             </Stack>
@@ -255,6 +294,17 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
         }
         onClose={() => setArchiveQuestionDialogOpen(false)}
         onConfirm={archiveQuestion}
+      />
+      <DialogFeedback
+        open={unarchiveQuestionDialogOpen}
+        title="Unarchive question"
+        content={
+          <Typography variant="body1">
+            You are about to restore this question from archive. Are you sure?
+          </Typography>
+        }
+        onClose={() => setUnarchiveQuestionDialogOpen(false)}
+        onConfirm={unarchiveQuestion}
       />
       <DialogFeedback
         open={deleteQuestionDialogOpen}
