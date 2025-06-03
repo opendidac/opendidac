@@ -76,8 +76,6 @@ const AddMemberDialog = ({ group, open, onClose, onSuccess }) => {
     }
   }
 
-  console.log('members', members)
-
   return (
     group && (
       <DialogFeedback

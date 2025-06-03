@@ -21,12 +21,11 @@ import {
 import { withRestrictions } from '@/middleware/withRestrictions'
 import {
   Role,
-  EvaluationPhase,
   QuestionType,
   StudentPermission,
   CodeQuestionType,
 } from '@prisma/client'
-import { phaseGT } from '@/code/phase'
+import { isJoinable } from '@/code/phase'
 import { questionIncludeClause } from '@/code/questions'
 import { grading } from '@/code/grading/engine'
 import { getUser } from '@/code/auth/auth'
@@ -47,8 +46,11 @@ const post = async (req, res, prisma) => {
     return
   }
 
-  if (phaseGT(evaluation.phase, EvaluationPhase.IN_PROGRESS)) {
-    res.status(400).json({ message: 'Too late' })
+  if (!isJoinable(evaluation.phase)) {
+    // useRestrictions checks if the evaluation phase is after composition phase
+    // the join endpoint is also restricted after the IN-PROGRESS phase,
+    // while the students that already joined the evaluation are allowed to consult
+    res.status(400).json({ message: 'This evaluation is not joinable' })
     return
   }
 

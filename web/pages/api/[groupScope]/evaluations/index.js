@@ -18,6 +18,7 @@ import {
   EvaluationPhase,
   UserOnEvaluationAccessMode,
   QuestionSource,
+  QuestionStatus,
 } from '@prisma/client'
 import { withPrisma } from '@/middleware/withPrisma'
 import {
@@ -112,8 +113,16 @@ const post = async (req, res, prisma) => {
             evaluationToQuestions: {
               select: {
                 question: {
-                  include: {
-                    sourceQuestion: true,
+                  select: {
+                    id: true,
+                    source: true,
+                    status: true,
+                    sourceQuestion: {
+                      select: {
+                        id: true,
+                        status: true,
+                      },
+                    },
                   },
                 },
                 points: true,
@@ -134,8 +143,11 @@ const post = async (req, res, prisma) => {
               ? templateToQuestion.question
               : templateToQuestion.question.sourceQuestion
 
-          if (question === null) {
-            // skip questions that original no longer exists
+          if (
+            question === null ||
+            question.status === QuestionStatus.ARCHIVED
+          ) {
+            // skip questions that no longer exist or are archived
             continue
           }
 

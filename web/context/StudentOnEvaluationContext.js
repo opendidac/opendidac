@@ -53,8 +53,6 @@ export const StudentOnEvaluationProvider = ({ children }) => {
 
   const { evaluationId, pageIndex } = router.query
 
-  console.log('StudentOnEvaluationProvider evaluationId', evaluationId)
-
   const {
     data: evaluation,
     error: errorEvaluationStatus,
@@ -99,11 +97,6 @@ export const StudentOnEvaluationProvider = ({ children }) => {
   )
 
   const errorMessage = errorUserOnEvaluation?.message
-
-  console.log('isStudentNotInAccessList', isStudentNotInAccessList())
-  console.log('isStudentIpRestricted', isStudentIpRestricted())
-
-  console.log('errorEvaluationStatus', errorEvaluationStatus)
 
   /*
   evaluationToQuestions: 
@@ -211,9 +204,6 @@ export const StudentOnEvaluationProvider = ({ children }) => {
     [evaluationToQuestions],
   )
 
-  console.log('isStudentNotInAccessList', isStudentNotInAccessList())
-  console.log('isStudentIpRestricted', isStudentIpRestricted())
-
   return (
     <StudentOnEvaluationContext.Provider
       value={{
@@ -276,17 +266,12 @@ const StudentNotAllowedDialog = ({ message }) => (
 )
 
 const StudentIpRestrictedDialog = ({ message }) => (
-  console.log('StudentIpRestrictedDialog message', message),
-  (
-    <Overlay>
-      <AlertFeedback severity="warning">
-        <Stack spacing={1}>
-          <Typography variant="h5">
-            You are not allowed to participate
-          </Typography>
-          <Typography variant="body2">{message}</Typography>
-        </Stack>
-      </AlertFeedback>
-    </Overlay>
-  )
+  <Overlay>
+    <AlertFeedback severity="warning">
+      <Stack spacing={1}>
+        <Typography variant="h5">You are not allowed to participate</Typography>
+        <Typography variant="body2">{message}</Typography>
+      </Stack>
+    </AlertFeedback>
+  </Overlay>
 )

@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-import { Role } from '@prisma/client'
+import { EvaluationPhase, Role } from '@prisma/client'
 import { getPrisma } from './withPrisma'
 import { UserOnEvaluationAccessMode } from '@prisma/client'
 import { getUser } from '@/code/auth/auth'
+import { phaseGT } from '@/code/phase'
 
 const isIpInRange = (ip, range) => {
   // Handle CIDR notation
@@ -96,6 +97,15 @@ export const withRestrictions = (handler) => {
       return handler(req, res)
     }
 
+    // All student actions are restricted before the registration phase
+    if (!phaseGT(evaluation.phase, EvaluationPhase.COMPOSITION)) {
+      return res.status(400).json({
+        type: 'error',
+        id: 'not-ready',
+        message: 'This evaluation is not joinable',
+      })
+    }
+
     // Skip IP check for non-student users
     if (req.user && req.user.roles && !req.user.roles.includes(Role.STUDENT)) {
       return handler(req, res)
@@ -115,7 +125,6 @@ export const withRestrictions = (handler) => {
     }
 
     const userEmail = user.email
-    console.log('userEmail', userEmail)
     // Check if user is in access list
     const isAllowedAccessList = await isUserInAccessList(
       userEmail,

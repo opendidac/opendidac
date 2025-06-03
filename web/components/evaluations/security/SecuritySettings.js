@@ -31,7 +31,6 @@ const SecuritySettings = ({ evaluation, onChange }) => {
       <SettingsIPRestriction
         evaluation={evaluation}
         onChange={(ipRestrictions) => {
-          console.log('ipRestrictions', ipRestrictions)
           onChange({ ipRestrictions })
         }}
       />

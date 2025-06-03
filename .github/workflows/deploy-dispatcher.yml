@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 'Deployment Target? (PROD or STAGE)'     
+        description: 'Deployment Target? (PROD | STAGE | SECURE)'
         required: true
         default: 'PROD'
 
@@ -25,9 +25,6 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           NEXTAUTH_URL: https://eval.iict-heig-vd.in
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_KEYCLOAK_CLIENT_ID: ${{ secrets.NEXTAUTH_KEYCLOAK_CLIENT_ID }}
-          NEXTAUTH_KEYCLOAK_CLIENT_SECRET: ${{ secrets.NEXTAUTH_KEYCLOAK_CLIENT_SECRET }}
-          NEXTAUTH_KEYCLOAK_ISSUER_BASE_URL: https://idp.heig-vd.ch/realms/HEIG-VD
           NEXTAUTH_SWITCH_CLIENT_ID: hes-so_open_didac
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
           SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
@@ -48,12 +45,29 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           NEXTAUTH_URL: https://eval-staging.iict-heig-vd.in/
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_KEYCLOAK_CLIENT_ID: ${{ secrets.NEXTAUTH_KEYCLOAK_CLIENT_ID }}
-          NEXTAUTH_KEYCLOAK_CLIENT_SECRET: ${{ secrets.NEXTAUTH_KEYCLOAK_CLIENT_SECRET }}
-          NEXTAUTH_KEYCLOAK_ISSUER_BASE_URL: https://idp.heig-vd.ch/realms/HEIG-VD
           NEXTAUTH_SWITCH_CLIENT_ID: hes-so_open_didac
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
           SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
           SSL_PRIVKEY: ${{ secrets.SSL_PRIVKEY }}
           
+  
+  deploy_to_secure:
+    runs-on: [self-hosted, secure-runner]
+    if: github.event.inputs.target == 'SECURE'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy to SECURE
+        uses: ./.github/actions/deploy
+        with:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          NEXTAUTH_URL: https://eval-secured.iict-heig-vd.in
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_SWITCH_CLIENT_ID: hes-so_open_didac
+          NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
+          SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
+          SSL_PRIVKEY: ${{ secrets.SSL_PRIVKEY }}
 

@@ -18,8 +18,8 @@ import Loading from '@/components/feedback/Loading'
 import ResizableDrawer from '@/components/layout/utils/ResizableDrawer'
 import QuestionFilter from '@/components/question/QuestionFilter'
 import QuestionsGrid from '@/components/questions/list/QuestionsGrid'
-import { Alert, Button } from '@mui/material'
-import { Box, Stack } from '@mui/system'
+import { Alert, Button, Box, Stack  } from '@mui/material'
+
 import { useState } from 'react'
 import useSWR from 'swr'
 
@@ -71,7 +71,7 @@ const QuestionIncludeDrawer = ({
                             color={'primary'}
                             size={'small'}
                             onClick={() => {
-                              onInclude(selection)
+                              onInclude(selection.map((q) => q.id))
                               setSelection([])
                               onClose()
                             }}

@@ -101,7 +101,6 @@ const SolutionQueriesManager = ({ groupScope, questionId, onUpdate }) => {
   useEffect(() => {
     if (queries && (!outputs || outputs.every((output) => output === null))) {
       runAllQueries()
-      console.log('running queries')
     }
   }, [queries, outputs, runAllQueries])
 

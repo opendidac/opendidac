@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Role } from '@prisma/client'
+import { QuestionStatus, Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
@@ -39,7 +39,15 @@ const get = async (req, res, prisma) => {
       evaluationToQuestions: {
         include: {
           question: {
-            include: questionIncludeClause(questionIncludeOptions),
+            include: {
+              ...questionIncludeClause(questionIncludeOptions),
+              sourceQuestion: {
+                // Only Active
+                where: {
+                  status: QuestionStatus.ACTIVE,
+                },
+              },
+            },
           },
         },
         orderBy: {

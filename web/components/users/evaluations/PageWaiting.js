@@ -65,7 +65,7 @@ const PageWaiting = () => {
                         ? `${data.evaluation.label} is ${phaseToPhrase(
                             data.evaluation.phase,
                           )}.`
-                        : 'This session is not in progress.'}
+                        : 'This evaluation is not in progress.'}
                     </Typography>
                     <Typography variant="body1" gutterBottom>
                       {data.evaluation.phase === EvaluationPhase.GRADING

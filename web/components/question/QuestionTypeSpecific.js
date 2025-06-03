@@ -82,7 +82,6 @@ const QuestionTypeSpecific = ({
         break
       case QuestionType.essay:
         if (question.essay) {
-          console.log(question.essay)
           return (
             <Essay
               title={'Solution Answer'}
