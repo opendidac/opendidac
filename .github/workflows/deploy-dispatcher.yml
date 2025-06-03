@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 'Deployment Target? (PROD or STAGE)'     
+        description: 'Deployment Target? (PROD | STAGE | SECURE)'
         required: true
         default: 'PROD'
 
