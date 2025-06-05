@@ -417,47 +417,50 @@ const Groups = () => {
   const [joiningGroupId, setJoiningGroupId] = useState(null)
   const { showTopCenter: showSnackbar } = useSnackbar()
 
-  const handleJoinGroup = useCallback(async (groupId) => {
-    setJoiningGroupId(groupId)
-    
-    try {
-      // Get current user info first
-      const userResponse = await fetch('/api/auth/session')
-      const session = await userResponse.json()
-      
-      if (!session?.user) {
-        showSnackbar('You must be logged in to join a group', 'error')
-        return
-      }
+  const handleJoinGroup = useCallback(
+    async (groupId) => {
+      setJoiningGroupId(groupId)
 
-      // Join the group using the existing members endpoint
-      const response = await fetch(`/api/groups/${groupId}/members`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          member: {
-            id: session.user.id,
+      try {
+        // Get current user info first
+        const userResponse = await fetch('/api/auth/session')
+        const session = await userResponse.json()
+
+        if (!session?.user) {
+          showSnackbar('You must be logged in to join a group', 'error')
+          return
+        }
+
+        // Join the group using the existing members endpoint
+        const response = await fetch(`/api/groups/${groupId}/members`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        }),
-      })
+          body: JSON.stringify({
+            member: {
+              id: session.user.id,
+            },
+          }),
+        })
 
-      if (response.ok) {
-        showSnackbar('Successfully joined the group!', 'success')
-        // Refresh the groups data
-        mutate()
-      } else {
-        const errorData = await response.json()
-        showSnackbar(errorData.message || 'Failed to join group', 'error')
+        if (response.ok) {
+          showSnackbar('Successfully joined the group!', 'success')
+          // Refresh the groups data
+          mutate()
+        } else {
+          const errorData = await response.json()
+          showSnackbar(errorData.message || 'Failed to join group', 'error')
+        }
+      } catch (error) {
+        console.error('Error joining group:', error)
+        showSnackbar('An error occurred while joining the group', 'error')
+      } finally {
+        setJoiningGroupId(null)
       }
-    } catch (error) {
-      console.error('Error joining group:', error)
-      showSnackbar('An error occurred while joining the group', 'error')
-    } finally {
-      setJoiningGroupId(null)
-    }
-  }, [showSnackbar, mutate])
+    },
+    [showSnackbar, mutate],
+  )
 
   return (
     <Stack width="100%" height={'100%'} p={2} spacing={1}>
@@ -527,8 +530,8 @@ const Groups = () => {
                     label: 'Created By',
                     column: { width: '280px' },
                     renderCell: (row) => {
-                      return row.createdBy && (
-                        <UserAvatar user={row.createdBy} />
+                      return (
+                        row.createdBy && <UserAvatar user={row.createdBy} />
                       )
                     },
                   },
@@ -585,33 +588,24 @@ const PageAdmin = () => {
       <LayoutMain
         hideLogo
         header={
-          <Stack direction={"row"}>
+          <Stack direction={'row'}>
             <Stack direction={'row'} spacing={1} alignItems={'center'} flex={1}>
-                <BackButton backUrl="/" />
-                <Tabs
-                  value={tabValue}
-                  onChange={handleTabChange}
-                  aria-label="admin tabs"
-                >
-                  <Tab 
-                    label="Users" 
-                    sx={{ opacity: 1, m: 1 }}
-                  />                
-                  <Tab 
-                    label="Groups" 
-                    sx={{ opacity: 1, m: 1 }}
-                  />
-                </Tabs>
-              
+              <BackButton backUrl="/" />
+              <Tabs
+                value={tabValue}
+                onChange={handleTabChange}
+                aria-label="admin tabs"
+              >
+                <Tab label="Users" sx={{ opacity: 1, m: 1 }} />
+                <Tab label="Groups" sx={{ opacity: 1, m: 1 }} />
+              </Tabs>
             </Stack>
             <MaintenancePanel />
           </Stack>
         }
       >
         <Box sx={{ width: '100%', height: '100%' }}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            
-          </Box>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}></Box>
           <Box sx={{ height: 'calc(100% - 2px)' }}>
             {tabValue === 0 && <Users />}
             {tabValue === 1 && <Groups />}
