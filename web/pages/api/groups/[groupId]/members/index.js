@@ -77,7 +77,6 @@ const post = async (req, res, prisma) => {
   const { groupId } = req.query
   const { member } = req.body
 
-  // check if the users is a member of the group they are trying to add a member to
   const requester = await getUser(req, res)
 
   if (!requester) {
@@ -96,7 +95,8 @@ const post = async (req, res, prisma) => {
     },
   })
 
-  if (!requesterIsMemberOfGroup) {
+  // Allow if user is a member of the group OR if user is SUPER_ADMIN
+  if (!requesterIsMemberOfGroup && !requester.roles.includes('SUPER_ADMIN')) {
     res.status(401).json({ message: 'Unauthorized' })
     return
   }

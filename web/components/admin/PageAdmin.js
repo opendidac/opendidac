@@ -36,6 +36,8 @@ import {
   MenuItem,
   FormControl,
   IconButton,
+  Tabs,
+  Tab,
 } from '@mui/material'
 import LayoutMain from '../layout/LayoutMain'
 import BackButton from '../layout/BackButton'
@@ -208,7 +210,7 @@ const MaintenancePanel = () => {
   )
 }
 
-const PageAdmin = () => {
+const Users = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -249,154 +251,135 @@ const PageAdmin = () => {
   }
 
   return (
-    <Authorization allowRoles={[Role.SUPER_ADMIN]}>
-      <LayoutMain
-        hideLogo
-        header={
-          <Stack
-            direction="row"
-            alignItems={'center'}
-            justifyContent={'space-between'}
-          >
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <BackButton backUrl="/" />
-              <Typography variant="h6">Role Management</Typography>
-            </Stack>
-            <MaintenancePanel />
-          </Stack>
-        }
-      >
-        <Stack width="100%" height={'100%'} p={2} spacing={1}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <TextField
-              label="Search"
-              variant="outlined"
-              value={search}
-              fullWidth
-              onChange={(ev) => {
-                const value = ev.target.value
-                setSearch(value)
-                if (value.length >= 2) {
-                  debouncedSearch(value)
-                } else {
-                  debouncedSearch('')
-                }
+    <Stack width="100%" height={'100%'} p={2} spacing={1}>
+      <Stack direction="row" spacing={1} alignItems="center">
+        <TextField
+          label="Search"
+          variant="outlined"
+          value={search}
+          fullWidth
+          onChange={(ev) => {
+            const value = ev.target.value
+            setSearch(value)
+            if (value.length >= 2) {
+              debouncedSearch(value)
+            } else {
+              debouncedSearch('')
+            }
+          }}
+          endAdornment={
+            <LoadingButton loading={!data && !errorUsers}>
+              loading
+            </LoadingButton>
+          }
+        />
+        <Box minWidth="70px">
+          <Typography variant="h6">{pagination.total} users</Typography>
+        </Box>
+      </Stack>
+      <Loading loading={isValidating} error={errorUsers}>
+        <ScrollContainer>
+          <Stack spacing={2}>
+            <DataGrid
+              header={{
+                actions: {
+                  label: 'Actions',
+                  width: '120px',
+                },
+                columns: [
+                  {
+                    label: 'User',
+                    column: { minWidth: '220px', flexGrow: 1 },
+                    renderCell: (row) => {
+                      return <UserAvatar user={row} />
+                    },
+                  },
+                  {
+                    label: 'Roles',
+                    column: { width: '280px' },
+                    renderCell: (row) => {
+                      return (
+                        <Stack direction="row" spacing={1}>
+                          {row.roles.map((role) => {
+                            return (
+                              <Chip
+                                key={role}
+                                label={roleToDetails[role].label}
+                                color={roleToDetails[role].color}
+                              />
+                            )
+                          })}
+                        </Stack>
+                      )
+                    },
+                  },
+                ],
               }}
-              endAdornment={
-                <LoadingButton loading={!data && !errorUsers}>
-                  loading
-                </LoadingButton>
-              }
+              items={users?.map((user) => ({
+                ...user,
+                meta: {
+                  key: user.id,
+                  actions: [
+                    <Button
+                      key="edit"
+                      color="info"
+                      onClick={() => {
+                        setSelected(user)
+                        setManageRolesDialogOpen(true)
+                      }}
+                    >
+                      Manage roles
+                    </Button>,
+                  ],
+                },
+              }))}
             />
-            <Box minWidth="70px">
-              <Typography variant="h6">{pagination.total} users</Typography>
+
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 3,
+                pt: 2,
+                borderColor: 'divider',
+              }}
+            >
+              <FormControl size="small" sx={{ minWidth: 100 }}>
+                <Select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(e.target.value)}
+                  displayEmpty
+                >
+                  <MenuItem value={10}>10 Rows</MenuItem>
+                  <MenuItem value={25}>25 Rows</MenuItem>
+                  <MenuItem value={50}>50 Rows</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <IconButton
+                    onClick={() => handlePageChange(page - 1)}
+                    disabled={page <= 1}
+                    size="small"
+                  >
+                    <ChevronLeftIcon />
+                  </IconButton>
+                  <Typography variant="body2">Page {page}</Typography>
+                  <IconButton
+                    onClick={() => handlePageChange(page + 1)}
+                    disabled={page >= pagination.totalPages}
+                    size="small"
+                  >
+                    <ChevronRightIcon />
+                  </IconButton>
+                </Stack>
+              </Stack>
             </Box>
           </Stack>
-          <Loading loading={isValidating} error={errorUsers}>
-            <ScrollContainer>
-              <Stack spacing={2}>
-                <DataGrid
-                  header={{
-                    actions: {
-                      label: 'Actions',
-                      width: '120px',
-                    },
-                    columns: [
-                      {
-                        label: 'User',
-                        column: { minWidth: '220px', flexGrow: 1 },
-                        renderCell: (row) => {
-                          return <UserAvatar user={row} />
-                        },
-                      },
-                      {
-                        label: 'Roles',
-                        column: { width: '280px' },
-                        renderCell: (row) => {
-                          return (
-                            <Stack direction="row" spacing={1}>
-                              {row.roles.map((role) => {
-                                return (
-                                  <Chip
-                                    key={role}
-                                    label={roleToDetails[role].label}
-                                    color={roleToDetails[role].color}
-                                  />
-                                )
-                              })}
-                            </Stack>
-                          )
-                        },
-                      },
-                    ],
-                  }}
-                  items={users?.map((user) => ({
-                    ...user,
-                    meta: {
-                      key: user.id,
-                      actions: [
-                        <Button
-                          key="edit"
-                          color="info"
-                          onClick={() => {
-                            setSelected(user)
-                            setManageRolesDialogOpen(true)
-                          }}
-                        >
-                          Manage roles
-                        </Button>,
-                      ],
-                    },
-                  }))}
-                />
-
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: 3,
-                    pt: 2,
-                    borderColor: 'divider',
-                  }}
-                >
-                  <FormControl size="small" sx={{ minWidth: 100 }}>
-                    <Select
-                      value={pageSize}
-                      onChange={(e) => handlePageSizeChange(e.target.value)}
-                      displayEmpty
-                    >
-                      <MenuItem value={10}>10 Rows</MenuItem>
-                      <MenuItem value={25}>25 Rows</MenuItem>
-                      <MenuItem value={50}>50 Rows</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <IconButton
-                        onClick={() => handlePageChange(page - 1)}
-                        disabled={page <= 1}
-                        size="small"
-                      >
-                        <ChevronLeftIcon />
-                      </IconButton>
-                      <Typography variant="body2">Page {page}</Typography>
-                      <IconButton
-                        onClick={() => handlePageChange(page + 1)}
-                        disabled={page >= pagination.totalPages}
-                        size="small"
-                      >
-                        <ChevronRightIcon />
-                      </IconButton>
-                    </Stack>
-                  </Stack>
-                </Box>
-              </Stack>
-            </ScrollContainer>
-          </Loading>
-        </Stack>
-      </LayoutMain>
+        </ScrollContainer>
+      </Loading>
       <ManageRolesDialog
         open={manageRolesDialogOpen}
         user={selected}
@@ -416,6 +399,225 @@ const PageAdmin = () => {
           )
         }}
       />
+    </Stack>
+  )
+}
+
+const Groups = () => {
+  const {
+    data,
+    error: errorGroups,
+    mutate,
+    isValidating,
+  } = useSWR('/api/groups', fetcher, {
+    revalidateOnFocus: false,
+  })
+
+  const groups = data?.groups || []
+  const [joiningGroupId, setJoiningGroupId] = useState(null)
+  const { showTopCenter: showSnackbar } = useSnackbar()
+
+  const handleJoinGroup = useCallback(async (groupId) => {
+    setJoiningGroupId(groupId)
+    
+    try {
+      // Get current user info first
+      const userResponse = await fetch('/api/auth/session')
+      const session = await userResponse.json()
+      
+      if (!session?.user) {
+        showSnackbar('You must be logged in to join a group', 'error')
+        return
+      }
+
+      // Join the group using the existing members endpoint
+      const response = await fetch(`/api/groups/${groupId}/members`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          member: {
+            id: session.user.id,
+          },
+        }),
+      })
+
+      if (response.ok) {
+        showSnackbar('Successfully joined the group!', 'success')
+        // Refresh the groups data
+        mutate()
+      } else {
+        const errorData = await response.json()
+        showSnackbar(errorData.message || 'Failed to join group', 'error')
+      }
+    } catch (error) {
+      console.error('Error joining group:', error)
+      showSnackbar('An error occurred while joining the group', 'error')
+    } finally {
+      setJoiningGroupId(null)
+    }
+  }, [showSnackbar, mutate])
+
+  return (
+    <Stack width="100%" height={'100%'} p={2} spacing={1}>
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Box flex={1}>
+          <Typography variant="h6">Groups Management</Typography>
+        </Box>
+        <Box minWidth="100px">
+          <Typography variant="h6">{groups.length} groups</Typography>
+        </Box>
+      </Stack>
+      <Loading loading={isValidating} error={errorGroups}>
+        <ScrollContainer>
+          <Stack spacing={2}>
+            <DataGrid
+              header={{
+                actions: {
+                  label: 'Actions',
+                  width: '120px',
+                },
+                columns: [
+                  {
+                    label: 'Label',
+                    column: { minWidth: '200px', flexGrow: 1 },
+                    renderCell: (row) => {
+                      return (
+                        <Typography variant="body1" fontWeight="medium">
+                          {row.label}
+                        </Typography>
+                      )
+                    },
+                  },
+                  {
+                    label: 'Members',
+                    column: { width: '100px' },
+                    renderCell: (row) => {
+                      return (
+                        <Typography variant="body2" color="text.secondary">
+                          {row._count.members}
+                        </Typography>
+                      )
+                    },
+                  },
+                  {
+                    label: 'Questions',
+                    column: { width: '100px' },
+                    renderCell: (row) => {
+                      return (
+                        <Typography variant="body2" color="text.secondary">
+                          {row._count.questions}
+                        </Typography>
+                      )
+                    },
+                  },
+                  {
+                    label: 'Evaluations',
+                    column: { width: '100px' },
+                    renderCell: (row) => {
+                      return (
+                        <Typography variant="body2" color="text.secondary">
+                          {row._count.evaluations}
+                        </Typography>
+                      )
+                    },
+                  },
+                  {
+                    label: 'Created By',
+                    column: { width: '280px' },
+                    renderCell: (row) => {
+                      return row.createdBy && (
+                        <UserAvatar user={row.createdBy} />
+                      )
+                    },
+                  },
+                  {
+                    label: 'Created',
+                    column: { width: '140px' },
+                    renderCell: (row) => {
+                      return (
+                        <Typography variant="body2" color="text.secondary">
+                          {new Date(row.createdAt).toLocaleDateString()}
+                        </Typography>
+                      )
+                    },
+                  },
+                ],
+              }}
+              items={groups?.map((group) => ({
+                ...group,
+                meta: {
+                  key: group.id,
+                  actions: !group.isCurrentUserMember
+                    ? [
+                        <LoadingButton
+                          key="join"
+                          color="primary"
+                          variant="text"
+                          size="small"
+                          loading={joiningGroupId === group.id}
+                          onClick={() => handleJoinGroup(group.id)}
+                        >
+                          Join
+                        </LoadingButton>,
+                      ]
+                    : [],
+                },
+              }))}
+            />
+          </Stack>
+        </ScrollContainer>
+      </Loading>
+    </Stack>
+  )
+}
+
+const PageAdmin = () => {
+  const [tabValue, setTabValue] = useState(0)
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue)
+  }
+
+  return (
+    <Authorization allowRoles={[Role.SUPER_ADMIN]}>
+      <LayoutMain
+        hideLogo
+        header={
+          <Stack direction={"row"}>
+            <Stack direction={'row'} spacing={1} alignItems={'center'} flex={1}>
+                <BackButton backUrl="/" />
+                <Tabs
+                  value={tabValue}
+                  onChange={handleTabChange}
+                  aria-label="admin tabs"
+                >
+                  <Tab 
+                    label="Users" 
+                    sx={{ opacity: 1, m: 1 }}
+                  />                
+                  <Tab 
+                    label="Groups" 
+                    sx={{ opacity: 1, m: 1 }}
+                  />
+                </Tabs>
+              
+            </Stack>
+            <MaintenancePanel />
+          </Stack>
+        }
+      >
+        <Box sx={{ width: '100%', height: '100%' }}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            
+          </Box>
+          <Box sx={{ height: 'calc(100% - 2px)' }}>
+            {tabValue === 0 && <Users />}
+            {tabValue === 1 && <Groups />}
+          </Box>
+        </Box>
+      </LayoutMain>
     </Authorization>
   )
 }
