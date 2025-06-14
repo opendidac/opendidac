@@ -46,7 +46,6 @@ export function withGroupScopeOldToRemove(handler) {
 /**
 Group owned entities are entities that are owned by a group. 
 
-- Collection
 - Evaluation
 - Question
 - Tag
@@ -56,7 +55,6 @@ When the entity or any of its related entities are concerned, we must ensure tha
 */
 const EntityNameQueryStringIdPair = Object.freeze({
   Question: 'questionId',
-  Collection: 'collectionId',
   Evaluation: 'evaluationId',
   Tag: 'tagId',
 })

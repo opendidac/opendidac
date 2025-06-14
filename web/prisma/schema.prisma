@@ -107,7 +107,6 @@ model Group {
   members UserOnGroup[]
 
   questions   Question[]
-  collections Collection[]
   tags        Tag[]
   evaluations Evaluation[]
 }
@@ -147,8 +146,6 @@ model Question {
   code           Code?
   web            Web?
   database       Database?
-
-  collection CollectionToQuestion[]
 
   sourceQuestionId String? // Field indicating the ID of the source question if this is a copy
   sourceQuestion   Question?  @relation("SourceQuestion", fields: [sourceQuestionId], references: [id], onDelete: SetNull)
@@ -563,32 +560,7 @@ model Evaluation {
   userOnEvaluationDeniedAccessAttempt UserOnEvaluationDeniedAccessAttempt[]
 }
 
-model Collection {
-  id    String @id @default(cuid())
-  label String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  collectionToQuestions CollectionToQuestion[]
-
-  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  groupId String
-
-  @@unique([groupId, label])
-}
-
-model CollectionToQuestion {
-  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  collectionId String
-  question     Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  questionId   String
-
-  order  Int   @default(0)
-  points Float @default(4)
-
-  @@id([collectionId, questionId])
-}
 
 model EvaluationToQuestion {
   evaluation   Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
