@@ -54,7 +54,6 @@ export const withQuestionUpdate = withEntityUpdate(async (req, prisma) => {
   })
 })
 
-
 export const withEvaluationUpdate = withEntityUpdate(async (req, prisma) => {
   const { evaluationId } = req.query
   await prisma.evaluation.update({
