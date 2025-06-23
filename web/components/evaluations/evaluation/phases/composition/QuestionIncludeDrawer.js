@@ -18,7 +18,7 @@ import Loading from '@/components/feedback/Loading'
 import ResizableDrawer from '@/components/layout/utils/ResizableDrawer'
 import QuestionFilter from '@/components/question/QuestionFilter'
 import QuestionsGrid from '@/components/questions/list/QuestionsGrid'
-import { Alert, Button, Box, Stack  } from '@mui/material'
+import { Alert, Button, Box, Stack } from '@mui/material'
 
 import { useState } from 'react'
 import useSWR from 'swr'
