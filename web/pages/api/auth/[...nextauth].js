@@ -134,29 +134,23 @@ const switchEduId = {
     text: '#000', // Black text color
   },
   profile(OAuthProfile) {
-    console.log('[DEBUG] Starting profile processing');
-    console.log('[DEBUG] OAuthProfile:', JSON.stringify(OAuthProfile, null, 2));
-  
     const allowedDomains =
       process.env.NEXTAUTH_SWITCH_ORGANIZATION_DOMAINS?.split(',').map(
         (domain) => domain.trim(),
       );
   
-    console.log('[DEBUG] Allowed domains:', allowedDomains);
-  
     if (!allowedDomains || allowedDomains.length === 0) {
       throw new Error('Allowed organization domains are not set.');
     }
   
-    const affiliations = OAuthProfile.swissEduIDLinkedAffiliationMail || [];
+    const linked = OAuthProfile.swissEduIDLinkedAffiliationMail || [];
+    const associated = OAuthProfile.swissEduIDAssociatedMail || [];
   
-    console.log('[DEBUG] User affiliations:', affiliations);
+    const allAffiliations = Array.from(new Set([...linked, ...associated]));
   
-    const email = affiliations.find((affiliation) =>
+    const email = allAffiliations.find((affiliation) =>
       allowedDomains.some((domain) => affiliation.endsWith(domain)),
     );
-  
-    console.log('[DEBUG] Selected email based on domain match:', email);
   
     if (!email) {
       throw new Error(
@@ -164,11 +158,9 @@ const switchEduId = {
       );
     }
   
-    const organizations = OAuthProfile.swissEduIDLinkedAffiliationMail.map(
+    const organizations = allAffiliations.map(
       (affiliation) => affiliation.split('@')[1],
     );
-  
-    console.log('[DEBUG] Extracted organizations:', organizations);
   
     return {
       id: OAuthProfile.sub,
@@ -176,11 +168,12 @@ const switchEduId = {
       email: email,
       image: OAuthProfile.picture,
       roles: [Role.STUDENT],
-      affiliations: OAuthProfile.swissEduIDLinkedAffiliationMail,
+      affiliations: linked,
+      associated: associated,
       organizations: organizations,
       selectedAffiliation: null,
     };
-  },
+  }  
 }
 
 export const authOptions = {
