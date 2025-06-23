@@ -143,9 +143,12 @@ const switchEduId = {
       throw new Error('Allowed organization domains are not set.')
     }
 
-    const affiliations = OAuthProfile.swissEduIDLinkedAffiliationMail || []
+    const linked = OAuthProfile.swissEduIDLinkedAffiliationMail || []
+    const associated = OAuthProfile.swissEduIDAssociatedMail || []
 
-    const email = affiliations.find((affiliation) =>
+    const allAffiliations = Array.from(new Set([...linked, ...associated]))
+
+    const email = allAffiliations.find((affiliation) =>
       allowedDomains.some((domain) => affiliation.endsWith(domain)),
     )
 
@@ -155,16 +158,19 @@ const switchEduId = {
       )
     }
 
+    const organizations = allAffiliations.map(
+      (affiliation) => affiliation.split('@')[1],
+    )
+
     return {
       id: OAuthProfile.sub,
       name: OAuthProfile.name,
       email: email,
       image: OAuthProfile.picture,
       roles: [Role.STUDENT],
-      affiliations: OAuthProfile.swissEduIDLinkedAffiliationMail,
-      organizations: OAuthProfile.swissEduIDLinkedAffiliationMail.map(
-        (affiliation) => affiliation.split('@')[1],
-      ),
+      affiliations: linked,
+      associated: associated,
+      organizations: organizations,
       selectedAffiliation: null,
     }
   },
