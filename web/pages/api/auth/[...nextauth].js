@@ -134,27 +134,42 @@ const switchEduId = {
     text: '#000', // Black text color
   },
   profile(OAuthProfile) {
+    console.log('[DEBUG] Starting profile processing');
+    console.log('[DEBUG] OAuthProfile:', JSON.stringify(OAuthProfile, null, 2));
+  
     const allowedDomains =
       process.env.NEXTAUTH_SWITCH_ORGANIZATION_DOMAINS?.split(',').map(
         (domain) => domain.trim(),
-      )
-
+      );
+  
+    console.log('[DEBUG] Allowed domains:', allowedDomains);
+  
     if (!allowedDomains || allowedDomains.length === 0) {
-      throw new Error('Allowed organization domains are not set.')
+      throw new Error('Allowed organization domains are not set.');
     }
-
-    const affiliations = OAuthProfile.swissEduIDLinkedAffiliationMail || []
-
+  
+    const affiliations = OAuthProfile.swissEduIDLinkedAffiliationMail || [];
+  
+    console.log('[DEBUG] User affiliations:', affiliations);
+  
     const email = affiliations.find((affiliation) =>
       allowedDomains.some((domain) => affiliation.endsWith(domain)),
-    )
-
+    );
+  
+    console.log('[DEBUG] Selected email based on domain match:', email);
+  
     if (!email) {
       throw new Error(
         `User does not have an appropriate affiliation for the allowed domains: ${allowedDomains.join(', ')}`,
-      )
+      );
     }
-
+  
+    const organizations = OAuthProfile.swissEduIDLinkedAffiliationMail.map(
+      (affiliation) => affiliation.split('@')[1],
+    );
+  
+    console.log('[DEBUG] Extracted organizations:', organizations);
+  
     return {
       id: OAuthProfile.sub,
       name: OAuthProfile.name,
@@ -162,11 +177,9 @@ const switchEduId = {
       image: OAuthProfile.picture,
       roles: [Role.STUDENT],
       affiliations: OAuthProfile.swissEduIDLinkedAffiliationMail,
-      organizations: OAuthProfile.swissEduIDLinkedAffiliationMail.map(
-        (affiliation) => affiliation.split('@')[1],
-      ),
+      organizations: organizations,
       selectedAffiliation: null,
-    }
+    };
   },
 }
 
