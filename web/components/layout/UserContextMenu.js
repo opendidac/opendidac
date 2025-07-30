@@ -38,7 +38,7 @@ const UserContextMenu = ({ anchorElUser, handleCloseUserMenu }) => {
         {session.user.roles.includes(Role.SUPER_ADMIN) && (
           <Link href={`/admin`}>
             <Button startIcon={<SupervisedUserCircleIcon />}>
-              Manage Users
+              Admin Panel
             </Button>
           </Link>
         )}
