@@ -54,7 +54,7 @@ import gradingTemplate from '@/code/evaluation/export/templates/grading.hbs'
 import questionWithSolutionTemplate from '@/code/evaluation/export/templates/questionWithSolution.hbs'
 import sectionHeaderTemplate from '@/code/evaluation/export/templates/sectionHeader.hbs'
 
-const OUTPUT_FORMAT = 'html' // 'html' or 'pdf'
+const OUTPUT_FORMAT = 'pdf' // 'html' or 'pdf'
 
 const generatePDF = async (html, header) => {
   const browser = await puppeteer.launch({
@@ -144,6 +144,12 @@ Handlebars.registerHelper('countDatabasePassedTests', countDatabasePassedTests)
 Handlebars.registerHelper('chunkQuestions', chunkQuestions)
 Handlebars.registerHelper('calculateTotalPoints', calculateTotalPoints)
 Handlebars.registerHelper('calculateObtainedPoints', calculateObtainedPoints)
+
+// Helper to check if an option was selected by the student
+Handlebars.registerHelper('isOptionSelected', function(optionId, selectedOptions) {
+  if (!selectedOptions || !Array.isArray(selectedOptions)) return false
+  return selectedOptions.some(option => option.id === optionId)
+})
 
 const get = async (req, res, prisma) => {
   const { groupScope, evaluationId } = req.query
