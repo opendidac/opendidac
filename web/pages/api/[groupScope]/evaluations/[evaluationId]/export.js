@@ -51,8 +51,10 @@ import studentAnswerTrueFalseTemplate from '@/code/evaluation/export/templates/s
 import studentAnswerWebTemplate from '@/code/evaluation/export/templates/studentAnswerWeb.hbs'
 import studentAnswerDatabaseTemplate from '@/code/evaluation/export/templates/studentAnswerDatabase.hbs'
 import gradingTemplate from '@/code/evaluation/export/templates/grading.hbs'
+import questionWithSolutionTemplate from '@/code/evaluation/export/templates/questionWithSolution.hbs'
+import sectionHeaderTemplate from '@/code/evaluation/export/templates/sectionHeader.hbs'
 
-const OUTPUT_FORMAT = 'pdf' // 'html' or 'pdf'
+const OUTPUT_FORMAT = 'html' // 'html' or 'pdf'
 
 const generatePDF = async (html, header) => {
   const browser = await puppeteer.launch({
@@ -130,6 +132,8 @@ Handlebars.registerPartial(
   studentAnswerDatabaseTemplate,
 )
 Handlebars.registerPartial('studentAnswerGrading', gradingTemplate)
+Handlebars.registerPartial('questionWithSolution', questionWithSolutionTemplate)
+Handlebars.registerPartial('sectionHeader', sectionHeaderTemplate)
 
 // HELPER FUNCTIONS
 Handlebars.registerHelper('formatCode', formatCode)
@@ -218,12 +222,25 @@ const get = async (req, res, prisma) => {
     return studentWithQuestionsAndAnswers
   })
 
+  // Prepare questions for the solutions section
+  const questionsWithSolutions = questions.map((q) => {
+    const evalToQuestion = evaluation.evaluationToQuestions.find(
+      (etq) => etq.questionId === q.question.id,
+    )
+    return {
+      question: q.question,
+      order: evalToQuestion.order + 1,
+      points: evalToQuestion.points,
+    }
+  })
+
   // Prepare the context for the template
   const context = {
     includeConditionsPage: !!evaluation.conditions,
     includeSectionTwo: false,
     evaluation: evaluation,
     conditions: evaluation.conditions,
+    questionsWithSolutions: questionsWithSolutions,
     studentsWithQuestionsAndAnswers: studentsWithQuestionsAndAnswers,
     muiTheme: muiTheme,
   }

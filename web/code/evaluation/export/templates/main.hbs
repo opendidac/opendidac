@@ -23,6 +23,29 @@
       <div style="page-break-after: always;"></div>
     {{/if}}
 
+    <!-- Questions and Solutions Section -->
+    <div style="display:flex;justify-content:center;align-items:center;height:100%;">
+      <div>
+        <h1 style="text-align: center; color: #333;">Questions and Solutions</h1>
+        <p style="text-align: center;">This section contains all questions with their solutions and test cases.</p>
+      </div>
+    </div>
+    <div style="page-break-after: always;"></div>
+
+    {{#each questionsWithSolutions}}
+      {{> questionWithSolution this}}
+      <div style="page-break-after: always;"></div>
+    {{/each}}
+
+    <!-- Student Submissions Section -->
+    <div style="display:flex;justify-content:center;align-items:center;height:100%;">
+      <div>
+        <h1 style="text-align: center; color: #333;">Student Submissions</h1>
+        <p style="text-align: center;">This section contains individual student answers and grading details.</p>
+      </div>
+    </div>
+    <div style="page-break-after: always;"></div>
+
     {{#each studentsWithQuestionsAndAnswers}}
       <!-- Add student page with student info and a table with columns Q1,Q2... displaying obtained points / total points -->
       {{> studentCover this}}

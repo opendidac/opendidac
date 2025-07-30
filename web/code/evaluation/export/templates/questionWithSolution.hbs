@@ -1,0 +1,37 @@
+<div style="margin-bottom: 30px;">
+  {{> questionHeader this}}
+  
+  <div style="margin-bottom: 20px;">
+    <div>{{formatMarkdown this.question.content}}</div>
+  </div>
+
+  {{#if this.question.code}}
+    {{#if (eq this.question.code.codeType 'codeWriting')}}
+      <div style="margin-bottom: 20px;">
+        <h5>Solution Files</h5>
+        {{#each this.question.code.codeWriting.solutionFiles}}
+          <div style="margin-bottom: 15px;">
+            <div style="font-weight: bold; margin-bottom: 5px;">{{this.file.path}}</div>
+            <div>
+              {{> codeBloc this.file.content}}
+            </div>
+          </div>
+        {{/each}}
+      </div>
+
+      {{#if this.question.code.codeWriting.testCases}}
+        <div style="margin-bottom: 20px;">
+          <h5>Test Cases</h5>
+          {{#each this.question.code.codeWriting.testCases}}
+            <div style="margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+              <div style="margin-bottom: 5px;"><strong>Test Case {{this.index}}:</strong></div>
+              <div style="margin-bottom: 5px;"><strong>Exec:</strong> {{> codeBloc this.exec}}</div>
+              <div style="margin-bottom: 5px;"><strong>Input:</strong> {{> codeBloc this.input}}</div>
+              <div><strong>Expected Output:</strong> {{> codeBloc this.expectedOutput}}</div>
+            </div>
+          {{/each}}
+        </div>
+      {{/if}}
+    {{/if}}
+  {{/if}}
+</div> 
