@@ -151,7 +151,7 @@ You should see the following output: `Your database is now in sync with your sch
 
 ```bash
 cd web
-npm run dev
+npm run dev:https
 ```
 
 You might need to clear your browser cache for the page to load correctly.
