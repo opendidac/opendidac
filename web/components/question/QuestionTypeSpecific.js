@@ -21,6 +21,7 @@ import Web from './type_specific/Web'
 import Database from './type_specific/Database'
 import Essay from './type_specific/Essay'
 import ScrollContainer from '../layout/ScrollContainer'
+import ExactAnswer from './type_specific/ExactAnswer'
 
 const QuestionTypeSpecific = ({
   groupScope,
@@ -80,6 +81,7 @@ const QuestionTypeSpecific = ({
           )
         }
         break
+
       case QuestionType.essay:
         if (question.essay) {
           return (
@@ -91,6 +93,22 @@ const QuestionTypeSpecific = ({
               onChange={(property, newContent) =>
                 onTypeSpecificChange(question.type, {
                   ...question.essay,
+                  [property]: newContent,
+                })
+              }
+            />
+          )
+        }
+
+      case QuestionType.exactAnswer:
+        if (question.exactAnswer) {
+          return (
+            <ExactAnswer
+              groupScope={groupScope}
+              fields={question.exactAnswer.fields}
+              onChange={(property, newContent) =>
+                onTypeSpecificChange(question.type, {
+                  ...question.exactAnswer,
                   [property]: newContent,
                 })
               }
