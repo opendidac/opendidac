@@ -313,6 +313,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
         essay: { select: { content: true } },
         trueFalse: true,
         web: true,
+        exactAnswer: true,
         user: true,
       },
     }
@@ -673,6 +674,8 @@ export const copyQuestion = async (
       return copyCodeQuestion(prisma, question)
     case QuestionType.database:
       return copyDatabaseQuestion(prisma, question)
+    case QuestionType.exactAnswer:
+      return copyGenericQuestion(prisma, question)
     default:
       return null
   }
