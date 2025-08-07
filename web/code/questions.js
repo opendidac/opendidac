@@ -157,6 +157,20 @@ export const questionIncludeClause = (questionIncludeOptions) => {
               : {}),
           },
         },
+        exactAnswer: {
+          select: {
+            questionId: true,
+            fields: {
+              select: {
+                id: true,
+                order: true,
+                statement: true,
+                ...(includeOfficialAnswers ? { matchRegex: true } : {}),
+              },
+              orderBy: { order: 'asc' },
+            },
+          },
+        },
         database: {
           select: {
             image: true,
@@ -378,6 +392,30 @@ export const questionTypeSpecific = (
                       order: o.order,
                       text: o.text,
                       isCorrect: o.isCorrect,
+                    })),
+                  },
+          }
+    case QuestionType.exactAnswer:
+      return !question
+        ? {
+            // default fields when creating a new question
+            fields: {
+              create: [
+                { order: 0, statement: 'Enter your answer:', matchRegex: '.*' },
+              ],
+            },
+          }
+        : {
+            fields:
+              mode === 'update'
+                ? // exact answer fields are managed on the question level for now
+                  {}
+                : // for copying questions
+                  {
+                    create: question.exactAnswer.fields.map((field) => ({
+                      order: field.order,
+                      statement: field.statement,
+                      matchRegex: field.matchRegex,
                     })),
                   },
           }
