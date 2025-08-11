@@ -63,6 +63,8 @@ const EvaluationSideMenu = ({
   }
 
   const overallProgress = (progress) => {
+    if (!progress) return 0
+
     let totalAnswers = 0
     let completedAnswers = 0
 
@@ -78,6 +80,8 @@ const EvaluationSideMenu = ({
   }
 
   const overallGrading = (results) => {
+    if (!results) return 0
+
     let totalGraded = 0
     let graded = 0
 
@@ -400,6 +404,8 @@ const AttendanceSummary = ({ attendance }) => {
 
 const ProgressSummary = ({ progress }) => {
   const countAnswers = (progress, status = StudentAnswerStatus.MISSING) => {
+    if (!progress) return 0
+
     let count = 0
 
     progress.forEach((question) => {
@@ -412,6 +418,8 @@ const ProgressSummary = ({ progress }) => {
   }
 
   const totalAnswers = (progress) => {
+    if (!progress) return 0
+
     let count = 0
 
     progress.forEach((question) => {
