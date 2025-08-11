@@ -124,6 +124,7 @@ const ExactAnswer = ({ id = 'exactAnswer', groupScope, questionId, fields, onCha
           onChange={ onFieldChange }
           onDelete={ onDelete }
           mayDelete={ fields.length > 1 }
+          previewMode={previewMode}
         ></FieldEditor>
       ))}
 
