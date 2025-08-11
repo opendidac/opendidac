@@ -23,7 +23,7 @@ const ExactAnswer = ({ id = 'exactAnswer', groupScope, fields, onChange }) => {
     onChange('fields', updatedFields)
   }, [fields, onChange])
 
-  const onFieldChange = useCallback((index, field) => {
+  const onFieldChange = useCallback((index, newField) => {
     const updatedFields = [...fields]
     updatedFields[index] = newField
     onChange('fields', updatedFields)

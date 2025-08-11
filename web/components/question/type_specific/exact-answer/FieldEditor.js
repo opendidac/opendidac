@@ -19,6 +19,7 @@ import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined'
 import { styled } from '@mui/system'
 import { useTheme } from '@emotion/react'
+import { useEffect, useState } from 'react'
 
 // Styled component to apply whitespace visibility
 const MonoSpaceTextField = styled(TextField)({
@@ -30,6 +31,12 @@ const MonoSpaceTextField = styled(TextField)({
 // TODO factorize this monospacetextfield.
 
 const FieldEditor = ({ index, groupScope, field, onChange, onDelete }) => {
+  const [regex, setRegex] = useState(field.matchRegex || '')
+
+  useEffect(() => {
+    setRegex(field.matchRegex || '')
+  }, [field.matchRegex])
+
   const theme = useTheme()
 
   return (
@@ -65,14 +72,15 @@ const FieldEditor = ({ index, groupScope, field, onChange, onDelete }) => {
         id={`regex-${field.id}`}
         variant="standard"
         label="Expected Answer (Regex)"
-        value={field.matchRegex}
+        value={regex}
         required
         fullWidth
-        error={field.matchRegex === '' || field.matchRegex == null}
+        error={regex === '' || regex == null}
         onChange={(e) => {
           const newRegex = e.target.value
-          if (newRegex === field.matchRegex) return
-          onChange({
+          if (newRegex === regex) return
+          setRegex(newRegex)
+          onChange(index, {
             ...field,
             matchRegex: newRegex,
           })
