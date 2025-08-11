@@ -62,6 +62,7 @@ model User {
   groups           UserOnGroup[]
   groupsCreated    Group[]
   annotations      Annotation[]
+  purgedEvaluations Evaluation[]
 }
 
 enum Role {
@@ -557,6 +558,10 @@ model Evaluation {
   students              UserOnEvaluation[]
   
   evaluationToQuestions EvaluationToQuestion[]
+
+  purgedAt          DateTime?
+  purgedByUserEmail String?
+  purgedBy          User?     @relation(fields: [purgedByUserEmail], references: [email])
 
   group                               Group                                 @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId                             String

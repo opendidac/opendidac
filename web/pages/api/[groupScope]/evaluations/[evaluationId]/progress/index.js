@@ -21,6 +21,7 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { IncludeStrategy, questionIncludeClause } from '@/code/questions'
+import { withPurgeGuard } from '@/middleware/withPurged'
 
 const get = async (req, res, prisma) => {
   const { evaluationId } = req.query
@@ -52,6 +53,6 @@ const get = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
+    GET: withAuthorization(withPurgeGuard(withPrisma(get)), [Role.PROFESSOR]),
   }),
 )

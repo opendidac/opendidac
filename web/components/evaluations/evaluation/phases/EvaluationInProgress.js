@@ -63,6 +63,10 @@ const EvaluationInProgress = ({
     [evaluationId, onDurationChanged, showSnackbar, groupScope],
   )
 
+  if (!attendance || !progress) {
+    return null
+  }
+
   return (
     <Stack flex={1} px={1}>
       <EvaluationTitleBar

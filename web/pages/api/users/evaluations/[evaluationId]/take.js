@@ -27,6 +27,7 @@ import {
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
 import { withRestrictions } from '@/middleware/withRestrictions'
+import { withPurgeGuard } from '@/middleware/withPurged'
 
 /*
 Get the details about thr evaluation for a users
@@ -102,6 +103,9 @@ const get = withEvaluationPhase(
 
 export default withMethodHandler({
   GET: withRestrictions(
-    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+    withAuthorization(withPurgeGuard(withPrisma(get)), [
+      Role.PROFESSOR,
+      Role.STUDENT,
+    ]),
   ),
 })
