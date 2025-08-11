@@ -21,7 +21,7 @@ import Web from './type_specific/Web'
 import Database from './type_specific/Database'
 import Essay from './type_specific/Essay'
 import ScrollContainer from '../layout/ScrollContainer'
-import ExactAnswer from './type_specific/ExactAnswer'
+import ExactAnswer from './type_specific/exactAnswer/ExactAnswer'
 
 const QuestionTypeSpecific = ({
   groupScope,
