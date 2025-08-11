@@ -21,7 +21,7 @@ import Web from './type_specific/Web'
 import Database from './type_specific/Database'
 import Essay from './type_specific/Essay'
 import ScrollContainer from '../layout/ScrollContainer'
-import ExactAnswer from './type_specific/exactAnswer/ExactAnswer'
+import ExactAnswer from '@/components/question/type_specific/exact-answer/ExactAnswer'
 
 const QuestionTypeSpecific = ({
   groupScope,
@@ -99,6 +99,7 @@ const QuestionTypeSpecific = ({
             />
           )
         }
+        break
 
       case QuestionType.exactAnswer:
         if (question.exactAnswer) {
@@ -115,6 +116,8 @@ const QuestionTypeSpecific = ({
             />
           )
         }
+        break
+
       default:
         return null // or a default component or some feedback to the users
     }

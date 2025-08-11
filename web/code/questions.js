@@ -307,7 +307,6 @@ export const questionIncludeClause = (questionIncludeOptions) => {
         trueFalse: true,
         web: true,
         exactAnswer: true,
-        user: true,
       },
     }
 
