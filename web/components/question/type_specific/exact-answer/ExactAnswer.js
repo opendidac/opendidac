@@ -13,11 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React from 'react'
-import MarkdownEditor from '../../../input/markdown/MarkdownEditor'
+import React, { useCallback } from 'react'
 import { Stack } from '@mui/material'
+import FieldEditor from '@/components/question/type_specific/exact-answer/FieldEditor'
 
 const ExactAnswer = ({ id = 'exactAnswer', groupScope, fields, onChange }) => {
+  const onDelete = useCallback((index) => {
+    const updatedFields = fields.filter((_, i) => i !== index)
+    onChange('fields', updatedFields)
+  }, [fields, onChange])
+
+  const onFieldChange = useCallback((index, field) => {
+    const updatedFields = [...fields]
+    updatedFields[index] = newField
+    onChange('fields', updatedFields)
+  }, [fields, onChange])
+
   return (
     <Stack
       spacing={1}
@@ -27,26 +38,17 @@ const ExactAnswer = ({ id = 'exactAnswer', groupScope, fields, onChange }) => {
       px={1}
       pt={1}
     >
-      <MarkdownEditor
-        id={id}
-        title={'Solution Answer'}
-        groupScope={groupScope}
-        rawContent={"hardcoded"}
-        onChange={(newContent) => {
-          // if (newContent === solution) return
-          // onChange('fields', newContent === '' ? undefined : newContent)
-        }}
-      />
-      <MarkdownEditor
-        id={id}
-        title={'Student Starting Template'}
-        groupScope={groupScope}
-        rawContent={"hardcoded"}
-        onChange={(newContent) => {
-          // if (newContent === template) return
-          // onChange('template', newContent === '' ? undefined : newContent)
-        }}
-      />
+      {fields.map((field, index) => (
+        <FieldEditor
+          index={index}
+          groupScope={groupScope}
+          key={field.id}
+          field={field}
+          onChange={ onFieldChange }
+          onDelete={ onDelete }
+        ></FieldEditor>
+      ))}
+
     </Stack>
   )
 }
