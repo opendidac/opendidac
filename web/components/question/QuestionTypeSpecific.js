@@ -106,6 +106,7 @@ const QuestionTypeSpecific = ({
           return (
             <ExactAnswer
               groupScope={groupScope}
+              questionId={question.id}
               fields={question.exactAnswer.fields}
               onChange={(property, newContent) =>
                 onTypeSpecificChange(question.type, {

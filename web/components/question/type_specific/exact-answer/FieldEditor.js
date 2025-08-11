@@ -61,7 +61,7 @@ const FieldEditor = ({ index, groupScope, field, onChange, onDelete }) => {
           rawContent={field.statement}
           onChange={(newStatement) => {
             if (newStatement === field.statement) return
-            onChange(index, {
+            onChange({
               ...field,
               statement: newStatement,
             })
@@ -80,7 +80,7 @@ const FieldEditor = ({ index, groupScope, field, onChange, onDelete }) => {
           const newRegex = e.target.value
           if (newRegex === regex) return
           setRegex(newRegex)
-          onChange(index, {
+          onChange({
             ...field,
             matchRegex: newRegex,
           })
