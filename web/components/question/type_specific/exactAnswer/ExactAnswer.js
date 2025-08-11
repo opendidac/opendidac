@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import React from 'react'
-import MarkdownEditor from '../../input/markdown/MarkdownEditor'
+import MarkdownEditor from '../../../input/markdown/MarkdownEditor'
 import { Stack } from '@mui/material'
 
 const ExactAnswer = ({ id = 'exactAnswer', groupScope, fields, onChange }) => {
