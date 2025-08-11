@@ -74,8 +74,8 @@ const generatePDF = async (html, header) => {
         size: A4;
       }
       @page:first {
-        @bottom-left { content: ""; } /* Hide the email on the first page if desired */
-        @bottom-right { content: ""; } /* Optional: Exclude number on the first page */
+        @bottom-left { content: ""; }
+        @bottom-right { content: ""; }
       }
     `
     document.head.appendChild(style)
@@ -135,7 +135,7 @@ Handlebars.registerPartial('studentAnswerGrading', gradingTemplate)
 Handlebars.registerPartial('questionWithSolution', questionWithSolutionTemplate)
 Handlebars.registerPartial('sectionHeader', sectionHeaderTemplate)
 
-// HELPER FUNCTIONS
+// HELPERS
 Handlebars.registerHelper('formatCode', formatCode)
 Handlebars.registerHelper('formatMarkdown', formatMarkdown)
 Handlebars.registerHelper('eq', equals)
@@ -145,7 +145,6 @@ Handlebars.registerHelper('chunkQuestions', chunkQuestions)
 Handlebars.registerHelper('calculateTotalPoints', calculateTotalPoints)
 Handlebars.registerHelper('calculateObtainedPoints', calculateObtainedPoints)
 
-// Helper to check if an option was selected by the student
 Handlebars.registerHelper(
   'isOptionSelected',
   function (optionId, selectedOptions) {
@@ -158,16 +157,10 @@ const get = async (req, res, prisma) => {
   const { groupScope, evaluationId } = req.query
 
   const evaluation = await prisma.evaluation.findUnique({
-    where: {
-      id: evaluationId,
-    },
+    where: { id: evaluationId },
     include: {
       evaluationToQuestions: true,
-      students: {
-        select: {
-          user: true,
-        },
-      },
+      students: { select: { user: true } },
       group: true,
     },
   })
@@ -177,59 +170,54 @@ const get = async (req, res, prisma) => {
     return
   }
 
+  const includeStudentSubmissions = !evaluation.purgedAt
+
   const questions = await prisma.evaluationToQuestion.findMany({
     where: {
-      evaluationId: evaluationId,
-      question: {
-        group: {
-          scope: groupScope,
-        },
-      },
+      evaluationId,
+      question: { group: { scope: groupScope } },
     },
     include: {
       question: {
         include: questionIncludeClause({
           includeTypeSpecific: true,
           includeOfficialAnswers: true,
-          includeUserAnswers: {
-            strategy: IncludeStrategy.ALL,
-          },
-          includeGradings: true,
+          // When purged, we don't need user answers/gradings for export
+          includeUserAnswers: includeStudentSubmissions
+            ? { strategy: IncludeStrategy.ALL }
+            : undefined,
+          includeGradings: includeStudentSubmissions,
         }),
       },
     },
-    orderBy: {
-      order: 'asc',
-    },
+    orderBy: { order: 'asc' },
   })
 
-  // Transform the data to for the context of the template
-  const studentsWithQuestionsAndAnswers = evaluation.students.map((student) => {
-    const studentWithQuestionsAndAnswers = {
-      student: student.user,
-      questions: [],
-    }
+  // Only build the heavy student submissions payload when not purged
+  const studentsWithQuestionsAndAnswers = includeStudentSubmissions
+    ? evaluation.students.map((student) => {
+        const out = { student: student.user, questions: [] }
 
-    questions.forEach((q) => {
-      const studentAnswer = q.question.studentAnswer.find(
-        (sa) => sa.user.email === student.user.email,
-      )
+        questions.forEach((q) => {
+          const studentAnswer = q.question.studentAnswer.find(
+            (sa) => sa.user.email === student.user.email,
+          )
+          const evalToQuestion = evaluation.evaluationToQuestions.find(
+            (etq) => etq.questionId === q.question.id,
+          )
 
-      const evalToQuestion = evaluation.evaluationToQuestions.find(
-        (etq) => etq.questionId === q.question.id,
-      )
-
-      studentWithQuestionsAndAnswers.questions.push({
-        student: student.user,
-        question: q.question,
-        order: evalToQuestion.order + 1,
-        points: evalToQuestion.points,
-        studentAnswer: studentAnswer,
-        studentGrading: studentAnswer?.studentGrading,
+          out.questions.push({
+            student: student.user,
+            question: q.question,
+            order: evalToQuestion.order + 1,
+            points: evalToQuestion.points,
+            studentAnswer,
+            studentGrading: studentAnswer?.studentGrading,
+          })
+        })
+        return out
       })
-    })
-    return studentWithQuestionsAndAnswers
-  })
+    : []
 
   // Prepare questions for the solutions section
   const questionsWithSolutions = questions.map((q) => {
@@ -243,43 +231,41 @@ const get = async (req, res, prisma) => {
     }
   })
 
-  // Prepare the context for the template
+  // Template context
   const context = {
     includeConditionsPage: !!evaluation.conditions,
     includeSectionTwo: false,
-    evaluation: evaluation,
+    includeStudentSubmissions, // <- drives template visibility
+    evaluation,
+    studentsCount: evaluation.students.length, // always correct even when purged
     conditions: evaluation.conditions,
-    questionsWithSolutions: questionsWithSolutions,
-    studentsWithQuestionsAndAnswers: studentsWithQuestionsAndAnswers,
-    muiTheme: muiTheme,
+    questionsWithSolutions,
+    studentsWithQuestionsAndAnswers,
+    muiTheme,
   }
 
-  // Compile the main template
   const template = Handlebars.compile(mainTempate)
-  // Insert data into the template
   const combinedHtmlContent = template(context)
 
   if (OUTPUT_FORMAT === 'html') {
     res.setHeader('Content-Type', 'text/html')
     res.send(combinedHtmlContent)
     return
-  } else {
-    // Generate PDF
-    try {
-      const pdfBuffer = await generatePDF(
-        combinedHtmlContent,
-        evaluation.group.label,
-      )
-      const fileName = `evaluation_${evaluation.id}.pdf`
-      // Set headers to indicate content type and disposition (attachment means it will be downloaded)
-      res.setHeader('Content-Type', 'application/pdf')
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
-      res.setHeader('Content-Length', pdfBuffer.length)
-      res.send(pdfBuffer)
-    } catch (error) {
-      console.error(error)
-      res.status(500).send('Error generating PDF')
-    }
+  }
+
+  try {
+    const pdfBuffer = await generatePDF(
+      combinedHtmlContent,
+      evaluation.group.label,
+    )
+    const fileName = `evaluation_${evaluation.id}.pdf`
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
+    res.setHeader('Content-Length', pdfBuffer.length)
+    res.send(pdfBuffer)
+  } catch (error) {
+    console.error(error)
+    res.status(500).send('Error generating PDF')
   }
 }
 

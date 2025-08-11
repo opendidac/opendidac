@@ -1,10 +1,8 @@
 <html>
   <head>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
-
     {{> styles}}
     <meta charset="UTF-8">
-    
   </head>
   <body>
 
@@ -12,7 +10,7 @@
       <div>
         <h2>{{evaluation.label}}</h2>
         <p>Questions: {{evaluation.evaluationToQuestions.length}}</p>
-        <p>Students: {{studentsWithQuestionsAndAnswers.length}}</p>
+        <p>Students: {{studentsCount}}</p>
       </div>
     </div>
     <div style="page-break-after: always;"></div>
@@ -37,65 +35,62 @@
       <div style="page-break-after: always;"></div>
     {{/each}}
 
-    <!-- Student Submissions Section -->
-    <div style="display:flex;justify-content:center;align-items:center;height:100%;">
-      <div>
-        <h1 style="text-align: center; color: #333;">Student Submissions</h1>
-        <p style="text-align: center;">This section contains individual student answers and grading details.</p>
+    {{#if includeStudentSubmissions}}
+      <!-- Student Submissions Section -->
+      <div style="display:flex;justify-content:center;align-items:center;height:100%;">
+        <div>
+          <h1 style="text-align: center; color: #333;">Student Submissions</h1>
+          <p style="text-align: center;">This section contains individual student answers and grading details.</p>
+        </div>
       </div>
-    </div>
-    <div style="page-break-after: always;"></div>
+      <div style="page-break-after: always;"></div>
 
-    {{#each studentsWithQuestionsAndAnswers}}
-      <!-- Add student page with student info and a table with columns Q1,Q2... displaying obtained points / total points -->
-      {{> studentCover this}}
+      {{#each studentsWithQuestionsAndAnswers}}
+        {{> studentCover this}}
 
-      {{#each this.questions}}
-        
-        {{> studentInfo this.studentAnswer.user }}
-        
-        {{> questionHeader this}}
-        <div>{{formatMarkdown this.question.content}} </div>
+        {{#each this.questions}}
+          {{> studentInfo this.studentAnswer.user }}
+          {{> questionHeader this}}
+          <div>{{formatMarkdown this.question.content}} </div>
 
-        {{#if this.studentAnswer.code}}
-          {{#if this.question.code.codeType}}
-            {{#if (eq this.question.code.codeType 'codeWriting')}}
-              {{> studentAnswerCodeWriting this}}
-            {{/if}}
-            {{#if (eq this.question.code.codeType 'codeReading')}}
-              {{> studentAnswerCodeReading this}}
+          {{#if this.studentAnswer.code}}
+            {{#if this.question.code.codeType}}
+              {{#if (eq this.question.code.codeType 'codeWriting')}}
+                {{> studentAnswerCodeWriting this}}
+              {{/if}}
+              {{#if (eq this.question.code.codeType 'codeReading')}}
+                {{> studentAnswerCodeReading this}}
+              {{/if}}
             {{/if}}
           {{/if}}
-        {{/if}}
 
+          {{#if this.studentAnswer.essay}}
+            {{> studentAnswerEssay this}}
+          {{/if}}
 
-        {{#if this.studentAnswer.essay}}
-          {{> studentAnswerEssay this}}
-        {{/if}}
+          {{#if this.studentAnswer.multipleChoice}}
+            {{> studentAnswerMultipleChoice this}}
+          {{/if}}
 
-        {{#if this.studentAnswer.multipleChoice}}
-          {{> studentAnswerMultipleChoice this}}
-        {{/if}}
+          {{#if this.studentAnswer.trueFalse}}
+            {{> studentAnswerTrueFalse this}}
+          {{/if}}
 
-        {{#if this.studentAnswer.trueFalse}}
-          {{> studentAnswerTrueFalse this}}
-        {{/if}}
+          {{#if this.studentAnswer.web}}
+            {{> studentAnswerWeb this}}
+          {{/if}}
 
-        {{#if this.studentAnswer.web}}
-          {{> studentAnswerWeb this}}
-        {{/if}}
+          {{#if this.studentAnswer.database}}
+            {{> studentAnswerDatabase this}}
+          {{/if}}
 
-        {{#if this.studentAnswer.database}}
-          {{> studentAnswerDatabase this}}
-        {{/if}}
+          {{#if this.studentAnswer.studentGrading}}
+            {{> studentAnswerGrading this}}
+          {{/if}}
 
-        {{#if this.studentAnswer.studentGrading}}
-          {{> studentAnswerGrading this}}
-        {{/if}}
-        
-        <div style="page-break-after: always;"></div>
+          <div style="page-break-after: always;"></div>
+        {{/each}}
       {{/each}}
-      
-    {{/each}}
+    {{/if}}
   </body>
 </html>
