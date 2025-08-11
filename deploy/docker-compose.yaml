@@ -40,7 +40,7 @@ services:
 
   sandbox:
     image: docker:28.2.2-dind
-    runtime: sysbox-runc
+    runtime: sysbox-runc # ! requires sysbox-runc installed on the host
     restart: unless-stopped
     expose:
       - "2375"
