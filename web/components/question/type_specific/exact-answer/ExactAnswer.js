@@ -18,9 +18,20 @@ import { Button, Stack } from '@mui/material'
 import FieldEditor from '@/components/question/type_specific/exact-answer/FieldEditor'
 import AddIcon from '@mui/icons-material/Add'
 import ToggleWithLabel from '@/components/input/ToggleWithLabel'
+import ScrollContainer from '@/components/layout/ScrollContainer'
+import ReorderableList from '@/components/layout/utils/ReorderableList'
+import { useDebouncedCallback } from 'use-debounce'
 
-const ExactAnswer = ({ id = 'exactAnswer', groupScope, questionId, fields, onChange }) => {
+const ExactAnswer = ({
+  id = 'exactAnswer',
+  groupScope,
+  questionId,
+  fields: initialFields,
+  onChange,
+  // TODO handle all warnings
+}) => {
   const [previewMode, setPreviewMode] = React.useState(false)
+  const [fields, setFields] = React.useState(initialFields || [])
 
   const onAddField = useCallback(async () => {
     const response = await fetch(
@@ -35,55 +46,107 @@ const ExactAnswer = ({ id = 'exactAnswer', groupScope, questionId, fields, onCha
           field: {
             statement: '',
             matchRegex: '.*',
-          }
-        })
+          },
+        }),
       },
     )
     // TODO do I need to do something to handle failure?
     const newField = await response.json()
-    onChange('fields', [...fields, newField])
-  }, [groupScope, questionId, fields, onChange])
+    const newFields = [...fields, newField]
+    setFields(newFields)
+  }, [groupScope, questionId, fields])
 
-  const onFieldChange = useCallback(async (newField) => {
-    await fetch(
-      `/api/${groupScope}/questions/${questionId}/exact-answer/fields`,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+  const onFieldChange = useCallback(
+    async (newField) => {
+      await fetch(
+        `/api/${groupScope}/questions/${questionId}/exact-answer/fields`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            field: newField,
+          }),
         },
-        body: JSON.stringify({
-          field: newField,
-        }),
-      },
-    )
-    // TODO do I need to do something to handle failure?
-  }, [groupScope, questionId])
+      )
+      // TODO do I need to do something to handle failure?
 
-  const onDelete = useCallback(async (index) => {
-    if (fields.length <= 1) {
-      // Do not allow to delete the last field
-      console.warn('Cannot delete the last field')
-      return
-    }
-    await fetch(
-      `/api/${groupScope}/questions/${questionId}/exact-answer/fields`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          fieldId: fields[index].id,
-        }),
+      const updatedFields = fields.map((field) =>
+        field.id === newField.id ? newField : field,
+      )
+      setFields(updatedFields)
+      // No need to call onChange here, as the field change is already handled by the PUT request
+    },
+    [fields, groupScope, questionId],
+  )
+
+  const onDelete = useCallback(
+    async (id) => {
+      if (fields.length <= 1) {
+        // Do not allow to delete the last field
+        console.warn('Cannot delete the last field')
+        return
       }
-    )
-    // TODO do I need to do something to handle failure?
-    const updatedFields = fields.filter((_, i) => i !== index)
-    onChange('fields', updatedFields)
-  }, [fields, groupScope, onChange, questionId])
+      await fetch(
+        `/api/${groupScope}/questions/${questionId}/exact-answer/fields`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            fieldId: id,
+          }),
+        },
+      )
+      // TODO do I need to do something to handle failure?
+      const updatedFields = fields.filter((field) => field.id !== id)
+      setFields(updatedFields)
+      // No need to call onChange here, as the field deletion is already handled by the DELETE request
+    },
+    [fields, groupScope, questionId],
+  )
+
+  const saveOrder = useCallback(
+    async (reordered) => {
+      await fetch(
+        `/api/${groupScope}/questions/${questionId}/exact-answer/order`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fields: reordered,
+          }),
+        },
+      )
+    },
+    [groupScope, questionId],
+  )
+
+  const debounceSaveOrdering = useDebouncedCallback(saveOrder, 300)
+
+  const onReorder = useCallback(
+    async (sourceIndex, targetIndex) => {
+      const reorderedFields = [...fields]
+
+      const [removedField] = reorderedFields.splice(sourceIndex, 1)
+      reorderedFields.splice(targetIndex, 0, removedField)
+
+      reorderedFields.forEach((field, index) => {
+        field.order = index
+      })
+
+      setFields(reorderedFields)
+      // No need to call onChange here, as the reordering is already handled by the PUT request
+      debounceSaveOrdering(reorderedFields)
+    },
+    [debounceSaveOrdering, fields],
+  )
 
   return (
     <Stack
@@ -115,19 +178,22 @@ const ExactAnswer = ({ id = 'exactAnswer', groupScope, questionId, fields, onCha
           onChange={(e) => setPreviewMode(e.target.checked)}
         />
       </Stack>
-      {fields.map((field, index) => (
-        <FieldEditor
-          index={index}
-          groupScope={groupScope}
-          key={field.id}
-          field={field}
-          onChange={ onFieldChange }
-          onDelete={ onDelete }
-          mayDelete={ fields.length > 1 }
-          previewMode={previewMode}
-        ></FieldEditor>
-      ))}
-
+      <ScrollContainer spacing={1}>
+        <ReorderableList onChangeOrder={onReorder}>
+          {fields.map((field, index) => (
+            <FieldEditor
+              key={field.id}
+              index={index}
+              groupScope={groupScope}
+              field={field}
+              onChange={onFieldChange}
+              onDelete={onDelete}
+              mayDelete={fields.length > 1}
+              previewMode={previewMode}
+            ></FieldEditor>
+          ))}
+        </ReorderableList>
+      </ScrollContainer>
     </Stack>
   )
 }

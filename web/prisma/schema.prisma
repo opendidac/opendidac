@@ -503,7 +503,7 @@ model ExactAnswerField {
   exactAnswerQuestion ExactAnswerQuestion @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
   questionId          String
 
-  order      Int     @unique
+  order      Int     @default(0)
   statement  String?
   matchRegex String?
 }
