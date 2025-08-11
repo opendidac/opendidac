@@ -14,10 +14,35 @@
  * limitations under the License.
  */
 import React, { useCallback } from 'react'
-import { Stack } from '@mui/material'
+import { Button, Stack } from '@mui/material'
 import FieldEditor from '@/components/question/type_specific/exact-answer/FieldEditor'
+import AddIcon from '@mui/icons-material/Add'
+import ToggleWithLabel from '@/components/input/ToggleWithLabel'
 
 const ExactAnswer = ({ id = 'exactAnswer', groupScope, questionId, fields, onChange }) => {
+  const [previewMode, setPreviewMode] = React.useState(false)
+
+  const onAddField = useCallback(async () => {
+    const response = await fetch(
+      `/api/${groupScope}/questions/${questionId}/exact-answer/fields`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          field: {
+            statement: '',
+            matchRegex: '.*',
+          }
+        })
+      },
+    )
+    const newField = await response.json()
+    onChange('fields', [...fields, newField])
+  }, [groupScope, questionId, fields, onChange])
+
   const onFieldChange = useCallback(async (newField) => {
     await fetch(
       `/api/${groupScope}/questions/${questionId}/exact-answer/fields`,
@@ -49,6 +74,27 @@ const ExactAnswer = ({ id = 'exactAnswer', groupScope, questionId, fields, onCha
       px={1}
       pt={1}
     >
+      <Stack
+        direction="row"
+        px={1}
+        justifyContent="space-between"
+        alignItems="center"
+        spacing={2}
+      >
+        <Button
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => onAddField()}
+          px={2}
+        >
+          Add Field
+        </Button>
+        <ToggleWithLabel
+          label="Preview Mode"
+          checked={previewMode}
+          onChange={(e) => setPreviewMode(e.target.checked)}
+        />
+      </Stack>
       {fields.map((field, index) => (
         <FieldEditor
           index={index}

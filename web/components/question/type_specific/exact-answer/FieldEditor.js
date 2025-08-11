@@ -53,7 +53,7 @@ const FieldEditor = ({ index, groupScope, field, onChange, onDelete }) => {
           <DeleteForeverOutlinedIcon />
         </IconButton>
       </Stack>
-      <Stack minHeight={250} p={1}>
+      <Stack minHeight={250} py={1}>
         <MarkdownEditor
           id={field.id}
           title={field.title}
