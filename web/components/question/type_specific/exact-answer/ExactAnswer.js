@@ -39,6 +39,7 @@ const ExactAnswer = ({ id = 'exactAnswer', groupScope, questionId, fields, onCha
         })
       },
     )
+    // TODO do I need to do something to handle failure?
     const newField = await response.json()
     onChange('fields', [...fields, newField])
   }, [groupScope, questionId, fields, onChange])
@@ -60,10 +61,29 @@ const ExactAnswer = ({ id = 'exactAnswer', groupScope, questionId, fields, onCha
     // TODO do I need to do something to handle failure?
   }, [groupScope, questionId])
 
-  const onDelete = useCallback((index) => {
+  const onDelete = useCallback(async (index) => {
+    if (fields.length <= 1) {
+      // Do not allow to delete the last field
+      console.warn('Cannot delete the last field')
+      return
+    }
+    await fetch(
+      `/api/${groupScope}/questions/${questionId}/exact-answer/fields`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          fieldId: fields[index].id,
+        }),
+      }
+    )
+    // TODO do I need to do something to handle failure?
     const updatedFields = fields.filter((_, i) => i !== index)
     onChange('fields', updatedFields)
-  }, [fields, onChange])
+  }, [fields, groupScope, onChange, questionId])
 
   return (
     <Stack
@@ -103,6 +123,7 @@ const ExactAnswer = ({ id = 'exactAnswer', groupScope, questionId, fields, onCha
           field={field}
           onChange={ onFieldChange }
           onDelete={ onDelete }
+          mayDelete={ fields.length > 1 }
         ></FieldEditor>
       ))}
 

@@ -30,7 +30,7 @@ const MonoSpaceTextField = styled(TextField)({
 })
 // TODO factorize this monospacetextfield.
 
-const FieldEditor = ({ index, groupScope, field, onChange, onDelete }) => {
+const FieldEditor = ({ index, groupScope, field, onChange, onDelete, mayDelete }) => {
   const [regex, setRegex] = useState(field.matchRegex || '')
 
   useEffect(() => {
@@ -49,7 +49,7 @@ const FieldEditor = ({ index, groupScope, field, onChange, onDelete }) => {
         pl={1}
       >
         <Typography variant={'h6'}>Field {index + 1}</Typography>
-        <IconButton onClick={() => onDelete(index)} color="error">
+        <IconButton onClick={() => onDelete(index)} color="error" disabled={!mayDelete}>
           <DeleteForeverOutlinedIcon />
         </IconButton>
       </Stack>

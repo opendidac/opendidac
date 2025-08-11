@@ -87,6 +87,11 @@ const del = async (req, res, prisma) => {
     return
   }
 
+  if (exactAnswer.fields.length <= 1) {
+    res.status(400).json({ message: 'Cannot delete the last field' })
+    return
+  }
+
   await prisma.exactAnswerField.delete({
     where: { id: fieldId },
   })
