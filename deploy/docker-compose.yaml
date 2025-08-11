@@ -1,4 +1,3 @@
-version: "3.8"
 name: eval
 services:
   web:
@@ -7,13 +6,12 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - assets:/app/assets
     environment:
-      - DOCKER_HOST=unix:///var/run/docker.sock
-      - TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+      - DOCKER_HOST=tcp://sandbox:2375
     depends_on:
       - db
+      - sandbox
     networks:
       - app-network
 
@@ -40,6 +38,17 @@ services:
     networks:
       - app-network
 
+  sandbox:
+    image: docker:28.2.2-dind
+    runtime: sysbox-runc
+    restart: unless-stopped
+    expose:
+      - "2375"
+    environment:
+      - DOCKER_TLS_CERTDIR=
+    networks:
+      - app-network
+
 volumes:
   pgdata:
   assets:
@@ -47,4 +56,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-
