@@ -457,6 +457,7 @@ const ProgressSummary = ({ progress }) => {
 }
 
 const GradingSummary = ({ results }) => {
+  if (!results) return null
   const countGraded = (results) => {
     let count = 0
     results.forEach((question) => {
