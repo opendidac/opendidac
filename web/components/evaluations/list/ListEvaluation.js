@@ -17,7 +17,14 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { EvaluationPhase, EvaluationStatus } from '@prisma/client'
-import { Box, Button, IconButton, Stack, Tooltip } from '@mui/material'
+import {
+  Box,
+  Button,
+  IconButton,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material'
 
 import { getStudentEntryLink } from '@/code/utils'
 import DisplayPhase from '../DisplayPhase'
@@ -78,8 +85,20 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
               label: 'Phase',
               column: { width: '130px' },
               renderCell: (row) => (
-                <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{ width: '100%' }}
+                  alignItems="center"
+                >
                   <DisplayPhase phase={row.phase} />
+                  {row.purgedAt && (
+                    <Tooltip title="Student data purged">
+                      <Typography variant="caption" color="error">
+                        <b>purged</b>
+                      </Typography>
+                    </Tooltip>
+                  )}
                   {row.phase === EvaluationPhase.DRAFT && (
                     <Button
                       key="promote-to-in-progress"
