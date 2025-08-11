@@ -24,6 +24,7 @@ import { withRestrictions } from '@/middleware/withRestrictions'
 import { getUser } from '@/code/auth/auth'
 import { questionIncludeClause, IncludeStrategy } from '@/code/questions'
 import { isFinished } from './questions/[questionId]/answers/utils'
+import { withPurgeGuard } from '@/middleware/withPurged'
 
 const get = async (req, res, prisma) => {
   const { evaluationId } = req.query
@@ -99,6 +100,9 @@ const get = async (req, res, prisma) => {
 
 export default withMethodHandler({
   GET: withRestrictions(
-    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+    withAuthorization(withPurgeGuard(withPrisma(get)), [
+      Role.PROFESSOR,
+      Role.STUDENT,
+    ]),
   ),
 })

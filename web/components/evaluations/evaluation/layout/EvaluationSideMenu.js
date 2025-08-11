@@ -51,21 +51,29 @@ const EvaluationSideMenu = ({
   active,
   setActive,
 }) => {
+  const isPurged = Boolean(evaluation.purgedAt)
+
+  const disableForPhaseOrPurge = (phase) => {
+    const phaseDisabled = phaseGreaterThan(phase, currentPhase)
+    const purgeDisabled =
+      isPurged &&
+      (phase === EvaluationPhase.IN_PROGRESS ||
+        phase === EvaluationPhase.GRADING)
+    return phaseDisabled || purgeDisabled
+  }
+
   const overallProgress = (progress) => {
     let totalAnswers = 0
     let completedAnswers = 0
 
-    progress.forEach((question) => {
-      totalAnswers += question.question.studentAnswer.length
-      completedAnswers += question.question.studentAnswer.filter(
-        (answer) => answer.status !== StudentAnswerStatus.MISSING,
+    progress.forEach((q) => {
+      totalAnswers += q.question.studentAnswer.length
+      completedAnswers += q.question.studentAnswer.filter(
+        (a) => a.status !== StudentAnswerStatus.MISSING,
       ).length
     })
 
-    if (totalAnswers === 0) {
-      return 0 // Avoid division by zero
-    }
-
+    if (totalAnswers === 0) return 0
     return Math.round((completedAnswers / totalAnswers) * 100)
   }
 
@@ -73,17 +81,14 @@ const EvaluationSideMenu = ({
     let totalGraded = 0
     let graded = 0
 
-    results.forEach((question) => {
-      totalGraded += question.question.studentAnswer.length
-      graded += question.question.studentAnswer.filter(
-        (answer) => answer.studentGrading?.signedBy,
+    results.forEach((q) => {
+      totalGraded += q.question.studentAnswer.length
+      graded += q.question.studentAnswer.filter(
+        (a) => a.studentGrading?.signedBy,
       ).length
     })
 
-    if (totalGraded === 0) {
-      return 0 // Avoid division by zero
-    }
-
+    if (totalGraded === 0) return 0
     return Math.round((graded / totalGraded) * 100)
   }
 
@@ -97,8 +102,10 @@ const EvaluationSideMenu = ({
         active={active}
         setActive={setActive}
         menuKey="settings"
+        disabled={disableForPhaseOrPurge(EvaluationPhase.SETTINGS)}
         summary={<SettingsSummary evaluation={evaluation} />}
       />
+
       <EvaluationMenuItem
         icon={FormatListNumberedSharpIcon}
         label="Composition"
@@ -108,6 +115,7 @@ const EvaluationSideMenu = ({
         active={active}
         setActive={setActive}
         menuKey="composition"
+        disabled={disableForPhaseOrPurge(EvaluationPhase.COMPOSITION)}
         summary={
           <CompositionSummary
             evaluation={evaluation}
@@ -115,6 +123,7 @@ const EvaluationSideMenu = ({
           />
         }
       />
+
       <EvaluationMenuItem
         icon={PeopleSharpIcon}
         label="Attendance"
@@ -151,58 +160,77 @@ const EvaluationSideMenu = ({
         active={active}
         setActive={setActive}
         menuKey="attendance"
+        disabled={disableForPhaseOrPurge(EvaluationPhase.REGISTRATION)}
         summary={<AttendanceSummary attendance={attendance} />}
       />
+
       <EvaluationMenuItem
         icon={ModelTrainingSharpIcon}
         label="In Progress"
         details={
-          <>
-            <Link
-              href={`/${groupScope}/evaluations/${evaluation.id}/analytics`}
-              passHref
-              key="analytics"
-              target="_blank"
-            >
-              <Tooltip title="Open Analytics Page">
-                <IconButton
-                  component="span"
-                  onClick={(event) => event.stopPropagation()}
-                  disabled={
-                    !phaseGreaterThan(
-                      currentPhase,
-                      EvaluationPhase.REGISTRATION,
-                    )
-                  }
-                >
-                  <Image
-                    alt="Analytics"
-                    src="/svg/icons/analytics.svg"
-                    width="18"
-                    height="18"
-                  />
-                </IconButton>
-              </Tooltip>
-            </Link>
-            {overallProgress(progress)}% completed
-          </>
+          isPurged ? (
+            <Typography variant="body2" color="error">
+              Purged
+            </Typography>
+          ) : (
+            <>
+              <Link
+                href={`/${groupScope}/evaluations/${evaluation.id}/analytics`}
+                passHref
+                key="analytics"
+                target="_blank"
+              >
+                <Tooltip title="Open Analytics Page">
+                  <IconButton
+                    component="span"
+                    onClick={(event) => event.stopPropagation()}
+                    disabled={
+                      !phaseGreaterThan(
+                        currentPhase,
+                        EvaluationPhase.REGISTRATION,
+                      )
+                    }
+                  >
+                    <Image
+                      alt="Analytics"
+                      src="/svg/icons/analytics.svg"
+                      width="18"
+                      height="18"
+                    />
+                  </IconButton>
+                </Tooltip>
+              </Link>
+              {overallProgress(progress)}% completed
+            </>
+          )
         }
         phase={EvaluationPhase.IN_PROGRESS}
         currentPhase={currentPhase}
         active={active}
         setActive={setActive}
         menuKey="progress"
+        disabled={disableForPhaseOrPurge(EvaluationPhase.IN_PROGRESS)}
         summary={<ProgressSummary progress={progress} />}
       />
+
       <EvaluationMenuItem
         icon={GradingSharpIcon}
         label="Results & Feedback"
-        details={`${overallGrading(results)}%`}
+        details={
+          isPurged ? (
+            <Typography variant="body2" color="error">
+              Purged
+            </Typography>
+          ) : (
+            `${overallGrading(results)}%`
+          )
+        }
         phase={EvaluationPhase.GRADING}
         currentPhase={currentPhase}
         active={active}
         setActive={setActive}
         menuKey="results"
+        disabled={disableForPhaseOrPurge(EvaluationPhase.GRADING)}
         summary={<GradingSummary results={results} />}
       />
     </MenuList>
@@ -219,17 +247,14 @@ const EvaluationMenuItem = ({
   active,
   setActive,
   menuKey,
+  disabled,
 }) => {
   const renderStatus = () => {
-    if (phaseGreaterThan(currentPhase, phase)) {
+    if (phaseGreaterThan(currentPhase, phase))
       return <StatusDisplay status={'SUCCESS'} />
-    } else if (currentPhase === phase) {
-      return <StatusDisplay status={'NEUTRAL'} />
-    }
+    if (currentPhase === phase) return <StatusDisplay status={'NEUTRAL'} />
     return <StatusDisplay status={'EMPTY'} />
   }
-
-  const disabled = phaseGreaterThan(phase, currentPhase)
 
   return (
     <>
@@ -242,13 +267,16 @@ const EvaluationMenuItem = ({
           <Icon fontSize="small" />
         </ListItemIcon>
         <ListItemText>{label}</ListItemText>
+
         {details && (
           <Typography variant="body2" color="text.secondary">
             {details}
           </Typography>
         )}
+
         <Box ml={0.5}>{renderStatus()}</Box>
       </MenuItem>
+
       {summary && !disabled && (
         <Stack pt={1} pl={2} pb={2}>
           {summary}
@@ -257,7 +285,6 @@ const EvaluationMenuItem = ({
     </>
   )
 }
-
 const SettingsSummary = ({ evaluation }) => {
   const isAccessListRestricted =
     evaluation.accessMode === UserOnEvaluationAccessMode.LINK_AND_ACCESS_LIST

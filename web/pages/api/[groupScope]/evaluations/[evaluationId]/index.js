@@ -86,6 +86,9 @@ const get = async (req, res, prisma) => {
     where: {
       id: evaluationId,
     },
+    include: {
+      purgedBy: true,
+    },
   })
 
   res.status(200).json(evaluation)

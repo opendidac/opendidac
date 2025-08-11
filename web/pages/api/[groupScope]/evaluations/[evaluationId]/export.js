@@ -146,10 +146,13 @@ Handlebars.registerHelper('calculateTotalPoints', calculateTotalPoints)
 Handlebars.registerHelper('calculateObtainedPoints', calculateObtainedPoints)
 
 // Helper to check if an option was selected by the student
-Handlebars.registerHelper('isOptionSelected', function(optionId, selectedOptions) {
-  if (!selectedOptions || !Array.isArray(selectedOptions)) return false
-  return selectedOptions.some(option => option.id === optionId)
-})
+Handlebars.registerHelper(
+  'isOptionSelected',
+  function (optionId, selectedOptions) {
+    if (!selectedOptions || !Array.isArray(selectedOptions)) return false
+    return selectedOptions.some((option) => option.id === optionId)
+  },
+)
 
 const get = async (req, res, prisma) => {
   const { groupScope, evaluationId } = req.query
