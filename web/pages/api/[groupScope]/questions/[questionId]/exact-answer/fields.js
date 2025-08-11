@@ -55,7 +55,7 @@ const post = async (req, res, prisma) => {
   const { field } = req.body
 
   const countFields = await prisma.exactAnswerField.count({
-    where: { exactAnswer: { questionId: questionId } },
+    where: { exactAnswerQuestion: { questionId: questionId } },
   })
 
   const newField = await prisma.exactAnswerField.create({
@@ -63,7 +63,7 @@ const post = async (req, res, prisma) => {
       statement: field.statement,
       matchRegex: field.matchRegex,
       order: countFields, // Ensure the new field is added at the end
-      exactAnswer: { connect: { questionId: questionId } },
+      exactAnswerQuestion: { connect: { questionId: questionId } },
     },
   })
 
@@ -93,7 +93,7 @@ const del = async (req, res, prisma) => {
 
   // reorder fields after deletion
   const remainingFields = await prisma.exactAnswerField.findMany({
-    where: { exactAnswer: { questionId: questionId } },
+    where: { exactAnswerQuestion: { questionId: questionId } },
     orderBy: { order: 'asc' },
   })
 
