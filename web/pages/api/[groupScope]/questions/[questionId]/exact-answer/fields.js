@@ -1,0 +1,126 @@
+/**
+ * Copyright 2022-2024 HEIG-VD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import {
+  withAuthorization,
+  withGroupScope,
+  withMethodHandler,
+} from '@/middleware/withAuthorization'
+import { withQuestionUpdate } from '@/middleware/withUpdate'
+import { withPrisma } from '@/middleware/withPrisma'
+import { Role } from '@prisma/client'
+
+
+const put = async (req, res, prisma) => {
+  const { questionId } = req.query
+  const { field } = req.body
+
+  const exactAnswer = await prisma.exactAnswerQuestion.findUnique({
+    where: { questionId: questionId },
+    include: {
+      fields: true,
+    },
+  })
+
+  if (!exactAnswer.fields.some((f) => f.id === field.id)) {
+    res.status(404).json({ message: 'Field not found' })
+    return
+  }
+
+  let updatedField = await prisma.exactAnswerField.update({
+    where: { id: field.id },
+    data: {
+      statement: field.statement,
+      matchRegex: field.matchRegex,
+    },
+  })
+
+  res.status(200).json(updatedField)
+}
+
+const post = async (req, res, prisma) => {
+  const { questionId } = req.query
+  const { field } = req.body
+
+  const countFields = await prisma.exactAnswerField.count({
+    where: { exactAnswer: { questionId: questionId } },
+  })
+
+  const newField = await prisma.exactAnswerField.create({
+    data: {
+      statement: field.statement,
+      matchRegex: field.matchRegex,
+      order: countFields, // Ensure the new field is added at the end
+      exactAnswer: { connect: { questionId: questionId } },
+    },
+  })
+
+  res.status(200).json(newField)
+}
+
+const del = async (req, res, prisma) => {
+  const { questionId } = req.query
+  const { fieldId } = req.body
+
+  // check if field belongs to the question
+  const exactAnswer = await prisma.exactAnswerQuestion.findUnique({
+    where: { questionId: questionId },
+    include: {
+      fields: true,
+    },
+  })
+
+  if (!exactAnswer.fields.some((f) => f.id === fieldId)) {
+    res.status(404).json({ message: 'Field not found' })
+    return
+  }
+
+  await prisma.exactAnswerField.delete({
+    where: { id: fieldId },
+  })
+
+  // reorder fields after deletion
+  const remainingFields = await prisma.exactAnswerField.findMany({
+    where: { exactAnswer: { questionId: questionId } },
+    orderBy: { order: 'asc' },
+  })
+
+  await prisma.$transaction(async (transaction) => {
+    await Promise.all(
+      remainingFields.map((field, index) =>
+        transaction.exactAnswerField.update({
+          where: { id: field.id },
+          data: { order: index },
+        }),
+      ),
+    )
+  })
+
+  res.status(200).json({ message: 'Field deleted successfully' })
+}
+
+export default withGroupScope(
+  withMethodHandler({
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
+      Role.PROFESSOR,
+    ]),
+    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
+      Role.PROFESSOR,
+    ]),
+    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), [
+      Role.PROFESSOR,
+    ]),
+  }),
+)

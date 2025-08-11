@@ -17,15 +17,26 @@ import React, { useCallback } from 'react'
 import { Stack } from '@mui/material'
 import FieldEditor from '@/components/question/type_specific/exact-answer/FieldEditor'
 
-const ExactAnswer = ({ id = 'exactAnswer', groupScope, fields, onChange }) => {
+const ExactAnswer = ({ id = 'exactAnswer', groupScope, questionId, fields, onChange }) => {
+  const onFieldChange = useCallback(async (newField) => {
+    await fetch(
+      `/api/${groupScope}/questions/${questionId}/exact-answer/fields`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          field: newField,
+        }),
+      },
+    )
+    // TODO do I need to do something to handle failure?
+  }, [groupScope, questionId])
+
   const onDelete = useCallback((index) => {
     const updatedFields = fields.filter((_, i) => i !== index)
-    onChange('fields', updatedFields)
-  }, [fields, onChange])
-
-  const onFieldChange = useCallback((index, newField) => {
-    const updatedFields = [...fields]
-    updatedFields[index] = newField
     onChange('fields', updatedFields)
   }, [fields, onChange])
 
