@@ -304,9 +304,18 @@ export const questionIncludeClause = (questionIncludeOptions) => {
           },
         },
         essay: { select: { content: true } },
+        exactAnswer: {
+          select: {
+            fields: {
+              select: {
+                fieldId: true,
+                value: true,
+              },
+            },
+          },
+        },
         trueFalse: true,
         web: true,
-        exactAnswer: true,
       },
     }
 
@@ -661,13 +670,12 @@ export const copyQuestion = async (
     case QuestionType.multipleChoice:
     case QuestionType.trueFalse:
     case QuestionType.web:
+    case QuestionType.exactAnswer:
       return copyGenericQuestion(prisma, question)
     case QuestionType.code:
       return copyCodeQuestion(prisma, question)
     case QuestionType.database:
       return copyDatabaseQuestion(prisma, question)
-    case QuestionType.exactAnswer:
-      return copyGenericQuestion(prisma, question)
     default:
       return null
   }
