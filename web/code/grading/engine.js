@@ -49,6 +49,8 @@ export const grading = (question, totalPoints, studentAnswer) => {
     case QuestionType.database:
       // users database submission is graded during users database sandbox run
       return gradeDatabase(totalPoints, studentAnswer)
+    case QuestionType.exactAnswer:
+      return gradeExactAnswer(question, totalPoints, studentAnswer)
     default:
       return undefined
   }
@@ -190,3 +192,8 @@ const gradeWeb = (answer) => ({
     ? StudentQuestionGradingStatus.UNGRADED
     : StudentQuestionGradingStatus.AUTOGRADED,
 })
+
+const gradeExactAnswer = (question, totalPoints, studentAnswer) => {
+  // TODO
+  return totalPoints
+}

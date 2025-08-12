@@ -904,6 +904,7 @@ model StudentAnswerExactAnswer {
   @@id([userEmail, questionId])
 }
 
+// TODO Rename this model
 model ExactAnswerFieldToStudentAnswer {
   fieldId    String
   userEmail  String
