@@ -712,6 +712,7 @@ model StudentAnswer {
   code           StudentAnswerCode?
   web            StudentAnswerWeb?
   database       StudentAnswerDatabase?
+  exactAnswer    StudentAnswerExactAnswer?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -921,4 +922,26 @@ model StudentAnswerCodeHistory {
   code String?
 
   @@id([userEmail, questionId, createdAt])
+}
+
+model StudentAnswerExactAnswer {
+  studentAnswer StudentAnswer @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
+  userEmail     String
+  questionId    String
+
+  fields ExactAnswerFieldToStudentAnswer[]
+
+  @@id([userEmail, questionId])
+}
+
+model ExactAnswerFieldToStudentAnswer {
+  fieldId    String
+  userEmail  String
+  questionId String
+
+  studentAnswerExactAnswer StudentAnswerExactAnswer @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
+
+  value String?
+
+  @@id([fieldId, userEmail, questionId])
 }
