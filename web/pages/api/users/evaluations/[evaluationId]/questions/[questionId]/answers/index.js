@@ -112,6 +112,16 @@ const get = withEvaluationPhase(
               },
             },
           },
+          exactAnswer: {
+            select: {
+              fields: {
+                select: {
+                  id: true,
+                  statement: true,
+                },
+              }
+            },
+          }
         },
       })
 
@@ -200,6 +210,16 @@ const get = withEvaluationPhase(
                 select: {
                   id: true,
                   text: true,
+                },
+              },
+            },
+          },
+          exactAnswer: {
+            select: {
+              fields: {
+                select: {
+                  fieldId: true,
+                  value: true,
                 },
               },
             },

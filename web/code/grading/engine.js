@@ -195,5 +195,5 @@ const gradeWeb = (answer) => ({
 
 const gradeExactAnswer = (question, totalPoints, studentAnswer) => {
   // TODO
-  return totalPoints
+  return defaultGrading
 }
