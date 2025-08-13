@@ -27,19 +27,19 @@ const put = async (req, res, prisma) => {
   const { questionId } = req.query
   const { field } = req.body
 
-  const exactAnswer = await prisma.exactAnswerQuestion.findUnique({
+  const exactMatch = await prisma.exactMatch.findUnique({
     where: { questionId: questionId },
     include: {
       fields: true,
     },
   })
 
-  if (!exactAnswer.fields.some((f) => f.id === field.id)) {
+  if (!exactMatch.fields.some((f) => f.id === field.id)) {
     res.status(404).json({ message: 'Field not found' })
     return
   }
 
-  let updatedField = await prisma.exactAnswerField.update({
+  let updatedField = await prisma.exactMatchField.update({
     where: { id: field.id },
     data: {
       statement: field.statement,
@@ -54,16 +54,16 @@ const post = async (req, res, prisma) => {
   const { questionId } = req.query
   const { field } = req.body
 
-  const countFields = await prisma.exactAnswerField.count({
-    where: { exactAnswerQuestion: { questionId: questionId } },
+  const countFields = await prisma.exactMatchField.count({
+    where: { exactMatch: { questionId: questionId } },
   })
 
-  const newField = await prisma.exactAnswerField.create({
+  const newField = await prisma.exactMatchField.create({
     data: {
       statement: field.statement,
       matchRegex: field.matchRegex,
       order: countFields, // Ensure the new field is added at the end
-      exactAnswerQuestion: { connect: { questionId: questionId } },
+      exactMatch: { connect: { questionId: questionId } },
     },
   })
 
@@ -75,37 +75,37 @@ const del = async (req, res, prisma) => {
   const { fieldId } = req.body
 
   // check if field belongs to the question
-  const exactAnswer = await prisma.exactAnswerQuestion.findUnique({
+  const exactMatch = await prisma.exactMatch.findUnique({
     where: { questionId: questionId },
     include: {
       fields: true,
     },
   })
 
-  if (!exactAnswer.fields.some((f) => f.id === fieldId)) {
+  if (!exactMatch.fields.some((f) => f.id === fieldId)) {
     res.status(404).json({ message: 'Field not found' })
     return
   }
 
-  if (exactAnswer.fields.length <= 1) {
+  if (exactMatch.fields.length <= 1) {
     res.status(400).json({ message: 'Cannot delete the last field' })
     return
   }
 
-  await prisma.exactAnswerField.delete({
+  await prisma.exactMatchField.delete({
     where: { id: fieldId },
   })
 
   // reorder fields after deletion
-  const remainingFields = await prisma.exactAnswerField.findMany({
-    where: { exactAnswerQuestion: { questionId: questionId } },
+  const remainingFields = await prisma.exactMatchField.findMany({
+    where: { exactMatch: { questionId: questionId } },
     orderBy: { order: 'asc' },
   })
 
   await prisma.$transaction(async (transaction) => {
     await Promise.all(
       remainingFields.map((field, index) =>
-        transaction.exactAnswerField.update({
+        transaction.exactMatchField.update({
           where: { id: field.id },
           data: { order: index },
         }),

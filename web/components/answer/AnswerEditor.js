@@ -36,7 +36,7 @@ import Overlay from '../ui/Overlay'
 
 import AnswerMultipleChoice from './multipleChoice/AnswerMultipleChoice'
 import MarkdownEditor from '../input/markdown/MarkdownEditor'
-import AnswerExactAnswer from '@/components/answer/exactAnswer/AnswerExactAnswer'
+import AnswerExactMatch from '@/components/answer/exactMatch/AnswerExactMatch'
 
 const SubmittedOverlay = ({ onUnsubmit }) => {
   return (
@@ -211,8 +211,8 @@ const AnswerEditor = ({
                 onAnswerChange={onAnswerChange}
               />
             )) ||
-            (question.type === QuestionType.exactAnswer && (
-              <AnswerExactAnswer
+            (question.type === QuestionType.exactMatch && (
+              <AnswerExactMatch
                 answer={studentAnswer}
                 question={question}
                 evaluationId={evaluationId}

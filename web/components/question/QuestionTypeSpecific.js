@@ -21,7 +21,7 @@ import Web from './type_specific/Web'
 import Database from './type_specific/Database'
 import Essay from './type_specific/Essay'
 import ScrollContainer from '../layout/ScrollContainer'
-import ExactAnswer from '@/components/question/type_specific/exact-answer/ExactAnswer'
+import ExactMatch from '@/components/question/type_specific/exact-match/ExactMatch'
 
 const QuestionTypeSpecific = ({
   groupScope,
@@ -101,16 +101,16 @@ const QuestionTypeSpecific = ({
         }
         break
 
-      case QuestionType.exactAnswer:
-        if (question.exactAnswer) {
+      case QuestionType.exactMatch:
+        if (question.exactMatch) {
           return (
-            <ExactAnswer
+            <ExactMatch
               groupScope={groupScope}
               questionId={question.id}
-              fields={question.exactAnswer.fields}
+              fields={question.exactMatch.fields}
               onChange={(property, newContent) =>
                 onTypeSpecificChange(question.type, {
-                  ...question.exactAnswer,
+                  ...question.exactMatch,
                   [property]: newContent,
                 })
               }

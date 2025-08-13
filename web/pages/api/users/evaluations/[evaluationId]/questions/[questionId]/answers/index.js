@@ -112,7 +112,7 @@ const get = withEvaluationPhase(
               },
             },
           },
-          exactAnswer: {
+          exactMatch: {
             select: {
               fields: {
                 select: {
@@ -214,7 +214,7 @@ const get = withEvaluationPhase(
               },
             },
           },
-          exactAnswer: {
+          exactMatch: {
             select: {
               fields: {
                 select: {

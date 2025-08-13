@@ -22,7 +22,7 @@ const typesMap = {
   [QuestionType.code]: 'Code',
   [QuestionType.web]: 'Web',
   [QuestionType.database]: 'Database',
-  [QuestionType.exactAnswer]: 'Exact Answer',
+  [QuestionType.exactMatch]: 'Exact Match',
 }
 
 const colorsMap = {

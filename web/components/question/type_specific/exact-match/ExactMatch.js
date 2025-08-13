@@ -15,15 +15,15 @@
  */
 import React, { useCallback } from 'react'
 import { Button, Stack } from '@mui/material'
-import FieldEditor from '@/components/question/type_specific/exact-answer/FieldEditor'
+import FieldEditor from '@/components/question/type_specific/exact-match/FieldEditor'
 import AddIcon from '@mui/icons-material/Add'
 import ToggleWithLabel from '@/components/input/ToggleWithLabel'
 import ScrollContainer from '@/components/layout/ScrollContainer'
 import ReorderableList from '@/components/layout/utils/ReorderableList'
 import { useDebouncedCallback } from 'use-debounce'
 
-const ExactAnswer = ({
-  id = 'exactAnswer',
+const ExactMatch = ({
+  id = 'exactMatch',
   groupScope,
   questionId,
   fields: initialFields,
@@ -35,7 +35,7 @@ const ExactAnswer = ({
 
   const onAddField = useCallback(async () => {
     const response = await fetch(
-      `/api/${groupScope}/questions/${questionId}/exact-answer/fields`,
+      `/api/${groupScope}/questions/${questionId}/exact-match/fields`,
       {
         method: 'POST',
         headers: {
@@ -59,7 +59,7 @@ const ExactAnswer = ({
   const onFieldChange = useCallback(
     async (newField) => {
       await fetch(
-        `/api/${groupScope}/questions/${questionId}/exact-answer/fields`,
+        `/api/${groupScope}/questions/${questionId}/exact-match/fields`,
         {
           method: 'PUT',
           headers: {
@@ -90,7 +90,7 @@ const ExactAnswer = ({
         return
       }
       await fetch(
-        `/api/${groupScope}/questions/${questionId}/exact-answer/fields`,
+        `/api/${groupScope}/questions/${questionId}/exact-match/fields`,
         {
           method: 'DELETE',
           headers: {
@@ -113,7 +113,7 @@ const ExactAnswer = ({
   const saveOrder = useCallback(
     async (reordered) => {
       await fetch(
-        `/api/${groupScope}/questions/${questionId}/exact-answer/order`,
+        `/api/${groupScope}/questions/${questionId}/exact-match/order`,
         {
           method: 'PUT',
           headers: {
@@ -198,4 +198,4 @@ const ExactAnswer = ({
   )
 }
 
-export default ExactAnswer
+export default ExactMatch

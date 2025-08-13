@@ -89,7 +89,7 @@ enum QuestionType {
   code
   web
   database
-  exactAnswer
+  exactMatch
 }
 
 enum QuestionStatus {
@@ -151,7 +151,7 @@ model Question {
   code           Code?
   web            Web?
   database       Database?
-  exactAnswer    ExactAnswerQuestion?
+  exactMatch     ExactMatch?
 
   collection CollectionToQuestion[]
 
@@ -490,18 +490,18 @@ model Web {
   templateJs   String?
 }
 
-model ExactAnswerQuestion {
+model ExactMatch {
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionId String   @id
 
-  fields ExactAnswerField[]
+  fields ExactMatchField[]
 }
 
-model ExactAnswerField {
+model ExactMatchField {
   id String @id @default(cuid())
 
-  exactAnswerQuestion ExactAnswerQuestion @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
-  questionId          String
+  exactMatch ExactMatch @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+  questionId String
 
   order      Int     @default(0)
   statement  String?
@@ -712,7 +712,7 @@ model StudentAnswer {
   code           StudentAnswerCode?
   web            StudentAnswerWeb?
   database       StudentAnswerDatabase?
-  exactAnswer    StudentAnswerExactAnswer?
+  exactMatch     StudentAnswerExactMatch?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -924,23 +924,22 @@ model StudentAnswerCodeHistory {
   @@id([userEmail, questionId, createdAt])
 }
 
-model StudentAnswerExactAnswer {
+model StudentAnswerExactMatch {
   studentAnswer StudentAnswer @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
   userEmail     String
   questionId    String
 
-  fields ExactAnswerFieldToStudentAnswer[]
+  fields StudentAnswerExactMatchField[]
 
   @@id([userEmail, questionId])
 }
 
-// TODO Rename this model
-model ExactAnswerFieldToStudentAnswer {
+model StudentAnswerExactMatchField {
   fieldId    String
   userEmail  String
   questionId String
 
-  studentAnswerExactAnswer StudentAnswerExactAnswer @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
+  studentAnswerExactMatch StudentAnswerExactMatch @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
 
   value String?
 

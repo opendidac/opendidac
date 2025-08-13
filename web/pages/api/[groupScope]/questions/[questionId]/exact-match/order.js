@@ -30,7 +30,7 @@ const put = async (req, res, prisma) => {
 
   prisma.$transaction(async (prisma) => {
     for (const [_, field] of fields.entries()) {
-      await prisma.exactAnswerField.update({
+      await prisma.exactMatchField.update({
         where: { id: field.id },
         data: {
           order: field.order,
