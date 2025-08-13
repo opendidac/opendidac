@@ -77,6 +77,7 @@ const post = async (req, res, prisma) => {
   }
 
   await prisma.$transaction(async (prisma) => {
+    console.warn(`Creating userOnEvaluation for ${studentEmail} on evaluation ${evaluationId}`)
     // connect the users to the evaluation
     userOnEvaluation = await prisma.userOnEvaluation.create({
       data: {
@@ -125,6 +126,7 @@ const post = async (req, res, prisma) => {
       })
 
       if (!existingAnswer) {
+        console.warn(`Creating student answer for ${studentEmail} on question ${question.id}`)
         const studentAnswer = await prisma.studentAnswer.create({
           data: {
             userEmail: studentEmail,
@@ -187,6 +189,13 @@ const post = async (req, res, prisma) => {
             break
           case QuestionType.database:
             await createDatabaseTypeSpecificData(
+              prisma,
+              studentAnswer,
+              question,
+            )
+            break
+          case QuestionType.exactAnswer:
+            await createExactAnswerTypeSpecificData(
               prisma,
               studentAnswer,
               question,
@@ -311,6 +320,29 @@ const createDatabaseTypeSpecificData = async (
       },
     })
   }
+}
+
+const createExactAnswerTypeSpecificData = async (
+  prisma,
+  studentAnswer,
+  question,
+) => {
+  console.warn(`Creating exact answer for question ${studentAnswer.questionId} for student ${studentAnswer.userEmail}`)
+  // Create StudentAnswerExactAnswer instance and related fields
+  await prisma.studentAnswerExactAnswer.create({
+    data: {
+      userEmail: studentAnswer.userEmail,
+      questionId: studentAnswer.questionId,
+      fields: {
+        create: question.exactAnswer.fields.map((field) => {
+          return {
+            fieldId: field.id,
+            value: '', // Start with an empty value
+          }
+        }),
+      },
+    },
+  })
 }
 
 export default withMethodHandler({

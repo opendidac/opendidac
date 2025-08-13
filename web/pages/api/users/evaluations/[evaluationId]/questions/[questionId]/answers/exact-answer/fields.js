@@ -40,7 +40,7 @@ const put = withEvaluationPhase(
       const studentEmail = user.email
       const { evaluationId, questionId } = req.query
 
-      const { field } = req.body
+      const { field: answer } = req.body
 
       const evaluationToQuestion = await prisma.evaluationToQuestion.findUnique(
         {
@@ -85,7 +85,7 @@ const put = withEvaluationPhase(
               'Internal Server Error: question does not have an exact answer',
           })
       }
-      let expectedField = exactAnswer.fields.find((f) => f.id === field.id)
+      let expectedField = exactAnswer.fields.find((f) => f.id === answer.fieldId)
       if (!expectedField) {
         res.status(400).json({
           message: 'Internal Server Error: field does not belong to question',
@@ -99,11 +99,11 @@ const put = withEvaluationPhase(
           studentEmail_questionId_fieldId: {
             studentEmail: studentEmail,
             questionId: questionId,
-            fieldId: field.id,
+            fieldId: answer.fieldId,
           },
         },
         data: {
-          value: field.value,
+          value: answer.value,
         },
       })
 

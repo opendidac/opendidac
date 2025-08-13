@@ -214,6 +214,7 @@ const AnswerEditor = ({
             (question.type === QuestionType.exactAnswer && (
               <AnswerExactAnswer
                 answer={studentAnswer}
+                question={question}
                 evaluationId={evaluationId}
                 questionId={question.id}
                 onAnswerChange={onAnswerChange}

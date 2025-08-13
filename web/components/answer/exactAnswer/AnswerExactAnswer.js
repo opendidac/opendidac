@@ -13,48 +13,63 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useCallback} from 'react'
-import { useDebouncedCallback } from 'use-debounce'
-import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
+import React, { useCallback, useEffect, useState } from 'react'
+import { Stack } from '@mui/system'
+import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
+import AnswerField from '@/components/answer/exactAnswer/AnswerField'
 
-const AnswerExactAnswer = ({ answer, evaluationId, questionId, onAnswerChange }) => {
-  const onEssayChange = useCallback(
-    async (content) => {
-      if (answer.essay.content === content) return
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            answer: content
-              ? {
-                content: content,
-              }
-              : undefined,
-          }),
+const AnswerExactAnswer = ({
+  answer,
+  question,
+  evaluationId,
+  questionId,
+  onAnswerChange,
+}) => {
+  const { exactAnswer: savedAnswers } = answer
+  console.log(JSON.stringify(answer))
+
+  const [studentAnswers, setStudentAnswers] = useState(savedAnswers.fields)
+
+  useEffect(() => {
+    setStudentAnswers(savedAnswers.fields)
+  }, [savedAnswers.fields, setStudentAnswers])
+
+  const onFieldChange = useCallback(async (fieldId, value) => {
+    const response = await fetch(
+      `/api/evaluations/${evaluationId}/questions/${questionId}/answers/exact-answer/fields/`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
-      )
+        body: JSON.stringify({ fieldId, value }),
+      },
+    )
 
-      const ok = response.ok
-      const data = await response.json()
+    const ok = response.ok
+    const data = await response.json()
+    onAnswerChange(ok, data)
+  }, [evaluationId, onAnswerChange, questionId])
 
-      onAnswerChange && onAnswerChange(ok, data)
-    },
-    [evaluationId, questionId, answer, onAnswerChange],
-  )
-
-  const debouncedOnChange = useDebouncedCallback(onEssayChange, 500)
+  const { exactAnswer } = question
 
   return (
-      <MarkdownEditor
-        id={`answer-editor-${questionId}`}
-        rawContent={"42"}
-        onChange={(newContent) => {
-          // debouncedOnChange(newContent)
-        }}
-      />
+    <Stack direction={'column'} width={'100%'} spacing={2}>
+      {exactAnswer.fields.map((field, index) => {
+        const studentAnswer = studentAnswers.find((a) => a.fieldId === field.id)
+        if (!studentAnswer) {
+          console.error(`No answer found for field ${field.id}`) // TODO remove this line
+          return null
+        }
+        return (
+        <Stack key={field.id} direction={'column'} width={'100%'}>
+          <MarkdownViewer content={field.statement} />
+          <AnswerField fieldId={field.id} value={studentAnswer.value} onValueChange={onFieldChange} />
+        </Stack>
+      )
+      })}
+    </Stack>
   )
 }
 
