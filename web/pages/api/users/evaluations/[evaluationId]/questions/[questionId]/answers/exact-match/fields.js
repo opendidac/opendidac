@@ -40,7 +40,7 @@ const put = withEvaluationPhase(
       const userEmail = user.email
       const { evaluationId, questionId } = req.query
 
-      const { field: answer } = req.body
+      const { value: answer, fieldId: answeredFieldId } = req.body
 
       const evaluationToQuestion = await prisma.evaluationToQuestion.findUnique(
         {
@@ -76,19 +76,20 @@ const put = withEvaluationPhase(
         return
       }
 
-      const { exactMach } = evaluationToQuestion.question
-      if (!exactMach) {
+      const { exactMatch } = evaluationToQuestion.question
+      if (!exactMatch) {
         res
           .status(400)
           .json({
             message:
               'Internal Server Error: question does not have an exact answer',
           })
+        return
       }
-      let expectedField = exactMach.fields.find((f) => f.id === answer.fieldId)
+      let expectedField = exactMatch.fields.find((f) => f.id === answeredFieldId)
       if (!expectedField) {
         res.status(400).json({
-          message: 'Internal Server Error: field does not belong to question',
+          message: `Internal Server Error: field ${answeredFieldId} does belong to question ${exactMatch.questionId}`,
         })
         return
       }
@@ -97,13 +98,13 @@ const put = withEvaluationPhase(
       await prisma.studentAnswerExactMatchField.update({
         where: {
           fieldId_userEmail_questionId : {
-            fieldId: answer.fieldId,
+            fieldId: answeredFieldId,
             userEmail: userEmail,
             questionId: questionId,
           },
         },
         data: {
-          value: answer.value,
+          value: answer,
         },
       })
 

@@ -34,9 +34,19 @@ const AnswerExactMatch = ({
     setStudentAnswers(savedAnswers.fields)
   }, [savedAnswers.fields, setStudentAnswers])
 
-  const onFieldChange = useCallback(async (fieldId, value) => {
+  const onFieldChange = useCallback(async (index, value) => {
+    const field = studentAnswers[index]
+    // TODO handle if it doesn't exist
+
+    const newAnswers = [...studentAnswers]
+    newAnswers[index] = { ...field, value: value }
+    setStudentAnswers(newAnswers)
+
+    const fieldId = newAnswers[index].fieldId
+    console.log(`Field ${fieldId} changed to ${value}. Requesting change to backend.`)
+
     const response = await fetch(
-      `/api/evaluations/${evaluationId}/questions/${questionId}/answers/exact-match/fields/`,
+      `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/exact-match/fields`,
       {
         method: 'PUT',
         headers: {
@@ -50,7 +60,7 @@ const AnswerExactMatch = ({
     const ok = response.ok
     const data = await response.json()
     onAnswerChange(ok, data)
-  }, [evaluationId, onAnswerChange, questionId])
+  }, [evaluationId, onAnswerChange, questionId, studentAnswers])
 
   const { exactMatch } = question
 
@@ -65,7 +75,7 @@ const AnswerExactMatch = ({
         return (
         <Stack key={field.id} direction={'column'} width={'100%'}>
           <MarkdownViewer content={field.statement} />
-          <AnswerField fieldId={field.id} value={studentAnswer.value} onValueChange={onFieldChange} />
+          <AnswerField index={index} value={studentAnswer.value} onValueChange={onFieldChange} />
         </Stack>
       )
       })}
