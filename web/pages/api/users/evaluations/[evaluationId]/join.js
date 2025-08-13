@@ -327,21 +327,14 @@ const createExactMatchTypeSpecificData = async (
   studentAnswer,
   question,
 ) => {
-  console.warn(`Creating exact answer for question ${studentAnswer.questionId} for student ${studentAnswer.userEmail}`)
   // Create StudentAnswerExactMatch instance and related fields
-  await prisma.studentAnswerExactMatch.create({
-    data: {
+  await prisma.studentAnswerExactMatchField.createMany({
+    data: question.exactMatch.fields.map((field) => ({
       userEmail: studentAnswer.userEmail,
       questionId: studentAnswer.questionId,
-      fields: {
-        create: question.exactMatch.fields.map((field) => {
-          return {
-            fieldId: field.id,
-            value: '', // Start with an empty value
-          }
-        }),
-      },
-    },
+      fieldId: field.id,
+      value: '',
+    })),
   })
 }
 
