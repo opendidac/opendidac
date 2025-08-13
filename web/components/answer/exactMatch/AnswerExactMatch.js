@@ -16,16 +16,16 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Stack } from '@mui/system'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
-import AnswerField from '@/components/answer/exactAnswer/AnswerField'
+import AnswerField from '@/components/answer/exactMatch/AnswerField'
 
-const AnswerExactAnswer = ({
+const AnswerExactMatch = ({
   answer,
   question,
   evaluationId,
   questionId,
   onAnswerChange,
 }) => {
-  const { exactAnswer: savedAnswers } = answer
+  const { exactMatch: savedAnswers } = answer
   console.log(JSON.stringify(answer))
 
   const [studentAnswers, setStudentAnswers] = useState(savedAnswers.fields)
@@ -36,7 +36,7 @@ const AnswerExactAnswer = ({
 
   const onFieldChange = useCallback(async (fieldId, value) => {
     const response = await fetch(
-      `/api/evaluations/${evaluationId}/questions/${questionId}/answers/exact-answer/fields/`,
+      `/api/evaluations/${evaluationId}/questions/${questionId}/answers/exact-match/fields/`,
       {
         method: 'PUT',
         headers: {
@@ -52,11 +52,11 @@ const AnswerExactAnswer = ({
     onAnswerChange(ok, data)
   }, [evaluationId, onAnswerChange, questionId])
 
-  const { exactAnswer } = question
+  const { exactMatch } = question
 
   return (
     <Stack direction={'column'} width={'100%'} spacing={2}>
-      {exactAnswer.fields.map((field, index) => {
+      {exactMatch.fields.map((field, index) => {
         const studentAnswer = studentAnswers.find((a) => a.fieldId === field.id)
         if (!studentAnswer) {
           console.error(`No answer found for field ${field.id}`) // TODO remove this line
@@ -73,4 +73,4 @@ const AnswerExactAnswer = ({
   )
 }
 
-export default AnswerExactAnswer
+export default AnswerExactMatch

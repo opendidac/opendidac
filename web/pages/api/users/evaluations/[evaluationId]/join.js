@@ -194,8 +194,8 @@ const post = async (req, res, prisma) => {
               question,
             )
             break
-          case QuestionType.exactAnswer:
-            await createExactAnswerTypeSpecificData(
+          case QuestionType.exactMatch:
+            await createExactMatchTypeSpecificData(
               prisma,
               studentAnswer,
               question,
@@ -322,19 +322,19 @@ const createDatabaseTypeSpecificData = async (
   }
 }
 
-const createExactAnswerTypeSpecificData = async (
+const createExactMatchTypeSpecificData = async (
   prisma,
   studentAnswer,
   question,
 ) => {
   console.warn(`Creating exact answer for question ${studentAnswer.questionId} for student ${studentAnswer.userEmail}`)
-  // Create StudentAnswerExactAnswer instance and related fields
-  await prisma.studentAnswerExactAnswer.create({
+  // Create StudentAnswerExactMatch instance and related fields
+  await prisma.studentAnswerExactMatch.create({
     data: {
       userEmail: studentAnswer.userEmail,
       questionId: studentAnswer.questionId,
       fields: {
-        create: question.exactAnswer.fields.map((field) => {
+        create: question.exactMatch.fields.map((field) => {
           return {
             fieldId: field.id,
             value: '', // Start with an empty value

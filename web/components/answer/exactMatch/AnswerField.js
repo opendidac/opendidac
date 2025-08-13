@@ -25,10 +25,10 @@ const MonoSpaceTextField = styled(TextField)({
 })
 // TODO factorize this monospacetextfield.
 
-const AnswerExactAnswer = ({ fieldId, value, onValueChange }) => {
+const AnswerExactMatch = ({ fieldId, value, onValueChange }) => {
   return (
     <MonoSpaceTextField
-      id={`answer-exact-answer-${fieldId}`}
+      id={`answer-exact-match-${fieldId}`}
       variant="standard"
       label="Exact answer"
       value={value}
@@ -44,4 +44,4 @@ const AnswerExactAnswer = ({ fieldId, value, onValueChange }) => {
   )
 }
 
-export default AnswerExactAnswer
+export default AnswerExactMatch

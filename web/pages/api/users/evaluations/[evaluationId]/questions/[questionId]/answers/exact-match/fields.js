@@ -37,7 +37,7 @@ const put = withEvaluationPhase(
     [UserOnEvaluationStatus.IN_PROGRESS],
     async (req, res, prisma) => {
       const user = await getUser(req, res)
-      const studentEmail = user.email
+      const userEmail = user.email
       const { evaluationId, questionId } = req.query
 
       const { field: answer } = req.body
@@ -53,7 +53,7 @@ const put = withEvaluationPhase(
           include: {
             question: {
               include: {
-                exactAnswer: {
+                exactMatch: {
                   select: {
                     fields: true,
                   },
@@ -76,8 +76,8 @@ const put = withEvaluationPhase(
         return
       }
 
-      const { exactAnswer } = evaluationToQuestion.question
-      if (!exactAnswer) {
+      const { exactMach } = evaluationToQuestion.question
+      if (!exactMach) {
         res
           .status(400)
           .json({
@@ -85,7 +85,7 @@ const put = withEvaluationPhase(
               'Internal Server Error: question does not have an exact answer',
           })
       }
-      let expectedField = exactAnswer.fields.find((f) => f.id === answer.fieldId)
+      let expectedField = exactMach.fields.find((f) => f.id === answer.fieldId)
       if (!expectedField) {
         res.status(400).json({
           message: 'Internal Server Error: field does not belong to question',
@@ -94,12 +94,12 @@ const put = withEvaluationPhase(
       }
 
       // Update the student's answer for that field
-      await prisma.exactAnswerFieldToStudentAnswer.update({
+      await prisma.studentAnswerExactMatchField.update({
         where: {
-          studentEmail_questionId_fieldId: {
-            studentEmail: studentEmail,
-            questionId: questionId,
+          fieldId_userEmail_questionId : {
             fieldId: answer.fieldId,
+            userEmail: userEmail,
+            questionId: questionId,
           },
         },
         data: {
@@ -112,7 +112,7 @@ const put = withEvaluationPhase(
       await prisma.studentAnswer.update({
         where: {
           userEmail_questionId: {
-            userEmail: studentEmail,
+            userEmail: userEmail,
             questionId: questionId,
           },
         },
@@ -125,13 +125,13 @@ const put = withEvaluationPhase(
       const updatedStudentAnswer = await prisma.studentAnswer.findUnique({
         where: {
           userEmail_questionId: {
-            userEmail: studentEmail,
+            userEmail: userEmail,
             questionId: questionId,
           },
         },
         select: {
           status: true,
-          exactAnswer: {
+          exactMatch: {
             include: {
               fields: {
                 select: {
@@ -143,23 +143,23 @@ const put = withEvaluationPhase(
           },
         },
       })
-      const { exactAnswer: updatedExactAnswer } = updatedStudentAnswer
+      const { exactMatch: updatedExactMatch } = updatedStudentAnswer
 
       // Grade the answer
       const grade = grading(
         evaluationToQuestion.question,
         evaluationToQuestion.points,
-        updatedExactAnswer,
+        updatedExactMatch,
       )
       await prisma.studentQuestionGrading.upsert({
         where: {
           userEmail_questionId: {
-            userEmail: studentEmail,
+            userEmail: userEmail,
             questionId: questionId,
           },
         },
         create: {
-          userEmail: studentEmail,
+          userEmail: userEmail,
           questionId: questionId,
           ...grade,
         },

@@ -155,7 +155,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
               : {}),
           },
         },
-        exactAnswer: {
+        exactMatch: {
           select: {
             questionId: true,
             fields: {
@@ -304,7 +304,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
           },
         },
         essay: { select: { content: true } },
-        exactAnswer: {
+        exactMatch: {
           select: {
             fields: {
               select: {
@@ -397,7 +397,7 @@ export const questionTypeSpecific = (
                     })),
                   },
           }
-    case QuestionType.exactAnswer:
+    case QuestionType.exactMatch:
       return !question
         ? {
             // default fields when creating a new question
@@ -414,7 +414,7 @@ export const questionTypeSpecific = (
                   {}
                 : // for copying questions
                   {
-                    create: question.exactAnswer.fields.map((field) => ({
+                    create: question.exactMatch.fields.map((field) => ({
                       order: field.order,
                       statement: field.statement,
                       matchRegex: field.matchRegex,
@@ -670,7 +670,7 @@ export const copyQuestion = async (
     case QuestionType.multipleChoice:
     case QuestionType.trueFalse:
     case QuestionType.web:
-    case QuestionType.exactAnswer:
+    case QuestionType.exactMatch:
       return copyGenericQuestion(prisma, question)
     case QuestionType.code:
       return copyCodeQuestion(prisma, question)
