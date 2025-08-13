@@ -17,6 +17,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Stack } from '@mui/system'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import AnswerField from '@/components/answer/exactMatch/AnswerField'
+import { Divider } from '@mui/material'
 
 const AnswerExactMatch = ({
   answer,
@@ -34,38 +35,43 @@ const AnswerExactMatch = ({
     setStudentAnswers(savedAnswers.fields)
   }, [savedAnswers.fields, setStudentAnswers])
 
-  const onFieldChange = useCallback(async (index, value) => {
-    const field = studentAnswers[index]
-    // TODO handle if it doesn't exist
+  const onFieldChange = useCallback(
+    async (index, value) => {
+      const field = studentAnswers[index]
+      // TODO handle if it doesn't exist
 
-    const newAnswers = [...studentAnswers]
-    newAnswers[index] = { ...field, value: value }
-    setStudentAnswers(newAnswers)
+      const newAnswers = [...studentAnswers]
+      newAnswers[index] = { ...field, value: value }
+      setStudentAnswers(newAnswers)
 
-    const fieldId = newAnswers[index].fieldId
-    console.log(`Field ${fieldId} changed to ${value}. Requesting change to backend.`)
+      const fieldId = newAnswers[index].fieldId
+      console.log(
+        `Field ${fieldId} changed to ${value}. Requesting change to backend.`,
+      )
 
-    const response = await fetch(
-      `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/exact-match/fields`,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+      const response = await fetch(
+        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/exact-match/fields`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({ fieldId, value }),
         },
-        body: JSON.stringify({ fieldId, value }),
-      },
-    )
+      )
 
-    const ok = response.ok
-    const data = await response.json()
-    onAnswerChange(ok, data)
-  }, [evaluationId, onAnswerChange, questionId, studentAnswers])
+      const ok = response.ok
+      const data = await response.json()
+      onAnswerChange(ok, data)
+    },
+    [evaluationId, onAnswerChange, questionId, studentAnswers],
+  )
 
   const { exactMatch } = question
 
   return (
-    <Stack direction={'column'} width={'100%'} spacing={2}>
+    <Stack direction={'column'} width={'100%'} spacing={4} p={2}>
       {exactMatch.fields.map((field, index) => {
         const studentAnswer = studentAnswers.find((a) => a.fieldId === field.id)
         if (!studentAnswer) {
@@ -73,11 +79,16 @@ const AnswerExactMatch = ({
           return null
         }
         return (
-        <Stack key={field.id} direction={'column'} width={'100%'}>
-          <MarkdownViewer content={field.statement} />
-          <AnswerField index={index} value={studentAnswer.value} onValueChange={onFieldChange} />
-        </Stack>
-      )
+          <Stack key={field.id} direction={'column'} width={'100%'} spacing={1}>
+            {index > 0 ? <Divider sx={{ opacity: 0.5 }} /> : null}
+            <MarkdownViewer content={field.statement} />
+            <AnswerField
+              index={index}
+              value={studentAnswer.value}
+              onValueChange={onFieldChange}
+            />
+          </Stack>
+        )
       })}
     </Stack>
   )
