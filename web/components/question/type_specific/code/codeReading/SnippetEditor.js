@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 import React, { useEffect, useState } from 'react'
-import { Stack, Typography, IconButton, Box, TextField } from '@mui/material'
+import { Stack, Typography, IconButton } from '@mui/material'
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
-
-import { styled } from '@mui/system'
-
-// Styled component to apply whitespace visibility
-const MonoSpaceTextField = styled(TextField)({
-  '& textarea': {
-    whiteSpace: 'pre-wrap', // Preserves whitespaces and wraps text
-    fontFamily: 'monospace', // Makes spaces more noticeable
-  },
-})
+import outputEditorOptions from '@/components/question/type_specific/code/codeReading/outputEditorOptions.json'
 
 const SnippetEditor = ({
   index,
@@ -37,13 +28,13 @@ const SnippetEditor = ({
   onOutputChange,
   onDelete,
 }) => {
-  const [code, setCode] = useState(snippet.snippet)
-  const [output, setOutput] = useState(snippet.output)
+  const [code, setCode] = useState(snippet.snippet || '')
+  const [output, setOutput] = useState(snippet.output || '')
 
   useEffect(() => {
     setCode(snippet.snippet || '')
     setOutput(snippet.output || '')
-  }, [snippet.snippet, snippet.output])
+  }, [snippet])
 
   return (
     <Stack direction={'column'} key={index} spacing={1}>
@@ -59,42 +50,46 @@ const SnippetEditor = ({
           <DeleteForeverOutlinedIcon />
         </IconButton>
       </Stack>
+
+      {/* Code editor */}
       <InlineMonacoEditor
-        key={index}
+        key={`code-${index}`}
         language={language}
         minHeight={60}
         code={code}
-        onChange={(code) => {
-          setCode(code)
+        onChange={(newCode) => {
+          setCode(newCode)
           setOutput('')
-          onSnippetChange(code)
+          onSnippetChange(newCode)
         }}
       />
-      <Box px={1}>
-        <MonoSpaceTextField
-          id={`output-${index}`}
-          variant="standard"
-          label={`Output`}
-          value={output}
-          multiline
-          required
-          fullWidth
-          InputProps={{
-            readOnly: !isOutputEditable,
-          }}
-          error={output === '' || output == null}
-          onChange={(ev) => {
-            setOutput(ev.target.value)
-            onOutputChange(ev.target.value)
-          }}
-          helperText={
-            output === '' || output == null
-              ? 'Dont forget to run the snippets to get the output'
-              : ''
-          }
-        />
-      </Box>
+
+      {/* Output editor */}
+
+      <OutputEditor
+        output={output}
+        isOutputEditable={isOutputEditable}
+        onOutputChange={(newOutput) => {
+          setOutput(newOutput)
+          onOutputChange(newOutput)
+        }}
+      />
     </Stack>
+  )
+}
+
+const OutputEditor = ({ output, isOutputEditable, onOutputChange }) => {
+  return (
+    <InlineMonacoEditor
+      language="plaintext"
+      minHeight={60}
+      readOnly={!isOutputEditable}
+      editorOptions={outputEditorOptions}
+      code={output}
+      onChange={(newOutput) => {
+        onOutputChange(newOutput)
+      }}
+    />
   )
 }
 

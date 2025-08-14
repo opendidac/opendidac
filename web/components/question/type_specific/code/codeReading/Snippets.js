@@ -36,6 +36,8 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
   const [lock, setLock] = useState(false)
   const [statuses, setStatuses] = useState([])
 
+  const [snippets, setSnippets] = useState([])
+
   const { data, error, mutate } = useSWR(
     `/api/${groupScope}/questions/${questionId}/code/code-reading/snippets`,
     groupScope && questionId ? fetcher : null,
@@ -51,6 +53,7 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
         return SnippetStatus.SUCCESS
       }),
     )
+    setSnippets(data)
   }, [data])
 
   const onAddSnippet = useCallback(async () => {
@@ -113,22 +116,25 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
   }, [statuses])
 
   const onAfterRun = useCallback(
-    (result) => {
+    async (result) => {
       setStatuses(
         statuses.map((_, index) => {
-          if (!result.tests || !result.tests[index]) {
-            return SnippetStatus.ERROR
-          }
-
-          if (result.tests[index].output) {
-            return SnippetStatus.SUCCESS
-          }
-
-          return SnippetStatus.ERROR
+          if (!result.tests || !result.tests[index]) return SnippetStatus.ERROR
+          return result.tests[index].output
+            ? SnippetStatus.SUCCESS
+            : SnippetStatus.ERROR
         }),
       )
+
+      // update snippets with the new outputs
+      setSnippets(
+        snippets.map((snippet, index) => ({
+          ...snippet,
+          output: result.tests[index].output,
+        })),
+      )
     },
-    [statuses],
+    [statuses, snippets],
   )
 
   return (
@@ -198,7 +204,7 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
             />
           }
         >
-          {data?.map((snippet, index) => (
+          {snippets?.map((snippet, index) => (
             <SnippetEditor
               key={index}
               index={index}
