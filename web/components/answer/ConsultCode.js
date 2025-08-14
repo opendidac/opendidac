@@ -18,10 +18,10 @@ import {
   Tab,
   Tabs,
   Typography,
-  TextField,
-  InputAdornment,
   Box,
   Alert,
+  Stack,
+  
 } from '@mui/material'
 
 import TestCaseResults from '@/components/question/type_specific/code/codeWriting/TestCaseResults'
@@ -35,6 +35,7 @@ import { AnnotationProvider } from '@/context/AnnotationContext'
 import ScrollContainer from '../layout/ScrollContainer'
 import CodeWritingTabLabelTestSummary from './code/codeWriting/CodeWritingTabLabelTestSummary'
 import StudentFileAnnotationWrapper from '../evaluations/grading/annotation/StudentFileAnnotationWrapper'
+import outputEditorOptions from '@/components/question/type_specific/code/codeReading/outputEditorOptions.json'
 
 const ConsultCode = ({ question, answer }) => {
   const codeType = question.code.codeType
@@ -110,38 +111,44 @@ const ConsultCodeWriting = ({ answer }) => {
 
 const ConsultCodeReading = ({ question, answer }) => {
   const language = question.code.language
+  const outputs = answer?.codeReading?.outputs || []
+
   return (
     <Box pt={1}>
-      {answer?.codeReading?.outputs.map((output, index) => (
-        <>
+      {outputs.map((output, index) => (
+        <Box key={output.id ?? index} mb={1.5}>
+          {/* Snippet (read-only) */}
           <InlineMonacoEditor
-            key={index}
+            readOnly
             language={language}
             code={output.codeReadingSnippet.snippet}
-            readOnly
+            minHeight={30}
+            editorOptions={{ wordWrap: 'on', minimap: { enabled: false } }}
           />
+
+          {/* Status + Student Output (read-only plaintext) */}
           <Box p={1}>
-            <TextField
-              fullWidth
-              multiline
-              label="Your output"
-              value={output.output}
-              variant="standard"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Box pt={0.5}>
-                      <AnswerCodeReadingOutputStatus
-                        studentOutputTest
-                        status={output.status}
-                      />
-                    </Box>
-                  </InputAdornment>
-                ),
-              }}
+            <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
+              <Box pt={0.5}>
+                <AnswerCodeReadingOutputStatus
+                  studentOutputTest
+                  status={output.status}
+                />
+              </Box>
+              <Typography variant="caption">Your output</Typography>
+            </Stack>
+
+            <InlineMonacoEditor
+              readOnly
+              language="plaintext"
+              minHeight={60}
+              code={
+                (output?.output?.toString?.() ?? output?.output ?? 'No Output Provided')
+              }
+              editorOptions={outputEditorOptions}
             />
           </Box>
-        </>
+        </Box>
       ))}
     </Box>
   )

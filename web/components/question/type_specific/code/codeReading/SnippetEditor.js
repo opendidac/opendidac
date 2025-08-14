@@ -15,9 +15,10 @@
  * and limitations under the License.
  */
 import React, { useEffect, useState } from 'react'
-import { Stack, Typography, IconButton, Box } from '@mui/material'
+import { Stack, Typography, IconButton } from '@mui/material'
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
+import outputEditorOptions from '@/components/question/type_specific/code/codeReading/outputEditorOptions.json'
 
 const SnippetEditor = ({
   index,
@@ -78,15 +79,6 @@ const SnippetEditor = ({
       
     </Stack>
   )
-}
-
-const outputEditorOptions = {
-  wordWrap: 'on',                  // Wrap lines so text doesn't scroll horizontally
-  renderWhitespace: 'all',         // Don't clutter with whitespace symbols
-  lineNumbers: 'off',              // No line numbers for plain text
-  lineDecorationsWidth: 0,         // Remove gutter decoration space
-  lineNumbersMinChars: 0,          // No reserved chars for line numbers
-  scrollBeyondLastLine: false,     // Avoid unnecessary vertical space
 }
 
 

@@ -21,7 +21,6 @@ import {
   Tab,
   Tabs,
   Typography,
-  TextField,
 } from '@mui/material'
 
 import ResizePanel from '@/components/layout/utils/ResizePanel'
@@ -41,6 +40,7 @@ import { AnnotationProvider } from '@/context/AnnotationContext'
 
 import CodeWritingTabLabelTestSummary from './code/codeWriting/CodeWritingTabLabelTestSummary'
 import StudentFileAnnotationWrapper from '../evaluations/grading/annotation/StudentFileAnnotationWrapper'
+import outputEditorOptions from '@/components/question/type_specific/code/codeReading/outputEditorOptions.json'
 
 const CompareCode = ({ readOnly, student, question, solution, answer }) => {
   return (
@@ -214,52 +214,61 @@ const CompareCodeReading = ({ solution, answer }) => {
       <Box>
         {snippets.map((snippet, index) => {
           const studentOutput = outputs.find(
-            (output) => output.codeReadingSnippet.order === snippet.order,
+            (o) => o.codeReadingSnippet.order === snippet.order,
           )
-          const severity = studentOutput
-            ? studentOutput.status ===
-              StudentAnswerCodeReadingOutputStatus.MATCH
+
+          const severity =
+            studentOutput &&
+            studentOutput.status === StudentAnswerCodeReadingOutputStatus.MATCH
               ? 'success'
               : 'error'
-            : 'error'
 
           return (
-            <Box key={index}>
+            <Box key={snippet.id ?? snippet.order ?? index}>
+              {/* Snippet (read-only code) */}
               <InlineMonacoEditor
                 readOnly
                 language="cpp"
                 minHeight={30}
                 code={snippet.snippet}
+                editorOptions={{ wordWrap: 'on', minimap: { enabled: false } }}
               />
+
               <Alert
                 severity={severity}
                 variant="standard"
                 icon={false}
                 sx={{
                   px: 1,
-                  '& .MuiAlert-message': {
-                    width: '100%',
-                  },
+                  '& .MuiAlert-message': { width: '100%' },
                 }}
               >
-                <Stack direction="row" spacing={1}>
-                  <TextField
-                    variant="standard"
-                    label="Student Output"
-                    fullWidth
-                    multiline
-                    value={studentOutput?.output || 'No Output Provided'}
-                    readOnly
-                  />
+                <Stack direction="row" spacing={1} width="100%">
+                  {/* Student Output (read-only plaintext) */}
+                  <Stack flex={1} spacing={0.5}>
+                    <InlineMonacoEditor
+                      readOnly
+                      language="plaintext"
+                      minHeight={60}
+                      code={
+                        (studentOutput?.output?.toString?.() ??
+                          studentOutput?.output ??
+                          'No Output Provided')
+                      }
+                      editorOptions={outputEditorOptions}
+                    />
+                  </Stack>
 
-                  <TextField
-                    variant="standard"
-                    label="Expected Output"
-                    fullWidth
-                    multiline
-                    value={snippet.output}
-                    readOnly
-                  />
+                  {/* Expected Output (read-only plaintext) */}
+                  <Stack flex={1} spacing={0.5}>
+                    <InlineMonacoEditor
+                      readOnly
+                      language="plaintext"
+                      minHeight={60}
+                      code={(snippet.output ?? '')}
+                      editorOptions={outputEditorOptions}
+                    />
+                  </Stack>
                 </Stack>
               </Alert>
             </Box>
@@ -269,5 +278,4 @@ const CompareCodeReading = ({ solution, answer }) => {
     </Stack>
   )
 }
-
 export default CompareCode
