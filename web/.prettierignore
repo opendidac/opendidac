@@ -1,3 +1,7 @@
 .next
 node_modules
 *.hbs
+
+# ignore third-party / generated assets
+styles/normalize.css
+**/normalize.css
