@@ -7,26 +7,17 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied.
+ * See the License for the specific language governing permissions
+ * and limitations under the License.
  */
 import React, { useEffect, useState } from 'react'
-import { Stack, Typography, IconButton, Box, TextField } from '@mui/material'
+import { Stack, Typography, IconButton, Box } from '@mui/material'
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
-
-import { styled } from '@mui/system'
-
-// Styled component to apply whitespace visibility
-const MonoSpaceTextField = styled(TextField)({
-  '& textarea': {
-    whiteSpace: 'pre-wrap', // Preserves whitespaces and wraps text
-    fontFamily: 'monospace', // Makes spaces more noticeable
-  },
-})
 
 const SnippetEditor = ({
   index,
@@ -37,13 +28,14 @@ const SnippetEditor = ({
   onOutputChange,
   onDelete,
 }) => {
-  const [code, setCode] = useState(snippet.snippet)
-  const [output, setOutput] = useState(snippet.output)
+  
+  const [code, setCode] = useState(snippet.snippet || '')
+  const [output, setOutput] = useState(snippet.output || '')
 
   useEffect(() => {
     setCode(snippet.snippet || '')
     setOutput(snippet.output || '')
-  }, [snippet.snippet, snippet.output])
+  }, [snippet])
 
   return (
     <Stack direction={'column'} key={index} spacing={1}>
@@ -59,41 +51,43 @@ const SnippetEditor = ({
           <DeleteForeverOutlinedIcon />
         </IconButton>
       </Stack>
+
+      {/* Code editor */}
       <InlineMonacoEditor
-        key={index}
+        key={`code-${index}`}
         language={language}
         minHeight={60}
         code={code}
-        onChange={(code) => {
-          setCode(code)
+        onChange={(newCode) => {
+          setCode(newCode)
           setOutput('')
-          onSnippetChange(code)
+          onSnippetChange(newCode)
         }}
       />
-      <Box px={1}>
-        <MonoSpaceTextField
-          id={`output-${index}`}
-          variant="standard"
-          label={`Output`}
-          value={output}
-          multiline
-          required
-          fullWidth
-          InputProps={{
-            readOnly: !isOutputEditable,
+
+      {/* Output editor */}
+      
+        <InlineMonacoEditor
+          key={`output-${index}`}
+          language="plaintext"
+          minHeight={60}
+          readOnly={!isOutputEditable}
+          code={output}
+          editorOptions={{
+            wordWrap: 'on',                 // Wrap lines so text doesn't scroll horizontally
+            renderWhitespace: 'none',       // Don't clutter with whitespace symbols
+            lineNumbers: 'off',              // No line numbers for plain text
+            lineDecorationsWidth: 0,         // Remove gutter decoration space
+            lineNumbersMinChars: 0,          // No reserved chars for line numbers
+            scrollBeyondLastLine: false,     // Avoid unnecessary vertical space
           }}
-          error={output === '' || output == null}
-          onChange={(ev) => {
-            setOutput(ev.target.value)
-            onOutputChange(ev.target.value)
+          onChange={(newOutput) => {
+            setOutput(newOutput)
+            onOutputChange(newOutput)
           }}
-          helperText={
-            output === '' || output == null
-              ? 'Dont forget to run the snippets to get the output'
-              : ''
-          }
+          
         />
-      </Box>
+      
     </Stack>
   )
 }
