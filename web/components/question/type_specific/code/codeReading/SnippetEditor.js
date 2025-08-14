@@ -66,29 +66,42 @@ const SnippetEditor = ({
       />
 
       {/* Output editor */}
-      
-        <InlineMonacoEditor
-          key={`output-${index}`}
-          language="plaintext"
-          minHeight={60}
-          readOnly={!isOutputEditable}
-          code={output}
-          editorOptions={{
-            wordWrap: 'on',                 // Wrap lines so text doesn't scroll horizontally
-            renderWhitespace: 'none',       // Don't clutter with whitespace symbols
-            lineNumbers: 'off',              // No line numbers for plain text
-            lineDecorationsWidth: 0,         // Remove gutter decoration space
-            lineNumbersMinChars: 0,          // No reserved chars for line numbers
-            scrollBeyondLastLine: false,     // Avoid unnecessary vertical space
-          }}
-          onChange={(newOutput) => {
-            setOutput(newOutput)
-            onOutputChange(newOutput)
-          }}
-          
-        />
+
+      <OutputEditor 
+        output={output} 
+        isOutputEditable={isOutputEditable} 
+        onOutputChange={(newOutput) => {
+          setOutput(newOutput)
+          onOutputChange(newOutput)
+        }} 
+      />
       
     </Stack>
+  )
+}
+
+const outputEditorOptions = {
+  wordWrap: 'on',                  // Wrap lines so text doesn't scroll horizontally
+  renderWhitespace: 'all',         // Don't clutter with whitespace symbols
+  lineNumbers: 'off',              // No line numbers for plain text
+  lineDecorationsWidth: 0,         // Remove gutter decoration space
+  lineNumbersMinChars: 0,          // No reserved chars for line numbers
+  scrollBeyondLastLine: false,     // Avoid unnecessary vertical space
+}
+
+
+const OutputEditor = ({ output, isOutputEditable, onOutputChange }) => {
+  return (
+    <InlineMonacoEditor
+      language="plaintext"
+      minHeight={60}
+      readOnly={!isOutputEditable}
+      editorOptions={outputEditorOptions}
+      code={output}
+      onChange={(newOutput) => {
+        onOutputChange(newOutput)
+      }}
+    />
   )
 }
 
