@@ -62,7 +62,8 @@ model User {
   groups           UserOnGroup[]
   groupsCreated    Group[]
   annotations      Annotation[]
-  purgedEvaluations Evaluation[]
+  purgedEvaluations Evaluation[] @relation("PurgedEvaluations")
+  archivedEvaluations Evaluation[] @relation("ArchivedEvaluations")
 }
 
 enum Role {
@@ -522,7 +523,7 @@ enum EvaluationPhase {
 
 enum EvaluationStatus {
   ACTIVE
-  ARCHIVED
+  INACTIVE
 }
 
 enum UserOnEvaluationAccessMode {
@@ -559,9 +560,13 @@ model Evaluation {
   
   evaluationToQuestions EvaluationToQuestion[]
 
+  archivedAt          DateTime?
+  archivedByUserEmail String?
+  archivedBy          User?     @relation("ArchivedEvaluations", fields: [archivedByUserEmail], references: [email])
+
   purgedAt          DateTime?
   purgedByUserEmail String?
-  purgedBy          User?     @relation(fields: [purgedByUserEmail], references: [email])
+  purgedBy          User?     @relation("PurgedEvaluations", fields: [purgedByUserEmail], references: [email])
 
   group                               Group                                 @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId                             String

@@ -173,10 +173,10 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
                   </Tooltip>
                 </Link>
                 {evaluation.status === EvaluationStatus.ACTIVE && (
-                  <Tooltip title="Add to archive" key="archive">
+                  <Tooltip title="Deactivate evaluation" key="deactivate">
                     <IconButton onClick={(ev) => onDelete(ev, evaluation)}>
                       <Image
-                        alt="Add to archive"
+                        alt="Deactivate evaluation"
                         src="/svg/icons/archive.svg"
                         width="18"
                         height="18"
@@ -185,7 +185,7 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
                   </Tooltip>
                 )}
 
-                {evaluation.status === EvaluationStatus.ARCHIVED && (
+                {evaluation.status === EvaluationStatus.INACTIVE && (
                   <Tooltip title="Delete definitively" key="archive">
                     <IconButton onClick={(ev) => onDelete(ev, evaluation)}>
                       <Image
