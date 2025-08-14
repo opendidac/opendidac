@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 import React, { useState } from 'react'
-import {
-  Tab,
-  Tabs,
-  Typography,
-  Box,
-  Alert,
-  Stack,
-  
-} from '@mui/material'
+import { Tab, Tabs, Typography, Box, Alert, Stack } from '@mui/material'
 
 import TestCaseResults from '@/components/question/type_specific/code/codeWriting/TestCaseResults'
 import TabContent from '@/components/layout/utils/TabContent'
@@ -143,7 +135,9 @@ const ConsultCodeReading = ({ question, answer }) => {
               language="plaintext"
               minHeight={60}
               code={
-                (output?.output?.toString?.() ?? output?.output ?? 'No Output Provided')
+                output?.output?.toString?.() ??
+                output?.output ??
+                'No Output Provided'
               }
               editorOptions={outputEditorOptions}
             />

@@ -120,19 +120,22 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
       setStatuses(
         statuses.map((_, index) => {
           if (!result.tests || !result.tests[index]) return SnippetStatus.ERROR
-          return result.tests[index].output ? SnippetStatus.SUCCESS : SnippetStatus.ERROR
+          return result.tests[index].output
+            ? SnippetStatus.SUCCESS
+            : SnippetStatus.ERROR
         }),
       )
 
       // update snippets with the new outputs
-      setSnippets(snippets.map((snippet, index) => ({
-        ...snippet,
-        output: result.tests[index].output,
-      })))
+      setSnippets(
+        snippets.map((snippet, index) => ({
+          ...snippet,
+          output: result.tests[index].output,
+        })),
+      )
     },
-    [statuses, mutate, snippets],
+    [statuses, snippets],
   )
-  
 
   return (
     <Loading loading={!data} errors={[error]}>

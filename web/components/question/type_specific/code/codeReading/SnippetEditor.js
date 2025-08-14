@@ -7,12 +7,11 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied.
- * See the License for the specific language governing permissions
- * and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 import React, { useEffect, useState } from 'react'
 import { Stack, Typography, IconButton } from '@mui/material'
@@ -29,7 +28,6 @@ const SnippetEditor = ({
   onOutputChange,
   onDelete,
 }) => {
-  
   const [code, setCode] = useState(snippet.snippet || '')
   const [output, setOutput] = useState(snippet.output || '')
 
@@ -68,19 +66,17 @@ const SnippetEditor = ({
 
       {/* Output editor */}
 
-      <OutputEditor 
-        output={output} 
-        isOutputEditable={isOutputEditable} 
+      <OutputEditor
+        output={output}
+        isOutputEditable={isOutputEditable}
         onOutputChange={(newOutput) => {
           setOutput(newOutput)
           onOutputChange(newOutput)
-        }} 
+        }}
       />
-      
     </Stack>
   )
 }
-
 
 const OutputEditor = ({ output, isOutputEditable, onOutputChange }) => {
   return (

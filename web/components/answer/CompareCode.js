@@ -14,14 +14,7 @@
  * limitations under the License.
  */
 import React from 'react'
-import {
-  Alert,
-  Box,
-  Stack,
-  Tab,
-  Tabs,
-  Typography,
-} from '@mui/material'
+import { Alert, Box, Stack, Tab, Tabs, Typography } from '@mui/material'
 
 import ResizePanel from '@/components/layout/utils/ResizePanel'
 import FileEditor from '@/components/question/type_specific/code/FileEditor'
@@ -251,9 +244,9 @@ const CompareCodeReading = ({ solution, answer }) => {
                       language="plaintext"
                       minHeight={60}
                       code={
-                        (studentOutput?.output?.toString?.() ??
-                          studentOutput?.output ??
-                          'No Output Provided')
+                        studentOutput?.output?.toString?.() ??
+                        studentOutput?.output ??
+                        'No Output Provided'
                       }
                       editorOptions={outputEditorOptions}
                     />
@@ -265,7 +258,7 @@ const CompareCodeReading = ({ solution, answer }) => {
                       readOnly
                       language="plaintext"
                       minHeight={60}
-                      code={(snippet.output ?? '')}
+                      code={snippet.output ?? ''}
                       editorOptions={outputEditorOptions}
                     />
                   </Stack>
