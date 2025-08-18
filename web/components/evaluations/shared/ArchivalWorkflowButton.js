@@ -568,7 +568,7 @@ const ArchivalWorkflowButton = ({
           },
           { 
             phase: 'ACTIVE', 
-            label: 'Cancel Archival',
+            label: 'Back to Active',
             description: 'Return to active state',
           },
         ]
@@ -581,7 +581,7 @@ const ArchivalWorkflowButton = ({
           },
           { 
             phase: 'ACTIVE', 
-            label: 'Cancel Archival',
+            label: 'Back to Active',
             description: 'Return to active state',
           },
         ]
@@ -589,7 +589,7 @@ const ArchivalWorkflowButton = ({
         return [
           { 
             phase: 'ACTIVE', 
-            label: 'Return to Active',
+            label: 'Back to Active',
             description: 'Remove exclusion and return to active state',
           },
         ]
@@ -635,7 +635,7 @@ const ArchivalWorkflowButton = ({
     
     if (targetPhase === 'ACTIVE') {
       // Handle cancel archival (works for both MARKED_FOR_ARCHIVAL and ARCHIVED phases)
-      await handleCancelArchival()
+              await handleBackToActive()
       return
     }
     
@@ -643,10 +643,10 @@ const ArchivalWorkflowButton = ({
     onTransition?.(evaluation, currentPhase, targetPhase)
   }
 
-    const handleCancelArchival = async () => {
+    const handleBackToActive = async () => {
     try {
-      const res = await fetch(
-        `/api/admin/archive/${evaluation.id}/cancel-archival`,
+              const res = await fetch(
+          `/api/admin/archive/${evaluation.id}/back-to-active`,
         {
           method: 'POST',
           headers: { 

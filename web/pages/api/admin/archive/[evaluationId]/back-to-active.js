@@ -44,16 +44,18 @@ const post = async (req, res, prisma) => {
   console.log('Evaluation archival phase:', evaluation.archivalPhase)
   console.log('Evaluation archived at:', evaluation.archivedAt)
   
-  // Check if evaluation can be cancelled from archival (use archivalPhase as source of truth)
-  if (evaluation.archivalPhase !== 'MARKED_FOR_ARCHIVAL' && evaluation.archivalPhase !== 'ARCHIVED') {
+  // Check if evaluation can be returned to active (use archivalPhase as source of truth)
+  if (evaluation.archivalPhase !== 'MARKED_FOR_ARCHIVAL' && 
+      evaluation.archivalPhase !== 'ARCHIVED' && 
+      evaluation.archivalPhase !== 'EXCLUDED_FROM_ARCHIVAL') {
     res.status(400).json({ 
-      message: `Evaluation cannot be cancelled from archival. Current phase: ${evaluation.archivalPhase}` 
+      message: `Evaluation cannot be returned to active. Current phase: ${evaluation.archivalPhase}` 
     })
     return
   }
 
   if (evaluation.archivalPhase === 'PURGED') {
-    res.status(400).json({ message: 'Cannot cancel archival - evaluation data has been purged' })
+    res.status(400).json({ message: 'Cannot return to active - evaluation data has been purged' })
     return
   }
 
@@ -64,13 +66,15 @@ const post = async (req, res, prisma) => {
     return
   } 
 
-  // Update evaluation to cancel archival (return to active)
+  // Update evaluation to return to active state
   const updatedEvaluation = await prisma.evaluation.update({
     where: { id: evaluationId },
     data: {
       archivalPhase: ArchivalPhase.ACTIVE,
       archivalDeadline: null, // Clear the archival deadline
       purgeDeadline: null,    // Clear the purge deadline if coming from archived state
+      // Clear exclusion fields if coming from excluded state
+      excludedFromArchivalComment: null,
     },
     include: {
       group: true,
@@ -78,7 +82,7 @@ const post = async (req, res, prisma) => {
   })
 
   res.status(200).json({
-    message: 'Archival cancelled successfully',
+    message: 'Evaluation back to active state successfully',
     evaluation: updatedEvaluation,
   })
 }
