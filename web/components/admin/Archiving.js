@@ -24,11 +24,15 @@ import {
   Typography,
   IconButton,
   Tooltip,
+  Chip,
 } from '@mui/material'
-import { LoadingButton } from '@mui/lab'
-import { useSnackbar } from '@/context/SnackbarContext'
 import ArchiveIcon from '@mui/icons-material/Archive'
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
+import { Button } from '@mui/material'
+import Image from 'next/image'
+import DateTimeAgo from '../feedback/DateTimeAgo'
+import DisplayPhase from '../evaluations/DisplayPhase'
+import ArchivalWorkflowButton from '../evaluations/shared/ArchivalWorkflowButton'
 
 const Archiving = () => {
   const {
@@ -40,20 +44,27 @@ const Archiving = () => {
     revalidateOnFocus: false,
   })
 
-
-
-  const [ evaluations, setEvaluations ] = useState([])
+  const [evaluations, setEvaluations] = useState([])
 
   useEffect(() => {
-    setEvaluations(data?.map(evaluation => ({
-      ...evaluation,
-      group: evaluation.group.label
-    })))
+    if (data) {
+      setEvaluations(data.map(evaluation => ({
+        ...evaluation,
+        group: evaluation.group.label,
+        groupScope: evaluation.group.scope  // Preserve the scope
+      })))
+    } else {
+      setEvaluations([])
+    }
   }, [data])
 
-  // print first 10 evaluations
-  console.log("evaluations", evaluations.slice(0, 10))
-  
+  const handleArchivalTransition = (evaluation, fromPhase, toPhase) => {
+    console.log(`Transitioning evaluation ${evaluation.id} from ${fromPhase} to ${toPhase}`)
+    // The workflow button now handles its own form, so we just need to refresh data
+    mutate() // Refresh the data
+  }
+
+
 
   return (
     <Box
@@ -70,7 +81,7 @@ const Archiving = () => {
           header={{
             actions: {
               label: 'Actions',
-              width: '200px',
+              width: '300px',
             },
             columns: [
               {
@@ -83,60 +94,73 @@ const Archiving = () => {
                 ),
               },
               {
-                label: 'Created',
-                column: { width: '140px' },
+                label: 'Phase',
+                column: { width: '130px' },
+                renderCell: (row) => (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <DisplayPhase phase={row.phase} />
+                    {row.purgedAt && (
+                      <Typography variant="caption" color="error">
+                        <b>purged</b>
+                      </Typography>
+                    )}
+                  </Stack>
+                ),
+              },
+              {
+                label: 'Questions',
+                column: { width: '80px' },
                 renderCell: (row) => (
                   <Typography variant="body2" color="text.secondary">
-                    {new Date(row.createdAt).toLocaleDateString()}
+                    {row._count?.evaluationToQuestions || 0}
                   </Typography>
                 ),
               },
               {
-                label: 'Purged',
-                column: { width: '140px' },
+                label: 'Students',
+                column: { width: '80px' },
                 renderCell: (row) => (
                   <Typography variant="body2" color="text.secondary">
-                    {row.purgedAt
-                      ? new Date(row.purgedAt).toLocaleDateString()
-                      : 'N/A'}
+                    {row._count?.students || 0}
                   </Typography>
                 ),
               },
+
             ],
           }}
           items={evaluations?.map((evaluation) => ({
             ...evaluation,
             meta: {
               key: `evaluation-${evaluation.id}`,
+              
               actions: [
-                <React.Fragment key="actions">
-                  {!evaluation.archivedAt && (
-                    <Tooltip title="Archive evaluation" key="archive">
-                      <IconButton
-                        onClick={(ev) => {
-                          ev.preventDefault()
-                          ev.stopPropagation()
-                          // Handle archive action
-                        }}
-                      >
-                        <ArchiveIcon />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  {evaluation.archivedAt && !evaluation.purgedAt && (
-                    <Tooltip title="Purge evaluation" key="purge">
-                      <IconButton
-                        onClick={(ev) => {
-                          ev.preventDefault()
-                          ev.stopPropagation()
-                          // Handle purge action
-                        }}
-                      >
-                        <DeleteForeverIcon />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </React.Fragment>,
+                <Stack direction="row" spacing={1} key="actions">
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      window.open(
+                        `/api/${evaluation.groupScope}/evaluations/${evaluation.id}/export`,
+                        '_blank',
+                      )
+                    }}
+                    startIcon={
+                      <Image
+                        alt="Export"
+                        src="/svg/icons/file-pdf.svg"
+                        width="16"
+                        height="16"
+                      />
+                    }
+                  >
+                    PDF
+                  </Button>
+                  <ArchivalWorkflowButton
+                    evaluation={evaluation}
+                    onTransition={handleArchivalTransition}
+                    size="small"
+                  />
+                </Stack>,
               ],
             },
           }))}
@@ -145,19 +169,19 @@ const Archiving = () => {
               groupBy: 'group',
               option: 'Group',
               type: 'element',
-              renderLabel: (row) => {
-                console.log(row)
-                return (<Box>
+              renderLabel: (row) => (
+                <Box>
                   <Typography variant="body1" fontWeight="medium">
-                    {row.group}
+                    {row.label}
                   </Typography>
-                </Box>)
-              }
-
+                </Box>
+              ),
             },
           ]}
         />
       </Loading>
+
+      {/* TODO: Add other archival dialogs */}
     </Box>
   )
 }

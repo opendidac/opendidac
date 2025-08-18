@@ -113,7 +113,7 @@ import WarningIcon from '@mui/icons-material/Warning'
 import DangerConfirmDialog from '@/components/feedback/DangerConfirmDialog'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
 import DateTimeAgo from '@/components/feedback/DateTimeAgo'
-import Image from 'next/image'
+import NextImage from 'next/image'
 
 const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
   const { show: showSnackbar } = useSnackbar()
@@ -178,6 +178,11 @@ const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
     } finally {
       setPurgeBusy(false)
     }
+  }
+
+  const handlePurgeSuccess = () => {
+    setPurgeOpen(false)
+    onPhaseChange?.()
   }
 
   const isFinished = evaluation.phase === EvaluationPhase.FINISHED
@@ -284,7 +289,7 @@ const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
                 )
               }}
               startIcon={
-                <Image
+                <NextImage
                   alt="Export"
                   src="/svg/icons/file-pdf.svg"
                   width="22"

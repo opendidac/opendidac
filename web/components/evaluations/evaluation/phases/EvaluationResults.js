@@ -17,7 +17,8 @@ import { Button, IconButton, Stack, Tooltip } from '@mui/material'
 import EvaluationTitleBar from '../layout/EvaluationTitleBar'
 import ExportCSV from './results/ExportCSV'
 import StudentResultsGrid from './results/StudentResultsGrid'
-import Image from 'next/image'
+import ExportPdfButton from './results/ExportPdfButton'
+import NextImage from 'next/image'
 import { useRouter } from 'next/router'
 
 const EvaluationResults = ({ groupScope, evaluation, attendance, results }) => {
@@ -37,26 +38,10 @@ const EvaluationResults = ({ groupScope, evaluation, attendance, results }) => {
                 results={results}
                 attendance={attendance}
               />
-              <Button
-                color="primary"
-                onClick={() => {
-                  // open in new page
-                  window.open(
-                    `/api/${groupScope}/evaluations/${evaluationId}/export`,
-                    '_blank',
-                  )
-                }}
-                startIcon={
-                  <Image
-                    alt="Export"
-                    src="/svg/icons/file-pdf.svg"
-                    width="22"
-                    height="22"
-                  />
-                }
-              >
-                Export as PDF
-              </Button>
+              <ExportPdfButton
+                groupScope={groupScope}
+                evaluationId={evaluationId}
+              />
               <Button
                 variant="text"
                 color="primary"
@@ -84,7 +69,7 @@ const EvaluationResults = ({ groupScope, evaluation, attendance, results }) => {
                 target="_blank"
               >
                 <IconButton size="small">
-                  <Image
+                  <NextImage
                     alt="View"
                     src="/svg/icons/view-user.svg"
                     width="18"

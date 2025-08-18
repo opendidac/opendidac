@@ -64,6 +64,7 @@ model User {
   annotations      Annotation[]
   purgedEvaluations Evaluation[] @relation("PurgedEvaluations")
   archivedEvaluations Evaluation[] @relation("ArchivedEvaluations")
+  excludedFromArchivalEvaluations Evaluation[] @relation("ExcludedFromArchivalEvaluations")
 }
 
 enum Role {
@@ -521,6 +522,14 @@ enum EvaluationPhase {
   FINISHED
 }
 
+enum ArchivalPhase {
+  ACTIVE
+  EXCLUDED_FROM_ARCHIVAL
+  MARKED_FOR_ARCHIVAL
+  ARCHIVED
+  PURGED
+}
+
 enum EvaluationStatus {
   ACTIVE
   INACTIVE
@@ -560,13 +569,27 @@ model Evaluation {
   
   evaluationToQuestions EvaluationToQuestion[]
 
+  archivalPhase       ArchivalPhase @default(ACTIVE)
+
   archivedAt          DateTime?
   archivedByUserEmail String?
   archivedBy          User?     @relation("ArchivedEvaluations", fields: [archivedByUserEmail], references: [email])
 
+  // Deadline for when the evaluation should be archived
+  archivalDeadline    DateTime?
+
+  // Fields for excluded evaluations
+  excludedFromArchivalAt          DateTime?
+  excludedFromArchivalByUserEmail String?
+  excludedFromArchivalBy          User?     @relation("ExcludedFromArchivalEvaluations", fields: [excludedFromArchivalByUserEmail], references: [email])
+  excludedFromArchivalComment     String?   // Reason for exclusion
+
   purgedAt          DateTime?
   purgedByUserEmail String?
   purgedBy          User?     @relation("PurgedEvaluations", fields: [purgedByUserEmail], references: [email])
+
+  // Deadline for when the evaluation should be purged
+  purgeDeadline       DateTime?
 
   group                               Group                                 @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId                             String

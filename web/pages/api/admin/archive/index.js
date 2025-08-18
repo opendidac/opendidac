@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Role } from '@prisma/client'
+import { Role, EvaluationPhase } from '@prisma/client'
 import {
   withAuthorization,
   withMethodHandler,
@@ -30,11 +30,54 @@ const get = async (req, res, prisma) => {
 
   const evaluationsNotPurged = await prisma.evaluation.findMany({
     where: {
-      purgedAt: null,
+      phase: {
+        in: [
+          EvaluationPhase.IN_PROGRESS,
+          EvaluationPhase.GRADING,
+          EvaluationPhase.FINISHED,
+        ],
+      },
     },
-    include: {
-      group: true,
-    },
+          select: {
+        id: true,
+        label: true,
+        phase: true,
+        archivalPhase: true,
+        createdAt: true,
+        archivedAt: true,
+        archivedByUserEmail: true,
+        archivalDeadline: true,
+        purgedAt: true,
+        purgedByUserEmail: true,
+        purgeDeadline: true,
+        group: {
+          select: {
+            id: true,
+            label: true,
+            scope: true,
+          },
+        },
+        archivedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        purgedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            evaluationToQuestions: true,
+            students: true,
+          },
+        },
+      },
     orderBy: {
       createdAt: 'desc',
     },
