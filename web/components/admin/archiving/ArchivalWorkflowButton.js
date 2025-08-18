@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Button,
   Menu,
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Chip,
   Stack,
   Typography,
   Divider,
@@ -29,7 +28,6 @@ import {
   RadioGroup,
   Radio,
   Box,
-  Checkbox,
 } from '@mui/material'
 import {
   ArrowDropDown,
@@ -367,29 +365,32 @@ const ArchiveImmediatelyForm = ({ evaluation, onSuccess, onCancel }) => {
   const [deadlineOption, setDeadlineOption] = useState('3months')
 
   // Preset deadline options for purge
-  const presetOptions = [
-    {
-      value: '1weeks',
-      label: '1 Weeks',
-      date: addWeeks(new Date(), 1),
-    },
-    {
-      value: '3weeks',
-      label: '3 Weeks',
-      date: addWeeks(new Date(), 3),
-    },
-    {
-      value: '1month',
-      label: '1 Month',
-      date: addMonths(new Date(), 1),
-    },
-    {
-      value: '3months',
-      label: '3 Months',
-      date: addMonths(new Date(), 3),
-    },
-    { value: 'custom', label: 'Custom date', date: null },
-  ]
+  const presetOptions = useMemo(
+    () => [
+      {
+        value: '1weeks',
+        label: '1 Weeks',
+        date: addWeeks(new Date(), 1),
+      },
+      {
+        value: '3weeks',
+        label: '3 Weeks',
+        date: addWeeks(new Date(), 3),
+      },
+      {
+        value: '1month',
+        label: '1 Month',
+        date: addMonths(new Date(), 1),
+      },
+      {
+        value: '3months',
+        label: '3 Months',
+        date: addMonths(new Date(), 3),
+      },
+      { value: 'custom', label: 'Custom date', date: null },
+    ],
+    [],
+  )
 
   // Initialize with first preset option
   useEffect(() => {
@@ -397,7 +398,7 @@ const ArchiveImmediatelyForm = ({ evaluation, onSuccess, onCancel }) => {
     if (firstPreset?.date) {
       setPurgeDeadline(firstPreset.date)
     }
-  }, [])
+  }, [presetOptions])
 
   const handleDeadlineOptionChange = (event) => {
     const option = event.target.value
@@ -535,15 +536,17 @@ const MarkForArchivalForm = ({ evaluation, onSuccess, onCancel }) => {
   const [busy, setBusy] = useState(false)
   const [archivalDeadline, setArchivalDeadline] = useState(null)
   const [deadlineOption, setDeadlineOption] = useState('1week')
-  const [notifyOwner, setNotifyOwner] = useState(true)
 
-  // Preset deadline options
-  const presetOptions = [
-    { value: '2weeks', label: '2 Weeks', date: addWeeks(new Date(), 2) },
-    { value: '1month', label: '1 Month', date: addMonths(new Date(), 1) },
-    { value: '3months', label: '3 Months', date: addMonths(new Date(), 3) },
-    { value: 'custom', label: 'Custom date', date: null },
-  ]
+  // Preset deadline options, use Memo
+  const presetOptions = useMemo(
+    () => [
+      { value: '2weeks', label: '2 Weeks', date: addWeeks(new Date(), 2) },
+      { value: '1month', label: '1 Month', date: addMonths(new Date(), 1) },
+      { value: '3months', label: '3 Months', date: addMonths(new Date(), 3) },
+      { value: 'custom', label: 'Custom date', date: null },
+    ],
+    [],
+  )
 
   // Initialize with first preset option
   useEffect(() => {
@@ -551,7 +554,7 @@ const MarkForArchivalForm = ({ evaluation, onSuccess, onCancel }) => {
     if (firstPreset?.date) {
       setArchivalDeadline(firstPreset.date)
     }
-  }, [])
+  }, [presetOptions])
 
   const handleDeadlineOptionChange = (event) => {
     const option = event.target.value
@@ -578,7 +581,6 @@ const MarkForArchivalForm = ({ evaluation, onSuccess, onCancel }) => {
           },
           body: JSON.stringify({
             archivalDeadline: archivalDeadline?.toISOString() || null,
-            notifyOwner,
           }),
         },
       )

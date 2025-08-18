@@ -68,7 +68,7 @@ const PurgeEvaluationDialog = ({
         <Stack spacing={1.5}>
           <AlertFeedback severity="warning">
             This will permanently delete all <b>student answers</b> and related
-            feedback. It will keep the evaluation's <b>composition</b>{' '}
+            feedback. It will keep the evaluation&apos;s <b>composition</b>{' '}
             (questions & points) and the attendance list.
           </AlertFeedback>
           <AlertFeedback severity="warning">

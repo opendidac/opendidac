@@ -62,10 +62,16 @@ const post = async (req, res, prisma) => {
       res.status(400).json({ message: 'Invalid archival deadline' })
       return
     }
-    if (deadlineDate <= new Date()) {
+    // Allow today as archival date by using start of day comparison
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const deadline = new Date(deadlineDate)
+    deadline.setHours(0, 0, 0, 0)
+
+    if (deadline < today) {
       res
         .status(400)
-        .json({ message: 'Archival deadline must be in the future' })
+        .json({ message: 'Archival deadline cannot be in the past' })
       return
     }
   }

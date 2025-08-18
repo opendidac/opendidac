@@ -68,8 +68,14 @@ const post = async (req, res, prisma) => {
       res.status(400).json({ message: 'Invalid purge deadline' })
       return
     }
-    if (purgeDeadlineDate <= new Date()) {
-      res.status(400).json({ message: 'Purge deadline must be in the future' })
+    // Allow today as purge date by using start of day comparison
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const deadline = new Date(purgeDeadlineDate)
+    deadline.setHours(0, 0, 0, 0)
+
+    if (deadline < today) {
+      res.status(400).json({ message: 'Purge deadline cannot be in the past' })
       return
     }
   }
