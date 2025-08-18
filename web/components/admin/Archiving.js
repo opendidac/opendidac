@@ -185,6 +185,8 @@ const Archiving = () => {
     isValidating,
   } = useSWR('/api/admin/archive', fetcher, {
     revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    refreshInterval: 0,
   })
 
   const [evaluations, setEvaluations] = useState([])
@@ -257,12 +259,42 @@ const Archiving = () => {
     setFilteredEvaluations(filtered)
   }, [evaluations, archivalFilter, breachFilter])
 
-  const handleArchivalTransition = (evaluation, fromPhase, toPhase) => {
+  const handleArchivalTransition = async (evaluation, fromPhase, toPhase) => {
     console.log(
       `Transitioning evaluation ${evaluation.id} from ${fromPhase} to ${toPhase}`,
     )
-    // The workflow button now handles its own form, so we just need to refresh data
-    mutate() // Refresh the data
+
+    // Create optimistic update based on the transition
+    const updatedEvaluation = {
+      ...evaluation,
+      archivalPhase: toPhase,
+      // Update relevant timestamp fields based on transition
+      ...(toPhase === 'ARCHIVED' && { archivedAt: new Date().toISOString() }),
+      ...(toPhase === 'PURGED' && { purgedAt: new Date().toISOString() }),
+      ...(toPhase === 'EXCLUDED_FROM_ARCHIVAL' && {
+        excludedFromArchivalAt: new Date().toISOString(),
+      }),
+      ...(toPhase === 'ACTIVE' && {
+        archivalDeadline: null,
+        purgeDeadline: null,
+        excludedFromArchivalComment: null,
+      }),
+    }
+
+    // Update local state immediately (no re-render from SWR)
+    setEvaluations((prevEvaluations) =>
+      prevEvaluations.map((e) =>
+        e.id === evaluation.id ? updatedEvaluation : e,
+      ),
+    )
+
+    // Update SWR cache silently in the background (without revalidation)
+    mutate((currentData) => {
+      if (!currentData) return currentData
+      return currentData.map((e) =>
+        e.id === evaluation.id ? { ...e, archivalPhase: toPhase } : e,
+      )
+    }, false)
   }
 
   return (
