@@ -57,11 +57,9 @@ const post = async (req, res, prisma) => {
   }
 
   if (evaluation.archivalPhase === 'PURGED') {
-    res
-      .status(400)
-      .json({
-        message: 'Cannot return to active - evaluation data has been purged',
-      })
+    res.status(400).json({
+      message: 'Cannot return to active - evaluation data has been purged',
+    })
     return
   }
 

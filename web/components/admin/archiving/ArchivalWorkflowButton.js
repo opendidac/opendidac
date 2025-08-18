@@ -294,7 +294,8 @@ const ExcludeFromArchivalForm = ({ evaluation, onSuccess, onCancel }) => {
         </Typography>
 
         <Typography variant="body2" color="text.secondary">
-          The evaluation can be excluded only in case it does not contain any real student data.
+          The evaluation can be excluded only in case it does not contain any
+          real student data.
         </Typography>
 
         <Typography variant="body2" color="text.secondary">
@@ -370,22 +371,22 @@ const ArchiveImmediatelyForm = ({ evaluation, onSuccess, onCancel }) => {
     {
       value: '1weeks',
       label: '1 Weeks',
-      date: addWeeks(new Date(), 1)
+      date: addWeeks(new Date(), 1),
     },
     {
       value: '3weeks',
       label: '3 Weeks',
-      date: addWeeks(new Date(), 3)
+      date: addWeeks(new Date(), 3),
     },
     {
       value: '1month',
       label: '1 Month',
-      date: addMonths(new Date(), 1)
+      date: addMonths(new Date(), 1),
     },
     {
       value: '3months',
       label: '3 Months',
-      date: addMonths(new Date(), 3)
+      date: addMonths(new Date(), 3),
     },
     { value: 'custom', label: 'Custom date', date: null },
   ]
@@ -462,7 +463,12 @@ const ArchiveImmediatelyForm = ({ evaluation, onSuccess, onCancel }) => {
               value={option.value}
               control={<Radio />}
               label={
-                <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
                   <Typography variant="body2">{option.label}</Typography>
                   {option.date && (
                     <Typography variant="caption" color="text.secondary">
@@ -911,7 +917,6 @@ const ArchivalWorkflowButton = ({
             currentPhase={currentPhase}
           />
 
-          
           {/* Available Transitions */}
 
           {/* Forms Section */}
