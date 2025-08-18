@@ -72,4 +72,4 @@ const post = async (req, res, prisma) => {
 
 export default withMethodHandler({
   POST: withAuthorization(withPrisma(post), [Role.SUPER_ADMIN]),
-}) 
+})

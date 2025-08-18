@@ -20,12 +20,12 @@ import AlertFeedback from '@/components/feedback/AlertFeedback'
 import ExportPdfButton from '../evaluation/phases/results/ExportPdfButton'
 import { useSnackbar } from '@/context/SnackbarContext'
 
-const PurgeEvaluationDialog = ({ 
-  open, 
-  onClose, 
-  evaluation, 
+const PurgeEvaluationDialog = ({
+  open,
+  onClose,
+  evaluation,
   groupScope,
-  onSuccess 
+  onSuccess,
 }) => {
   const { show: showSnackbar } = useSnackbar()
   const [purgeBusy, setPurgeBusy] = useState(false)
@@ -67,8 +67,8 @@ const PurgeEvaluationDialog = ({
       content={
         <Stack spacing={1.5}>
           <AlertFeedback severity="warning">
-            This will permanently delete all <b>student answers</b> and
-            related feedback. It will keep the evaluation's <b>composition</b>{' '}
+            This will permanently delete all <b>student answers</b> and related
+            feedback. It will keep the evaluation's <b>composition</b>{' '}
             (questions & points) and the attendance list.
           </AlertFeedback>
           <AlertFeedback severity="warning">
@@ -77,8 +77,8 @@ const PurgeEvaluationDialog = ({
           <AlertFeedback severity="info">
             Consider exporting the results for the archive before you proceed.
           </AlertFeedback>
-          
-          <ExportPdfButton 
+
+          <ExportPdfButton
             groupScope={groupScope}
             evaluationId={evaluation.id}
             variant="outlined"
@@ -100,4 +100,4 @@ const PurgeEvaluationDialog = ({
   )
 }
 
-export default PurgeEvaluationDialog 
+export default PurgeEvaluationDialog

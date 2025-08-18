@@ -27,8 +27,8 @@ const post = async (req, res, prisma) => {
 
   const evaluation = await prisma.evaluation.findUnique({
     where: { id: evaluationId },
-    select: { 
-      id: true, 
+    select: {
+      id: true,
       archivalPhase: true,
       archivedAt: true,
       purgedAt: true,
@@ -41,7 +41,9 @@ const post = async (req, res, prisma) => {
   }
 
   if (evaluation.archivalPhase !== 'ACTIVE') {
-    res.status(400).json({ message: 'Evaluation is not in active archival phase' })
+    res
+      .status(400)
+      .json({ message: 'Evaluation is not in active archival phase' })
     return
   }
 
@@ -61,7 +63,9 @@ const post = async (req, res, prisma) => {
       return
     }
     if (deadlineDate <= new Date()) {
-      res.status(400).json({ message: 'Archival deadline must be in the future' })
+      res
+        .status(400)
+        .json({ message: 'Archival deadline must be in the future' })
       return
     }
   }
@@ -80,7 +84,9 @@ const post = async (req, res, prisma) => {
 
   // TODO: Send notification to evaluation owner if requested
   if (notifyOwner) {
-    console.log(`Would notify evaluation owner about archival schedule for evaluation ${evaluationId}`)
+    console.log(
+      `Would notify evaluation owner about archival schedule for evaluation ${evaluationId}`,
+    )
     if (deadlineDate) {
       console.log(`Archival deadline: ${deadlineDate.toISOString()}`)
     }
@@ -95,4 +101,4 @@ const post = async (req, res, prisma) => {
 
 export default withMethodHandler({
   POST: withAuthorization(withPrisma(post), [Role.SUPER_ADMIN]),
-}) 
+})

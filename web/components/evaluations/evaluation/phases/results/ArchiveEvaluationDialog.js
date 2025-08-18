@@ -28,12 +28,7 @@ import { LoadingButton } from '@mui/lab'
 import { useSnackbar } from '@/context/SnackbarContext'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
 
-const ArchiveEvaluationDialog = ({ 
-  open, 
-  onClose, 
-  evaluation,
-  onSuccess 
-}) => {
+const ArchiveEvaluationDialog = ({ open, onClose, evaluation, onSuccess }) => {
   const { show: showSnackbar } = useSnackbar()
   const [archiveBusy, setArchiveBusy] = useState(false)
   const [archiveDate, setArchiveDate] = useState('')
@@ -41,19 +36,16 @@ const ArchiveEvaluationDialog = ({
   const handleArchive = async () => {
     setArchiveBusy(true)
     try {
-      const res = await fetch(
-        `/api/admin/archive/${evaluation.id}/archive`,
-        {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            Accept: 'application/json' 
-          },
-          body: JSON.stringify({ 
-            archiveDate: archiveDate || null 
-          }),
+      const res = await fetch(`/api/admin/archive/${evaluation.id}/archive`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
-      )
+        body: JSON.stringify({
+          archiveDate: archiveDate || null,
+        }),
+      })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.message || 'Failed to archive')
       showSnackbar('Evaluation archived successfully', 'success')
@@ -74,16 +66,9 @@ const ArchiveEvaluationDialog = ({
   }
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose}
-      maxWidth="sm"
-      fullWidth
-    >
-      <DialogTitle>
-        Archive Evaluation
-      </DialogTitle>
-      
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Archive Evaluation</DialogTitle>
+
       <DialogContent>
         <Stack spacing={2}>
           <AlertFeedback severity="info">
@@ -115,10 +100,7 @@ const ArchiveEvaluationDialog = ({
       </DialogContent>
 
       <DialogActions>
-        <Button 
-          onClick={handleClose}
-          disabled={archiveBusy}
-        >
+        <Button onClick={handleClose} disabled={archiveBusy}>
           Cancel
         </Button>
         <LoadingButton
@@ -134,4 +116,4 @@ const ArchiveEvaluationDialog = ({
   )
 }
 
-export default ArchiveEvaluationDialog 
+export default ArchiveEvaluationDialog

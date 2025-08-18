@@ -27,8 +27,8 @@ const post = async (req, res, prisma) => {
 
   const evaluation = await prisma.evaluation.findUnique({
     where: { id: evaluationId },
-    select: { 
-      id: true, 
+    select: {
+      id: true,
       label: true,
       archivalPhase: true,
     },
@@ -40,12 +40,16 @@ const post = async (req, res, prisma) => {
   }
 
   if (evaluation.archivalPhase !== 'ACTIVE') {
-    res.status(400).json({ message: 'Can only exclude active evaluations from archival' })
+    res
+      .status(400)
+      .json({ message: 'Can only exclude active evaluations from archival' })
     return
   }
 
   if (!comment || comment.trim().length === 0) {
-    res.status(400).json({ message: 'Comment is required to explain exclusion reason' })
+    res
+      .status(400)
+      .json({ message: 'Comment is required to explain exclusion reason' })
     return
   }
 
@@ -79,4 +83,4 @@ const post = async (req, res, prisma) => {
 
 export default withMethodHandler({
   POST: withAuthorization(withPrisma(post), [Role.SUPER_ADMIN]),
-}) 
+})

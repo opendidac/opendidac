@@ -26,8 +26,8 @@ const post = async (req, res, prisma) => {
 
   const evaluation = await prisma.evaluation.findUnique({
     where: { id: evaluationId },
-    select: { 
-      id: true, 
+    select: {
+      id: true,
       label: true,
       archivalPhase: true,
       archivedAt: true,
@@ -43,19 +43,25 @@ const post = async (req, res, prisma) => {
   // Debug: Log the actual archival phase
   console.log('Evaluation archival phase:', evaluation.archivalPhase)
   console.log('Evaluation archived at:', evaluation.archivedAt)
-  
+
   // Check if evaluation can be returned to active (use archivalPhase as source of truth)
-  if (evaluation.archivalPhase !== 'MARKED_FOR_ARCHIVAL' && 
-      evaluation.archivalPhase !== 'ARCHIVED' && 
-      evaluation.archivalPhase !== 'EXCLUDED_FROM_ARCHIVAL') {
-    res.status(400).json({ 
-      message: `Evaluation cannot be returned to active. Current phase: ${evaluation.archivalPhase}` 
+  if (
+    evaluation.archivalPhase !== 'MARKED_FOR_ARCHIVAL' &&
+    evaluation.archivalPhase !== 'ARCHIVED' &&
+    evaluation.archivalPhase !== 'EXCLUDED_FROM_ARCHIVAL'
+  ) {
+    res.status(400).json({
+      message: `Evaluation cannot be returned to active. Current phase: ${evaluation.archivalPhase}`,
     })
     return
   }
 
   if (evaluation.archivalPhase === 'PURGED') {
-    res.status(400).json({ message: 'Cannot return to active - evaluation data has been purged' })
+    res
+      .status(400)
+      .json({
+        message: 'Cannot return to active - evaluation data has been purged',
+      })
     return
   }
 
@@ -64,7 +70,7 @@ const post = async (req, res, prisma) => {
   if (!user) {
     res.status(401).json({ message: 'Unauthorized' })
     return
-  } 
+  }
 
   // Update evaluation to return to active state
   const updatedEvaluation = await prisma.evaluation.update({
@@ -72,7 +78,7 @@ const post = async (req, res, prisma) => {
     data: {
       archivalPhase: ArchivalPhase.ACTIVE,
       archivalDeadline: null, // Clear the archival deadline
-      purgeDeadline: null,    // Clear the purge deadline if coming from archived state
+      purgeDeadline: null, // Clear the purge deadline if coming from archived state
       // Clear exclusion fields if coming from excluded state
       excludedFromArchivalComment: null,
     },
@@ -89,4 +95,4 @@ const post = async (req, res, prisma) => {
 
 export default withMethodHandler({
   POST: withAuthorization(withPrisma(post), [Role.SUPER_ADMIN]),
-}) 
+})

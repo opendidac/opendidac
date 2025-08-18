@@ -18,11 +18,7 @@ import Loading from '../feedback/Loading'
 import useSWR from 'swr'
 import UserAvatar from '../layout/UserAvatar'
 import DataGrid from '../ui/DataGrid'
-import {
-  Box,
-  Stack,
-  Typography,
-} from '@mui/material'
+import { Box, Stack, Typography } from '@mui/material'
 import { useCallback, useState } from 'react'
 import { LoadingButton } from '@mui/lab'
 import ScrollContainer from '../layout/ScrollContainer'
@@ -201,4 +197,4 @@ const Groups = () => {
   )
 }
 
-export default Groups 
+export default Groups

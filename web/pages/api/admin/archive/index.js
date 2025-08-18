@@ -27,7 +27,6 @@ import { withPrisma } from '@/middleware/withPrisma'
  */
 
 const get = async (req, res, prisma) => {
-
   const evaluationsNotPurged = await prisma.evaluation.findMany({
     where: {
       phase: {
@@ -38,46 +37,63 @@ const get = async (req, res, prisma) => {
         ],
       },
     },
-          select: {
-        id: true,
-        label: true,
-        phase: true,
-        archivalPhase: true,
-        createdAt: true,
-        archivedAt: true,
-        archivedByUserEmail: true,
-        archivalDeadline: true,
-        purgedAt: true,
-        purgedByUserEmail: true,
-        purgeDeadline: true,
-        group: {
-          select: {
-            id: true,
-            label: true,
-            scope: true,
-          },
-        },
-        archivedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        purgedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        _count: {
-          select: {
-            evaluationToQuestions: true,
-            students: true,
-          },
+    select: {
+      id: true,
+      label: true,
+      phase: true,
+      archivalPhase: true,
+      createdAt: true,
+      updatedAt: true,
+      startAt: true,
+      endAt: true,
+      durationActive: true,
+      durationHours: true,
+      durationMins: true,
+      status: true,
+      archivedAt: true,
+      archivedByUserEmail: true,
+      archivalDeadline: true,
+      excludedFromArchivalAt: true,
+      excludedFromArchivalByUserEmail: true,
+      excludedFromArchivalComment: true,
+      purgedAt: true,
+      purgedByUserEmail: true,
+      purgeDeadline: true,
+      group: {
+        select: {
+          id: true,
+          label: true,
+          scope: true,
         },
       },
+      archivedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      purgedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      excludedFromArchivalBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      _count: {
+        select: {
+          evaluationToQuestions: true,
+          students: true,
+        },
+      },
+    },
     orderBy: {
       createdAt: 'desc',
     },

@@ -54,9 +54,14 @@ const OutputMonacoEditor = ({
       {(helperText || showErrorWhenEmpty) && (
         <Typography
           variant="caption"
-          sx={{ color: empty && showErrorWhenEmpty ? 'error.main' : 'text.secondary' }}
+          sx={{
+            color:
+              empty && showErrorWhenEmpty ? 'error.main' : 'text.secondary',
+          }}
         >
-          {empty && showErrorWhenEmpty ? "Don't forget to run the snippets to get the output" : (helperText ?? ' ')}
+          {empty && showErrorWhenEmpty
+            ? "Don't forget to run the snippets to get the output"
+            : helperText ?? ' '}
         </Typography>
       )}
     </Box>

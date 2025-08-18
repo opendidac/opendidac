@@ -318,4 +318,4 @@ const ManageRolesDialog = ({ open, user, onClose, onChange }) => {
   )
 }
 
-export default Users 
+export default Users

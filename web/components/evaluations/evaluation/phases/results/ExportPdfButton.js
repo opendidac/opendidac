@@ -16,15 +16,15 @@
 import { Button } from '@mui/material'
 import NextImage from 'next/image'
 
-const ExportPdfButton = ({ 
-  groupScope, 
-  evaluationId, 
+const ExportPdfButton = ({
+  groupScope,
+  evaluationId,
   variant = 'text',
   color = 'primary',
   size = 'medium',
   children = 'Export as PDF',
   startIcon,
-  ...buttonProps 
+  ...buttonProps
 }) => {
   const handleExport = () => {
     window.open(
@@ -56,4 +56,4 @@ const ExportPdfButton = ({
   )
 }
 
-export default ExportPdfButton 
+export default ExportPdfButton

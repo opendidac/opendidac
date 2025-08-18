@@ -27,8 +27,8 @@ const post = async (req, res, prisma) => {
 
   const evaluation = await prisma.evaluation.findUnique({
     where: { id: evaluationId },
-    select: { 
-      id: true, 
+    select: {
+      id: true,
       label: true,
       archivalPhase: true,
       archivedAt: true,
@@ -47,7 +47,9 @@ const post = async (req, res, prisma) => {
   }
 
   if (evaluation.archivalPhase === 'PURGED') {
-    res.status(400).json({ message: 'Cannot archive - evaluation data has been purged' })
+    res
+      .status(400)
+      .json({ message: 'Cannot archive - evaluation data has been purged' })
     return
   }
 
@@ -76,7 +78,7 @@ const post = async (req, res, prisma) => {
   const updatedEvaluation = await prisma.evaluation.update({
     where: { id: evaluationId },
     data: {
-      archivalPhase: ArchivalPhase.ARCHIVED,  // Ensure phase is set correctly
+      archivalPhase: ArchivalPhase.ARCHIVED, // Ensure phase is set correctly
       archivedAt: new Date(),
       archivedByUserEmail: user.email,
       purgeDeadline: purgeDeadlineDate,
@@ -98,4 +100,4 @@ const post = async (req, res, prisma) => {
 
 export default withMethodHandler({
   POST: withAuthorization(withPrisma(post), [Role.SUPER_ADMIN]),
-}) 
+})

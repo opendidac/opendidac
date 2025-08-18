@@ -18,21 +18,11 @@ import { fetcher } from '@/code/utils'
 import Loading from '../feedback/Loading'
 import useSWR from 'swr'
 import GridGrouping from '../ui/GridGrouping'
-import {
-  Box,
-  Stack,
-  Typography,
-  IconButton,
-  Tooltip,
-  Chip,
-} from '@mui/material'
-import ArchiveIcon from '@mui/icons-material/Archive'
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
+import { Box, Stack, Typography } from '@mui/material'
 import { Button } from '@mui/material'
 import Image from 'next/image'
-import DateTimeAgo from '../feedback/DateTimeAgo'
 import DisplayPhase from '../evaluations/DisplayPhase'
-import ArchivalWorkflowButton from '../evaluations/shared/ArchivalWorkflowButton'
+import ArchivalWorkflowButton from './archiving/ArchivalWorkflowButton'
 
 const Archiving = () => {
   const {
@@ -48,23 +38,25 @@ const Archiving = () => {
 
   useEffect(() => {
     if (data) {
-      setEvaluations(data.map(evaluation => ({
-        ...evaluation,
-        group: evaluation.group.label,
-        groupScope: evaluation.group.scope  // Preserve the scope
-      })))
+      setEvaluations(
+        data.map((evaluation) => ({
+          ...evaluation,
+          group: evaluation.group.label,
+          groupScope: evaluation.group.scope, // Preserve the scope
+        })),
+      )
     } else {
       setEvaluations([])
     }
   }, [data])
 
   const handleArchivalTransition = (evaluation, fromPhase, toPhase) => {
-    console.log(`Transitioning evaluation ${evaluation.id} from ${fromPhase} to ${toPhase}`)
+    console.log(
+      `Transitioning evaluation ${evaluation.id} from ${fromPhase} to ${toPhase}`,
+    )
     // The workflow button now handles its own form, so we just need to refresh data
     mutate() // Refresh the data
   }
-
-
 
   return (
     <Box
@@ -125,14 +117,13 @@ const Archiving = () => {
                   </Typography>
                 ),
               },
-
             ],
           }}
           items={evaluations?.map((evaluation) => ({
             ...evaluation,
             meta: {
               key: `evaluation-${evaluation.id}`,
-              
+
               actions: [
                 <Stack direction="row" spacing={1} key="actions">
                   <Button

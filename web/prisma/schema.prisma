@@ -569,6 +569,7 @@ model Evaluation {
   
   evaluationToQuestions EvaluationToQuestion[]
 
+  // Data Cycle Management: Archival fields
   archivalPhase       ArchivalPhase @default(ACTIVE)
 
   archivedAt          DateTime?

@@ -36,8 +36,6 @@ import Users from './Users'
 import Groups from './Groups'
 import Archiving from './Archiving'
 
-
-
 const MaintenancePanel = () => {
   const [anchorElUser, setAnchorEl] = useState(null)
 
@@ -180,10 +178,6 @@ const MaintenancePanel = () => {
   )
 }
 
-
-
-
-
 const PageAdmin = () => {
   const [tabValue, setTabValue] = useState(0)
 
@@ -225,7 +219,5 @@ const PageAdmin = () => {
     </Authorization>
   )
 }
-
-
 
 export default PageAdmin

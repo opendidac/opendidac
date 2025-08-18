@@ -142,18 +142,17 @@ const patch = async (req, res, prisma) => {
     }
 
     if (nextPhase === EvaluationPhase.IN_PROGRESS) {
-      // handle start and end time
-      let durationHours = currentEvaluation.durationHours
-      let durationMins = currentEvaluation.durationMins
-      if (durationHours > 0 || durationMins > 0) {
-        data.startAt = new Date()
-        data.endAt = new Date(
-          Date.now() + durationHours * 3600000 + durationMins * 60000,
-        )
-      } else {
-        data.startAt = null
-        data.endAt = null
-      }
+      // Set start time when evaluation begins
+      data.startAt = new Date()
+      // endAt is not set here - it will be set when moving to GRADING
+    }
+
+    if (
+      currentEvaluation.phase === EvaluationPhase.IN_PROGRESS &&
+      nextPhase === EvaluationPhase.GRADING
+    ) {
+      // Set end time when professor ends the evaluation
+      data.endAt = new Date()
     }
   }
 
@@ -175,15 +174,8 @@ const patch = async (req, res, prisma) => {
     data.durationMins = durationMins
   }
 
-  if (endAt !== undefined) {
-    let startAt = new Date(currentEvaluation.startAt)
-    let newEndAt = new Date(endAt)
-    if (newEndAt < startAt) {
-      res.status(400).json({ message: 'End time must be after start time' })
-      return
-    }
-    data.endAt = endAt
-  }
+  // endAt is automatically managed during phase transitions
+  // Manual setting of endAt is not allowed
 
   // Handle consultation and solutions conflict resolution
   if (consultationEnabled !== undefined) {
