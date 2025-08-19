@@ -23,7 +23,6 @@ import { getUser } from '@/code/auth/auth'
 
 const post = async (req, res, prisma) => {
   const { evaluationId } = req.query
-  const { purgeDeadline } = req.body
 
   const evaluation = await prisma.evaluation.findUnique({
     where: { id: evaluationId },
@@ -60,26 +59,6 @@ const post = async (req, res, prisma) => {
     return
   }
 
-  // Validate purge deadline if provided
-  let purgeDeadlineDate = null
-  if (purgeDeadline) {
-    purgeDeadlineDate = new Date(purgeDeadline)
-    if (isNaN(purgeDeadlineDate.getTime())) {
-      res.status(400).json({ message: 'Invalid purge deadline' })
-      return
-    }
-    // Allow today as purge date by using start of day comparison
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const deadline = new Date(purgeDeadlineDate)
-    deadline.setHours(0, 0, 0, 0)
-
-    if (deadline < today) {
-      res.status(400).json({ message: 'Purge deadline cannot be in the past' })
-      return
-    }
-  }
-
   // Update evaluation to archived state
   const updatedEvaluation = await prisma.evaluation.update({
     where: { id: evaluationId },
@@ -87,9 +66,6 @@ const post = async (req, res, prisma) => {
       archivalPhase: ArchivalPhase.ARCHIVED, // Ensure phase is set correctly
       archivedAt: new Date(),
       archivedByUserEmail: user.email,
-      purgeDeadline: purgeDeadlineDate,
-      // Clear any previous archival deadline since we're archiving now
-      archivalDeadline: null,
     },
     include: {
       group: true,
@@ -100,7 +76,6 @@ const post = async (req, res, prisma) => {
   res.status(200).json({
     message: 'Evaluation archived successfully',
     evaluation: updatedEvaluation,
-    purgeDeadline: purgeDeadlineDate?.toISOString() || null,
   })
 }
 

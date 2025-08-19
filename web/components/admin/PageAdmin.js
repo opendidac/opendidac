@@ -32,6 +32,7 @@ import DialogFeedback from '../feedback/DialogFeedback'
 import { LoadingButton } from '@mui/lab'
 import { useSnackbar } from '@/context/SnackbarContext'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
+import { useRouter } from 'next/router'
 import Users from './Users'
 import Groups from './Groups'
 import Archiving from './Archiving'
@@ -178,11 +179,20 @@ const MaintenancePanel = () => {
   )
 }
 
-const PageAdmin = () => {
-  const [tabValue, setTabValue] = useState(0)
+const PageAdmin = ({ activeTab = 'users' }) => {
+  const router = useRouter()
 
   const handleTabChange = (event, newValue) => {
-    setTabValue(newValue)
+    const tabRoutes = ['users', 'groups', 'archiving']
+    const newRoute = tabRoutes[newValue]
+    if (newRoute) {
+      router.push(`/admin/${newRoute}`)
+    }
+  }
+
+  const getTabValue = () => {
+    const tabRoutes = ['users', 'groups', 'archiving']
+    return tabRoutes.indexOf(activeTab)
   }
 
   return (
@@ -194,7 +204,7 @@ const PageAdmin = () => {
             <Stack direction={'row'} spacing={1} alignItems={'center'} flex={1}>
               <BackButton backUrl="/" />
               <Tabs
-                value={tabValue}
+                value={getTabValue()}
                 onChange={handleTabChange}
                 aria-label="admin tabs"
               >
@@ -210,9 +220,9 @@ const PageAdmin = () => {
         <Box sx={{ width: '100%', height: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}></Box>
           <Box sx={{ height: 'calc(100% - 2px)' }}>
-            {tabValue === 0 && <Users />}
-            {tabValue === 1 && <Groups />}
-            {tabValue === 2 && <Archiving />}
+            {activeTab === 'users' && <Users />}
+            {activeTab === 'groups' && <Groups />}
+            {activeTab === 'archiving' && <Archiving />}
           </Box>
         </Box>
       </LayoutMain>

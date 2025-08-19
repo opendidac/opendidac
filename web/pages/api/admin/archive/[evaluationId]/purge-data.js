@@ -40,25 +40,16 @@ const post = async (req, res, prisma) => {
     return
   }
 
-  // Debug: Log the actual archival phase
-  console.log('Evaluation archival phase:', evaluation.archivalPhase)
-  console.log('Evaluation archived at:', evaluation.archivedAt)
-
-  // Check if evaluation can be returned to active (use archivalPhase as source of truth)
-  if (
-    evaluation.archivalPhase !== 'MARKED_FOR_ARCHIVAL' &&
-    evaluation.archivalPhase !== 'ARCHIVED'
-  ) {
+  // Only allow purging from ARCHIVED phase
+  if (evaluation.archivalPhase !== 'ARCHIVED') {
     res.status(400).json({
-      message: `Evaluation cannot be returned to active. Current phase: ${evaluation.archivalPhase}`,
+      message: 'Evaluation can only be purged from ARCHIVED phase',
     })
     return
   }
 
-  if (evaluation.archivalPhase === 'PURGED') {
-    res.status(400).json({
-      message: 'Cannot return to active - evaluation data has been purged',
-    })
+  if (evaluation.purgedAt) {
+    res.status(400).json({ message: 'Evaluation is already purged' })
     return
   }
 
@@ -69,20 +60,22 @@ const post = async (req, res, prisma) => {
     return
   }
 
-  // Update evaluation to return to active state
+  // Update evaluation to PURGED state
   const updatedEvaluation = await prisma.evaluation.update({
     where: { id: evaluationId },
     data: {
-      archivalPhase: ArchivalPhase.ACTIVE,
-      archivalDeadline: null, // Clear the archival deadline
+      archivalPhase: ArchivalPhase.PURGED,
+      purgedAt: new Date(),
+      purgedByUserEmail: user.email,
     },
     include: {
       group: true,
+      purgedBy: true,
     },
   })
 
   res.status(200).json({
-    message: 'Evaluation back to active state successfully',
+    message: 'Evaluation data purged successfully',
     evaluation: updatedEvaluation,
   })
 }

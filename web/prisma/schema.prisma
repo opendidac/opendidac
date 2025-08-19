@@ -64,7 +64,7 @@ model User {
   annotations      Annotation[]
   purgedEvaluations Evaluation[] @relation("PurgedEvaluations")
   archivedEvaluations Evaluation[] @relation("ArchivedEvaluations")
-  excludedFromArchivalEvaluations Evaluation[] @relation("ExcludedFromArchivalEvaluations")
+  createdEvaluations Evaluation[] @relation("CreatedEvaluations")
 }
 
 enum Role {
@@ -524,10 +524,10 @@ enum EvaluationPhase {
 
 enum ArchivalPhase {
   ACTIVE
-  EXCLUDED_FROM_ARCHIVAL
   MARKED_FOR_ARCHIVAL
   ARCHIVED
   PURGED
+  PURGED_WITHOUT_ARCHIVAL
 }
 
 enum EvaluationStatus {
@@ -565,6 +565,10 @@ model Evaluation {
 
   ipRestrictions String?
 
+  // Creator tracking
+  createdByUserEmail String?
+  createdBy          User?     @relation("CreatedEvaluations", fields: [createdByUserEmail], references: [email])
+
   students              UserOnEvaluation[]
   
   evaluationToQuestions EvaluationToQuestion[]
@@ -582,8 +586,7 @@ model Evaluation {
   // Fields for excluded evaluations
   excludedFromArchivalAt          DateTime?
   excludedFromArchivalByUserEmail String?
-  excludedFromArchivalBy          User?     @relation("ExcludedFromArchivalEvaluations", fields: [excludedFromArchivalByUserEmail], references: [email])
-  excludedFromArchivalComment     String?   // Reason for exclusion
+  excludedFromArchivalComment     String?
 
   purgedAt          DateTime?
   purgedByUserEmail String?

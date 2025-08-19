@@ -53,17 +53,23 @@ const get = async (req, res, prisma) => {
       archivedAt: true,
       archivedByUserEmail: true,
       archivalDeadline: true,
-      excludedFromArchivalAt: true,
-      excludedFromArchivalByUserEmail: true,
-      excludedFromArchivalComment: true,
       purgedAt: true,
       purgedByUserEmail: true,
-      purgeDeadline: true,
       group: {
         select: {
           id: true,
           label: true,
           scope: true,
+          members: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                },
+              },
+            },
+          },
         },
       },
       archivedBy: {
@@ -74,13 +80,6 @@ const get = async (req, res, prisma) => {
         },
       },
       purgedBy: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-      excludedFromArchivalBy: {
         select: {
           id: true,
           name: true,

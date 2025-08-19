@@ -23,7 +23,6 @@ import { getUser } from '@/code/auth/auth'
 
 const post = async (req, res, prisma) => {
   const { evaluationId } = req.query
-  const { comment } = req.body
 
   const evaluation = await prisma.evaluation.findUnique({
     where: { id: evaluationId },
@@ -31,6 +30,8 @@ const post = async (req, res, prisma) => {
       id: true,
       label: true,
       archivalPhase: true,
+      archivedAt: true,
+      purgedAt: true,
     },
   })
 
@@ -39,17 +40,17 @@ const post = async (req, res, prisma) => {
     return
   }
 
+  // Only allow purging from ACTIVE phase
   if (evaluation.archivalPhase !== 'ACTIVE') {
-    res
-      .status(400)
-      .json({ message: 'Can only exclude active evaluations from archival' })
+    res.status(400).json({
+      message:
+        'Evaluation can only be purged without archival from ACTIVE phase',
+    })
     return
   }
 
-  if (!comment || comment.trim().length === 0) {
-    res
-      .status(400)
-      .json({ message: 'Comment is required to explain exclusion reason' })
+  if (evaluation.purgedAt) {
+    res.status(400).json({ message: 'Evaluation is already purged' })
     return
   }
 
@@ -60,23 +61,22 @@ const post = async (req, res, prisma) => {
     return
   }
 
-  // Update evaluation to exclude from archival
+  // Update evaluation to PURGED_WITHOUT_ARCHIVAL state
   const updatedEvaluation = await prisma.evaluation.update({
     where: { id: evaluationId },
     data: {
-      archivalPhase: ArchivalPhase.EXCLUDED_FROM_ARCHIVAL,
-      excludedFromArchivalAt: new Date(),
-      excludedFromArchivalByUserEmail: user.email,
-      excludedFromArchivalComment: comment.trim(),
+      archivalPhase: ArchivalPhase.PURGED_WITHOUT_ARCHIVAL,
+      purgedAt: new Date(),
+      purgedByUserEmail: user.email,
     },
     include: {
       group: true,
-      excludedFromArchivalBy: true,
+      purgedBy: true,
     },
   })
 
   res.status(200).json({
-    message: 'Evaluation excluded from archival successfully',
+    message: 'Evaluation purged without archival successfully',
     evaluation: updatedEvaluation,
   })
 }

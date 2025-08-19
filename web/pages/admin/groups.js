@@ -13,17 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useEffect } from 'react'
-import { useRouter } from 'next/router'
+import PageAdmin from '../../components/admin/PageAdmin'
 
-const Admin = () => {
-  const router = useRouter()
-
-  useEffect(() => {
-    router.replace('/admin/users')
-  }, [router])
-
-  return null
+const AdminGroups = () => {
+  return <PageAdmin activeTab="groups" />
 }
 
-export default Admin
+export default AdminGroups

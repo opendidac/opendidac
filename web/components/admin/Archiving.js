@@ -29,13 +29,14 @@ import {
   MenuItem,
   Chip,
   Divider,
+  Menu,
 } from '@mui/material'
 import { Button } from '@mui/material'
 import Image from 'next/image'
 import DisplayPhase from '../evaluations/DisplayPhase'
 import ArchivalWorkflowButton from './archiving/ArchivalWorkflowButton'
 import ScrollContainer from '../layout/ScrollContainer'
-import { Warning, AccessTime, Info } from '@mui/icons-material'
+import { Warning, AccessTime, Info, People } from '@mui/icons-material'
 
 // Filter Controls Component
 const ArchivalFilters = ({
@@ -84,11 +85,6 @@ const ArchivalFilters = ({
               <MenuItem value="ARCHIVED">
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Chip label="Archived" color="success" size="small" />
-                </Stack>
-              </MenuItem>
-              <MenuItem value="EXCLUDED_FROM_ARCHIVAL">
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Chip label="Excluded" color="info" size="small" />
                 </Stack>
               </MenuItem>
               <MenuItem value="PURGED">
@@ -177,6 +173,61 @@ const ArchivalFilters = ({
   )
 }
 
+// Group Members Widget Component
+const GroupMembersWidget = ({ groupMembers }) => {
+  const [anchorEl, setAnchorEl] = useState(null)
+  const open = Boolean(anchorEl)
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleClose = () => {
+    setAnchorEl(null)
+  }
+
+  const memberCount = groupMembers?.length || 0
+
+  return (
+    <>
+      <Button
+        size="small"
+        variant="outlined"
+        startIcon={<People />}
+        onClick={handleClick}
+        sx={{ minWidth: 'auto', px: 1 }}
+      >
+        {memberCount} members
+      </Button>
+
+      <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+        <Box sx={{ p: 2 }}>
+          <Typography variant="subtitle2" fontWeight="medium" gutterBottom>
+            Group Members ({memberCount})
+          </Typography>
+          {memberCount > 0 ? (
+            <Stack spacing={0.5}>
+              {groupMembers.map((member, index) => (
+                <Typography
+                  key={member.user.id}
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  {member.user.email}
+                </Typography>
+              ))}
+            </Stack>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              No members found
+            </Typography>
+          )}
+        </Box>
+      </Menu>
+    </>
+  )
+}
+
 const Archiving = () => {
   const {
     data,
@@ -199,8 +250,9 @@ const Archiving = () => {
       setEvaluations(
         data.map((evaluation) => ({
           ...evaluation,
-          group: evaluation.group.label,
+          group: evaluation.group, // Keep the full group object
           groupScope: evaluation.group.scope, // Preserve the scope
+          groupKey: evaluation.group.label, // Add a flat property for grouping
         })),
       )
     } else {
@@ -271,13 +323,9 @@ const Archiving = () => {
       // Update relevant timestamp fields based on transition
       ...(toPhase === 'ARCHIVED' && { archivedAt: new Date().toISOString() }),
       ...(toPhase === 'PURGED' && { purgedAt: new Date().toISOString() }),
-      ...(toPhase === 'EXCLUDED_FROM_ARCHIVAL' && {
-        excludedFromArchivalAt: new Date().toISOString(),
-      }),
       ...(toPhase === 'ACTIVE' && {
         archivalDeadline: null,
         purgeDeadline: null,
-        excludedFromArchivalComment: null,
       }),
     }
 
@@ -298,7 +346,7 @@ const Archiving = () => {
   }
 
   return (
-    <Stack width="100%" height={'100%'} p={2} spacing={1}>
+    <Stack width="100%" height={'100%'} p={2} spacing={1} bgcolor="white">
       {/* Filter Controls */}
       <ArchivalFilters
         archivalFilter={archivalFilter}
@@ -428,16 +476,28 @@ const Archiving = () => {
               }))}
               groupings={[
                 {
-                  groupBy: 'group',
+                  groupBy: 'groupKey',
                   option: 'Group',
                   type: 'element',
-                  renderLabel: (row) => (
-                    <Box>
-                      <Typography variant="body1" fontWeight="medium">
-                        {row.label}
-                      </Typography>
-                    </Box>
-                  ),
+                  renderLabel: (row) => {
+                    // Find the first evaluation in this group to get the group data
+                    const firstEvaluation = evaluations.find(
+                      (evaluation) => evaluation.groupKey === row.label,
+                    )
+                    const groupMembers = firstEvaluation?.group?.members || []
+                    console.log('groupMembers:', groupMembers)
+
+                    return (
+                      <Box>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Typography variant="body1" fontWeight="medium">
+                            {row.label}
+                          </Typography>
+                          <GroupMembersWidget groupMembers={groupMembers} />
+                        </Stack>
+                      </Box>
+                    )
+                  },
                 },
               ]}
             />
