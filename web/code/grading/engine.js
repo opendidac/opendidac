@@ -194,6 +194,16 @@ const gradeWeb = (answer) => ({
 })
 
 const gradeExactMatch = (question, totalPoints, studentAnswer) => {
-  // TODO
-  return defaultGrading
+  const success = studentAnswer?.fields?.every(
+    (field) => {
+      const fieldRegex = field.exactMatchField.matchRegex
+      const parts = fieldRegex.match(/^\/(.*)\/([a-z]*)$/)
+      const regex = new RegExp(parts[1], parts[2])
+      return regex.test(field.value)
+    }
+  )
+  return {
+    status: StudentQuestionGradingStatus.AUTOGRADED,
+    pointsObtained: success ? totalPoints : 0,
+  }
 }
