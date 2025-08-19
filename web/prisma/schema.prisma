@@ -506,6 +506,9 @@ model ExactMatchField {
   order      Int     @default(0)
   statement  String?
   matchRegex String?
+
+  // To allow student answer fields to reference the matching field and access the regex that way.
+  StudentAnswerExactMatchField StudentAnswerExactMatchField[]
 }
 
 model Tag {
@@ -938,6 +941,8 @@ model StudentAnswerExactMatchField {
   fieldId    String
   userEmail  String
   questionId String
+
+  exactMatchField ExactMatchField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
   studentAnswerExactMatch StudentAnswerExactMatch @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
 
