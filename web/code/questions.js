@@ -318,7 +318,6 @@ export const questionIncludeClause = (questionIncludeOptions) => {
                 fieldId: true,
                 value: true,
               },
-              orderBy: [{ order: 'asc' }, {id: 'asc'}],
             },
           },
         },

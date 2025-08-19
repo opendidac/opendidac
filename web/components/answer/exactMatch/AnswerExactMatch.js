@@ -36,7 +36,8 @@ const AnswerExactMatch = ({
   }, [savedAnswers.fields, setStudentAnswers])
 
   const onFieldChange = useCallback(
-    async (index, value) => {
+    async (fieldId, value) => {
+      const index = studentAnswers.findIndex((a) => a.fieldId === fieldId)
       const field = studentAnswers[index]
       // TODO handle if it doesn't exist
 
@@ -44,7 +45,6 @@ const AnswerExactMatch = ({
       newAnswers[index] = { ...field, value: value }
       setStudentAnswers(newAnswers)
 
-      const fieldId = newAnswers[index].fieldId
       console.log(
         `Field ${fieldId} changed to ${value}. Requesting change to backend.`,
       )
@@ -83,7 +83,7 @@ const AnswerExactMatch = ({
             {index > 0 ? <Divider sx={{ opacity: 0.5 }} /> : null}
             <MarkdownViewer content={field.statement} />
             <AnswerField
-              index={index}
+              fieldId={field.id}
               value={studentAnswer.value}
               onValueChange={onFieldChange}
             />
