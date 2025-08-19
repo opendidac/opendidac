@@ -24,10 +24,10 @@ const MultiLineTextField = styled(TextField)({
 })
 // TODO factorize this monospacetextfield.
 
-const AnswerField = ({ index, value, onValueChange }) => {
+const AnswerField = ({ fieldId, value, onValueChange }) => {
   return (
     <MultiLineTextField
-      id={`answer-exact-match-${index}`}
+      id={`answer-exact-match-${fieldId}`}
       variant="filled"
       label="Answer"
       value={value}
@@ -38,7 +38,7 @@ const AnswerField = ({ index, value, onValueChange }) => {
       onChange={(e) => {
         const newValue = e.target.value
         if (newValue !== value) {
-          onValueChange(index, newValue)
+          onValueChange(fieldId, newValue)
         }
       }}
     />
