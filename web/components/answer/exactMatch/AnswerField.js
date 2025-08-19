@@ -17,17 +17,16 @@ import { TextField } from '@mui/material'
 import { styled } from '@mui/system'
 
 // Styled component to apply whitespace visibility
-const MonoSpaceTextField = styled(TextField)({
+const MultiLineTextField = styled(TextField)({
   '& textarea': {
     whiteSpace: 'pre-wrap', // Preserves whitespaces and wraps text
-    fontFamily: 'monospace', // Makes spaces more noticeable
   },
 })
 // TODO factorize this monospacetextfield.
 
 const AnswerField = ({ index, value, onValueChange }) => {
   return (
-    <MonoSpaceTextField
+    <MultiLineTextField
       id={`answer-exact-match-${index}`}
       variant="filled"
       label="Answer"

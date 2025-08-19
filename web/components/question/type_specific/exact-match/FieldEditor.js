@@ -85,9 +85,9 @@ const FieldEditor = ({
       >
         <DragHandleSVG />
       </Stack>
-      <Stack direction={'column'} width={'100%'} height={'100%'} spacing={1}>
+      <Stack direction={'column'} width={'100%'} height={'100%'} spacing={0}>
         {previewMode ? (
-          <Stack direction={'column'} pb={1}>
+          <Stack direction={'column'} pb={0}>
             <MarkdownViewer content={statement} />
           </Stack>
         ) : (
@@ -127,8 +127,9 @@ const FieldEditor = ({
         <MonoSpaceTextField
           id={`regex-${field.id}`}
           variant="standard"
-          label={'Expected Answer (Regex)'}
-          value={regex}
+          label={previewMode ? 'Answer' : 'Expected Answer (Regex)'}
+          value={previewMode ? '' : regex}
+          disabled={previewMode}
           required
           fullWidth
           error={regex === '' || regex == null}
