@@ -179,7 +179,7 @@ const MaintenancePanel = () => {
   )
 }
 
-const PageAdmin = ({ activeTab = 'users', children }) => {
+const PageAdmin = ({ activeTab = 'users' }) => {
   const router = useRouter()
 
   const handleTabChange = (event, newValue) => {
@@ -191,14 +191,38 @@ const PageAdmin = ({ activeTab = 'users', children }) => {
   }
 
   const getTabValue = () => {
-    const tabRoutes = ['users', 'groups', 'archiving']
     const currentPath = router.asPath
 
     if (currentPath.startsWith('/admin/archiving')) {
       return 2 // archiving tab
     }
+    if (currentPath.startsWith('/admin/groups')) {
+      return 1 // groups tab
+    }
+    return 0 // users tab (default)
+  }
 
-    return tabRoutes.indexOf(activeTab)
+  const getCurrentTabContent = () => {
+    const currentPath = router.asPath
+
+    if (currentPath.startsWith('/admin/archiving')) {
+      // Determine archiving mode based on the specific route
+      if (currentPath === '/admin/archiving/pending') {
+        return <Archiving mode="pending" />
+      }
+      if (currentPath === '/admin/archiving/done') {
+        return <Archiving mode="done" />
+      }
+      // Default to todo mode for /admin/archiving
+      return <Archiving mode="todo" />
+    }
+
+    if (currentPath.startsWith('/admin/groups')) {
+      return <Groups />
+    }
+
+    // Default to users
+    return <Users />
   }
 
   return (
@@ -226,13 +250,7 @@ const PageAdmin = ({ activeTab = 'users', children }) => {
         <Box sx={{ width: '100%', height: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}></Box>
           <Box sx={{ height: 'calc(100% - 2px)' }}>
-            {children || (
-              <>
-                {activeTab === 'users' && <Users />}
-                {activeTab === 'groups' && <Groups />}
-                {activeTab === 'archiving' && <Archiving />}
-              </>
-            )}
+            {getCurrentTabContent()}
           </Box>
         </Box>
       </LayoutMain>

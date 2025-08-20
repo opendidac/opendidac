@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 import PageAdmin from '@/components/admin/PageAdmin'
-import Archiving from '@/components/admin/Archiving'
 
 const ArchivingPendingPage = () => {
-  return (
-    <PageAdmin>
-      <Archiving mode="pending" />
-    </PageAdmin>
-  )
+  return <PageAdmin />
 }
 
 export default ArchivingPendingPage

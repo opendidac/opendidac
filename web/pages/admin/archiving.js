@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 import PageAdmin from '@/components/admin/PageAdmin'
-import Archiving from '@/components/admin/Archiving'
 
 const AdminArchiving = () => {
-  return (
-    <PageAdmin>
-      <Archiving mode="todo" />
-    </PageAdmin>
-  )
+  return <PageAdmin />
 }
 
 export default AdminArchiving

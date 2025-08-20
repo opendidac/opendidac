@@ -124,109 +124,111 @@ const Users = () => {
           <Typography variant="h6">{pagination.total} users</Typography>
         </Box>
       </Stack>
-      <Loading loading={isValidating} error={errorUsers}>
-        <ScrollContainer>
-          <Stack spacing={2}>
-            <DataGrid
-              header={{
-                actions: {
-                  label: 'Actions',
-                  width: '120px',
-                },
-                columns: [
-                  {
-                    label: 'User',
-                    column: { minWidth: '220px', flexGrow: 1 },
-                    renderCell: (row) => {
-                      return <UserAvatar user={row} />
-                    },
+      <Stack flex={1}>
+        <Loading loading={isValidating} error={errorUsers}>
+          <ScrollContainer>
+            <Stack spacing={2} height="100%">
+              <DataGrid
+                header={{
+                  actions: {
+                    label: 'Actions',
+                    width: '120px',
                   },
-                  {
-                    label: 'Roles',
-                    column: { width: '280px' },
-                    renderCell: (row) => {
-                      return (
-                        <Stack direction="row" spacing={1}>
-                          {row.roles.map((role) => {
-                            return (
-                              <Chip
-                                key={role}
-                                label={roleToDetails[role].label}
-                                color={roleToDetails[role].color}
-                              />
-                            )
-                          })}
-                        </Stack>
-                      )
+                  columns: [
+                    {
+                      label: 'User',
+                      column: { minWidth: '220px', flexGrow: 1 },
+                      renderCell: (row) => {
+                        return <UserAvatar user={row} />
+                      },
                     },
-                  },
-                ],
-              }}
-              items={users?.map((user) => ({
-                ...user,
-                meta: {
-                  key: user.id,
-                  actions: [
-                    <Button
-                      key="edit"
-                      color="info"
-                      onClick={() => {
-                        setSelected(user)
-                        setManageRolesDialogOpen(true)
-                      }}
-                    >
-                      Manage roles
-                    </Button>,
+                    {
+                      label: 'Roles',
+                      column: { width: '280px' },
+                      renderCell: (row) => {
+                        return (
+                          <Stack direction="row" spacing={1}>
+                            {row.roles.map((role) => {
+                              return (
+                                <Chip
+                                  key={role}
+                                  label={roleToDetails[role].label}
+                                  color={roleToDetails[role].color}
+                                />
+                              )
+                            })}
+                          </Stack>
+                        )
+                      },
+                    },
                   ],
-                },
-              }))}
-            />
+                }}
+                items={users?.map((user) => ({
+                  ...user,
+                  meta: {
+                    key: user.id,
+                    actions: [
+                      <Button
+                        key="edit"
+                        color="info"
+                        onClick={() => {
+                          setSelected(user)
+                          setManageRolesDialogOpen(true)
+                        }}
+                      >
+                        Manage roles
+                      </Button>,
+                    ],
+                  },
+                }))}
+              />
 
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 3,
-                pt: 2,
-                borderColor: 'divider',
-              }}
-            >
-              <FormControl size="small" sx={{ minWidth: 100 }}>
-                <Select
-                  value={pageSize}
-                  onChange={(e) => handlePageSizeChange(e.target.value)}
-                  displayEmpty
-                >
-                  <MenuItem value={10}>10 Rows</MenuItem>
-                  <MenuItem value={25}>25 Rows</MenuItem>
-                  <MenuItem value={50}>50 Rows</MenuItem>
-                </Select>
-              </FormControl>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 3,
+                  pt: 2,
+                  borderColor: 'divider',
+                }}
+              >
+                <FormControl size="small" sx={{ minWidth: 100 }}>
+                  <Select
+                    value={pageSize}
+                    onChange={(e) => handlePageSizeChange(e.target.value)}
+                    displayEmpty
+                  >
+                    <MenuItem value={10}>10 Rows</MenuItem>
+                    <MenuItem value={25}>25 Rows</MenuItem>
+                    <MenuItem value={50}>50 Rows</MenuItem>
+                  </Select>
+                </FormControl>
 
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <IconButton
-                    onClick={() => handlePageChange(page - 1)}
-                    disabled={page <= 1}
-                    size="small"
-                  >
-                    <ChevronLeftIcon />
-                  </IconButton>
-                  <Typography variant="body2">Page {page}</Typography>
-                  <IconButton
-                    onClick={() => handlePageChange(page + 1)}
-                    disabled={page >= pagination.totalPages}
-                    size="small"
-                  >
-                    <ChevronRightIcon />
-                  </IconButton>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <IconButton
+                      onClick={() => handlePageChange(page - 1)}
+                      disabled={page <= 1}
+                      size="small"
+                    >
+                      <ChevronLeftIcon />
+                    </IconButton>
+                    <Typography variant="body2">Page {page}</Typography>
+                    <IconButton
+                      onClick={() => handlePageChange(page + 1)}
+                      disabled={page >= pagination.totalPages}
+                      size="small"
+                    >
+                      <ChevronRightIcon />
+                    </IconButton>
+                  </Stack>
                 </Stack>
-              </Stack>
-            </Box>
-          </Stack>
-        </ScrollContainer>
-      </Loading>
+              </Box>
+            </Stack>
+          </ScrollContainer>
+        </Loading>
+      </Stack>
       <ManageRolesDialog
         open={manageRolesDialogOpen}
         user={selected}
