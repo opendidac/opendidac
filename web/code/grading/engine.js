@@ -194,16 +194,22 @@ const gradeWeb = (answer) => ({
 })
 
 const gradeExactMatch = (question, totalPoints, studentAnswer) => {
-  const success = studentAnswer?.fields?.every(
-    (field) => {
-      const fieldRegex = field.exactMatchField.matchRegex
-      const parts = fieldRegex.match(/^\/(.*)\/([a-z]*)$/)
-      const regex = new RegExp(parts[1], parts[2])
-      return regex.test(field.value)
-    }
-  )
+  const correctFields = studentAnswer?.fields?.reduce((acc, field, index) => {
+    const fieldRegex = question.exactMatch.fields[index].matchRegex
+    const parts = fieldRegex.match(/^\/(.*)\/([a-z]*)$/)
+    let regex = (!parts || parts.length !== 3) ?
+      (() => {
+        console.warn(`Missing flags on regex format. Using default flags.`)
+        return new RegExp(fieldRegex)
+      })() :
+      new RegExp(parts[1], parts[2])
+    return acc + (regex.test(field.value) ? 1 : 0)
+  }, 0)
+
+  const fieldCount = question.exactMatch.fields.length
+
   return {
     status: StudentQuestionGradingStatus.AUTOGRADED,
-    pointsObtained: success ? totalPoints : 0,
+    pointsObtained: correctFields / fieldCount * totalPoints,
   }
 }
