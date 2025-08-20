@@ -179,7 +179,7 @@ const MaintenancePanel = () => {
   )
 }
 
-const PageAdmin = ({ activeTab = 'users' }) => {
+const PageAdmin = ({ activeTab = 'users', children }) => {
   const router = useRouter()
 
   const handleTabChange = (event, newValue) => {
@@ -192,6 +192,12 @@ const PageAdmin = ({ activeTab = 'users' }) => {
 
   const getTabValue = () => {
     const tabRoutes = ['users', 'groups', 'archiving']
+    const currentPath = router.asPath
+
+    if (currentPath.startsWith('/admin/archiving')) {
+      return 2 // archiving tab
+    }
+
     return tabRoutes.indexOf(activeTab)
   }
 
@@ -220,9 +226,13 @@ const PageAdmin = ({ activeTab = 'users' }) => {
         <Box sx={{ width: '100%', height: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}></Box>
           <Box sx={{ height: 'calc(100% - 2px)' }}>
-            {activeTab === 'users' && <Users />}
-            {activeTab === 'groups' && <Groups />}
-            {activeTab === 'archiving' && <Archiving />}
+            {children || (
+              <>
+                {activeTab === 'users' && <Users />}
+                {activeTab === 'groups' && <Groups />}
+                {activeTab === 'archiving' && <Archiving />}
+              </>
+            )}
           </Box>
         </Box>
       </LayoutMain>

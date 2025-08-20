@@ -99,8 +99,7 @@ const ArchivalPhaseDetails = ({ evaluation, currentPhase }) => {
   // Only show if there's archival-specific information
   const hasArchivalInfo =
     (currentPhase === 'MARKED_FOR_ARCHIVAL' && evaluation.archivalDeadline) ||
-    (currentPhase === 'ARCHIVED' &&
-      (evaluation.archivedAt || evaluation.purgeDeadline)) ||
+    (currentPhase === 'ARCHIVED' && evaluation.archivedAt) ||
     (currentPhase === 'PURGED' && evaluation.purgedAt) ||
     (currentPhase === 'PURGED_WITHOUT_ARCHIVAL' && evaluation.purgedAt)
 
@@ -142,16 +141,6 @@ const ArchivalPhaseDetails = ({ evaluation, currentPhase }) => {
                     by {evaluation.archivedBy.name}
                   </>
                 )}
-              </Typography>
-            )}
-            {evaluation.purgeDeadline && (
-              <Typography
-                variant="caption"
-                color="error.main"
-                fontWeight="medium"
-              >
-                Purge Deadline: {formatDate(evaluation.purgeDeadline)} (
-                <DateTimeAgo date={new Date(evaluation.purgeDeadline)} />)
               </Typography>
             )}
           </Stack>

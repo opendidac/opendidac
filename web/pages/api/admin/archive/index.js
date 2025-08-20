@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Role, EvaluationPhase } from '@prisma/client'
+import { Role, EvaluationPhase, ArchivalPhase } from '@prisma/client'
 import {
   withAuthorization,
   withMethodHandler,
@@ -27,8 +27,11 @@ import { withPrisma } from '@/middleware/withPrisma'
  */
 
 const get = async (req, res, prisma) => {
-  const evaluationsNotPurged = await prisma.evaluation.findMany({
-    where: {
+  const { mode = 'todo' } = req.query
+
+  // Build mode-specific where conditions
+  const getWhereCondition = (mode) => {
+    const baseCondition = {
       phase: {
         in: [
           EvaluationPhase.IN_PROGRESS,
@@ -36,7 +39,47 @@ const get = async (req, res, prisma) => {
           EvaluationPhase.FINISHED,
         ],
       },
-    },
+    }
+
+    switch (mode) {
+      case 'todo':
+        // Active evaluations, marked for archival with deadline breach, and archived ones
+        return {
+          ...baseCondition,
+          OR: [
+            { archivalPhase: ArchivalPhase.ACTIVE },
+            {
+              archivalPhase: ArchivalPhase.MARKED_FOR_ARCHIVAL,
+              archivalDeadline: { lt: new Date() }, // Deadline passed
+            },
+            { archivalPhase: ArchivalPhase.ARCHIVED },
+          ],
+        }
+      case 'pending':
+        // Marked for archival but not yet in deadline breach
+        return {
+          ...baseCondition,
+          archivalPhase: ArchivalPhase.MARKED_FOR_ARCHIVAL,
+          OR: [
+            { archivalDeadline: null }, // No deadline set
+            { archivalDeadline: { gte: new Date() } }, // Deadline not passed
+          ],
+        }
+      case 'done':
+        // Purged and purged without archive
+        return {
+          ...baseCondition,
+          archivalPhase: {
+            in: [ArchivalPhase.PURGED, ArchivalPhase.PURGED_WITHOUT_ARCHIVAL],
+          },
+        }
+      default:
+        return baseCondition
+    }
+  }
+
+  const evaluations = await prisma.evaluation.findMany({
+    where: getWhereCondition(mode),
     select: {
       id: true,
       label: true,
@@ -97,7 +140,7 @@ const get = async (req, res, prisma) => {
       createdAt: 'desc',
     },
   })
-  res.status(200).json(evaluationsNotPurged)
+  res.status(200).json(evaluations)
 }
 
 export default withMethodHandler({

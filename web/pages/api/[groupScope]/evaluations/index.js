@@ -79,7 +79,11 @@ const post = async (req, res, prisma) => {
         scope: groupScope,
       },
     },
-    createdByUserEmail: user.email,
+    createdBy: {
+      connect: {
+        email: user.email,
+      },
+    },
   }
 
   if (presetType === 'from_existing') {

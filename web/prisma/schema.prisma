@@ -583,17 +583,9 @@ model Evaluation {
   // Deadline for when the evaluation should be archived
   archivalDeadline    DateTime?
 
-  // Fields for excluded evaluations
-  excludedFromArchivalAt          DateTime?
-  excludedFromArchivalByUserEmail String?
-  excludedFromArchivalComment     String?
-
   purgedAt          DateTime?
   purgedByUserEmail String?
   purgedBy          User?     @relation("PurgedEvaluations", fields: [purgedByUserEmail], references: [email])
-
-  // Deadline for when the evaluation should be purged
-  purgeDeadline       DateTime?
 
   group                               Group                                 @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId                             String

@@ -16,12 +16,12 @@
 import PageAdmin from '@/components/admin/PageAdmin'
 import Archiving from '@/components/admin/Archiving'
 
-const AdminArchiving = () => {
+const ArchivingDonePage = () => {
   return (
     <PageAdmin>
-      <Archiving mode="todo" />
+      <Archiving mode="done" />
     </PageAdmin>
   )
 }
 
-export default AdminArchiving
+export default ArchivingDonePage

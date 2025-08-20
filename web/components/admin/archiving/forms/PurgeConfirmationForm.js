@@ -75,13 +75,19 @@ const PurgeConfirmationForm = ({
 
   return (
     <>
-      <Stack spacing={3}>
+      <Stack spacing={1}>
         <Typography variant="h6" color="error" fontWeight="bold">
           ⚠️ DANGER: Permanent Data Loss
         </Typography>
 
-        <Typography variant="subtitle1" color="error" fontWeight="medium">
+        <Typography variant="subtitle2" color="error" fontWeight="medium">
           {isDirectPurge ? 'Purge Without Archival' : 'Purge Student Data'}
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary">
+          {isDirectPurge
+            ? 'This will permanently delete all student data without creating an archive.'
+            : 'This will permanently delete all student data from the archived evaluation.'}
         </Typography>
 
         <Stack spacing={1}>

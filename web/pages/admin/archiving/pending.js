@@ -16,12 +16,12 @@
 import PageAdmin from '@/components/admin/PageAdmin'
 import Archiving from '@/components/admin/Archiving'
 
-const AdminArchiving = () => {
+const ArchivingPendingPage = () => {
   return (
     <PageAdmin>
-      <Archiving mode="todo" />
+      <Archiving mode="pending" />
     </PageAdmin>
   )
 }
 
-export default AdminArchiving
+export default ArchivingPendingPage
