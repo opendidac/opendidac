@@ -50,6 +50,7 @@ import studentAnswerMultipleChoiceTemplate from '@/code/evaluation/export/templa
 import studentAnswerTrueFalseTemplate from '@/code/evaluation/export/templates/studentAnswerTrueFalse.hbs'
 import studentAnswerWebTemplate from '@/code/evaluation/export/templates/studentAnswerWeb.hbs'
 import studentAnswerDatabaseTemplate from '@/code/evaluation/export/templates/studentAnswerDatabase.hbs'
+import studentAnswerExactMatchTemplate from '@/code/evaluation/export/templates/studentAnswerExactMatch.hbs'
 import gradingTemplate from '@/code/evaluation/export/templates/grading.hbs'
 
 const OUTPUT_FORMAT = 'pdf' // 'html' or 'pdf'
@@ -129,6 +130,7 @@ Handlebars.registerPartial(
   'studentAnswerDatabase',
   studentAnswerDatabaseTemplate,
 )
+Handlebars.registerPartial('studentAnswerExactMatch', studentAnswerExactMatchTemplate)
 Handlebars.registerPartial('studentAnswerGrading', gradingTemplate)
 
 // HELPER FUNCTIONS
