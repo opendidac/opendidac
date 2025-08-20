@@ -36,15 +36,16 @@ import {
   withGroupScope,
   withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { EvaluationPhase, Role } from '@prisma/client'
+import { EvaluationPhase, Role, ArchivalPhase } from '@prisma/client'
 import { getUser } from '@/code/auth/auth'
+import { purgeEvaluationData } from '@/code/evaluation/purge'
 
 const post = async (req, res, prisma) => {
   const { evaluationId } = req.query
 
   const evaluation = await prisma.evaluation.findUnique({
     where: { id: evaluationId },
-    select: { id: true, phase: true },
+    select: { id: true, phase: true, archivalPhase: true },
   })
   if (!evaluation) {
     res.status(404).json({ message: 'evaluation not found' })
@@ -74,107 +75,23 @@ const post = async (req, res, prisma) => {
     return
   }
 
-  // IDs we’ll target
-  const [eToQs, participants] = await Promise.all([
-    prisma.evaluationToQuestion.findMany({
-      where: { evaluationId },
-      select: { questionId: true },
-    }),
-    prisma.userOnEvaluation.findMany({
-      where: { evaluationId },
-      select: { userEmail: true },
-    }),
-  ])
-  const questionIds = eToQs.map((x) => x.questionId)
-  const emails = participants.map((x) => x.userEmail)
+  try {
+    // Use the refactored purge function, but keep current archival phase (this is just data purging)
+    const result = await purgeEvaluationData(
+      prisma,
+      evaluationId,
+      user.email,
+      evaluation.archivalPhase || ArchivalPhase.ACTIVE, // Keep current phase or default to ACTIVE
+    )
 
-  if (questionIds.length === 0 || emails.length === 0) {
     res.status(200).json({
-      message: 'nothing to purge',
-      kept: {
-        evaluation: evaluationId,
-        composition: true,
-        participants: emails.length,
-      },
-      stats: {
-        studentDbQueries: 0,
-        files: 0,
-        codeHistory: 0,
-        studentAnswers: 0,
-      },
+      message: 'evaluation data purged',
+      stats: result.stats,
     })
-    return
+  } catch (error) {
+    console.error('Error purging evaluation data:', error)
+    res.status(500).json({ message: 'Failed to purge evaluation data' })
   }
-
-  const stats = await prisma.$transaction(async (tx) => {
-    // 1) Delete student-owned DatabaseQuery rows.
-    //    Rationale: these do NOT cascade from StudentAnswer; if we don’t remove them, they remain.
-    //    Filter: queries having the 1–1 studentAnswerDatabaseToQuery link for our user/question scope.
-    const studentDbQueriesDeleted = await tx.databaseQuery.deleteMany({
-      where: {
-        studentAnswerDatabaseToQuery: {
-          is: {
-            userEmail: { in: emails },
-            questionId: { in: questionIds },
-          },
-        },
-      },
-    })
-
-    // 2) Delete student code files.
-    //    Rationale: File belongs to the question’s CodeWriting; it won’t be deleted by StudentAnswer cascade.
-    //    Filter via the join: files that have a StudentAnswerCodeToFile link for our user/question scope.
-    //
-    //    NOTE: We’re *not* deleting Annotations manually; they’ll be removed when the StudentAnswer is deleted.
-    //    This assumes the Annotation.fileId FK allows deleting File (fileId is optional in your schema).
-    const filesDeleted = await tx.file.deleteMany({
-      where: {
-        studentAnswerCode: {
-          is: {
-            userEmail: { in: emails },
-            questionId: { in: questionIds },
-          },
-        },
-      },
-    })
-
-    // 3) Delete code edit history (no FK to StudentAnswer → won’t cascade).
-    const codeHistoryDeleted = await tx.studentAnswerCodeHistory.deleteMany({
-      where: {
-        userEmail: { in: emails },
-        questionId: { in: questionIds },
-      },
-    })
-
-    // 4) Finally, delete StudentAnswer (this cascades StudentAnswer* + gradings + test results + annotations).
-    const studentAnswersDeleted = await tx.studentAnswer.deleteMany({
-      where: {
-        userEmail: { in: emails },
-        questionId: { in: questionIds },
-      },
-    })
-
-    // 5) Update the evaluation to set the purge date and user
-    await tx.evaluation.update({
-      where: { id: evaluationId },
-      data: {
-        purgedAt: new Date(),
-        purgedByUserEmail: user.email,
-      },
-    })
-
-    return {
-      studentDbQueries: studentDbQueriesDeleted.count,
-      files: filesDeleted.count,
-      codeHistory: codeHistoryDeleted.count,
-      studentAnswers: studentAnswersDeleted.count,
-    }
-  })
-
-  res.status(200).json({
-    message: 'evaluation data purged',
-    stats,
-  })
 }
 
 export default withGroupScope(

@@ -20,6 +20,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 import { getUser } from '@/code/auth/auth'
+import { purgeEvaluationData } from '@/code/evaluation/purge'
 
 const post = async (req, res, prisma) => {
   const { evaluationId } = req.query
@@ -61,24 +62,26 @@ const post = async (req, res, prisma) => {
     return
   }
 
-  // Update evaluation to PURGED_WITHOUT_ARCHIVAL state
-  const updatedEvaluation = await prisma.evaluation.update({
-    where: { id: evaluationId },
-    data: {
-      archivalPhase: ArchivalPhase.PURGED_WITHOUT_ARCHIVAL,
-      purgedAt: new Date(),
-      purgedByUserEmail: user.email,
-    },
-    include: {
-      group: true,
-      purgedBy: true,
-    },
-  })
+  try {
+    // Use the refactored purge function
+    const result = await purgeEvaluationData(
+      prisma,
+      evaluationId,
+      user.email,
+      ArchivalPhase.PURGED_WITHOUT_ARCHIVAL,
+    )
 
-  res.status(200).json({
-    message: 'Evaluation purged without archival successfully',
-    evaluation: updatedEvaluation,
-  })
+    res.status(200).json({
+      message: result.message,
+      evaluation: result.evaluation,
+      stats: result.stats,
+    })
+  } catch (error) {
+    console.error('Error purging evaluation without archival:', error)
+    res
+      .status(500)
+      .json({ message: 'Failed to purge evaluation without archival' })
+  }
 }
 
 export default withMethodHandler({

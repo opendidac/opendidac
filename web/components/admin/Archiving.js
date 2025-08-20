@@ -307,6 +307,11 @@ const Archiving = ({ mode = 'todo' }) => {
                         key="actions"
                         justifyContent={'flex-end'}
                       >
+                        <ArchivalWorkflowButton
+                          evaluation={evaluation}
+                          onTransition={handleArchivalTransition}
+                          size="small"
+                        />
                         <Button
                           variant="outlined"
                           size="small"
@@ -340,11 +345,6 @@ const Archiving = ({ mode = 'todo' }) => {
                         >
                           PDF
                         </Button>
-                        <ArchivalWorkflowButton
-                          evaluation={evaluation}
-                          onTransition={handleArchivalTransition}
-                          size="small"
-                        />
                       </Stack>,
                     ],
                   },
