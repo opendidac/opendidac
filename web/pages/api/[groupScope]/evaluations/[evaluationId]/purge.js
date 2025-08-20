@@ -81,7 +81,7 @@ const post = async (req, res, prisma) => {
       prisma,
       evaluationId,
       user.email,
-      evaluation.archivalPhase || ArchivalPhase.ACTIVE, // Keep current phase or default to ACTIVE
+      ArchivalPhase.PURGED_WITHOUT_ARCHIVAL,
     )
 
     res.status(200).json({
