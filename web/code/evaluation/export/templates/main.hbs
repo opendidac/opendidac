@@ -84,6 +84,10 @@
             {{> studentAnswerDatabase this}}
           {{/if}}
 
+          {{#if this.studentAnswer.exactMatch}}
+              {{> studentAnswerExactMatch this}}
+          {{/if}}
+
           {{#if this.studentAnswer.studentGrading}}
             {{> studentAnswerGrading this}}
           {{/if}}

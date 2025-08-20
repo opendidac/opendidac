@@ -1,0 +1,13 @@
+<div style="display:flex;flex-direction:column;gap:15px;">
+  {{> studentAnswerHeader studentAnswer}}
+  <div>
+    <span>Answers by student:</span>
+    <ul>
+    {{#each studentAnswer.exactMatch.fields}}
+      <li>
+        <label for="{{this.id}}">{{this.value}}</label>
+      </li>
+    {{/each}}
+    </ul>
+  </div>
+</div>

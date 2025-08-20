@@ -50,6 +50,7 @@ import studentAnswerMultipleChoiceTemplate from '@/code/evaluation/export/templa
 import studentAnswerTrueFalseTemplate from '@/code/evaluation/export/templates/studentAnswerTrueFalse.hbs'
 import studentAnswerWebTemplate from '@/code/evaluation/export/templates/studentAnswerWeb.hbs'
 import studentAnswerDatabaseTemplate from '@/code/evaluation/export/templates/studentAnswerDatabase.hbs'
+import studentAnswerExactMatchTemplate from '@/code/evaluation/export/templates/studentAnswerExactMatch.hbs'
 import gradingTemplate from '@/code/evaluation/export/templates/grading.hbs'
 import questionWithSolutionTemplate from '@/code/evaluation/export/templates/questionWithSolution.hbs'
 import sectionHeaderTemplate from '@/code/evaluation/export/templates/sectionHeader.hbs'
@@ -131,6 +132,7 @@ Handlebars.registerPartial(
   'studentAnswerDatabase',
   studentAnswerDatabaseTemplate,
 )
+Handlebars.registerPartial('studentAnswerExactMatch', studentAnswerExactMatchTemplate)
 Handlebars.registerPartial('studentAnswerGrading', gradingTemplate)
 Handlebars.registerPartial('questionWithSolution', questionWithSolutionTemplate)
 Handlebars.registerPartial('sectionHeader', sectionHeaderTemplate)
