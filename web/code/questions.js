@@ -316,6 +316,13 @@ export const questionIncludeClause = (questionIncludeOptions) => {
             fields: {
               select: {
                 fieldId: true,
+                ...(includeOfficialAnswers ? {
+                  exactMatchField: {
+                    select: {
+                      matchRegex: true,
+                    },
+                  },
+                } : {}),
                 value: true,
               },
             },
