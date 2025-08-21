@@ -108,6 +108,12 @@ const PageConsult = () => {
     return <ConsultationDisabledDialog />
   }
 
+  if (!userOnEvaluation && errorUserOnEvaluation) {
+    if (errorUserOnEvaluation.id === 'evaluation-purged') {
+      return <NoLongerAvailableDialog />
+    }
+  }
+
   return (
     <Authorization allowRoles={[Role.PROFESSOR, Role.STUDENT]}>
       <Loading loading={!evaluationStatus} errors={[errorEvaluationStatus]}>
@@ -241,6 +247,18 @@ const ConsultationDisabledDialog = () => (
         <Typography variant="body1">
           If you have any questions regarding the consultation, please contact
           your professor for further information.
+        </Typography>
+      </Stack>
+    </AlertFeedback>
+  </Overlay>
+)
+
+const NoLongerAvailableDialog = () => (
+  <Overlay>
+    <AlertFeedback severity="info">
+      <Stack spacing={1}>
+        <Typography variant="h5">
+          Evaluation is no longer available for consultation
         </Typography>
       </Stack>
     </AlertFeedback>

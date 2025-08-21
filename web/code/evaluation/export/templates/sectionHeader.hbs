@@ -1,0 +1,27 @@
+<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;padding:10px 0px 10px 0px;">
+    {{#if student}}
+        <!-- Student header for submissions -->
+        <div style="display:flex;flex-direction:column;align-items:center;padding: 10px 0px 10px 0px; gap:5px;margin-bottom:20px;">
+            <span class="body1">{{student.name}}</span>
+            <span class="body2">({{student.email}})</span>
+        </div>
+    {{else}}
+        <!-- Question header for solutions -->
+        <div style="display:flex;flex-direction:column;align-items:center;padding: 10px 0px 10px 0px; gap:5px;margin-bottom:20px;">
+            <span class="body1">{{title}}</span>
+            {{#if questionType}}
+                <span class="body2">{{formatQuestionType questionType}}</span>
+            {{/if}}
+        </div>
+    {{/if}}
+    
+    <!-- Divider line -->
+    <div style="width: 100%; border-top: 1px solid {{muiTheme.palette.divider}}; margin-bottom: 20px;"></div>
+    
+    {{#if points}}
+        <!-- Points display below divider -->
+        <div style="display:flex;justify-content:flex-end;width:100%;padding:0px 0px 10px 0px;">
+            <span class="h6">{{points}} points</span>
+        </div>
+    {{/if}}
+</div> 

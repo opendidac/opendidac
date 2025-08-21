@@ -1,19 +1,36 @@
 <div style="display:flex;flex-direction:column;gap:15px;">
   {{> studentAnswerHeader studentAnswer}}
   <div>
-    <span>Options selected by the student:</span>
-    <ul>
-    {{#each studentAnswer.multipleChoice.options}}
-      <li>
-        <label for="{{this.id}}">{{this.text}}</label>
-      </li>
-    {{/each}}
-    </ul>
+    <h5>Student's Answer</h5>
+    <div>
+      <ul style="list-style-type: none; padding-left: 0;">
+        {{#each question.multipleChoice.options}}
+          {{#if (isOptionSelected this.id ../studentAnswer.multipleChoice.options)}}
+            {{!-- SELECTED option --}}
+            <li style="margin-bottom: 10px; padding: 8px; border-radius: 4px; {{#if this.isCorrect}}background-color: #e8f5e8; border-left: 4px solid #4caf50;{{else}}background-color: #ffebee; border-left: 4px solid #f44336;{{/if}}">
+              <label>
+                {{#if this.isCorrect}}✓{{else}}✗{{/if}} {{this.text}}
+                {{#if this.isCorrect}}<span style="color: #4caf50; font-weight: bold; margin-left: 10px;">(Correct Selection)</span>{{else}}<span style="color: #f44336; font-weight: bold; margin-left: 10px;">(Incorrect Selection)</span>{{/if}}
+              </label>
+            </li>
+          {{else}}
+            {{!-- NOT SELECTED option --}}
+            <li style="margin-bottom: 10px; padding: 8px; border-radius: 4px; {{#if this.isCorrect}}background-color: #fff3e0; border-left: 4px solid #ff9800;{{else}}background-color: #f5f5f5;{{/if}}">
+              <label>
+                ○ {{this.text}}
+                {{#if this.isCorrect}}<span style="color: #ff9800; font-weight: bold; margin-left: 10px;">(Missed Correct Answer)</span>{{else}}<span style="color: #666; margin-left: 10px;">(Not Selected)</span>{{/if}}
+              </label>
+            </li>
+          {{/if}}
+        {{/each}}
+      </ul>
+    </div>
   </div>
+  
   {{#if question.multipleChoice.activateStudentComment}}
     <div>
-      <span><b>{{question.multipleChoice.studentCommentLabel}}</b></span>
-      <p>{{studentAnswer.multipleChoice.comment}}</p>
+      <span style="font-weight: bold;">{{question.multipleChoice.studentCommentLabel}}</span>
+      <p style="background-color: #f9f9f9; padding: 10px; border-radius: 4px; border-left: 4px solid #2196f3;">{{studentAnswer.multipleChoice.comment}}</p>
     </div>
   {{/if}}
 </div>

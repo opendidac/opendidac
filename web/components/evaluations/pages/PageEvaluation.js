@@ -16,7 +16,7 @@
 
 import { useRouter } from 'next/router'
 import useSWR from 'swr'
-import { getPhaseDetails } from '../evaluation/phases'
+import { getPhaseDetails, phaseGreaterThan } from '../evaluation/phases'
 import { fetcher } from '@/code/utils'
 import Authorization from '@/components/security/Authorization'
 import Loading from '@/components/feedback/Loading'
@@ -34,10 +34,19 @@ import EvaluationAttendance from '../evaluation/phases/EvaluationAttendance'
 import EvaluationInProgress from '../evaluation/phases/EvaluationInProgress'
 import EvaluationResults from '../evaluation/phases/EvaluationResults'
 import { useEffect, useState } from 'react'
-import { Role } from '@prisma/client'
+import { Role, EvaluationPhase } from '@prisma/client'
 
 const STUDENTS_ATTENDANCE_PULL_INTERVAL = 1000
 const STUDENTS_PROGRESS_PULL_INTERVAL = 5000
+
+// --- Disable logic owned by parent so we can auto-switch on purge/phase change ---
+const PHASE_BY_MENU = {
+  settings: EvaluationPhase.SETTINGS,
+  composition: EvaluationPhase.COMPOSITION,
+  attendance: EvaluationPhase.REGISTRATION,
+  progress: EvaluationPhase.IN_PROGRESS,
+  results: EvaluationPhase.GRADING,
+}
 
 const EvaluationPage = () => {
   const router = useRouter()
@@ -107,18 +116,35 @@ const EvaluationPage = () => {
     groupScope && evaluationId ? fetcher : null,
   )
 
+  const isMenuDisabled = (key) => {
+    if (!evaluation) return false
+    const p = PHASE_BY_MENU[key]
+    if (!p) return false
+    const phaseDisabled = phaseGreaterThan(p, evaluation.phase)
+    const purgeDisabled =
+      Boolean(evaluation.purgedAt) &&
+      (p === EvaluationPhase.IN_PROGRESS || p === EvaluationPhase.GRADING)
+    return phaseDisabled || purgeDisabled
+  }
+
+  // If the active menu becomes disabled (e.g., after purge), hop to a safe fallback
+  useEffect(() => {
+    if (!activeMenu || !evaluation) return
+    if (isMenuDisabled(activeMenu)) {
+      for (const key of ['attendance', 'composition', 'settings']) {
+        if (!isMenuDisabled(key)) {
+          setActiveMenu(key)
+          break
+        }
+      }
+    }
+  }, [evaluation?.purgedAt, evaluation?.phase, activeMenu]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
       <Loading
         error={[error, errorPhase]}
-        loading={
-          !evaluation ||
-          !phase ||
-          !composition ||
-          !attendance ||
-          !progress ||
-          !results
-        }
+        loading={!evaluation || !phase || !composition || !attendance}
       >
         {evaluation && (
           <LayoutMain

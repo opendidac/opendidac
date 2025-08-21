@@ -35,6 +35,10 @@ const StudentResultsGrid = ({
     setParticipants(attendance.registered.map((r) => r.user))
   }, [attendance])
 
+  if (!results) {
+    return null
+  }
+
   const gridHeaders = () => {
     let q = results.map((jstq) => ({
       label: <b>{`Q${jstq.order + 1}`}</b>,

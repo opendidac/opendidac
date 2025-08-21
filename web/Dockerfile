@@ -3,20 +3,14 @@ FROM node:20-bullseye-slim
 
 LABEL org.opencontainers.image.source="https://github.com/heigvd-teaching-tools/eval-infra/app-image"
 
-
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-    apt-transport-https \
     ca-certificates \
     curl \
     gnupg2 \
-    software-properties-common \
-    openssl
-
-# Install Docker
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" && \
-    apt-get update && apt-get install -y docker-ce-cli
+    openssl \
+    apt-transport-https \
+    software-properties-common
 
 # Check if we are in production
 ARG NODE_ENV=production
@@ -36,7 +30,6 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros fonts-kacst fonts-freefont-ttf libxss1 dbus dbus-x11 --no-install-recommends
 
-
 # Install Node.js dependencies
 RUN npm cache clean --force
 RUN npm install -g npm@latest
@@ -53,4 +46,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Run the app
-CMD [ "npm", "start" ]
+CMD ["npm", "start"]

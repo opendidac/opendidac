@@ -8,6 +8,15 @@
         <div>
           {{> codeBloc this.file.content}}
         </div>
+        
+        {{#if this.file.annotation}}
+          <div style="margin-top: 10px;">
+            <div style="font-weight: bold; color: #0000ff; margin-bottom: 5px;">Professor's Annotated Version:</div>
+            <div style="border: 2px solid #0000ff40; border-radius: 5px; padding: 10px; background-color: #f8f9ff;">
+              {{> codeBloc this.file.annotation.content}}
+            </div>
+          </div>
+        {{/if}}
       {{/if}}
   
       </div>

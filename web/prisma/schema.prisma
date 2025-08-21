@@ -62,6 +62,7 @@ model User {
   groups           UserOnGroup[]
   groupsCreated    Group[]
   annotations      Annotation[]
+  purgedEvaluations Evaluation[]
 }
 
 enum Role {
@@ -177,7 +178,7 @@ model MultipleChoice {
 
   activateStudentComment Boolean @default(false) // Allow student to provide a comment/justification
   studentCommentLabel    String? // Label for the student comment field
-  activateSelectionLimit Boolean @default(false) // Activate the selection limit, 
+  activateSelectionLimit Boolean @default(false) // Activate the selection limit,
   selectionLimit         Int?    @default(0) // The number of correct options that the student can select, depends on the number of correct options
 }
 
@@ -580,6 +581,10 @@ model Evaluation {
   students UserOnEvaluation[]
 
   evaluationToQuestions EvaluationToQuestion[]
+
+  purgedAt          DateTime?
+  purgedByUserEmail String?
+  purgedBy          User?     @relation(fields: [purgedByUserEmail], references: [email])
 
   group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId String
