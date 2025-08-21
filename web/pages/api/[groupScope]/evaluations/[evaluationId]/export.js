@@ -132,7 +132,10 @@ Handlebars.registerPartial(
   'studentAnswerDatabase',
   studentAnswerDatabaseTemplate,
 )
-Handlebars.registerPartial('studentAnswerExactMatch', studentAnswerExactMatchTemplate)
+Handlebars.registerPartial(
+  'studentAnswerExactMatch',
+  studentAnswerExactMatchTemplate,
+)
 Handlebars.registerPartial('studentAnswerGrading', gradingTemplate)
 Handlebars.registerPartial('questionWithSolution', questionWithSolutionTemplate)
 Handlebars.registerPartial('sectionHeader', sectionHeaderTemplate)

@@ -119,9 +119,9 @@ const get = withEvaluationPhase(
                   id: true,
                   statement: true,
                 },
-              }
+              },
             },
-          }
+          },
         },
       })
 

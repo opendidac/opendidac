@@ -58,7 +58,10 @@ const AnswerConsult = ({ id, question, answer }) => {
             <ConsultDatabase queries={answer.queries} />
           )) ||
           (question.type === QuestionType.exactMatch && (
-            <ConsultExactMatch exactMatch={question.exactMatch} answer={answer} />
+            <ConsultExactMatch
+              exactMatch={question.exactMatch}
+              answer={answer}
+            />
           )))}
     </Stack>
   )

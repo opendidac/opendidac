@@ -244,18 +244,22 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
 
           break
         case QuestionType.exactMatch:
-
           data[question.type].forEach((stat) => {
             if (maxValue > 0) {
-              stat.correct.percentage = Math.round(stat.correct.count / maxValue * 100)
-              stat.incorrect.percentage = Math.round(stat.incorrect.count / maxValue * 100)
+              stat.correct.percentage = Math.round(
+                (stat.correct.count / maxValue) * 100,
+              )
+              stat.incorrect.percentage = Math.round(
+                (stat.incorrect.count / maxValue) * 100,
+              )
             } else {
               stat.correct.percentage = 0
               stat.incorrect.percentage = 0
             }
             stat.unanswered = {
               count: maxValue - stat.correct.count - stat.incorrect.count,
-              percentage: 100 - stat.correct.percentage - stat.incorrect.percentage,
+              percentage:
+                100 - stat.correct.percentage - stat.incorrect.percentage,
             }
           })
 
@@ -552,38 +556,36 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
             )) ||
             (questionData.type === QuestionType.exactMatch && (
               <>
-                {
-                  questionData[questionData.type].map((stat, index) => (
-                    <AnalyticsRow
-                      key={index}
-                      label={
+                {questionData[questionData.type].map((stat, index) => (
+                  <AnalyticsRow
+                    key={index}
+                    label={
                       <Tooltip title={stat.regex}>
                         <Typography variant="body1">
                           {`Field ${index}`}
                         </Typography>
                       </Tooltip>
-                      }
-                      segments={[
-                        {
-                          percent: stat.correct.percentage,
-                          color: 'success',
-                          tooltip: `Matching answers [${stat.correct.count}]`,
-                        },
-                        {
-                          percent: stat.incorrect.percentage,
-                          color: 'error',
-                          tooltip: `Incorrect answers [${stat.incorrect.count}]`,
-                        },
-                        {
-                          percent: stat.unanswered.percentage,
-                          color: 'info',
-                          tooltip: `Unanswered [${stat.unanswered.count}]`,
-                        },
-                      ]}
-                      amount={submittedAnswers}
-                    />
-                  ))
-                }
+                    }
+                    segments={[
+                      {
+                        percent: stat.correct.percentage,
+                        color: 'success',
+                        tooltip: `Matching answers [${stat.correct.count}]`,
+                      },
+                      {
+                        percent: stat.incorrect.percentage,
+                        color: 'error',
+                        tooltip: `Incorrect answers [${stat.incorrect.count}]`,
+                      },
+                      {
+                        percent: stat.unanswered.percentage,
+                        color: 'info',
+                        tooltip: `Unanswered [${stat.unanswered.count}]`,
+                      },
+                    ]}
+                    amount={submittedAnswers}
+                  />
+                ))}
               </>
             )))}
         <Stack direction="row" spacing={4} alignItems="center">

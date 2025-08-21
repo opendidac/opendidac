@@ -29,7 +29,4 @@ const MonoSpaceTextField = styled(TextField)({
   },
 })
 
-export {
-  MultiLineTextField,
-  MonoSpaceTextField
-}
+export { MultiLineTextField, MonoSpaceTextField }
