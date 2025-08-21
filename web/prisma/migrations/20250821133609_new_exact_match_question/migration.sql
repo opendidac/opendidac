@@ -47,4 +47,7 @@ ALTER TABLE "ExactMatchField" ADD CONSTRAINT "ExactMatchField_questionId_fkey" F
 ALTER TABLE "StudentAnswerExactMatch" ADD CONSTRAINT "StudentAnswerExactMatch_userEmail_questionId_fkey" FOREIGN KEY ("userEmail", "questionId") REFERENCES "StudentAnswer"("userEmail", "questionId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "StudentAnswerExactMatchField" ADD CONSTRAINT "StudentAnswerExactMatchField_fieldId_fkey" FOREIGN KEY ("fieldId") REFERENCES "ExactMatchField"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "StudentAnswerExactMatchField" ADD CONSTRAINT "StudentAnswerExactMatchField_userEmail_questionId_fkey" FOREIGN KEY ("userEmail", "questionId") REFERENCES "StudentAnswerExactMatch"("userEmail", "questionId") ON DELETE CASCADE ON UPDATE CASCADE;
