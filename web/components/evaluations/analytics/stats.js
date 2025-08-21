@@ -356,7 +356,6 @@ const calculateExactMatchStats = (question) => {
   let perFieldIndex = new Map()
 
   question.exactMatch.fields.forEach((field, index) => {
-    console.log(field.matchRegex)
     regexps.set(field.id, regexpFromPattern(field.matchRegex))
     perFieldStats[index] = {
       regex: field.matchRegex,

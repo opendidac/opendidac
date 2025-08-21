@@ -27,8 +27,6 @@ const AnswerExactMatch = ({
   onAnswerChange,
 }) => {
   const { exactMatch: savedAnswers } = answer
-  console.log(JSON.stringify(answer))
-
   const [studentAnswers, setStudentAnswers] = useState(savedAnswers.fields)
 
   useEffect(() => {

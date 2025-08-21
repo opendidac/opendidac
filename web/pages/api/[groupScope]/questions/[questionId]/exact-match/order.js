@@ -25,7 +25,7 @@ import { Role } from '@prisma/client'
 const put = async (req, res, prisma) => {
   const { fields } = req.body
 
-  prisma.$transaction(async (prisma) => {
+  await prisma.$transaction(async (prisma) => {
     for (const [_, field] of fields.entries()) {
       await prisma.exactMatchField.update({
         where: { id: field.id },

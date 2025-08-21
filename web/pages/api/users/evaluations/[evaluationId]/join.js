@@ -77,9 +77,6 @@ const post = async (req, res, prisma) => {
   }
 
   await prisma.$transaction(async (prisma) => {
-    console.warn(
-      `Creating userOnEvaluation for ${studentEmail} on evaluation ${evaluationId}`,
-    )
     // connect the users to the evaluation
     userOnEvaluation = await prisma.userOnEvaluation.create({
       data: {
@@ -128,9 +125,6 @@ const post = async (req, res, prisma) => {
       })
 
       if (!existingAnswer) {
-        console.warn(
-          `Creating student answer for ${studentEmail} on question ${question.id}`,
-        )
         const studentAnswer = await prisma.studentAnswer.create({
           data: {
             userEmail: studentEmail,
