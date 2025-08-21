@@ -116,6 +116,26 @@ const del = async (req, res, prisma) => {
   res.status(200).json({ message: 'Field deleted successfully' })
 }
 
+const get = async (req, res, prisma) => {
+  const { questionId } = req.query
+
+  const exactMatch = await prisma.exactMatch.findUnique({
+    where: { questionId: questionId },
+    include: {
+      fields: {
+        orderBy: { order: 'asc' },
+      },
+    },
+  })
+
+  if (!exactMatch) {
+    res.status(404).json({ message: 'Question not found' })
+    return
+  }
+
+  res.status(200).json(exactMatch.fields)
+}
+
 export default withGroupScope(
   withMethodHandler({
     PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
@@ -127,5 +147,6 @@ export default withGroupScope(
     DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), [
       Role.PROFESSOR,
     ]),
+    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
   }),
 )
