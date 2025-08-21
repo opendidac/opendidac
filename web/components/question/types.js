@@ -22,6 +22,7 @@ const typesMap = {
   [QuestionType.code]: 'Code',
   [QuestionType.web]: 'Web',
   [QuestionType.database]: 'Database',
+  [QuestionType.exactMatch]: 'Exact Match',
 }
 
 const toArray = () => {

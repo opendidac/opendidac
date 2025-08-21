@@ -112,6 +112,16 @@ const get = withEvaluationPhase(
               },
             },
           },
+          exactMatch: {
+            select: {
+              fields: {
+                select: {
+                  id: true,
+                  statement: true,
+                },
+              },
+            },
+          },
         },
       })
 
@@ -200,6 +210,16 @@ const get = withEvaluationPhase(
                 select: {
                   id: true,
                   text: true,
+                },
+              },
+            },
+          },
+          exactMatch: {
+            select: {
+              fields: {
+                select: {
+                  fieldId: true,
+                  value: true,
                 },
               },
             },

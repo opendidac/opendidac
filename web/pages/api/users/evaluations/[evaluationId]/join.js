@@ -192,6 +192,13 @@ const post = async (req, res, prisma) => {
               question,
             )
             break
+          case QuestionType.exactMatch:
+            await createExactMatchTypeSpecificData(
+              prisma,
+              studentAnswer,
+              question,
+            )
+            break
         }
       }
     }
@@ -311,6 +318,22 @@ const createDatabaseTypeSpecificData = async (
       },
     })
   }
+}
+
+const createExactMatchTypeSpecificData = async (
+  prisma,
+  studentAnswer,
+  question,
+) => {
+  // Create StudentAnswerExactMatch instance and related fields
+  await prisma.studentAnswerExactMatchField.createMany({
+    data: question.exactMatch.fields.map((field) => ({
+      userEmail: studentAnswer.userEmail,
+      questionId: studentAnswer.questionId,
+      fieldId: field.id,
+      value: '',
+    })),
+  })
 }
 
 export default withMethodHandler({
