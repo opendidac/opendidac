@@ -130,7 +130,10 @@ Handlebars.registerPartial(
   'studentAnswerDatabase',
   studentAnswerDatabaseTemplate,
 )
-Handlebars.registerPartial('studentAnswerExactMatch', studentAnswerExactMatchTemplate)
+Handlebars.registerPartial(
+  'studentAnswerExactMatch',
+  studentAnswerExactMatchTemplate,
+)
 Handlebars.registerPartial('studentAnswerGrading', gradingTemplate)
 
 // HELPER FUNCTIONS

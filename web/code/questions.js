@@ -165,7 +165,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
                 statement: true,
                 ...(includeOfficialAnswers ? { matchRegex: true } : {}),
               },
-              orderBy: [{ order: 'asc' }, {id: 'asc'}],
+              orderBy: [{ order: 'asc' }, { id: 'asc' }],
             },
           },
         },
@@ -309,13 +309,15 @@ export const questionIncludeClause = (questionIncludeOptions) => {
             fields: {
               select: {
                 fieldId: true,
-                ...(includeOfficialAnswers ? {
-                  exactMatchField: {
-                    select: {
-                      matchRegex: true,
-                    },
-                  },
-                } : {}),
+                ...(includeOfficialAnswers
+                  ? {
+                      exactMatchField: {
+                        select: {
+                          matchRegex: true,
+                        },
+                      },
+                    }
+                  : {}),
                 value: true,
               },
             },

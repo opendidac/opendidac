@@ -17,7 +17,7 @@ import React, { useEffect, useState } from 'react'
 import { Box, InputAdornment } from '@mui/material'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 
-import {MonoSpaceTextField} from "@/components/input/MultiLineTextFields";
+import { MonoSpaceTextField } from '@/components/input/MultiLineTextFields'
 
 const AnswerCodeReadingOutput = ({
   language,

@@ -65,20 +65,28 @@ const put = withEvaluationPhase(
       )
 
       if (!evaluationToQuestion) {
-        console.error(`Could not find evaluationToQuestion for evaluationId: ${evaluationId}, questionId: ${questionId}`)
+        console.error(
+          `Could not find evaluationToQuestion for evaluationId: ${evaluationId}, questionId: ${questionId}`,
+        )
         res.status(400).json({ message: 'Internal Server Error' })
         return
       }
 
       const { exactMatch } = evaluationToQuestion.question
       if (!exactMatch) {
-        console.error(`Question ${questionId} does not have an exact match answer`)
+        console.error(
+          `Question ${questionId} does not have an exact match answer`,
+        )
         res.status(400).json({ message: 'Internal Server Error' })
         return
       }
-      let expectedField = exactMatch.fields.find((f) => f.id === answeredFieldId)
+      let expectedField = exactMatch.fields.find(
+        (f) => f.id === answeredFieldId,
+      )
       if (!expectedField) {
-        console.error(`Field ${answeredFieldId} does not belong to question ${questionId}`)
+        console.error(
+          `Field ${answeredFieldId} does not belong to question ${questionId}`,
+        )
         res.status(400).json({ message: 'Internal Server Error' })
         return
       }
@@ -86,7 +94,7 @@ const put = withEvaluationPhase(
       // Update the student's answer for that field
       await prisma.studentAnswerExactMatchField.update({
         where: {
-          fieldId_userEmail_questionId : {
+          fieldId_userEmail_questionId: {
             fieldId: answeredFieldId,
             userEmail: userEmail,
             questionId: questionId,

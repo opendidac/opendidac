@@ -205,6 +205,6 @@ const gradeExactMatch = (question, totalPoints, studentAnswer) => {
 
   return {
     status: StudentQuestionGradingStatus.AUTOGRADED,
-    pointsObtained: correctFields / fieldCount * totalPoints,
+    pointsObtained: (correctFields / fieldCount) * totalPoints,
   }
 }

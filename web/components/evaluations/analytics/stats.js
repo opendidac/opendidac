@@ -379,7 +379,9 @@ const calculateExactMatchStats = (question) => {
       const index = perFieldIndex.get(field.fieldId)
       const regex = regexps.get(field.fieldId)
       if (!regex) {
-        console.error(`No regex found for field ${field.fieldId} during stat computation`)
+        console.error(
+          `No regex found for field ${field.fieldId} during stat computation`,
+        )
         return
       }
       if (regex.test(field.value)) {

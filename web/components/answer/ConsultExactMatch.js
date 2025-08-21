@@ -30,13 +30,13 @@ const ConsultExactMatch = ({ exactMatch, answer }) => {
             return (
               <Stack key={field.id} spacing={1} width={'100%'} pb={2}>
                 <MarkdownViewer content={field.statement} />
-                  <MultiLineTextField
-                    label={'Answer'}
-                    multiline
-                    variant="standard"
-                    fullWidth
-                    value={fieldAnswer || ''}
-                  />
+                <MultiLineTextField
+                  label={'Answer'}
+                  multiline
+                  variant="standard"
+                  fullWidth
+                  value={fieldAnswer || ''}
+                />
               </Stack>
             )
           })}

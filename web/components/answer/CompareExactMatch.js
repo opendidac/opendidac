@@ -23,10 +23,7 @@ import {
 } from '@/components/input/MultiLineTextFields'
 import { regexpFromPattern } from '@/code/utils'
 
-const CompareExactMatch = ({
-  solution,
-  answer,
-}) => {
+const CompareExactMatch = ({ solution, answer }) => {
   return (
     <Stack p={2} pt={2} height={'100%'} spacing={2}>
       <ScrollContainer>
@@ -41,7 +38,7 @@ const CompareExactMatch = ({
               <Stack key={field.id} spacing={1} width={'100%'} pb={2}>
                 <MarkdownViewer content={field.statement} />
                 <Alert
-                  severity={matches ? "success" : "error"}
+                  severity={matches ? 'success' : 'error'}
                   variant="standard"
                   icon={false}
                   sx={{
@@ -51,28 +48,28 @@ const CompareExactMatch = ({
                     },
                   }}
                 >
-                <ResizePanel
-                  hideHandle={true}
-                  leftPanel={
-                    <MultiLineTextField
-                      label={'Answer'}
-                      multiline
-                      variant="standard"
-                      fullWidth
-                      value={fieldAnswer || ''}
-                    />
-                  }
-                  rightPanel={
-                    <MonoSpaceTextField
-                      id={`regex-${field.id}`}
-                      variant="standard"
-                      label={'Expected Answer (Regex)'}
-                      value={field.matchRegex}
-                      fullWidth
-                      error={false}
-                    />
-                  }
-                />
+                  <ResizePanel
+                    hideHandle={true}
+                    leftPanel={
+                      <MultiLineTextField
+                        label={'Answer'}
+                        multiline
+                        variant="standard"
+                        fullWidth
+                        value={fieldAnswer || ''}
+                      />
+                    }
+                    rightPanel={
+                      <MonoSpaceTextField
+                        id={`regex-${field.id}`}
+                        variant="standard"
+                        label={'Expected Answer (Regex)'}
+                        value={field.matchRegex}
+                        fullWidth
+                        error={false}
+                      />
+                    }
+                  />
                 </Alert>
               </Stack>
             )
