@@ -20,6 +20,7 @@ import {
   StudentAnswerStatus,
   StudentQuestionGradingStatus,
 } from '@prisma/client'
+import { regexpFromPattern } from '@/code/utils'
 
 export const getSignedSuccessRate = (evaluationToQuestions) => {
   // total signed points
@@ -356,13 +357,7 @@ const calculateExactMatchStats = (question) => {
 
   question.exactMatch.fields.forEach((field, index) => {
     console.log(field.matchRegex)
-    const parts = field.matchRegex.match(/^\/(.*)\/([a-z]*)$/)
-    if (!parts) {
-      console.warn(`Invalid regex format for field ${field.id}: ${field.matchRegex}. Using it as a regex without flags.`)
-      regexps.set(field.id, new RegExp(field.matchRegex, 'g'))
-    } else {
-      regexps.set(field.id, new RegExp(parts[1], parts[2]))
-    }
+    regexps.set(field.id, regexpFromPattern(field.matchRegex))
     perFieldStats[index] = {
       regex: field.matchRegex,
       correct: { count: 0 },

@@ -21,6 +21,7 @@ import {
   MonoSpaceTextField,
   MultiLineTextField,
 } from '@/components/input/MultiLineTextFields'
+import { regexpFromPattern } from '@/code/utils'
 
 const CompareExactMatch = ({
   solution,
@@ -34,10 +35,7 @@ const CompareExactMatch = ({
             let { value: fieldAnswer } = answer.fields.find(
               (ans) => ans.fieldId === field.id,
             ) || { value: '' }
-            const parts = field.matchRegex.match(/^\/(.*)\/([a-z]*)$/)
-            let regex = (!parts || parts.length !== 3) ?
-              new RegExp(field.matchRegex) :
-              new RegExp(parts[1], parts[2])
+            let regex = regexpFromPattern(field.matchRegex)
             let matches = fieldAnswer.match(regex)
             return (
               <Stack key={field.id} spacing={1} width={'100%'} pb={2}>
