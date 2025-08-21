@@ -195,8 +195,15 @@ const gradeWeb = (answer) => ({
 })
 
 const gradeExactMatch = (question, totalPoints, studentAnswer) => {
-  const correctFields = studentAnswer?.fields?.reduce((acc, field, index) => {
-    const fieldRegex = question.exactMatch.fields[index].matchRegex
+  const correctFields = studentAnswer?.fields?.reduce((acc, field) => {
+    const expectedField = question.exactMatch.fields.find(
+      (f) => f.id === field.fieldId,
+    )
+    if (!expectedField) {
+      console.error(`Field with ID ${field.fieldId} not found in question.`)
+      return acc
+    }
+    const fieldRegex = expectedField.matchRegex
     let regex = regexpFromPattern(fieldRegex)
     return acc + (regex.test(field.value) ? 1 : 0)
   }, 0)
