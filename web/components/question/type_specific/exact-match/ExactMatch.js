@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { Button, Stack } from '@mui/material'
 import FieldEditor from '@/components/question/type_specific/exact-match/FieldEditor'
 import AddIcon from '@mui/icons-material/Add'
@@ -22,16 +22,46 @@ import ScrollContainer from '@/components/layout/ScrollContainer'
 import ReorderableList from '@/components/layout/utils/ReorderableList'
 import { useDebouncedCallback } from 'use-debounce'
 import { useSnackbar } from '@/context/SnackbarContext'
+import { fetcher } from '@/code/utils'
+import useSWR from 'swr'
+import Loading from '@/components/feedback/Loading'
 
-const ExactMatch = ({
-  groupScope,
-  questionId,
-  fields: initialFields,
-}) => {
+const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
   const [previewMode, setPreviewMode] = React.useState(false)
-  const [fields, setFields] = React.useState(initialFields || [])
 
   const { show: showSnackbar } = useSnackbar()
+
+  const {
+    data: loadedFields,
+    isLoading: isLoadingFields,
+    error: loadingError,
+  } = useSWR(
+    `/api/${groupScope}/questions/${questionId}/exact-match/fields`,
+    groupScope && questionId ? fetcher : null,
+    { revalidateOnFocus: false },
+  )
+
+  const [fields, setFieldsState] = React.useState(
+    isLoadingFields || loadingError ? [] : loadedFields,
+  )
+  const setFields = useCallback(
+    (newFields) => {
+      setFieldsState(newFields)
+      onFieldsChange(newFields)
+    },
+    [setFieldsState, onFieldsChange],
+  )
+
+  useEffect(() => {
+    if (!isLoadingFields && loadingError) {
+      console.error(`Failed to load fields: ${loadingError}`)
+      showSnackbar(`Failed to load fields. Please try again.`, 'error')
+    }
+  }, [isLoadingFields, loadingError, showSnackbar])
+
+  useEffect(() => {
+    setFieldsState(loadedFields)
+  }, [loadedFields])
 
   const onAddField = useCallback(async () => {
     try {
@@ -61,7 +91,7 @@ const ExactMatch = ({
       console.error('Failed to add field', error)
       showSnackbar('Failed to add field', 'error')
     }
-  }, [groupScope, questionId, fields, showSnackbar])
+  }, [groupScope, questionId, fields, setFields, showSnackbar])
 
   const debouncedAddField = useDebouncedCallback(onAddField, 300)
 
@@ -92,7 +122,7 @@ const ExactMatch = ({
         showSnackbar('Failed to save field change', 'error')
       }
     },
-    [fields, groupScope, questionId, showSnackbar],
+    [fields, groupScope, questionId, setFields, showSnackbar],
   )
   const debouncedFieldChange = useDebouncedCallback(onFieldChange, 300)
 
@@ -128,7 +158,7 @@ const ExactMatch = ({
         showSnackbar('Failed to delete field', 'error')
       }
     },
-    [fields, groupScope, questionId, showSnackbar],
+    [fields, groupScope, questionId, setFields, showSnackbar],
   )
   const debouncedDelete = useDebouncedCallback(onDelete, 300)
 
@@ -173,7 +203,7 @@ const ExactMatch = ({
       setFields(reorderedFields)
       debouncedSaveOrdering(reorderedFields)
     },
-    [debouncedSaveOrdering, fields],
+    [debouncedSaveOrdering, fields, setFields],
   )
 
   return (
@@ -206,22 +236,24 @@ const ExactMatch = ({
           onChange={(e) => setPreviewMode(e.target.checked)}
         />
       </Stack>
-      <ScrollContainer spacing={1}>
-        <ReorderableList onChangeOrder={onReorder}>
-          {fields.map((field, index) => (
-            <FieldEditor
-              key={field.id}
-              index={index}
-              groupScope={groupScope}
-              field={field}
-              onChange={debouncedFieldChange}
-              onDelete={debouncedDelete}
-              mayDelete={fields.length > 1}
-              previewMode={previewMode}
-            ></FieldEditor>
-          ))}
-        </ReorderableList>
-      </ScrollContainer>
+      <Loading errors={[loadingError]} loading={isLoadingFields}>
+        <ScrollContainer spacing={1}>
+          <ReorderableList onChangeOrder={onReorder}>
+            {fields.map((field, index) => (
+              <FieldEditor
+                key={field.id}
+                index={index}
+                groupScope={groupScope}
+                field={field}
+                onChange={debouncedFieldChange}
+                onDelete={debouncedDelete}
+                mayDelete={fields.length > 1}
+                previewMode={previewMode}
+              ></FieldEditor>
+            ))}
+          </ReorderableList>
+        </ScrollContainer>
+      </Loading>
     </Stack>
   )
 }
