@@ -21,66 +21,80 @@ import ToggleWithLabel from '@/components/input/ToggleWithLabel'
 import ScrollContainer from '@/components/layout/ScrollContainer'
 import ReorderableList from '@/components/layout/utils/ReorderableList'
 import { useDebouncedCallback } from 'use-debounce'
+import { useSnackbar } from '@/context/SnackbarContext'
 
 const ExactMatch = ({
-  id = 'exactMatch',
   groupScope,
   questionId,
   fields: initialFields,
-  onChange,
-  // TODO handle all warnings
 }) => {
   const [previewMode, setPreviewMode] = React.useState(false)
   const [fields, setFields] = React.useState(initialFields || [])
 
-  const onAddField = useCallback(async () => {
-    const response = await fetch(
-      `/api/${groupScope}/questions/${questionId}/exact-match/fields`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          field: {
-            statement: '',
-            matchRegex: '.*',
-          },
-        }),
-      },
-    )
-    // TODO do I need to do something to handle failure?
-    const newField = await response.json()
-    const newFields = [...fields, newField]
-    setFields(newFields)
-  }, [groupScope, questionId, fields])
+  const { show: showSnackbar } = useSnackbar()
 
-  const onFieldChange = useCallback(
-    async (newField) => {
-      await fetch(
+  const onAddField = useCallback(async () => {
+    try {
+      const response = await fetch(
         `/api/${groupScope}/questions/${questionId}/exact-match/fields`,
         {
-          method: 'PUT',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
           },
           body: JSON.stringify({
-            field: newField,
+            field: {
+              statement: '',
+              matchRegex: '.*',
+            },
           }),
         },
       )
-      // TODO do I need to do something to handle failure?
 
-      const updatedFields = fields.map((field) =>
-        field.id === newField.id ? newField : field,
-      )
-      setFields(updatedFields)
-      // No need to call onChange here, as the field change is already handled by the PUT request
+      const newField = await response.json()
+      const newFields = [...fields, newField]
+      setFields(newFields)
+
+      showSnackbar('Field added successfully', 'success')
+    } catch (error) {
+      console.error('Failed to add field', error)
+      showSnackbar('Failed to add field', 'error')
+    }
+  }, [groupScope, questionId, fields, showSnackbar])
+
+  const debouncedAddField = useDebouncedCallback(onAddField, 300)
+
+  const onFieldChange = useCallback(
+    async (newField) => {
+      try {
+        await fetch(
+          `/api/${groupScope}/questions/${questionId}/exact-match/fields`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({
+              field: newField,
+            }),
+          },
+        )
+        const updatedFields = fields.map((field) =>
+          field.id === newField.id ? newField : field,
+        )
+        setFields(updatedFields)
+
+        showSnackbar('Field saved successfully', 'success')
+      } catch (error) {
+        console.error('Failed to save field change', error)
+        showSnackbar('Failed to save field change', 'error')
+      }
     },
-    [fields, groupScope, questionId],
+    [fields, groupScope, questionId, showSnackbar],
   )
+  const debouncedFieldChange = useDebouncedCallback(onFieldChange, 300)
 
   const onDelete = useCallback(
     async (id) => {
@@ -89,26 +103,34 @@ const ExactMatch = ({
         console.warn('Cannot delete the last field')
         return
       }
-      await fetch(
-        `/api/${groupScope}/questions/${questionId}/exact-match/fields`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
+
+      try {
+        await fetch(
+          `/api/${groupScope}/questions/${questionId}/exact-match/fields`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({
+              fieldId: id,
+            }),
           },
-          body: JSON.stringify({
-            fieldId: id,
-          }),
-        },
-      )
-      // TODO do I need to do something to handle failure?
-      const updatedFields = fields.filter((field) => field.id !== id)
-      setFields(updatedFields)
-      // No need to call onChange here, as the field deletion is already handled by the DELETE request
+        )
+
+        const updatedFields = fields.filter((field) => field.id !== id)
+        setFields(updatedFields)
+
+        showSnackbar('Field deleted successfully', 'success')
+      } catch (error) {
+        console.error('Failed to delete field', error)
+        showSnackbar('Failed to delete field', 'error')
+      }
     },
-    [fields, groupScope, questionId],
+    [fields, groupScope, questionId, showSnackbar],
   )
+  const debouncedDelete = useDebouncedCallback(onDelete, 300)
 
   const saveOrder = useCallback(
     async (reordered) => {
@@ -124,11 +146,18 @@ const ExactMatch = ({
           }),
         },
       )
+        .then((_) => {
+          showSnackbar('Field order saved successfully', 'success')
+        })
+        .catch((error) => {
+          console.error('Failed to save field order', error)
+          showSnackbar('Failed to save field order', 'error')
+        })
     },
-    [groupScope, questionId],
+    [groupScope, questionId, showSnackbar],
   )
 
-  const debounceSaveOrdering = useDebouncedCallback(saveOrder, 300)
+  const debouncedSaveOrdering = useDebouncedCallback(saveOrder, 300)
 
   const onReorder = useCallback(
     async (sourceIndex, targetIndex) => {
@@ -142,10 +171,9 @@ const ExactMatch = ({
       })
 
       setFields(reorderedFields)
-      // No need to call onChange here, as the reordering is already handled by the PUT request
-      debounceSaveOrdering(reorderedFields)
+      debouncedSaveOrdering(reorderedFields)
     },
-    [debounceSaveOrdering, fields],
+    [debouncedSaveOrdering, fields],
   )
 
   return (
@@ -167,7 +195,7 @@ const ExactMatch = ({
         <Button
           color="primary"
           startIcon={<AddIcon />}
-          onClick={() => onAddField()}
+          onClick={debouncedAddField}
           px={2}
         >
           Add Field
@@ -186,8 +214,8 @@ const ExactMatch = ({
               index={index}
               groupScope={groupScope}
               field={field}
-              onChange={onFieldChange}
-              onDelete={onDelete}
+              onChange={debouncedFieldChange}
+              onDelete={debouncedDelete}
               mayDelete={fields.length > 1}
               previewMode={previewMode}
             ></FieldEditor>

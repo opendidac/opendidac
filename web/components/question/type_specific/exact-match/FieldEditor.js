@@ -14,24 +14,15 @@
  * limitations under the License.
  */
 
-import { IconButton, Stack, TextField, Typography } from '@mui/material'
+import { IconButton, Stack, Typography } from '@mui/material'
 import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined'
-import { styled } from '@mui/system'
 import { useEffect, useState } from 'react'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import DragHandleSVG from '@/components/layout/utils/DragHandleSVG'
 import { useReorderable } from '@/components/layout/utils/ReorderableList'
 import { useTheme } from '@emotion/react'
-
-// Styled component to apply whitespace visibility
-const MonoSpaceTextField = styled(TextField)({
-  '& textarea': {
-    whiteSpace: 'pre-wrap', // Preserves whitespaces and wraps text
-    fontFamily: 'monospace', // Makes spaces more noticeable
-  },
-})
-// TODO factorize this monospacetextfield.
+import {MonoSpaceTextField} from "@/components/input/MultiLineTextFields";
 
 const FieldEditor = ({
   index,

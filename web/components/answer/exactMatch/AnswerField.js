@@ -13,16 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TextField } from '@mui/material'
-import { styled } from '@mui/system'
-
-// Styled component to apply whitespace visibility
-const MultiLineTextField = styled(TextField)({
-  '& textarea': {
-    whiteSpace: 'pre-wrap', // Preserves whitespaces and wraps text
-  },
-})
-// TODO factorize this monospacetextfield.
+import { MultiLineTextField } from '@/components/input/MultiLineTextFields'
 
 const AnswerField = ({ fieldId, value, onValueChange }) => {
   return (

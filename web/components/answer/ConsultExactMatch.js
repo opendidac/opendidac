@@ -13,16 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Stack, TextField } from '@mui/material'
+import { Stack } from '@mui/material'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import ScrollContainer from '@/components/layout/ScrollContainer'
-import { styled } from '@mui/system'
-
-const MultiLineTextField = styled(TextField)({
-  '& textarea': {
-    whiteSpace: 'pre-wrap', // Preserves whitespaces and wraps text
-  },
-})
+import { MultiLineTextField } from '@/components/input/MultiLineTextFields'
 
 const ConsultExactMatch = ({ exactMatch, answer }) => {
   return (

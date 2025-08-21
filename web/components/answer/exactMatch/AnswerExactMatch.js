@@ -38,16 +38,20 @@ const AnswerExactMatch = ({
   const onFieldChange = useCallback(
     async (fieldId, value) => {
       const index = studentAnswers.findIndex((a) => a.fieldId === fieldId)
+      if (index < 0 || index >= studentAnswers.length) {
+        console.error(`Field with ID ${fieldId} not found in student answers.`)
+        return
+      }
+
       const field = studentAnswers[index]
-      // TODO handle if it doesn't exist
+      if (!field) {
+        console.error(`Field with ID ${fieldId} not found in student answers.`)
+        return
+      }
 
       const newAnswers = [...studentAnswers]
       newAnswers[index] = { ...field, value: value }
       setStudentAnswers(newAnswers)
-
-      console.log(
-        `Field ${fieldId} changed to ${value}. Requesting change to backend.`,
-      )
 
       const response = await fetch(
         `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/exact-match/fields`,
@@ -75,7 +79,7 @@ const AnswerExactMatch = ({
       {exactMatch.fields.map((field, index) => {
         const studentAnswer = studentAnswers.find((a) => a.fieldId === field.id)
         if (!studentAnswer) {
-          console.error(`No answer found for field ${field.id}`) // TODO remove this line
+          console.error(`No answer found for field ${field.id}`)
           return null
         }
         return (

@@ -13,24 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Alert, Stack, TextField } from '@mui/material'
+import { Alert, Stack } from '@mui/material'
 import ResizePanel from '@/components/layout/utils/ResizePanel'
 import ScrollContainer from '../layout/ScrollContainer'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
-import { styled } from '@mui/system'
-
-const MultiLineTextField = styled(TextField)({
-  '& textarea': {
-    whiteSpace: 'pre-wrap', // Preserves whitespaces and wraps text
-  },
-})
-// Styled component to apply whitespace visibility
-const MonoSpaceTextField = styled(TextField)({
-  '& textarea': {
-    whiteSpace: 'pre-wrap', // Preserves whitespaces and wraps text
-    fontFamily: 'monospace', // Makes spaces more noticeable
-  },
-})
+import {
+  MonoSpaceTextField,
+  MultiLineTextField,
+} from '@/components/input/MultiLineTextFields'
 
 const CompareExactMatch = ({
   solution,
@@ -40,7 +30,7 @@ const CompareExactMatch = ({
     <Stack p={2} pt={2} height={'100%'} spacing={2}>
       <ScrollContainer>
         <Stack spacing={2} width={'100%'}>
-          {solution.fields.map((field, index) => {
+          {solution.fields.map((field) => {
             let { value: fieldAnswer } = answer.fields.find(
               (ans) => ans.fieldId === field.id,
             ) || { value: '' }
