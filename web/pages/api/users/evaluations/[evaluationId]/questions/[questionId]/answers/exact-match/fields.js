@@ -65,32 +65,21 @@ const put = withEvaluationPhase(
       )
 
       if (!evaluationToQuestion) {
-        res
-          .status(400)
-          .json({
-            message:
-              'Internal Server Error: could not find that evaluationToQuestion',
-          })
-        // TODO, replace with this (and same everywhere in this file):
-        // res.status(400).json({ message: 'Internal Server Error' })
+        console.error(`Could not find evaluationToQuestion for evaluationId: ${evaluationId}, questionId: ${questionId}`)
+        res.status(400).json({ message: 'Internal Server Error' })
         return
       }
 
       const { exactMatch } = evaluationToQuestion.question
       if (!exactMatch) {
-        res
-          .status(400)
-          .json({
-            message:
-              'Internal Server Error: question does not have an exact answer',
-          })
+        console.error(`Question ${questionId} does not have an exact match answer`)
+        res.status(400).json({ message: 'Internal Server Error' })
         return
       }
       let expectedField = exactMatch.fields.find((f) => f.id === answeredFieldId)
       if (!expectedField) {
-        res.status(400).json({
-          message: `Internal Server Error: field ${answeredFieldId} does belong to question ${exactMatch.questionId}`,
-        })
+        console.error(`Field ${answeredFieldId} does not belong to question ${questionId}`)
+        res.status(400).json({ message: 'Internal Server Error' })
         return
       }
 
@@ -109,7 +98,6 @@ const put = withEvaluationPhase(
       })
 
       // Update the student's answer status
-      // TODO do I need to set back to MISSING if all fields are empty?
       await prisma.studentAnswer.update({
         where: {
           userEmail_questionId: {
@@ -118,6 +106,7 @@ const put = withEvaluationPhase(
           },
         },
         data: {
+          // As soon as modifications start, question is considered in progress
           status: StudentAnswerStatus.IN_PROGRESS,
         },
       })

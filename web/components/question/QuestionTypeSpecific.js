@@ -108,12 +108,6 @@ const QuestionTypeSpecific = ({
               groupScope={groupScope}
               questionId={question.id}
               fields={question.exactMatch.fields}
-              onChange={(property, newContent) =>
-                onTypeSpecificChange(question.type, {
-                  ...question.exactMatch,
-                  [property]: newContent,
-                })
-              }
             />
           )
         }

@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 import React, { useEffect, useState } from 'react'
-import { Box, InputAdornment, TextField } from '@mui/material'
+import { Box, InputAdornment } from '@mui/material'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 
-import { styled } from '@mui/system'
-
-// Styled component to apply whitespace visibility
-const MonoSpaceTextField = styled(TextField)({
-  '& textarea': {
-    whiteSpace: 'pre-wrap', // Preserves whitespaces and wraps text
-    fontFamily: 'monospace', // Makes spaces more noticeable
-  },
-})
+import {MonoSpaceTextField} from "@/components/input/MultiLineTextFields";
 
 const AnswerCodeReadingOutput = ({
   language,

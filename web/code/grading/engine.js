@@ -20,6 +20,7 @@ import {
   CodeQuestionType,
 } from '@prisma/client'
 import GradingPolicy from './policy'
+import { regexpFromPattern } from '@/code/utils'
 
 /*
     This function is used to grade a users answers to a question.
@@ -196,13 +197,7 @@ const gradeWeb = (answer) => ({
 const gradeExactMatch = (question, totalPoints, studentAnswer) => {
   const correctFields = studentAnswer?.fields?.reduce((acc, field, index) => {
     const fieldRegex = question.exactMatch.fields[index].matchRegex
-    const parts = fieldRegex.match(/^\/(.*)\/([a-z]*)$/)
-    let regex = (!parts || parts.length !== 3) ?
-      (() => {
-        console.warn(`Missing flags on regex format. Using default flags.`)
-        return new RegExp(fieldRegex)
-      })() :
-      new RegExp(parts[1], parts[2])
+    let regex = regexpFromPattern(fieldRegex)
     return acc + (regex.test(field.value) ? 1 : 0)
   }, 0)
 
