@@ -53,15 +53,17 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
   )
 
   useEffect(() => {
-    if (!isLoadingFields && loadingError) {
-      console.error(`Failed to load fields: ${loadingError}`)
-      showSnackbar(`Failed to load fields. Please try again.`, 'error')
+    if (!isLoadingFields) {
+      if (loadingError) {
+        console.error(`Failed to load fields: ${loadingError}`)
+        showSnackbar(`Failed to load fields. Please try again.`, 'error')
+      } else {
+        setFieldsState(loadedFields)
+      }
     }
-  }, [isLoadingFields, loadingError, showSnackbar])
+  }, [isLoadingFields, loadedFields, loadingError, showSnackbar])
 
-  useEffect(() => {
-    setFieldsState(loadedFields)
-  }, [loadedFields])
+  useEffect(() => {}, [loadedFields, isLoadingFields, loadingError])
 
   const onAddField = useCallback(async () => {
     try {
