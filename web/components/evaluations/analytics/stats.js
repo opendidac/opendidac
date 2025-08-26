@@ -20,6 +20,7 @@ import {
   StudentAnswerStatus,
   StudentQuestionGradingStatus,
 } from '@prisma/client'
+import { regexpFromPattern } from '@/code/utils'
 
 export const getSignedSuccessRate = (evaluationToQuestions) => {
   // total signed points
@@ -256,6 +257,8 @@ export const typeSpecificStats = (question) => {
         testQueriesStats,
         lintQueriesStats,
       }
+    case QuestionType.exactMatch:
+      return calculateExactMatchStats(question)
     default:
       return null
   }
@@ -345,4 +348,48 @@ const calculateCodeReadingStats = (question) => {
     failure: { count: failure },
     unanswered: { count: unanswered },
   }
+}
+
+const calculateExactMatchStats = (question) => {
+  let regexps = new Map()
+  let perFieldStats = []
+  let perFieldIndex = new Map()
+
+  question.exactMatch.fields.forEach((field, index) => {
+    regexps.set(field.id, regexpFromPattern(field.matchRegex))
+    perFieldStats[index] = {
+      regex: field.matchRegex,
+      correct: { count: 0 },
+      incorrect: { count: 0 },
+    }
+    perFieldIndex.set(field.id, index)
+  })
+
+  question.studentAnswer.forEach((sa) => {
+    if (sa.status === StudentAnswerStatus.MISSING) {
+      return
+    }
+
+    sa.exactMatch.fields.forEach((field) => {
+      if (field.value === '') {
+        return
+      }
+
+      const index = perFieldIndex.get(field.fieldId)
+      const regex = regexps.get(field.fieldId)
+      if (!regex) {
+        console.error(
+          `No regex found for field ${field.fieldId} during stat computation`,
+        )
+        return
+      }
+      if (regex.test(field.value)) {
+        perFieldStats[index].correct.count += 1
+      } else {
+        perFieldStats[index].incorrect.count += 1
+      }
+    })
+  })
+
+  return perFieldStats
 }

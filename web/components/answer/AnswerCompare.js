@@ -22,6 +22,7 @@ import CompareEssay from './CompareEssay'
 import CompareMultipleChoice from './CompareMultipleChoice'
 import CompareTrueFalse from './CompareTrueFalse'
 import CompareDatabase from './CompareDatabase'
+import CompareExactMatch from '@/components/answer/CompareExactMatch'
 
 const AnswerCompare = ({
   readOnly = false,
@@ -71,6 +72,9 @@ const AnswerCompare = ({
           )) ||
           (questionType === QuestionType.web && (
             <CompareWeb solution={solution} answer={answer} />
+          )) ||
+          (questionType === QuestionType.exactMatch && (
+            <CompareExactMatch solution={solution} answer={answer} />
           )))) ||
         (questionType === QuestionType.database && (
           <CompareDatabase solution={solution} answer={answer} />
