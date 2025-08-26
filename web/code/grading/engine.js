@@ -195,6 +195,11 @@ const gradeWeb = (answer) => ({
 })
 
 const gradeExactMatch = (question, totalPoints, studentAnswer) => {
+  if (studentAnswer === undefined) {
+    // When student joins, studentAnswer is undefined.
+    return defaultGrading
+  }
+
   const correctFields = studentAnswer?.fields?.reduce((acc, field) => {
     const expectedField = question.exactMatch.fields.find(
       (f) => f.id === field.fieldId,
@@ -206,7 +211,7 @@ const gradeExactMatch = (question, totalPoints, studentAnswer) => {
     const fieldRegex = expectedField.matchRegex
     let regex = regexpFromPattern(fieldRegex)
     return acc + (regex.test(field.value) ? 1 : 0)
-  }, 0)
+  }, 0) ?? 0
 
   const fieldCount = question.exactMatch.fields.length
 
