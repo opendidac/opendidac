@@ -49,7 +49,7 @@
             {{> studentAnswerCodeWriting this}}
           {{/if}}
           {{#if (eq this.question.code.codeType 'codeReading')}}
-            {{> studentAnswerCodeReading this}}
+            {{> studentAnswerCodeReadingNeutral this}}
           {{/if}}
         {{/if}}
       {{/if}}
@@ -59,7 +59,7 @@
       {{/if}}
 
       {{#if this.studentAnswer.multipleChoice}}
-        {{> studentAnswerMultipleChoiceSimple this}}
+        {{> studentAnswerMultipleChoiceNeutral this}}
       {{/if}}
 
       {{#if this.studentAnswer.trueFalse}}

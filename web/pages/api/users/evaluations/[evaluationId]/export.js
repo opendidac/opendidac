@@ -50,7 +50,8 @@ import studentAnswerCodeWritingTemplate from '@/code/evaluation/export/templates
 import studentAnswerCodeReadingTemplate from '@/code/evaluation/export/templates/studentAnswerCodeReading.hbs'
 import studentAnswerEssayTemplate from '@/code/evaluation/export/templates/studentAnswerEssay.hbs'
 import studentAnswerMultipleChoiceTemplate from '@/code/evaluation/export/templates/studentAnswerMultipleChoice.hbs'
-import studentAnswerMultipleChoiceSimpleTemplate from '@/code/evaluation/export/templates/studentAnswerMultipleChoiceSimple.hbs'
+import studentAnswerMultipleChoiceNeutralTemplate from '@/code/evaluation/export/templates/student/studentAnswerMultipleChoiceNeutral.hbs'
+import studentAnswerCodeReadingNeutralTemplate from '@/code/evaluation/export/templates/student/studentAnswerCodeReadingNeutral.hbs'
 import studentAnswerTrueFalseTemplate from '@/code/evaluation/export/templates/studentAnswerTrueFalse.hbs'
 import studentAnswerWebTemplate from '@/code/evaluation/export/templates/studentAnswerWeb.hbs'
 import studentAnswerDatabaseTemplate from '@/code/evaluation/export/templates/studentAnswerDatabase.hbs'
@@ -114,7 +115,8 @@ Handlebars.registerPartial('studentAnswerCodeWriting', studentAnswerCodeWritingT
 Handlebars.registerPartial('studentAnswerCodeReading', studentAnswerCodeReadingTemplate)
 Handlebars.registerPartial('studentAnswerEssay', studentAnswerEssayTemplate)
 Handlebars.registerPartial('studentAnswerMultipleChoice', studentAnswerMultipleChoiceTemplate)
-Handlebars.registerPartial('studentAnswerMultipleChoiceSimple', studentAnswerMultipleChoiceSimpleTemplate)
+Handlebars.registerPartial('studentAnswerMultipleChoiceNeutral', studentAnswerMultipleChoiceNeutralTemplate)
+Handlebars.registerPartial('studentAnswerCodeReadingNeutral', studentAnswerCodeReadingNeutralTemplate)
 Handlebars.registerPartial('studentAnswerTrueFalse', studentAnswerTrueFalseTemplate)
 Handlebars.registerPartial('studentAnswerWeb', studentAnswerWebTemplate)
 Handlebars.registerPartial('studentAnswerDatabase', studentAnswerDatabaseTemplate)
