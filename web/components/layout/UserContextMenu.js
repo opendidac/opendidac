@@ -20,6 +20,7 @@ import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle'
 import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Role } from '@prisma/client'
+import ArchiveIcon from '@mui/icons-material/Archive'
 
 const UserContextMenu = ({ anchorElUser, handleCloseUserMenu }) => {
   const { data: session } = useSession()
@@ -39,6 +40,13 @@ const UserContextMenu = ({ anchorElUser, handleCloseUserMenu }) => {
           <Link href={`/admin`}>
             <Button startIcon={<SupervisedUserCircleIcon />}>
               Admin Panel
+            </Button>
+          </Link>
+        )}
+        {session.user.roles.includes(Role.ARCHIVIST) && (
+          <Link href={`/admin/archiving`}>
+            <Button startIcon={<ArchiveIcon />}>
+              Archiving
             </Button>
           </Link>
         )}

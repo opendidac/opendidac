@@ -55,6 +55,10 @@ const roleToDetails = {
     label: 'Super Admin',
     color: 'error',
   },
+  [Role.ARCHIVIST]: {
+    label: 'Archivist',
+    color: 'warning',
+  },
 }
 
 const Users = () => {

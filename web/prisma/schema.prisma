@@ -71,6 +71,7 @@ enum Role {
   STUDENT
   PROFESSOR
   SUPER_ADMIN
+  ARCHIVIST
 }
 
 model VerificationToken {

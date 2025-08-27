@@ -15,13 +15,26 @@
  */
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
+import { useSession } from 'next-auth/react'
+import { Role } from '@prisma/client'
 
 const Admin = () => {
   const router = useRouter()
+  const { data: session } = useSession()
 
   useEffect(() => {
-    router.replace('/admin/users')
-  }, [router])
+    if (session?.user) {
+      // Check if user is ARCHIVIST role only
+      const isArchivistOnly = session.user.roles?.includes(Role.ARCHIVIST) && 
+                              !session.user.roles?.includes(Role.SUPER_ADMIN)
+      
+      if (isArchivistOnly) {
+        router.replace('/admin/archiving')
+      } else {
+        router.replace('/admin/users')
+      }
+    }
+  }, [router, session])
 
   return null
 }

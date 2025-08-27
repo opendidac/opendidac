@@ -33,21 +33,62 @@ import { LoadingButton } from '@mui/lab'
 import { useSnackbar } from '@/context/SnackbarContext'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { useRouter } from 'next/router'
+import { useSession } from 'next-auth/react'
 import Users from './Users'
 import Groups from './Groups'
 import Archiving from './Archiving'
 
+// Constants for tab configuration
+const ADMIN_TABS = [
+  { key: 'users', label: 'Users', component: Users, route: '/admin/users' },
+  { key: 'groups', label: 'Groups', component: Groups, route: '/admin/groups' },
+  { key: 'archiving', label: 'Archiving', component: Archiving, route: '/admin/archiving' },
+]
+
+// User role utilities
+const getUserRoleType = (session) => {
+  if (!session?.user?.roles) return 'none'
+  
+  const roles = session.user.roles
+  const isSuperAdmin = roles.includes(Role.SUPER_ADMIN)
+  const isArchivist = roles.includes(Role.ARCHIVIST)
+  
+  if (isSuperAdmin) return 'super_admin'
+  if (isArchivist) return 'archivist'
+  return 'none'
+}
+
+const getRolePermissions = (roleType) => {
+  const permissions = {
+    super_admin: {
+      allowedRoles: [Role.SUPER_ADMIN],
+      availableTabs: ADMIN_TABS,
+      showMaintenance: true,
+      defaultRedirect: '/admin/users'
+    },
+    archivist: {
+      allowedRoles: [Role.ARCHIVIST, Role.SUPER_ADMIN],
+      availableTabs: ADMIN_TABS.filter(tab => tab.key === 'archiving'),
+      showMaintenance: false,
+      defaultRedirect: '/admin/archiving'
+    },
+    none: {
+      allowedRoles: [],
+      availableTabs: [],
+      showMaintenance: false,
+      defaultRedirect: '/'
+    }
+  }
+  
+  return permissions[roleType] || permissions.none
+}
+
+// Maintenance Panel Component
 const MaintenancePanel = () => {
   const [anchorElUser, setAnchorEl] = useState(null)
-
   const { showTopCenter: showSnackbar } = useSnackbar()
-
-  const [openRunAllSandboxesDialog, setOpenRunAllSandboxesDialog] =
-    useState(false)
-
-  const [openUnusedUploadsCleanupDialog, setOpenUnusedUploadsCleanupDialog] =
-    useState(false)
-
+  const [openRunAllSandboxesDialog, setOpenRunAllSandboxesDialog] = useState(false)
+  const [openUnusedUploadsCleanupDialog, setOpenUnusedUploadsCleanupDialog] = useState(false)
   const [runningAllSandbox, setRunningAllSandbox] = useState(false)
   const [runningUploadsCleanup, setRunningUploadsCleanup] = useState(false)
 
@@ -145,7 +186,6 @@ const MaintenancePanel = () => {
               This will also update the expected outputs for the code writing
               questions that are part of evaluations.
             </Typography>
-
             <Typography variant="body2">
               Are you sure you want to run all sandboxes and update the expected
               output of the test cases?
@@ -179,82 +219,168 @@ const MaintenancePanel = () => {
   )
 }
 
-const PageAdmin = ({ activeTab = 'users' }) => {
-  const router = useRouter()
-
-  const handleTabChange = (event, newValue) => {
-    const tabRoutes = ['users', 'groups', 'archiving']
-    const newRoute = tabRoutes[newValue]
-    if (newRoute) {
-      router.push(`/admin/${newRoute}`)
-    }
-  }
-
-  const getTabValue = () => {
-    const currentPath = router.asPath
-
-    if (currentPath.startsWith('/admin/archiving')) {
-      return 2 // archiving tab
-    }
-    if (currentPath.startsWith('/admin/groups')) {
-      return 1 // groups tab
-    }
-    return 0 // users tab (default)
-  }
-
-  const getCurrentTabContent = () => {
-    const currentPath = router.asPath
-
-    if (currentPath.startsWith('/admin/archiving')) {
-      // Determine archiving mode based on the specific route
-      if (currentPath === '/admin/archiving/pending') {
-        return <Archiving mode="pending" />
-      }
-      if (currentPath === '/admin/archiving/done') {
-        return <Archiving mode="done" />
-      }
-      // Default to todo mode for /admin/archiving
-      return <Archiving mode="todo" />
-    }
-
-    if (currentPath.startsWith('/admin/groups')) {
-      return <Groups />
-    }
-
-    // Default to users
-    return <Users />
+// Tab Navigation Component
+const AdminTabNavigation = ({ availableTabs, currentTabIndex, onTabChange }) => {
+  if (availableTabs.length <= 1) {
+    return null // Don't show tabs if there's only one or no tabs
   }
 
   return (
-    <Authorization allowRoles={[Role.SUPER_ADMIN]}>
+    <Tabs
+      value={currentTabIndex}
+      onChange={onTabChange}
+      aria-label="admin tabs"
+    >
+      {availableTabs.map((tab) => (
+        <Tab key={tab.key} label={tab.label} sx={{ opacity: 1, m: 1 }} />
+      ))}
+    </Tabs>
+  )
+}
+
+// Admin Header Component
+const AdminHeader = ({ roleType, availableTabs, currentTabIndex, onTabChange }) => {
+  const permissions = getRolePermissions(roleType)
+  
+  const getHeaderTitle = () => {
+    if (roleType === 'archivist') {
+      return 'Archiving Management'
+    }
+    return null // For super admin, show tabs instead of title
+  }
+
+  const headerTitle = getHeaderTitle()
+
+  return (
+    <Stack direction={'row'}>
+      <Stack direction={'row'} spacing={1} alignItems={'center'} flex={1}>
+        <BackButton backUrl="/" />
+        {headerTitle ? (
+          <Typography variant="h6" sx={{ opacity: 1, m: 1 }}>
+            {headerTitle}
+          </Typography>
+        ) : (
+          <AdminTabNavigation 
+            availableTabs={availableTabs}
+            currentTabIndex={currentTabIndex}
+            onTabChange={onTabChange}
+          />
+        )}
+      </Stack>
+      {permissions.showMaintenance && <MaintenancePanel />}
+    </Stack>
+  )
+}
+
+// Main Admin Layout Component
+const AdminLayout = ({ children, roleType, availableTabs, currentTabIndex, onTabChange }) => {
+  const permissions = getRolePermissions(roleType)
+
+  return (
+    <Authorization allowRoles={permissions.allowedRoles}>
       <LayoutMain
         hideLogo
         header={
-          <Stack direction={'row'}>
-            <Stack direction={'row'} spacing={1} alignItems={'center'} flex={1}>
-              <BackButton backUrl="/" />
-              <Tabs
-                value={getTabValue()}
-                onChange={handleTabChange}
-                aria-label="admin tabs"
-              >
-                <Tab label="Users" sx={{ opacity: 1, m: 1 }} />
-                <Tab label="Groups" sx={{ opacity: 1, m: 1 }} />
-                <Tab label="Archiving" sx={{ opacity: 1, m: 1 }} />
-              </Tabs>
-            </Stack>
-            <MaintenancePanel />
-          </Stack>
+          <AdminHeader 
+            roleType={roleType}
+            availableTabs={availableTabs}
+            currentTabIndex={currentTabIndex}
+            onTabChange={onTabChange}
+          />
         }
       >
         <Box sx={{ width: '100%', height: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}></Box>
           <Box sx={{ height: 'calc(100% - 2px)' }}>
-            {getCurrentTabContent()}
+            {children}
           </Box>
         </Box>
       </LayoutMain>
     </Authorization>
+  )
+}
+
+// Tab Content Router
+const TabContentRouter = ({ availableTabs, currentPath }) => {
+  // Determine archiving mode based on the specific route
+  if (currentPath.startsWith('/admin/archiving')) {
+    if (currentPath === '/admin/archiving/pending') {
+      return <Archiving mode="pending" />
+    }
+    if (currentPath === '/admin/archiving/done') {
+      return <Archiving mode="done" />
+    }
+    return <Archiving mode="todo" />
+  }
+
+  // Find the matching tab based on current path
+  const activeTab = availableTabs.find(tab => 
+    currentPath.startsWith(tab.route) || 
+    (tab.key === 'users' && currentPath === '/admin')
+  )
+
+  if (activeTab) {
+    const Component = activeTab.component
+    return <Component />
+  }
+
+  // Default fallback
+  const defaultTab = availableTabs[0]
+  if (defaultTab) {
+    const Component = defaultTab.component
+    return <Component />
+  }
+
+  return (
+    <Box sx={{ p: 2 }}>
+      <Typography variant="body1" color="text.secondary">
+        No content available
+      </Typography>
+    </Box>
+  )
+}
+
+// Main Page Component
+const PageAdmin = ({ activeTab = 'users' }) => {
+  const router = useRouter()
+  const { data: session } = useSession()
+  
+  // Determine user role and permissions
+  const roleType = getUserRoleType(session)
+  const permissions = getRolePermissions(roleType)
+  const { availableTabs } = permissions
+
+  // Tab navigation logic
+  const getCurrentTabIndex = () => {
+    const currentPath = router.asPath
+    return availableTabs.findIndex(tab => 
+      currentPath.startsWith(tab.route) ||
+      (tab.key === 'users' && currentPath === '/admin')
+    )
+  }
+
+  const handleTabChange = (event, newValue) => {
+    const targetTab = availableTabs[newValue]
+    if (targetTab) {
+      router.push(targetTab.route)
+    }
+  }
+
+  const currentTabIndex = getCurrentTabIndex()
+
+  // Render the appropriate layout
+  return (
+    <AdminLayout
+      roleType={roleType}
+      availableTabs={availableTabs}
+      currentTabIndex={currentTabIndex}
+      onTabChange={handleTabChange}
+    >
+      <TabContentRouter 
+        availableTabs={availableTabs}
+        currentPath={router.asPath}
+      />
+    </AdminLayout>
   )
 }
 

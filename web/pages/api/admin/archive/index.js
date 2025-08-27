@@ -144,5 +144,5 @@ const get = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.SUPER_ADMIN]),
+  GET: withAuthorization(withPrisma(get), [Role.SUPER_ADMIN, Role.ARCHIVIST]),
 })
