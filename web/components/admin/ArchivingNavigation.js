@@ -47,26 +47,27 @@ const ArchivingNavigation = ({ currentMode }) => {
       case 'todo':
         return {
           text: 'Sorted by creation date (oldest first)',
-          detail: 'Prioritizing evaluations waiting longest for archival action',
-          severity: 'info'
+          detail:
+            'Prioritizing evaluations waiting longest for archival action',
+          severity: 'info',
         }
       case 'pending':
         return {
           text: 'Sorted by archival deadline (earliest first)',
           detail: 'Prioritizing upcoming deadlines to prevent breaches',
-          severity: 'warning'
+          severity: 'warning',
         }
       case 'done':
         return {
           text: 'Sorted by completion date (most recent first)',
           detail: 'Showing latest archival activity',
-          severity: 'success'
+          severity: 'success',
         }
       default:
         return {
           text: 'Default sorting applied',
           detail: '',
-          severity: 'info'
+          severity: 'info',
         }
     }
   }
@@ -126,15 +127,15 @@ const ArchivingNavigation = ({ currentMode }) => {
         </Box>
 
         {/* Sorting info on the right */}
-        
-        <Alert 
-          severity={sortInfo.severity} 
+
+        <Alert
+          severity={sortInfo.severity}
           icon={<Sort fontSize="small" />}
-          sx={{ 
+          sx={{
             py: 0.5,
             '& .MuiAlert-message': {
-              py: 0.5
-            }
+              py: 0.5,
+            },
           }}
         >
           <Stack spacing={0.25}>

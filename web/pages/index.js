@@ -19,7 +19,9 @@ import IndexPage from '../components/IndexPage'
 
 const Home = () => {
   return (
-    <Authorization allowRoles={[Role.PROFESSOR, Role.ARCHIVIST, Role.SUPER_ADMIN]}>
+    <Authorization
+      allowRoles={[Role.PROFESSOR, Role.ARCHIVIST, Role.SUPER_ADMIN]}
+    >
       <IndexPage />
     </Authorization>
   )

@@ -84,22 +84,19 @@ const get = async (req, res, prisma) => {
       case 'todo':
         // Oldest first - prioritize evaluations waiting longest for action
         return { createdAt: 'asc' }
-      
+
       case 'pending':
         // Earliest deadline first, then by creation date
-        return [
-          { archivalDeadline: 'asc' },
-          { createdAt: 'asc' }
-        ]
-      
+        return [{ archivalDeadline: 'asc' }, { createdAt: 'asc' }]
+
       case 'done':
         // Most recently completed first - prioritize purged then archived
         return [
           { purgedAt: 'desc' },
           { archivedAt: 'desc' },
-          { createdAt: 'desc' }
+          { createdAt: 'desc' },
         ]
-      
+
       default:
         return { createdAt: 'desc' }
     }

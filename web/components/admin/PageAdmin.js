@@ -42,17 +42,22 @@ import Archiving from './Archiving'
 const ADMIN_TABS = [
   { key: 'users', label: 'Users', component: Users, route: '/admin/users' },
   { key: 'groups', label: 'Groups', component: Groups, route: '/admin/groups' },
-  { key: 'archiving', label: 'Archiving', component: Archiving, route: '/admin/archiving' },
+  {
+    key: 'archiving',
+    label: 'Archiving',
+    component: Archiving,
+    route: '/admin/archiving',
+  },
 ]
 
 // User role utilities
 const getUserRoleType = (session) => {
   if (!session?.user?.roles) return 'none'
-  
+
   const roles = session.user.roles
   const isSuperAdmin = roles.includes(Role.SUPER_ADMIN)
   const isArchivist = roles.includes(Role.ARCHIVIST)
-  
+
   if (isSuperAdmin) return 'super_admin'
   if (isArchivist) return 'archivist'
   return 'none'
@@ -64,22 +69,22 @@ const getRolePermissions = (roleType) => {
       allowedRoles: [Role.SUPER_ADMIN],
       availableTabs: ADMIN_TABS,
       showMaintenance: true,
-      defaultRedirect: '/admin/users'
+      defaultRedirect: '/admin/users',
     },
     archivist: {
       allowedRoles: [Role.ARCHIVIST, Role.SUPER_ADMIN],
-      availableTabs: ADMIN_TABS.filter(tab => tab.key === 'archiving'),
+      availableTabs: ADMIN_TABS.filter((tab) => tab.key === 'archiving'),
       showMaintenance: false,
-      defaultRedirect: '/admin/archiving'
+      defaultRedirect: '/admin/archiving',
     },
     none: {
       allowedRoles: [],
       availableTabs: [],
       showMaintenance: false,
-      defaultRedirect: '/'
-    }
+      defaultRedirect: '/',
+    },
   }
-  
+
   return permissions[roleType] || permissions.none
 }
 
@@ -87,8 +92,10 @@ const getRolePermissions = (roleType) => {
 const MaintenancePanel = () => {
   const [anchorElUser, setAnchorEl] = useState(null)
   const { showTopCenter: showSnackbar } = useSnackbar()
-  const [openRunAllSandboxesDialog, setOpenRunAllSandboxesDialog] = useState(false)
-  const [openUnusedUploadsCleanupDialog, setOpenUnusedUploadsCleanupDialog] = useState(false)
+  const [openRunAllSandboxesDialog, setOpenRunAllSandboxesDialog] =
+    useState(false)
+  const [openUnusedUploadsCleanupDialog, setOpenUnusedUploadsCleanupDialog] =
+    useState(false)
   const [runningAllSandbox, setRunningAllSandbox] = useState(false)
   const [runningUploadsCleanup, setRunningUploadsCleanup] = useState(false)
 
@@ -220,7 +227,11 @@ const MaintenancePanel = () => {
 }
 
 // Tab Navigation Component
-const AdminTabNavigation = ({ availableTabs, currentTabIndex, onTabChange }) => {
+const AdminTabNavigation = ({
+  availableTabs,
+  currentTabIndex,
+  onTabChange,
+}) => {
   if (availableTabs.length <= 1) {
     return null // Don't show tabs if there's only one or no tabs
   }
@@ -239,9 +250,14 @@ const AdminTabNavigation = ({ availableTabs, currentTabIndex, onTabChange }) => 
 }
 
 // Admin Header Component
-const AdminHeader = ({ roleType, availableTabs, currentTabIndex, onTabChange }) => {
+const AdminHeader = ({
+  roleType,
+  availableTabs,
+  currentTabIndex,
+  onTabChange,
+}) => {
   const permissions = getRolePermissions(roleType)
-  
+
   const getHeaderTitle = () => {
     if (roleType === 'archivist') {
       return 'Archiving Management'
@@ -260,7 +276,7 @@ const AdminHeader = ({ roleType, availableTabs, currentTabIndex, onTabChange }) 
             {headerTitle}
           </Typography>
         ) : (
-          <AdminTabNavigation 
+          <AdminTabNavigation
             availableTabs={availableTabs}
             currentTabIndex={currentTabIndex}
             onTabChange={onTabChange}
@@ -273,7 +289,13 @@ const AdminHeader = ({ roleType, availableTabs, currentTabIndex, onTabChange }) 
 }
 
 // Main Admin Layout Component
-const AdminLayout = ({ children, roleType, availableTabs, currentTabIndex, onTabChange }) => {
+const AdminLayout = ({
+  children,
+  roleType,
+  availableTabs,
+  currentTabIndex,
+  onTabChange,
+}) => {
   const permissions = getRolePermissions(roleType)
 
   return (
@@ -281,7 +303,7 @@ const AdminLayout = ({ children, roleType, availableTabs, currentTabIndex, onTab
       <LayoutMain
         hideLogo
         header={
-          <AdminHeader 
+          <AdminHeader
             roleType={roleType}
             availableTabs={availableTabs}
             currentTabIndex={currentTabIndex}
@@ -291,9 +313,7 @@ const AdminLayout = ({ children, roleType, availableTabs, currentTabIndex, onTab
       >
         <Box sx={{ width: '100%', height: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}></Box>
-          <Box sx={{ height: 'calc(100% - 2px)' }}>
-            {children}
-          </Box>
+          <Box sx={{ height: 'calc(100% - 2px)' }}>{children}</Box>
         </Box>
       </LayoutMain>
     </Authorization>
@@ -314,9 +334,10 @@ const TabContentRouter = ({ availableTabs, currentPath }) => {
   }
 
   // Find the matching tab based on current path
-  const activeTab = availableTabs.find(tab => 
-    currentPath.startsWith(tab.route) || 
-    (tab.key === 'users' && currentPath === '/admin')
+  const activeTab = availableTabs.find(
+    (tab) =>
+      currentPath.startsWith(tab.route) ||
+      (tab.key === 'users' && currentPath === '/admin'),
   )
 
   if (activeTab) {
@@ -344,7 +365,7 @@ const TabContentRouter = ({ availableTabs, currentPath }) => {
 const PageAdmin = ({ activeTab = 'users' }) => {
   const router = useRouter()
   const { data: session } = useSession()
-  
+
   // Determine user role and permissions
   const roleType = getUserRoleType(session)
   const permissions = getRolePermissions(roleType)
@@ -353,9 +374,10 @@ const PageAdmin = ({ activeTab = 'users' }) => {
   // Tab navigation logic
   const getCurrentTabIndex = () => {
     const currentPath = router.asPath
-    return availableTabs.findIndex(tab => 
-      currentPath.startsWith(tab.route) ||
-      (tab.key === 'users' && currentPath === '/admin')
+    return availableTabs.findIndex(
+      (tab) =>
+        currentPath.startsWith(tab.route) ||
+        (tab.key === 'users' && currentPath === '/admin'),
     )
   }
 
@@ -376,7 +398,7 @@ const PageAdmin = ({ activeTab = 'users' }) => {
       currentTabIndex={currentTabIndex}
       onTabChange={handleTabChange}
     >
-      <TabContentRouter 
+      <TabContentRouter
         availableTabs={availableTabs}
         currentPath={router.asPath}
       />

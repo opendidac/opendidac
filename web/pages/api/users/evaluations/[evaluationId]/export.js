@@ -38,7 +38,6 @@ import {
   formatCode,
 } from '@/code/evaluation/export/helpers'
 
-import mainTempate from '@/code/evaluation/export/templates/main.hbs'
 import studentMainTemplate from '@/code/evaluation/export/templates/studentMain.hbs'
 import stylesTemplate from '@/code/evaluation/export/templates/styles.hbs'
 import studentCoverTemplate from '@/code/evaluation/export/templates/studentCover.hbs'
@@ -111,15 +110,36 @@ Handlebars.registerPartial('studentCover', studentCoverTemplate)
 Handlebars.registerPartial('questionHeader', questionTemplate)
 Handlebars.registerPartial('codeBloc', codeBlocTemplate)
 Handlebars.registerPartial('studentAnswerHeader', studentAnswerHeaderTemplate)
-Handlebars.registerPartial('studentAnswerCodeWriting', studentAnswerCodeWritingTemplate)
-Handlebars.registerPartial('studentAnswerCodeReading', studentAnswerCodeReadingTemplate)
+Handlebars.registerPartial(
+  'studentAnswerCodeWriting',
+  studentAnswerCodeWritingTemplate,
+)
+Handlebars.registerPartial(
+  'studentAnswerCodeReading',
+  studentAnswerCodeReadingTemplate,
+)
 Handlebars.registerPartial('studentAnswerEssay', studentAnswerEssayTemplate)
-Handlebars.registerPartial('studentAnswerMultipleChoice', studentAnswerMultipleChoiceTemplate)
-Handlebars.registerPartial('studentAnswerMultipleChoiceNeutral', studentAnswerMultipleChoiceNeutralTemplate)
-Handlebars.registerPartial('studentAnswerCodeReadingNeutral', studentAnswerCodeReadingNeutralTemplate)
-Handlebars.registerPartial('studentAnswerTrueFalse', studentAnswerTrueFalseTemplate)
+Handlebars.registerPartial(
+  'studentAnswerMultipleChoice',
+  studentAnswerMultipleChoiceTemplate,
+)
+Handlebars.registerPartial(
+  'studentAnswerMultipleChoiceNeutral',
+  studentAnswerMultipleChoiceNeutralTemplate,
+)
+Handlebars.registerPartial(
+  'studentAnswerCodeReadingNeutral',
+  studentAnswerCodeReadingNeutralTemplate,
+)
+Handlebars.registerPartial(
+  'studentAnswerTrueFalse',
+  studentAnswerTrueFalseTemplate,
+)
 Handlebars.registerPartial('studentAnswerWeb', studentAnswerWebTemplate)
-Handlebars.registerPartial('studentAnswerDatabase', studentAnswerDatabaseTemplate)
+Handlebars.registerPartial(
+  'studentAnswerDatabase',
+  studentAnswerDatabaseTemplate,
+)
 Handlebars.registerPartial('grading', gradingTemplate)
 Handlebars.registerPartial('questionWithSolution', questionWithSolutionTemplate)
 Handlebars.registerPartial('sectionHeader', sectionHeaderTemplate)
@@ -179,9 +199,9 @@ const get = async (req, res, prisma) => {
                 include: questionIncludeClause({
                   includeTypeSpecific: true,
                   includeOfficialAnswers: false, // NO SOLUTIONS for students
-                  includeUserAnswers: { 
-                    strategy: IncludeStrategy.USER_SPECIFIC, 
-                    userEmail: currentUserEmail 
+                  includeUserAnswers: {
+                    strategy: IncludeStrategy.USER_SPECIFIC,
+                    userEmail: currentUserEmail,
                   },
                   includeGradings: true,
                 }),
@@ -254,5 +274,7 @@ const get = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.STUDENT, Role.PROFESSOR]),
-}) 
+  GET: withRestrictions(
+    withAuthorization(withPrisma(get), [Role.STUDENT, Role.PROFESSOR]),
+  ),
+})

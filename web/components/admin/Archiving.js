@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { fetcher } from '@/code/utils'
 import Loading from '../feedback/Loading'
 import UserHelpPopper from '../feedback/UserHelpPopper'
@@ -197,7 +197,7 @@ const Archiving = ({ mode = 'todo' }) => {
                         </Stack>
                       ),
                     },
-                    
+
                     {
                       label: 'Phase',
                       column: { width: '140px' },
@@ -274,21 +274,23 @@ const Archiving = ({ mode = 'todo' }) => {
                       column: { width: '200px' },
                       renderCell: (row) => (
                         <Stack direction="row" spacing={1} alignItems="center">
-                          <Typography 
-                            variant="body2" 
+                          <Typography
+                            variant="body2"
                             color="text.secondary"
-                            sx={{ 
-                              overflow: 'hidden', 
-                              textOverflow: 'ellipsis', 
+                            sx={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
-                              maxWidth: '140px'
+                              maxWidth: '140px',
                             }}
                             title={row.group?.label || 'Unknown'}
                           >
                             {row.group?.label || 'Unknown'}
                           </Typography>
                           {row.group?.members && (
-                            <GroupMembersWidget groupMembers={row.group.members} />
+                            <GroupMembersWidget
+                              groupMembers={row.group.members}
+                            />
                           )}
                         </Stack>
                       ),
@@ -296,61 +298,61 @@ const Archiving = ({ mode = 'todo' }) => {
                   ],
                 }}
                 items={evaluations?.map((evaluation) => ({
-                    ...evaluation,
-                    meta: {
-                      key: `evaluation-${evaluation.id}`,
+                  ...evaluation,
+                  meta: {
+                    key: `evaluation-${evaluation.id}`,
 
-                      actions: [
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          key="actions"
-                          justifyContent={'flex-end'}
-                        >
-                          <ArchivalWorkflowButton
-                            evaluation={evaluation}
-                            onTransition={handleArchivalTransition}
-                            size="small"
-                          />
-                          {isSuperAdmin || isProfessor ? (
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => {
-                                window.open(
-                                  `/${evaluation.groupScope}/evaluations/${evaluation.id}`,
-                                  '_blank',
-                                )
-                              }}
-                              color="primary"
-                            >
-                              Open
-                            </Button>
-                          ) : null}
+                    actions: [
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        key="actions"
+                        justifyContent={'flex-end'}
+                      >
+                        <ArchivalWorkflowButton
+                          evaluation={evaluation}
+                          onTransition={handleArchivalTransition}
+                          size="small"
+                        />
+                        {isSuperAdmin || isProfessor ? (
                           <Button
                             variant="outlined"
                             size="small"
                             onClick={() => {
                               window.open(
-                                `/api/${evaluation.groupScope}/evaluations/${evaluation.id}/export`,
+                                `/${evaluation.groupScope}/evaluations/${evaluation.id}`,
                                 '_blank',
                               )
                             }}
-                            startIcon={
-                              <Image
-                                alt="Export"
-                                src="/svg/icons/file-pdf.svg"
-                                width="16"
-                                height="16"
-                              />
-                            }
+                            color="primary"
                           >
-                            PDF
+                            Open
                           </Button>
-                        </Stack>,
-                      ],
-                    },
-                  }))}
+                        ) : null}
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => {
+                            window.open(
+                              `/api/${evaluation.groupScope}/evaluations/${evaluation.id}/export`,
+                              '_blank',
+                            )
+                          }}
+                          startIcon={
+                            <Image
+                              alt="Export"
+                              src="/svg/icons/file-pdf.svg"
+                              width="16"
+                              height="16"
+                            />
+                          }
+                        >
+                          PDF
+                        </Button>
+                      </Stack>,
+                    ],
+                  },
+                }))}
               />
             )}
           </ScrollContainer>

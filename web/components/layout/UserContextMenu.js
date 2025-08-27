@@ -45,9 +45,7 @@ const UserContextMenu = ({ anchorElUser, handleCloseUserMenu }) => {
         )}
         {session.user.roles.includes(Role.ARCHIVIST) && (
           <Link href={`/admin/archiving`}>
-            <Button startIcon={<ArchiveIcon />}>
-              Archiving
-            </Button>
+            <Button startIcon={<ArchiveIcon />}>Archiving</Button>
           </Link>
         )}
 

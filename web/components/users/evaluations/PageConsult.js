@@ -77,7 +77,6 @@ const PageConsult = () => {
   const [consultationDisabled, setConsultationDisabled] = useState(false)
 
   // Inline PDF Export Button
-  
 
   useEffect(() => {
     if (
@@ -146,13 +145,18 @@ const PageConsult = () => {
                     </Stack>
                   }
                   subheader={
-                    <Alert 
+                    <Alert
                       severity="info"
                       action={
                         <Button
                           variant="outlined"
                           size="small"
-                          onClick={() => window.open(`/api/users/evaluations/${evaluationId}/export`, '_blank')}
+                          onClick={() =>
+                            window.open(
+                              `/api/users/evaluations/${evaluationId}/export`,
+                              '_blank',
+                            )
+                          }
                           startIcon={
                             <NextImage
                               alt="Download PDF"
@@ -166,96 +170,97 @@ const PageConsult = () => {
                         </Button>
                       }
                     >
-                      This consultation will remain accessible until the evaluation is archived.
+                      This consultation will remain accessible until the
+                      evaluation is archived.
                     </Alert>
                   }
                 >
                   <LayoutSplitScreen
-                      sx={{ flex: 1 }}
-                      leftPanel={
-                        selected && (
-                          <QuestionView
-                            order={selected.order}
-                            points={selected.points}
-                            question={selected.question}
-                            totalPages={evaluationToQuestions.length}
-                            above={
-                              <Addendum
-                                evaluationToQuestion={selected}
-                                readOnly={true}
-                              />
-                            }
-                          />
-                        )
-                      }
-                      rightWidth={65}
-                      rightPanel={
-                        selected &&
-                        (userOnEvaluation.showSolutionsWhenFinished ? (
-                          <Box height={'100%'}>
-                            <AnswerCompare
-                              id={`answer-viewer-${selected.question.id}`}
-                              readOnly
+                    sx={{ flex: 1 }}
+                    leftPanel={
+                      selected && (
+                        <QuestionView
+                          order={selected.order}
+                          points={selected.points}
+                          question={selected.question}
+                          totalPages={evaluationToQuestions.length}
+                          above={
+                            <Addendum
                               evaluationToQuestion={selected}
-                              solution={selected.question[selected.question.type]}
-                              answer={
-                                selected.question.studentAnswer[0][
-                                  selected.question.type
-                                ]
-                              }
+                              readOnly={true}
                             />
-                          </Box>
-                        ) : (
-                          <AnswerConsult
+                          }
+                        />
+                      )
+                    }
+                    rightWidth={65}
+                    rightPanel={
+                      selected &&
+                      (userOnEvaluation.showSolutionsWhenFinished ? (
+                        <Box height={'100%'}>
+                          <AnswerCompare
                             id={`answer-viewer-${selected.question.id}`}
-                            question={selected.question}
+                            readOnly
+                            evaluationToQuestion={selected}
+                            solution={selected.question[selected.question.type]}
                             answer={
                               selected.question.studentAnswer[0][
                                 selected.question.type
                               ]
                             }
                           />
-                        ))
-                      }
-                      footer={
-                        <>
-                          {selected &&
-                            selected.question.studentAnswer[0].studentGrading
-                              .signedBy && (
-                              <Paper sx={{ height: '80px' }} square>
-                                <Stack
-                                  spacing={2}
-                                  direction="row"
-                                  justifyContent="center"
-                                  alignItems="center"
-                                  height="100%"
-                                  pr={1}
-                                >
-                                  <GradingSigned
-                                    signedBy={
-                                      selected.question.studentAnswer[0]
-                                        .studentGrading.signedBy
-                                    }
-                                    readOnly={true}
-                                  />
-                                  <GradingPointsComment
-                                    points={
-                                      selected.question.studentAnswer[0]
-                                        .studentGrading.pointsObtained
-                                    }
-                                    maxPoints={selected.points}
-                                    comment={
-                                      selected.question.studentAnswer[0]
-                                        .studentGrading.comment
-                                    }
-                                  />
-                                </Stack>
-                              </Paper>
-                            )}
-                        </>
-                      }
-                    />
-                  </LayoutMain>
+                        </Box>
+                      ) : (
+                        <AnswerConsult
+                          id={`answer-viewer-${selected.question.id}`}
+                          question={selected.question}
+                          answer={
+                            selected.question.studentAnswer[0][
+                              selected.question.type
+                            ]
+                          }
+                        />
+                      ))
+                    }
+                    footer={
+                      <>
+                        {selected &&
+                          selected.question.studentAnswer[0].studentGrading
+                            .signedBy && (
+                            <Paper sx={{ height: '80px' }} square>
+                              <Stack
+                                spacing={2}
+                                direction="row"
+                                justifyContent="center"
+                                alignItems="center"
+                                height="100%"
+                                pr={1}
+                              >
+                                <GradingSigned
+                                  signedBy={
+                                    selected.question.studentAnswer[0]
+                                      .studentGrading.signedBy
+                                  }
+                                  readOnly={true}
+                                />
+                                <GradingPointsComment
+                                  points={
+                                    selected.question.studentAnswer[0]
+                                      .studentGrading.pointsObtained
+                                  }
+                                  maxPoints={selected.points}
+                                  comment={
+                                    selected.question.studentAnswer[0]
+                                      .studentGrading.comment
+                                  }
+                                />
+                              </Stack>
+                            </Paper>
+                          )}
+                      </>
+                    }
+                  />
+                </LayoutMain>
               )}
             </Loading>
           </StudentPhaseRedirect>

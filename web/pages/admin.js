@@ -25,9 +25,10 @@ const Admin = () => {
   useEffect(() => {
     if (session?.user) {
       // Check if user is ARCHIVIST role only
-      const isArchivistOnly = session.user.roles?.includes(Role.ARCHIVIST) && 
-                              !session.user.roles?.includes(Role.SUPER_ADMIN)
-      
+      const isArchivistOnly =
+        session.user.roles?.includes(Role.ARCHIVIST) &&
+        !session.user.roles?.includes(Role.SUPER_ADMIN)
+
       if (isArchivistOnly) {
         router.replace('/admin/archiving')
       } else {

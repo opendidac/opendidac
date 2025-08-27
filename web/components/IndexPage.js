@@ -56,7 +56,6 @@ const IndexPage = () => {
           await router.push(`/${selectedGroup}/questions`)
         })()
       }
-
     }
 
     // Handle SUPER_ADMIN users - redirect to admin
@@ -64,7 +63,6 @@ const IndexPage = () => {
       router.push('/admin')
       return
     }
-
   }, [switchGroup, groups, session, router])
 
   return <Loading />
