@@ -18,7 +18,7 @@ import useSWR from 'swr'
 import { Role, StudentAnswerStatus } from '@prisma/client'
 import Authorization from '../../security/Authorization'
 import LayoutSplitScreen from '../../layout/LayoutSplitScreen'
-import { Box, Paper, Stack, Typography, Button } from '@mui/material'
+import { Box, Paper, Stack, Typography, Button, Alert } from '@mui/material'
 import Paging from '../../layout/utils/Paging'
 import { useEffect, useMemo, useState } from 'react'
 import StudentPhaseRedirect from './StudentPhaseRedirect'
@@ -170,92 +170,98 @@ const PageConsult = () => {
                       <StudentExportPdfButton evaluationId={evaluationId} />
                     </Stack>
                   }
+                  subheader={
+                    <Alert severity="info">
+                      This consultation will remain accessible until the evaluation is archived.
+                    </Alert>
+                  }
                 >
                   <LayoutSplitScreen
-                    leftPanel={
-                      selected && (
-                        <QuestionView
-                          order={selected.order}
-                          points={selected.points}
-                          question={selected.question}
-                          totalPages={evaluationToQuestions.length}
-                          above={
-                            <Addendum
+                      sx={{ flex: 1 }}
+                      leftPanel={
+                        selected && (
+                          <QuestionView
+                            order={selected.order}
+                            points={selected.points}
+                            question={selected.question}
+                            totalPages={evaluationToQuestions.length}
+                            above={
+                              <Addendum
+                                evaluationToQuestion={selected}
+                                readOnly={true}
+                              />
+                            }
+                          />
+                        )
+                      }
+                      rightWidth={65}
+                      rightPanel={
+                        selected &&
+                        (userOnEvaluation.showSolutionsWhenFinished ? (
+                          <Box height={'100%'}>
+                            <AnswerCompare
+                              id={`answer-viewer-${selected.question.id}`}
+                              readOnly
                               evaluationToQuestion={selected}
-                              readOnly={true}
+                              solution={selected.question[selected.question.type]}
+                              answer={
+                                selected.question.studentAnswer[0][
+                                  selected.question.type
+                                ]
+                              }
                             />
-                          }
-                        />
-                      )
-                    }
-                    rightWidth={65}
-                    rightPanel={
-                      selected &&
-                      (userOnEvaluation.showSolutionsWhenFinished ? (
-                        <Box height={'100%'}>
-                          <AnswerCompare
+                          </Box>
+                        ) : (
+                          <AnswerConsult
                             id={`answer-viewer-${selected.question.id}`}
-                            readOnly
-                            evaluationToQuestion={selected}
-                            solution={selected.question[selected.question.type]}
+                            question={selected.question}
                             answer={
                               selected.question.studentAnswer[0][
                                 selected.question.type
                               ]
                             }
                           />
-                        </Box>
-                      ) : (
-                        <AnswerConsult
-                          id={`answer-viewer-${selected.question.id}`}
-                          question={selected.question}
-                          answer={
-                            selected.question.studentAnswer[0][
-                              selected.question.type
-                            ]
-                          }
-                        />
-                      ))
-                    }
-                    footer={
-                      <>
-                        {selected &&
-                          selected.question.studentAnswer[0].studentGrading
-                            .signedBy && (
-                            <Paper sx={{ height: '80px' }} square>
-                              <Stack
-                                spacing={2}
-                                direction="row"
-                                justifyContent="center"
-                                alignItems="center"
-                                height="100%"
-                                pr={1}
-                              >
-                                <GradingSigned
-                                  signedBy={
-                                    selected.question.studentAnswer[0]
-                                      .studentGrading.signedBy
-                                  }
-                                  readOnly={true}
-                                />
-                                <GradingPointsComment
-                                  points={
-                                    selected.question.studentAnswer[0]
-                                      .studentGrading.pointsObtained
-                                  }
-                                  maxPoints={selected.points}
-                                  comment={
-                                    selected.question.studentAnswer[0]
-                                      .studentGrading.comment
-                                  }
-                                />
-                              </Stack>
-                            </Paper>
-                          )}
-                      </>
-                    }
-                  />
-                </LayoutMain>
+                        ))
+                      }
+                      footer={
+                        <>
+                          {selected &&
+                            selected.question.studentAnswer[0].studentGrading
+                              .signedBy && (
+                              <Paper sx={{ height: '80px' }} square>
+                                <Stack
+                                  spacing={2}
+                                  direction="row"
+                                  justifyContent="center"
+                                  alignItems="center"
+                                  height="100%"
+                                  pr={1}
+                                >
+                                  <GradingSigned
+                                    signedBy={
+                                      selected.question.studentAnswer[0]
+                                        .studentGrading.signedBy
+                                    }
+                                    readOnly={true}
+                                  />
+                                  <GradingPointsComment
+                                    points={
+                                      selected.question.studentAnswer[0]
+                                        .studentGrading.pointsObtained
+                                    }
+                                    maxPoints={selected.points}
+                                    comment={
+                                      selected.question.studentAnswer[0]
+                                        .studentGrading.comment
+                                    }
+                                  />
+                                </Stack>
+                              </Paper>
+                            )}
+                        </>
+                      }
+                    />
+                  </LayoutMain>
               )}
             </Loading>
           </StudentPhaseRedirect>
