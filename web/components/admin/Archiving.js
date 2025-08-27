@@ -55,7 +55,7 @@ const GroupMembersWidget = ({ groupMembers }) => {
         onClick={handleClick}
         sx={{ minWidth: 'auto', px: 1 }}
       >
-        {memberCount} members
+        {memberCount}
       </Button>
 
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
