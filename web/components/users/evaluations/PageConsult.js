@@ -18,7 +18,7 @@ import useSWR from 'swr'
 import { Role, StudentAnswerStatus } from '@prisma/client'
 import Authorization from '../../security/Authorization'
 import LayoutSplitScreen from '../../layout/LayoutSplitScreen'
-import { Box, Paper, Stack, Typography } from '@mui/material'
+import { Box, Paper, Stack, Typography, Button } from '@mui/material'
 import Paging from '../../layout/utils/Paging'
 import { useEffect, useMemo, useState } from 'react'
 import StudentPhaseRedirect from './StudentPhaseRedirect'
@@ -33,6 +33,32 @@ import AnswerCompare from '@/components/answer/AnswerCompare'
 import Overlay from '@/components/ui/Overlay'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
 import Addendum from '@/components/evaluations/addendum/Addendum'
+import NextImage from 'next/image'
+
+const StudentExportPdfButton = ({ evaluationId }) => {
+  const handleExport = () => {
+    window.open(`/api/users/evaluations/${evaluationId}/export`, '_blank')
+  }
+
+  return (
+    <Button
+      variant="text"
+      color="primary"
+      size="small"
+      onClick={handleExport}
+      startIcon={
+        <NextImage
+          alt="Download PDF"
+          src="/svg/icons/file-pdf.svg"
+          width="18"
+          height="18"
+        />
+      }
+    >
+      PDF
+    </Button>
+  )
+}
 
 const getFilledStatus = (studentAnswerStatus) => {
   switch (studentAnswerStatus) {
@@ -73,6 +99,9 @@ const PageConsult = () => {
   const [evaluationToQuestions, setEvaluationToQuestions] = useState([])
   const [selected, setSelected] = useState()
   const [consultationDisabled, setConsultationDisabled] = useState(false)
+
+  // Inline PDF Export Button
+  
 
   useEffect(() => {
     if (
@@ -126,7 +155,7 @@ const PageConsult = () => {
               {evaluationToQuestions && selected && (
                 <LayoutMain
                   header={
-                    <Stack direction="row" alignItems="center">
+                    <Stack direction="row" alignItems="center" spacing={2}>
                       <Stack flex={1} sx={{ overflow: 'hidden' }}>
                         <Paging
                           items={questionPages}
@@ -138,6 +167,7 @@ const PageConsult = () => {
                           }
                         />
                       </Stack>
+                      <StudentExportPdfButton evaluationId={evaluationId} />
                     </Stack>
                   }
                 >

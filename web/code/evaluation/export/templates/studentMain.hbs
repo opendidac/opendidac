@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    {{> styles}}
+    <meta charset="UTF-8">
+  </head>
+  <body>
+
+    <!-- Evaluation Header -->
+    <div style="display:flex;justify-content:center;align-items:center;height:100%;">
+      <div>
+        <h2>{{evaluation.label}}</h2>
+        <p>Questions: {{evaluation.evaluationToQuestions.length}}</p>
+        <p>Student: {{studentWithQuestionsAndAnswers.student.name}}</p>
+        {{#if evaluation.group}}
+          <p>Group: {{evaluation.group.label}}</p>
+        {{/if}}
+      </div>
+    </div>
+    <div style="page-break-after: always;"></div>
+
+    {{#if includeConditionsPage}}
+      <h2>Conditions</h2>
+      <div>{{formatMarkdown conditions}}</div>
+      <div style="page-break-after: always;"></div>
+    {{/if}}
+
+    <!-- Student Cover Page -->
+    {{> studentCover studentWithQuestionsAndAnswers}}
+    <div style="page-break-after: always;"></div>
+
+    <!-- Student Questions and Answers Section -->
+    <div style="display:flex;justify-content:center;align-items:center;height:100%;">
+      <div>
+        <h1 style="text-align: center; color: #333;">Your Answers and Results</h1>
+        <p style="text-align: center;">This section contains your answers, grading, and feedback.</p>
+      </div>
+    </div>
+    <div style="page-break-after: always;"></div>
+
+    {{#each studentWithQuestionsAndAnswers.questions}}
+      {{> studentInfo this.studentAnswer.user }}
+      {{> questionHeader this}}
+      <div>{{formatMarkdown this.question.content}} </div>
+
+      {{#if this.studentAnswer.code}}
+        {{#if this.question.code.codeType}}
+          {{#if (eq this.question.code.codeType 'codeWriting')}}
+            {{> studentAnswerCodeWriting this}}
+          {{/if}}
+          {{#if (eq this.question.code.codeType 'codeReading')}}
+            {{> studentAnswerCodeReading this}}
+          {{/if}}
+        {{/if}}
+      {{/if}}
+
+      {{#if this.studentAnswer.essay}}
+        {{> studentAnswerEssay this}}
+      {{/if}}
+
+      {{#if this.studentAnswer.multipleChoice}}
+        {{> studentAnswerMultipleChoice this}}
+      {{/if}}
+
+      {{#if this.studentAnswer.trueFalse}}
+        {{> studentAnswerTrueFalse this}}
+      {{/if}}
+
+      {{#if this.studentAnswer.web}}
+        {{> studentAnswerWeb this}}
+      {{/if}}
+
+      {{#if this.studentAnswer.database}}
+        {{> studentAnswerDatabase this}}
+      {{/if}}
+
+      {{#if this.studentAnswer.studentGrading}}
+        {{> grading this}}
+      {{/if}}
+
+      <div style="page-break-after: always;"></div>
+    {{/each}}
+
+  </body>
+</html> 
