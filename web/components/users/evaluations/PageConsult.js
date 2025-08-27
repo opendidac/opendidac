@@ -35,31 +35,6 @@ import AlertFeedback from '@/components/feedback/AlertFeedback'
 import Addendum from '@/components/evaluations/addendum/Addendum'
 import NextImage from 'next/image'
 
-const StudentExportPdfButton = ({ evaluationId }) => {
-  const handleExport = () => {
-    window.open(`/api/users/evaluations/${evaluationId}/export`, '_blank')
-  }
-
-  return (
-    <Button
-      variant="text"
-      color="primary"
-      size="small"
-      onClick={handleExport}
-      startIcon={
-        <NextImage
-          alt="Download PDF"
-          src="/svg/icons/file-pdf.svg"
-          width="18"
-          height="18"
-        />
-      }
-    >
-      PDF
-    </Button>
-  )
-}
-
 const getFilledStatus = (studentAnswerStatus) => {
   switch (studentAnswerStatus) {
     case StudentAnswerStatus.MISSING:
@@ -72,6 +47,7 @@ const getFilledStatus = (studentAnswerStatus) => {
       return 'empty'
   }
 }
+
 const PageConsult = () => {
   const router = useRouter()
   const { evaluationId, questionPage } = router.query
@@ -167,11 +143,29 @@ const PageConsult = () => {
                           }
                         />
                       </Stack>
-                      <StudentExportPdfButton evaluationId={evaluationId} />
                     </Stack>
                   }
                   subheader={
-                    <Alert severity="info">
+                    <Alert 
+                      severity="info"
+                      action={
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => window.open(`/api/users/evaluations/${evaluationId}/export`, '_blank')}
+                          startIcon={
+                            <NextImage
+                              alt="Download PDF"
+                              src="/svg/icons/file-pdf.svg"
+                              width="16"
+                              height="16"
+                            />
+                          }
+                        >
+                          Download PDF
+                        </Button>
+                      }
+                    >
                       This consultation will remain accessible until the evaluation is archived.
                     </Alert>
                   }
