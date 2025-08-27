@@ -78,6 +78,33 @@ const get = async (req, res, prisma) => {
     }
   }
 
+  // Build mode-specific ordering
+  const getOrderBy = (mode) => {
+    switch (mode) {
+      case 'todo':
+        // Oldest first - prioritize evaluations waiting longest for action
+        return { createdAt: 'asc' }
+      
+      case 'pending':
+        // Earliest deadline first, then by creation date
+        return [
+          { archivalDeadline: 'asc' },
+          { createdAt: 'asc' }
+        ]
+      
+      case 'done':
+        // Most recently completed first - prioritize purged then archived
+        return [
+          { purgedAt: 'desc' },
+          { archivedAt: 'desc' },
+          { createdAt: 'desc' }
+        ]
+      
+      default:
+        return { createdAt: 'desc' }
+    }
+  }
+
   const evaluations = await prisma.evaluation.findMany({
     where: getWhereCondition(mode),
     select: {
@@ -136,9 +163,7 @@ const get = async (req, res, prisma) => {
         },
       },
     },
-    orderBy: {
-      createdAt: 'desc',
-    },
+    orderBy: getOrderBy(mode),
   })
   res.status(200).json(evaluations)
 }

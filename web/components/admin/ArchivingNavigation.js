@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import { useRouter } from 'next/router'
-import { Box, Tabs, Tab, Stack, Typography } from '@mui/material'
+import { Box, Tabs, Tab, Stack, Typography, Alert } from '@mui/material'
+import { Sort } from '@mui/icons-material'
 
 const ArchivingNavigation = ({ currentMode }) => {
   const router = useRouter()
@@ -24,21 +25,51 @@ const ArchivingNavigation = ({ currentMode }) => {
       mode: 'todo',
       label: 'To Do',
       path: '/admin/archiving',
-      description: 'Needs attention',
+      description: 'Active & overdue archival',
     },
     {
       mode: 'pending',
       label: 'Pending',
       path: '/admin/archiving/pending',
-      description: 'Scheduled',
+      description: 'Marked for archival',
     },
     {
       mode: 'done',
       label: 'Done',
       path: '/admin/archiving/done',
-      description: 'Completed',
+      description: 'Purged evaluations',
     },
   ]
+
+  // Sorting information for each mode
+  const getSortingInfo = (mode) => {
+    switch (mode) {
+      case 'todo':
+        return {
+          text: 'Sorted by creation date (oldest first)',
+          detail: 'Prioritizing evaluations waiting longest for archival action',
+          severity: 'info'
+        }
+      case 'pending':
+        return {
+          text: 'Sorted by archival deadline (earliest first)',
+          detail: 'Prioritizing upcoming deadlines to prevent breaches',
+          severity: 'warning'
+        }
+      case 'done':
+        return {
+          text: 'Sorted by completion date (most recent first)',
+          detail: 'Showing latest archival activity',
+          severity: 'success'
+        }
+      default:
+        return {
+          text: 'Default sorting applied',
+          detail: '',
+          severity: 'info'
+        }
+    }
+  }
 
   const getCurrentTabIndex = () => {
     const currentPath = router.asPath
@@ -58,35 +89,64 @@ const ArchivingNavigation = ({ currentMode }) => {
     }
   }
 
+  const sortInfo = getSortingInfo(currentMode)
+
   return (
     <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-      <Tabs
-        value={getCurrentTabIndex()}
-        onChange={handleTabChange}
-        aria-label="archiving navigation tabs"
-      >
-        {tabs.map((tab) => (
-          <Tab
-            key={tab.mode}
-            label={
-              <Stack direction="column" alignItems="flex-start" spacing={0}>
-                <Typography variant="body2" fontWeight="medium">
-                  {tab.label}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {tab.description}
-                </Typography>
-              </Stack>
+      <Stack direction="row" alignItems="center" spacing={2}>
+        {/* Tabs on the left */}
+        <Box flex={1}>
+          <Tabs
+            value={getCurrentTabIndex()}
+            onChange={handleTabChange}
+            aria-label="archiving navigation tabs"
+          >
+            {tabs.map((tab) => (
+              <Tab
+                key={tab.mode}
+                label={
+                  <Stack direction="column" alignItems="flex-start" spacing={0}>
+                    <Typography variant="body2" fontWeight="medium">
+                      {tab.label}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {tab.description}
+                    </Typography>
+                  </Stack>
+                }
+                sx={{
+                  minHeight: 64,
+                  alignItems: 'flex-start',
+                  textAlign: 'left',
+                  opacity: 1,
+                }}
+              />
+            ))}
+          </Tabs>
+        </Box>
+
+        {/* Sorting info on the right */}
+        
+        <Alert 
+          severity={sortInfo.severity} 
+          icon={<Sort fontSize="small" />}
+          sx={{ 
+            py: 0.5,
+            '& .MuiAlert-message': {
+              py: 0.5
             }
-            sx={{
-              minHeight: 64,
-              alignItems: 'flex-start',
-              textAlign: 'left',
-              opacity: 1,
-            }}
-          />
-        ))}
-      </Tabs>
+          }}
+        >
+          <Stack spacing={0.25}>
+            <Typography variant="body1" fontWeight="medium">
+              {sortInfo.text}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {sortInfo.detail}
+            </Typography>
+          </Stack>
+        </Alert>
+      </Stack>
     </Box>
   )
 }

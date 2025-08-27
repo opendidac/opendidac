@@ -17,8 +17,9 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { fetcher } from '@/code/utils'
 import Loading from '../feedback/Loading'
 import UserHelpPopper from '../feedback/UserHelpPopper'
+import DateTimeAgo from '../feedback/DateTimeAgo'
 import useSWR from 'swr'
-import GridGrouping from '../ui/GridGrouping'
+import DataGrid from '../ui/DataGrid'
 import { Box, Stack, Typography, Menu } from '@mui/material'
 import { Button } from '@mui/material'
 import Image from 'next/image'
@@ -27,6 +28,8 @@ import ArchivalWorkflowButton from './archiving/ArchivalWorkflowButton'
 import ArchivingNavigation from './ArchivingNavigation'
 import ScrollContainer from '../layout/ScrollContainer'
 import { People } from '@mui/icons-material'
+import { useSession } from 'next-auth/react'
+import { Role } from '@prisma/client'
 
 // Group Members Widget Component
 const GroupMembersWidget = ({ groupMembers }) => {
@@ -104,7 +107,6 @@ const Archiving = ({ mode = 'todo' }) => {
           ...evaluation,
           group: evaluation.group, // Keep the full group object
           groupScope: evaluation.group.scope, // Preserve the scope
-          groupKey: evaluation.group.label, // Add a flat property for grouping
         })),
       )
     } else {
@@ -117,22 +119,6 @@ const Archiving = ({ mode = 'todo' }) => {
     if (!deadline) return false
     return new Date(deadline) < new Date()
   }
-
-  // Create a dictionary of group data for efficient lookups
-  const groupDataMap = useMemo(() => {
-    const map = new Map()
-    evaluations.forEach((evaluation) => {
-      if (evaluation.group && !map.has(evaluation.group.label)) {
-        map.set(evaluation.group.label, {
-          id: evaluation.group.id,
-          label: evaluation.group.label,
-          scope: evaluation.group.scope,
-          members: evaluation.group.members || [],
-        })
-      }
-    })
-    return map
-  }, [evaluations])
 
   const handleArchivalTransition = async (evaluation, fromPhase, toPhase) => {
     if (
@@ -170,6 +156,10 @@ const Archiving = ({ mode = 'todo' }) => {
     }
   }
 
+  const { data: session } = useSession()
+  const isSuperAdmin = session?.user?.roles?.includes(Role.SUPER_ADMIN)
+  const isProfessor = session?.user?.roles?.includes(Role.PROFESSOR)
+
   return (
     <Stack width="100%" height={'100%'} bgcolor="white">
       {/* Navigation Tabs */}
@@ -179,8 +169,7 @@ const Archiving = ({ mode = 'todo' }) => {
         <Loading loading={isValidating} error={errorEvaluations}>
           <ScrollContainer>
             {evaluations.length > 0 && (
-              <GridGrouping
-                label={'evaluations'}
+              <DataGrid
                 header={{
                   actions: {
                     label: 'Actions',
@@ -196,6 +185,19 @@ const Archiving = ({ mode = 'todo' }) => {
                         </Typography>
                       ),
                     },
+                    {
+                      label: 'Created',
+                      column: { width: '200px' },
+                      renderCell: (row) => (
+                        <Stack direction="column" spacing={0.25}>
+                          <DateTimeAgo date={new Date(row.createdAt)} />
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(row.createdAt).toLocaleString()}
+                          </Typography>
+                        </Stack>
+                      ),
+                    },
+                    
                     {
                       label: 'Phase',
                       column: { width: '160px' },
@@ -259,32 +261,6 @@ const Archiving = ({ mode = 'todo' }) => {
                       ),
                     },
                     {
-                      label: 'Timeline',
-                      column: { width: '180px' },
-                      renderCell: (row) => (
-                        <Stack direction="column" spacing={0.5}>
-                          {row.createdAt && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              <b>Created:</b>{' '}
-                              {new Date(row.createdAt).toLocaleString()}
-                            </Typography>
-                          )}
-                          {row.updatedAt && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              <b>Updated:</b>{' '}
-                              {new Date(row.updatedAt).toLocaleString()}
-                            </Typography>
-                          )}
-                        </Stack>
-                      ),
-                    },
-                    {
                       label: 'Students',
                       column: { width: '60px' },
                       renderCell: (row) => (
@@ -293,89 +269,78 @@ const Archiving = ({ mode = 'todo' }) => {
                         </Typography>
                       ),
                     },
+                    {
+                      label: 'Group',
+                      column: { width: '270px' },
+                      renderCell: (row) => (
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="body2" color="text.secondary">
+                            {row.group?.label || 'Unknown'}
+                          </Typography>
+                          {row.group?.members && (
+                            <GroupMembersWidget groupMembers={row.group.members} />
+                          )}
+                        </Stack>
+                      ),
+                    },
                   ],
                 }}
                 items={evaluations?.map((evaluation) => ({
-                  ...evaluation,
-                  meta: {
-                    key: `evaluation-${evaluation.id}`,
+                    ...evaluation,
+                    meta: {
+                      key: `evaluation-${evaluation.id}`,
 
-                    actions: [
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        key="actions"
-                        justifyContent={'flex-end'}
-                      >
-                        <ArchivalWorkflowButton
-                          evaluation={evaluation}
-                          onTransition={handleArchivalTransition}
-                          size="small"
-                        />
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => {
-                            window.open(
-                              `/${evaluation.groupScope}/evaluations/${evaluation.id}`,
-                              '_blank',
-                            )
-                          }}
-                          color="primary"
+                      actions: [
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          key="actions"
+                          justifyContent={'flex-end'}
                         >
-                          Open
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => {
-                            window.open(
-                              `/api/${evaluation.groupScope}/evaluations/${evaluation.id}/export`,
-                              '_blank',
-                            )
-                          }}
-                          startIcon={
-                            <Image
-                              alt="Export"
-                              src="/svg/icons/file-pdf.svg"
-                              width="16"
-                              height="16"
-                            />
-                          }
-                        >
-                          PDF
-                        </Button>
-                      </Stack>,
-                    ],
-                  },
-                }))}
-                groupings={[
-                  {
-                    groupBy: 'groupKey',
-                    option: 'Group',
-                    type: 'element',
-                    renderLabel: (row) => {
-                      // Get group data efficiently from the pre-computed map
-                      const groupData = groupDataMap.get(row.label)
-                      const groupMembers = groupData?.members || []
-
-                      return (
-                        <Box>
-                          <Stack
-                            direction="row"
-                            spacing={2}
-                            alignItems="center"
+                          <ArchivalWorkflowButton
+                            evaluation={evaluation}
+                            onTransition={handleArchivalTransition}
+                            size="small"
+                          />
+                          {isSuperAdmin || isProfessor ? (
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => {
+                                window.open(
+                                  `/${evaluation.groupScope}/evaluations/${evaluation.id}`,
+                                  '_blank',
+                                )
+                              }}
+                              color="primary"
+                            >
+                              Open
+                            </Button>
+                          ) : null}
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => {
+                              window.open(
+                                `/api/${evaluation.groupScope}/evaluations/${evaluation.id}/export`,
+                                '_blank',
+                              )
+                            }}
+                            startIcon={
+                              <Image
+                                alt="Export"
+                                src="/svg/icons/file-pdf.svg"
+                                width="16"
+                                height="16"
+                              />
+                            }
                           >
-                            <Typography variant="body1" fontWeight="medium">
-                              {row.label}
-                            </Typography>
-                            <GroupMembersWidget groupMembers={groupMembers} />
-                          </Stack>
-                        </Box>
-                      )
+                            PDF
+                          </Button>
+                        </Stack>,
+                      ],
                     },
-                  },
-                ]}
+                  }))}
               />
             )}
           </ScrollContainer>
