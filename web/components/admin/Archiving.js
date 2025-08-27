@@ -178,7 +178,7 @@ const Archiving = ({ mode = 'todo' }) => {
                   columns: [
                     {
                       label: 'Label',
-                      column: { flexGrow: 1 },
+                      column: { flexGrow: 1, minWidth: '200px' },
                       renderCell: (row) => (
                         <Typography variant="body1" fontWeight="medium">
                           {row.label}
@@ -187,7 +187,7 @@ const Archiving = ({ mode = 'todo' }) => {
                     },
                     {
                       label: 'Created',
-                      column: { width: '200px' },
+                      column: { width: '180px' },
                       renderCell: (row) => (
                         <Stack direction="column" spacing={0.25}>
                           <DateTimeAgo date={new Date(row.createdAt)} />
@@ -200,7 +200,7 @@ const Archiving = ({ mode = 'todo' }) => {
                     
                     {
                       label: 'Phase',
-                      column: { width: '160px' },
+                      column: { width: '140px' },
                       renderCell: (row) => (
                         <Stack direction="row" spacing={1} alignItems="center">
                           <DisplayPhase phase={row.phase} />
@@ -232,7 +232,7 @@ const Archiving = ({ mode = 'todo' }) => {
                     },
                     {
                       label: 'Schedule',
-                      column: { width: '180px' },
+                      column: { width: '160px' },
                       renderCell: (row) => (
                         <Stack direction="column" spacing={0.5}>
                           {row.startAt && (
@@ -262,7 +262,7 @@ const Archiving = ({ mode = 'todo' }) => {
                     },
                     {
                       label: 'Students',
-                      column: { width: '60px' },
+                      column: { width: '80px' },
                       renderCell: (row) => (
                         <Typography variant="body2" color="text.secondary">
                           {row._count?.students || 0}
@@ -271,10 +271,20 @@ const Archiving = ({ mode = 'todo' }) => {
                     },
                     {
                       label: 'Group',
-                      column: { width: '270px' },
+                      column: { width: '200px' },
                       renderCell: (row) => (
                         <Stack direction="row" spacing={1} alignItems="center">
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography 
+                            variant="body2" 
+                            color="text.secondary"
+                            sx={{ 
+                              overflow: 'hidden', 
+                              textOverflow: 'ellipsis', 
+                              whiteSpace: 'nowrap',
+                              maxWidth: '140px'
+                            }}
+                            title={row.group?.label || 'Unknown'}
+                          >
                             {row.group?.label || 'Unknown'}
                           </Typography>
                           {row.group?.members && (
