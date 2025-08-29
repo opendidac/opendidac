@@ -147,7 +147,6 @@ This document provides a **complete and systematically verified** list of all AP
 | `/api/[groupScope]/evaluations/[evaluationId]` | PATCH | PROFESSOR | Update evaluation settings, advance phase transitions, set timing, and manage access controls |
 | `/api/[groupScope]/evaluations/[evaluationId]` | DELETE | PROFESSOR | Delete evaluation if not yet started with complete cleanup of associated data |
 | `/api/[groupScope]/evaluations/[evaluationId]/phase` | GET | PROFESSOR, STUDENT | Get evaluation phase, start time, and end time information |
-| `/api/[groupScope]/evaluations/[evaluationId]/purge` | POST | PROFESSOR | Remove student data and answers while preserving evaluation structure (must be finished or grading phase) |
 | `/api/[groupScope]/evaluations/[evaluationId]/export` | GET | PROFESSOR | Generate PDF export of evaluation with student answers, grading, and solutions using Puppeteer |
 | `/api/[groupScope]/evaluations/[evaluationId]/composition` | GET | PROFESSOR | Get evaluation's question composition with details, ordering, points, and source question status |
 | `/api/[groupScope]/evaluations/[evaluationId]/composition` | POST | PROFESSOR | Add questions to evaluation composition by question IDs with automatic ordering |
