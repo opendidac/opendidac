@@ -67,6 +67,26 @@ const post = async (req, res, prisma) => {
     return
   }
 
+  // --- minimal helpers for uniform body indentation (language-agnostic) ---
+  const dedent = (s) => {
+    const lines = String(s ?? '')
+      .replace(/\r\n/g, '\n')
+      .split('\n')
+    const nonEmpty = lines.filter((l) => l.trim().length > 0)
+    const indents = nonEmpty.map((l) => l.match(/^(\s*)/)?.[1].length ?? 0)
+    const min = indents.length ? Math.min(...indents) : 0
+    return lines.map((l) => l.slice(Math.min(min, l.length))).join('\n')
+  }
+  const indent = (s, n = 2) => {
+    const pad = ' '.repeat(n)
+    return String(s)
+      .replace(/\r\n/g, '\n')
+      .split('\n')
+      .map((l) => (l.length ? pad + l : l)) // keep truly blank lines blank
+      .join('\n')
+  }
+  const stripSpacesOnBlankLines = (s) => String(s).replace(/^[ \t]+$/gm, '')
+
   // Generate function declarations and calls
   let functionDeclarations = ''
   let functionCalls = ''
@@ -76,15 +96,15 @@ const post = async (req, res, prisma) => {
     const functionName = `snippetFunc${index}`
     if (!snippet.snippet) return
 
-    // Handle indentation for Python specifically
-    let indentedSnippet = snippet.snippet
-      .split('\n')
-      .map((line) => `   ${line}`)
-      .join('\n')
+    // Uniformly indent every body line by 2 spaces (no language assumptions)
+    const preparedBody = stripSpacesOnBlankLines(
+      indent(dedent(snippet.snippet), 2),
+    )
+
     const functionDeclaration =
       codeReadingConfig.snippetWrapperFunctionSignature
         .replace('{{SNIPPET_FUNCTION_NAME}}', functionName)
-        .replace('{{SNIPPET_FUNCTION_BODY}}', indentedSnippet)
+        .replace('{{SNIPPET_FUNCTION_BODY}}', preparedBody)
 
     functionDeclarations += functionDeclaration + '\n'
     functionCalls += `${codeReadingConfig.snippetFunctionCallTemplate.replace(
@@ -95,11 +115,8 @@ const post = async (req, res, prisma) => {
     tests.push({ exec: code.codeReading.contextExec, input: functionName })
   })
 
-  // Correctly indent the function calls
-  let correctlyIndentedFunctionCalls = functionCalls
-    .split('\n')
-    .map((line) => line)
-    .join('\n   ')
+  // Do NOT re-indent the call block; trust the template spacing
+  let correctlyIndentedFunctionCalls = functionCalls.trimEnd()
 
   // Insert generated function declarations and function calls into the context
   let context = code.codeReading.context

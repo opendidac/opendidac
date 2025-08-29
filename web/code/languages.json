@@ -435,9 +435,9 @@
         }
       ],
       "codeReading": {
-        "context": "import java.util.Scanner;\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\npublic class Main {\n  \n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\n   public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        String functionName = scanner.nextLine();\n        {{SNIPPET_FUNCTION_CALLS}}\n        scanner.close();\n    }\n}",
-        "snippetWrapperFunctionSignature": "private static void {{SNIPPET_FUNCTION_NAME}}(){\n{{SNIPPET_FUNCTION_BODY}}\n}",
-        "snippetFunctionCallTemplate": "if (functionName.equals(\"{{SNIPPET_FUNCTION_NAME}}\")) { {{SNIPPET_FUNCTION_NAME}}(); }\n",
+        "context": "import java.util.Scanner;\n\npublic class Main {\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        String functionName = scanner.nextLine().trim();\n{{SNIPPET_FUNCTION_CALLS}}\n        scanner.close();\n    }\n}\n",
+        "snippetWrapperFunctionSignature": "private static void {{SNIPPET_FUNCTION_NAME}}() {\n{{SNIPPET_FUNCTION_BODY}}\n}\n",
+        "snippetFunctionCallTemplate": "        if (functionName.equals(\"{{SNIPPET_FUNCTION_NAME}}\")) {\n            {{SNIPPET_FUNCTION_NAME}}();\n        }\n",
         "snippets": [
           {
             "snippet": "String s = \"hello, world\";\ns = s.toUpperCase();\nSystem.out.println(s);",
@@ -567,24 +567,24 @@
         }
       ],
       "codeReading": {
-        "context": "\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\nfunction main() {\n    const readline = require('readline');\n    const rl = readline.createInterface({\n        input: process.stdin,\n        output: process.stdout\n    });\n    rl.on('line', (functionName) => {\n        {{SNIPPET_FUNCTION_CALLS}}\n        rl.close();\n    });\n}\nmain();",
-        "snippetWrapperFunctionSignature": "function {{SNIPPET_FUNCTION_NAME}}(){\n{{SNIPPET_FUNCTION_BODY}}\n}",
-        "snippetFunctionCallTemplate": "if functionName === '{{SNIPPET_FUNCTION_NAME}}') { {{SNIPPET_FUNCTION_NAME}}(); }\n",
+        "context": "{{SNIPPET_FUNCTION_DECLARATIONS}}\n\nfunction main() {\n  const readline = require('readline');\n  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });\n  rl.on('line', (functionName) => {\n{{SNIPPET_FUNCTION_CALLS}}\n    rl.close();\n  });\n}\nmain();\n",
+        "snippetWrapperFunctionSignature": "function {{SNIPPET_FUNCTION_NAME}}() {\n{{SNIPPET_FUNCTION_BODY}}\n}\n",
+        "snippetFunctionCallTemplate": "    if (functionName === \"{{SNIPPET_FUNCTION_NAME}}\") { {{SNIPPET_FUNCTION_NAME}}(); }\n",
         "snippets": [
           {
-            "snippet": "let s = 'hello, world'\ns = s.toUpperCase();\nconsole.log(s);",
+            "snippet": "let s = 'hello, world';\ns = s.toUpperCase();\nconsole.log(s);",
             "output": "HELLO, WORLD\n"
           },
           {
-            "snippet": "for (let i = 0; i < 3; i++) {\n    console.log(i);\n}",
+            "snippet": "for (let i = 0; i < 3; i++) {\n  console.log(i);\n}",
             "output": "0\n1\n2\n"
           },
           {
-            "snippet": "let i = 11\nwhile i > 4 do\n  i -= 2\n  console.log(i + ' ')",
+            "snippet": "let i = 11;\nwhile (i > 4) {\n  i -= 2;\n  process.stdout.write(i + ' ');\n}",
             "output": "9 7 5 3 "
           },
           {
-            "snippet": "let str = ''\nfor (let c = 'A'; c <= 'C'; c = String.fromCharCode(c.charCodeAt(0) + 1)) {\n    str = str + c + str\n}\nconsole.log(str)",
+            "snippet": "let str = '';\nfor (let c = 'A'.charCodeAt(0); c <= 'C'.charCodeAt(0); c++) {\n  str = str + String.fromCharCode(c) + str;\n}\nconsole.log(str);",
             "output": "ABACABA\n"
           }
         ]
@@ -699,9 +699,9 @@
         }
       ],
       "codeReading": {
-        "context": "import sys\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\ndef main():\n   functionName = sys.stdin.read().strip()\n   {{SNIPPET_FUNCTION_CALLS}}\n\nif __name__ == '__main__':\n   main()",
+        "context": "import sys\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\ndef main():\n    functionName = sys.stdin.read().strip()\n{{SNIPPET_FUNCTION_CALLS}}\n\nif __name__ == '__main__':\n    main()",
         "snippetWrapperFunctionSignature": "def {{SNIPPET_FUNCTION_NAME}}():\n{{SNIPPET_FUNCTION_BODY}}",
-        "snippetFunctionCallTemplate": "if functionName == \"{{SNIPPET_FUNCTION_NAME}}\" then\n  {{SNIPPET_FUNCTION_NAME}}()",
+        "snippetFunctionCallTemplate": "    if functionName == \"{{SNIPPET_FUNCTION_NAME}}\":\n        {{SNIPPET_FUNCTION_NAME}}()",
         "snippets": [
           {
             "snippet": "s = 'hello, world'\ns = s.upper()\nprint(s)",
@@ -764,9 +764,9 @@
         }
       ],
       "codeReading": {
-        "context": "package main\n\nimport (\n\t\"fmt\"\n\t\"bufio\"\n\t\"os\"\n\t\"strings\"\n)\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\nfunc main() {\n   reader := bufio.NewReader(os.Stdin)\n   functionName, _ := reader.ReadString('\\n')\n   functionName = strings.TrimSpace(functionName)\n   {{SNIPPET_FUNCTION_CALLS}}\n}",
-        "snippetWrapperFunctionSignature": "func {{SNIPPET_FUNCTION_NAME}}() {\n{{SNIPPET_FUNCTION_BODY}}\n}",
-        "snippetFunctionCallTemplate": "if functionName == \"{{SNIPPET_FUNCTION_NAME}}\" {\n\t{{SNIPPET_FUNCTION_NAME}}()\n}",
+        "context": "package main\n\nimport (\n\t\"bufio\"\n\t\"fmt\"\n\t\"os\"\n\t\"strings\"\n)\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\nfunc main() {\n\treader := bufio.NewReader(os.Stdin)\n\tfunctionName, _ := reader.ReadString('\\n')\n\tfunctionName = strings.TrimSpace(functionName)\n{{SNIPPET_FUNCTION_CALLS}}\n}\n",
+        "snippetWrapperFunctionSignature": "func {{SNIPPET_FUNCTION_NAME}}() {\n{{SNIPPET_FUNCTION_BODY}}\n}\n",
+        "snippetFunctionCallTemplate": "\tif functionName == \"{{SNIPPET_FUNCTION_NAME}}\" {\n\t\t{{SNIPPET_FUNCTION_NAME}}()\n\t}\n",
         "snippets": [
           {
             "snippet": "s := \"hello, world\"\nfmt.Println(strings.ToUpper(s))",
@@ -777,7 +777,7 @@
             "output": "0\n1\n2\n"
           },
           {
-            "snippet": "i := 11\nwhile i > 4 do\n  i -= 2\n  fmt.Printf(\"%d \", i)",
+            "snippet": "i := 11\nfor i > 4 {\n\ti -= 2\n\tfmt.Printf(\"%d \", i)\n}",
             "output": "9 7 5 3 "
           },
           {
@@ -844,12 +844,12 @@
         }
       ],
       "codeReading": {
-        "context": "import scala.io.StdIn\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\nobject Main:\n  def main(args: Array[String]): Unit =\n    val functionName = StdIn.readLine()\n    {{SNIPPET_FUNCTION_CALLS}}",
+        "context": "import scala.io.StdIn\n\n{{SNIPPET_FUNCTION_DECLARATIONS}}\n\nobject Main:\n  def main(args: Array[String]): Unit =\n    val functionName = StdIn.readLine().trim\n    {{SNIPPET_FUNCTION_CALLS}}",
         "snippetWrapperFunctionSignature": "def {{SNIPPET_FUNCTION_NAME}}(): Unit =\n{{SNIPPET_FUNCTION_BODY}}",
-        "snippetFunctionCallTemplate": "if functionName == \"{{SNIPPET_FUNCTION_NAME}}\" then\n  {{SNIPPET_FUNCTION_NAME}}()",
+        "snippetFunctionCallTemplate": "    if functionName == \"{{SNIPPET_FUNCTION_NAME}}\" then\n      {{SNIPPET_FUNCTION_NAME}}()",
         "snippets": [
           {
-            "snippet": "var s = \"hello, world\"\ns = s.toUpperCase\nprintln(s)",
+            "snippet": "var s = \"hello, world\"\ns = s.toUpperCase()\nprintln(s)",
             "output": "HELLO, WORLD\n"
           },
           {
@@ -857,7 +857,7 @@
             "output": "0\n1\n2\n"
           },
           {
-            "snippet": "var i = 11\nwhile i > 4 do\n  i -= 2\n  fmt.Printf(\"%d \", i)",
+            "snippet": "var i = 11\nwhile i > 4 do\n  i -= 2\n  print(s\"$i \")",
             "output": "9 7 5 3 "
           },
           {
