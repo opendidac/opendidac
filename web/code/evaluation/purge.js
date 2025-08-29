@@ -30,14 +30,12 @@
  *  - StudentAnswerCodeHistory                             [explicit delete]
  */
 
-import { ArchivalPhase } from '@prisma/client'
-
 /**
  * Purges student data from an evaluation and updates archival phase
  * @param {Object} prisma - Prisma client instance
  * @param {string} evaluationId - ID of the evaluation to purge
  * @param {string} userEmail - Email of the user performing the purge
- * @param {ArchivalPhase} newArchivalPhase - The new archival phase to set
+ * @param {string} newArchivalPhase - The new archival phase to set (ArchivalPhase enum value)
  * @returns {Promise<Object>} Purge statistics and updated evaluation
  */
 export const purgeEvaluationData = async (
