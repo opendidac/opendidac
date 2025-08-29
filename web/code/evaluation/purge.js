@@ -30,7 +30,6 @@
  *  - StudentAnswerCodeHistory                             [explicit delete]
  */
 
-
 /**
  * Purges student data from an evaluation and updates archival phase
  * @param {Object} prisma - Prisma client instance
