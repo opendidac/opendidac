@@ -13,10 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import PageAdmin from '../components/admin/PageAdmin'
+import { useEffect } from 'react'
+import { useRouter } from 'next/router'
+import { useSession } from 'next-auth/react'
+import { Role } from '@prisma/client'
 
-const ManageUsers = () => {
-  return <PageAdmin />
+const Admin = () => {
+  const router = useRouter()
+  const { data: session } = useSession()
+
+  useEffect(() => {
+    if (session?.user) {
+      // Check if user is ARCHIVIST role only
+      const isArchivistOnly =
+        session.user.roles?.includes(Role.ARCHIVIST) &&
+        !session.user.roles?.includes(Role.SUPER_ADMIN)
+
+      if (isArchivistOnly) {
+        router.replace('/admin/archiving')
+      } else {
+        router.replace('/admin/users')
+      }
+    }
+  }, [router, session])
+
+  return null
 }
 
-export default ManageUsers
+export default Admin

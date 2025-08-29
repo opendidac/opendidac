@@ -26,6 +26,7 @@ import {
   withGroupScope,
   withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { getUser } from '@/code/auth/auth'
 
 const get = async (req, res, prisma) => {
   // shallow session to question get -> we just need to count the number of questions
@@ -37,7 +38,24 @@ const get = async (req, res, prisma) => {
         scope: groupScope,
       },
     },
-    include: {
+    select: {
+      id: true,
+      label: true,
+      phase: true,
+      status: true,
+      archivalPhase: true,
+      archivedAt: true,
+      purgedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      startAt: true,
+      endAt: true,
+      durationActive: true,
+      durationHours: true,
+      durationMins: true,
+      accessMode: true,
+      accessList: true,
+      conditions: true,
       _count: {
         select: {
           evaluationToQuestions: true,
@@ -64,11 +82,23 @@ const post = async (req, res, prisma) => {
     templateEvaluation,
   } = req.body
 
+  // Get current user to record creator
+  const user = await getUser(req, res)
+  if (!user) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
   let data = {
     phase: EvaluationPhase.DRAFT,
     group: {
       connect: {
         scope: groupScope,
+      },
+    },
+    createdBy: {
+      connect: {
+        email: user.email,
       },
     },
   }

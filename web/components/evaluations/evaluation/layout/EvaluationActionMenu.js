@@ -109,20 +109,10 @@ const dialogConfigurations = {
     ),
   },
 }
-import WarningIcon from '@mui/icons-material/Warning'
-import DangerConfirmDialog from '@/components/feedback/DangerConfirmDialog'
-import AlertFeedback from '@/components/feedback/AlertFeedback'
-import DateTimeAgo from '@/components/feedback/DateTimeAgo'
-import Image from 'next/image'
 
 const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
   const { show: showSnackbar } = useSnackbar()
   const [dialogOpen, setDialogOpen] = useState(false)
-
-  // Purge dialog state
-  const [purgeOpen, setPurgeOpen] = useState(false)
-  const [purgeBusy, setPurgeBusy] = useState(false)
-  const confirmText = `purge ${evaluation.id}`
 
   const nextPhase = getNextPhase(evaluation.phase)
   const phaseDetails = getPhaseDetails(evaluation.phase)
@@ -157,32 +147,6 @@ const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
     await changePhase()
   }
 
-  const purgeEvaluation = async () => {
-    setPurgeBusy(true)
-    try {
-      const res = await fetch(
-        `/api/${groupScope}/evaluations/${evaluation.id}/purge`,
-        {
-          method: 'POST',
-          headers: { Accept: 'application/json' },
-        },
-      )
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.message || 'Failed to purge')
-      showSnackbar('Student data purged', 'success')
-      setPurgeOpen(false)
-      // Refresh evaluation so purgedAt/purgedBy appear
-      onPhaseChange?.()
-    } catch (err) {
-      showSnackbar(err.message || 'Purge failed', 'error')
-    } finally {
-      setPurgeBusy(false)
-    }
-  }
-
-  const isFinished = evaluation.phase === EvaluationPhase.FINISHED
-  const isPurged = Boolean(evaluation.purgedAt)
-
   return (
     <>
       <Stack direction="row" spacing={2} justifyContent="center">
@@ -209,33 +173,7 @@ const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
               <Typography variant="h6" color="textSecondary">
                 All phases completed
               </Typography>
-              {evaluation.purgedAt && (
-                <>
-                  <AlertFeedback severity="info">
-                    <Typography variant="body2">
-                      Student data purged by {evaluation.purgedBy?.name}
-                    </Typography>
-                    <Typography variant="body2">
-                      <DateTimeAgo date={evaluation.purgedAt} />
-                    </Typography>
-                  </AlertFeedback>
-                </>
-              )}
             </Stack>
-
-            {/* Purge spot: show button when not purged; else show "Purged by ..." */}
-            {isFinished && !isPurged && (
-              <Stack spacing={1.25}>
-                <Button
-                  variant="text"
-                  color="error"
-                  startIcon={<WarningIcon />}
-                  onClick={() => setPurgeOpen(true)}
-                >
-                  Purge all student data
-                </Button>
-              </Stack>
-            )}
           </Stack>
         )}
       </Stack>
@@ -249,65 +187,6 @@ const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
           onConfirm={onDialogConfirm}
         />
       )}
-
-      {/* Purge confirmation dialog */}
-      <DangerConfirmDialog
-        open={purgeOpen}
-        onClose={() => setPurgeOpen(false)}
-        onConfirm={purgeEvaluation}
-        width="sm"
-        title="Purge all student data for this evaluation?"
-        confirmButtonProps={{
-          children: purgeBusy ? 'Purging…' : 'Purge now',
-          disabled: purgeBusy,
-        }}
-        content={
-          <Stack spacing={1.5}>
-            <AlertFeedback severity="warning">
-              This will permanently delete all <b>student answers</b> and
-              related feedback. It will keep the evaluation’s <b>composition</b>{' '}
-              (questions & points) and the attendance list.
-            </AlertFeedback>
-            <AlertFeedback severity="warning">
-              This action is <b>irreversible</b>.
-            </AlertFeedback>
-            <AlertFeedback severity="info">
-              Consider exporting the results for the archive before you proceed.
-            </AlertFeedback>
-            <Button
-              color="primary"
-              onClick={() => {
-                // open in new page
-                window.open(
-                  `/api/${groupScope}/evaluations/${evaluation.id}/export`,
-                  '_blank',
-                )
-              }}
-              startIcon={
-                <Image
-                  alt="Export"
-                  src="/svg/icons/file-pdf.svg"
-                  width="22"
-                  height="22"
-                />
-              }
-            >
-              Export as PDF
-            </Button>
-
-            <Typography variant="body2">
-              To confirm, type{' '}
-              <b>
-                <code>{confirmText}</code>
-              </b>{' '}
-              below.
-            </Typography>
-          </Stack>
-        }
-        prompt=""
-        expectedValue={confirmText}
-        helperText="Type the exact phrase to enable the button."
-      />
     </>
   )
 }

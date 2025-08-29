@@ -62,13 +62,16 @@ model User {
   groups           UserOnGroup[]
   groupsCreated    Group[]
   annotations      Annotation[]
-  purgedEvaluations Evaluation[]
+  purgedEvaluations Evaluation[] @relation("PurgedEvaluations")
+  archivedEvaluations Evaluation[] @relation("ArchivedEvaluations")
+  createdEvaluations Evaluation[] @relation("CreatedEvaluations")
 }
 
 enum Role {
   STUDENT
   PROFESSOR
   SUPER_ADMIN
+  ARCHIVIST
 }
 
 model VerificationToken {
@@ -520,9 +523,17 @@ enum EvaluationPhase {
   FINISHED
 }
 
+enum ArchivalPhase {
+  ACTIVE
+  MARKED_FOR_ARCHIVAL
+  ARCHIVED
+  PURGED
+  PURGED_WITHOUT_ARCHIVAL
+}
+
 enum EvaluationStatus {
   ACTIVE
-  ARCHIVED
+  INACTIVE
 }
 
 enum UserOnEvaluationAccessMode {
@@ -555,13 +566,27 @@ model Evaluation {
 
   ipRestrictions String?
 
+  // Creator tracking
+  createdByUserEmail String?
+  createdBy          User?     @relation("CreatedEvaluations", fields: [createdByUserEmail], references: [email])
+
   students              UserOnEvaluation[]
   
   evaluationToQuestions EvaluationToQuestion[]
 
+  // Data Cycle Management: Archival fields
+  archivalPhase       ArchivalPhase @default(ACTIVE)
+
+  archivedAt          DateTime?
+  archivedByUserEmail String?
+  archivedBy          User?     @relation("ArchivedEvaluations", fields: [archivedByUserEmail], references: [email])
+
+  // Deadline for when the evaluation should be archived
+  archivalDeadline    DateTime?
+
   purgedAt          DateTime?
   purgedByUserEmail String?
-  purgedBy          User?     @relation(fields: [purgedByUserEmail], references: [email])
+  purgedBy          User?     @relation("PurgedEvaluations", fields: [purgedByUserEmail], references: [email])
 
   group                               Group                                 @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId                             String

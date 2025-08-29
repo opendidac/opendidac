@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import PageAdmin from '@/components/admin/PageAdmin'
 
-// used to get the ip address of the user during the development of the ip restriction feature
-// it is not used anywhere in the code
-export default function handler(req, res) {
-  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
-  res.status(200).json({ ip })
+const ArchivingPendingPage = () => {
+  return <PageAdmin />
 }
+
+export default ArchivingPendingPage

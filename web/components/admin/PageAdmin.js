@@ -15,70 +15,87 @@
  */
 import { Role } from '@prisma/client'
 import Authorization from '../security/Authorization'
-import { fetcher } from '@/code/utils'
-import Loading from '../feedback/Loading'
-import useSWR from 'swr'
-import UserAvatar from '../layout/UserAvatar'
-import DataGrid from '../ui/DataGrid'
 import {
   Alert,
   Box,
-  Button,
-  Checkbox,
-  Chip,
-  FormControlLabel,
-  FormGroup,
-  Menu,
   Stack,
-  TextField,
   Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  IconButton,
   Tabs,
   Tab,
+  Button,
+  Menu,
 } from '@mui/material'
 import LayoutMain from '../layout/LayoutMain'
 import BackButton from '../layout/BackButton'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import DialogFeedback from '../feedback/DialogFeedback'
-import { useDebouncedCallback } from 'use-debounce'
 import { LoadingButton } from '@mui/lab'
-
-import ScrollContainer from '../layout/ScrollContainer'
 import { useSnackbar } from '@/context/SnackbarContext'
-
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import { useRouter } from 'next/router'
+import { useSession } from 'next-auth/react'
+import Users from './Users'
+import Groups from './Groups'
+import Archiving from './Archiving'
 
-const roleToDetails = {
-  [Role.STUDENT]: {
-    label: 'Student',
-    color: 'info',
+// Constants for tab configuration
+const ADMIN_TABS = [
+  { key: 'users', label: 'Users', component: Users, route: '/admin/users' },
+  { key: 'groups', label: 'Groups', component: Groups, route: '/admin/groups' },
+  {
+    key: 'archiving',
+    label: 'Archiving',
+    component: Archiving,
+    route: '/admin/archiving',
   },
-  [Role.PROFESSOR]: {
-    label: 'Professor',
-    color: 'success',
-  },
-  [Role.SUPER_ADMIN]: {
-    label: 'Super Admin',
-    color: 'error',
-  },
+]
+
+// User role utilities
+const getUserRoleType = (session) => {
+  if (!session?.user?.roles) return 'none'
+
+  const roles = session.user.roles
+  const isSuperAdmin = roles.includes(Role.SUPER_ADMIN)
+  const isArchivist = roles.includes(Role.ARCHIVIST)
+
+  if (isSuperAdmin) return 'super_admin'
+  if (isArchivist) return 'archivist'
+  return 'none'
 }
 
+const getRolePermissions = (roleType) => {
+  const permissions = {
+    super_admin: {
+      allowedRoles: [Role.SUPER_ADMIN],
+      availableTabs: ADMIN_TABS,
+      showMaintenance: true,
+      defaultRedirect: '/admin/users',
+    },
+    archivist: {
+      allowedRoles: [Role.ARCHIVIST, Role.SUPER_ADMIN],
+      availableTabs: ADMIN_TABS.filter((tab) => tab.key === 'archiving'),
+      showMaintenance: false,
+      defaultRedirect: '/admin/archiving',
+    },
+    none: {
+      allowedRoles: [],
+      availableTabs: [],
+      showMaintenance: false,
+      defaultRedirect: '/',
+    },
+  }
+
+  return permissions[roleType] || permissions.none
+}
+
+// Maintenance Panel Component
 const MaintenancePanel = () => {
   const [anchorElUser, setAnchorEl] = useState(null)
-
   const { showTopCenter: showSnackbar } = useSnackbar()
-
   const [openRunAllSandboxesDialog, setOpenRunAllSandboxesDialog] =
     useState(false)
-
   const [openUnusedUploadsCleanupDialog, setOpenUnusedUploadsCleanupDialog] =
     useState(false)
-
   const [runningAllSandbox, setRunningAllSandbox] = useState(false)
   const [runningUploadsCleanup, setRunningUploadsCleanup] = useState(false)
 
@@ -176,7 +193,6 @@ const MaintenancePanel = () => {
               This will also update the expected outputs for the code writing
               questions that are part of evaluations.
             </Typography>
-
             <Typography variant="body2">
               Are you sure you want to run all sandboxes and update the expected
               output of the test cases?
@@ -210,477 +226,183 @@ const MaintenancePanel = () => {
   )
 }
 
-const Users = () => {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-
-  const {
-    data,
-    error: errorUsers,
-    mutate,
-    isValidating,
-  } = useSWR(
-    `/api/users?search=${searchQuery}&page=${page}&pageSize=${pageSize}`,
-    fetcher,
-    {
-      revalidateOnFocus: false,
-    },
-  )
-
-  const users = data?.users || []
-  const pagination = data?.pagination || { total: 0, totalPages: 0 }
-
-  const [search, setSearch] = useState('')
-
-  const debouncedSearch = useDebouncedCallback((value) => {
-    setSearchQuery(value)
-    setPage(1) // Reset to first page when search changes
-  }, 500)
-
-  const [selected, setSelected] = useState(null)
-  const [manageRolesDialogOpen, setManageRolesDialogOpen] = useState(false)
-
-  const handlePageChange = (newPage) => {
-    setPage(newPage)
-  }
-
-  const handlePageSizeChange = (newPageSize) => {
-    setPageSize(newPageSize)
-    setPage(1) // Reset to first page when page size changes
+// Tab Navigation Component
+const AdminTabNavigation = ({
+  availableTabs,
+  currentTabIndex,
+  onTabChange,
+}) => {
+  if (availableTabs.length <= 1) {
+    return null // Don't show tabs if there's only one or no tabs
   }
 
   return (
-    <Stack width="100%" height={'100%'} p={2} spacing={1}>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <TextField
-          label="Search"
-          variant="outlined"
-          value={search}
-          fullWidth
-          onChange={(ev) => {
-            const value = ev.target.value
-            setSearch(value)
-            if (value.length >= 2) {
-              debouncedSearch(value)
-            } else {
-              debouncedSearch('')
-            }
-          }}
-          endAdornment={
-            <LoadingButton loading={!data && !errorUsers}>
-              loading
-            </LoadingButton>
-          }
-        />
-        <Box minWidth="70px">
-          <Typography variant="h6">{pagination.total} users</Typography>
-        </Box>
+    <Tabs
+      value={currentTabIndex}
+      onChange={onTabChange}
+      aria-label="admin tabs"
+    >
+      {availableTabs.map((tab) => (
+        <Tab key={tab.key} label={tab.label} sx={{ opacity: 1, m: 1 }} />
+      ))}
+    </Tabs>
+  )
+}
+
+// Admin Header Component
+const AdminHeader = ({
+  roleType,
+  availableTabs,
+  currentTabIndex,
+  onTabChange,
+}) => {
+  const permissions = getRolePermissions(roleType)
+
+  const getHeaderTitle = () => {
+    if (roleType === 'archivist') {
+      return 'Archiving Management'
+    }
+    return null // For super admin, show tabs instead of title
+  }
+
+  const headerTitle = getHeaderTitle()
+
+  return (
+    <Stack direction={'row'}>
+      <Stack direction={'row'} spacing={1} alignItems={'center'} flex={1}>
+        <BackButton backUrl="/" />
+        {headerTitle ? (
+          <Typography variant="h6" sx={{ opacity: 1, m: 1 }}>
+            {headerTitle}
+          </Typography>
+        ) : (
+          <AdminTabNavigation
+            availableTabs={availableTabs}
+            currentTabIndex={currentTabIndex}
+            onTabChange={onTabChange}
+          />
+        )}
       </Stack>
-      <Loading loading={isValidating} error={errorUsers}>
-        <ScrollContainer>
-          <Stack spacing={2}>
-            <DataGrid
-              header={{
-                actions: {
-                  label: 'Actions',
-                  width: '120px',
-                },
-                columns: [
-                  {
-                    label: 'User',
-                    column: { minWidth: '220px', flexGrow: 1 },
-                    renderCell: (row) => {
-                      return <UserAvatar user={row} />
-                    },
-                  },
-                  {
-                    label: 'Roles',
-                    column: { width: '280px' },
-                    renderCell: (row) => {
-                      return (
-                        <Stack direction="row" spacing={1}>
-                          {row.roles.map((role) => {
-                            return (
-                              <Chip
-                                key={role}
-                                label={roleToDetails[role].label}
-                                color={roleToDetails[role].color}
-                              />
-                            )
-                          })}
-                        </Stack>
-                      )
-                    },
-                  },
-                ],
-              }}
-              items={users?.map((user) => ({
-                ...user,
-                meta: {
-                  key: user.id,
-                  actions: [
-                    <Button
-                      key="edit"
-                      color="info"
-                      onClick={() => {
-                        setSelected(user)
-                        setManageRolesDialogOpen(true)
-                      }}
-                    >
-                      Manage roles
-                    </Button>,
-                  ],
-                },
-              }))}
-            />
-
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 3,
-                pt: 2,
-                borderColor: 'divider',
-              }}
-            >
-              <FormControl size="small" sx={{ minWidth: 100 }}>
-                <Select
-                  value={pageSize}
-                  onChange={(e) => handlePageSizeChange(e.target.value)}
-                  displayEmpty
-                >
-                  <MenuItem value={10}>10 Rows</MenuItem>
-                  <MenuItem value={25}>25 Rows</MenuItem>
-                  <MenuItem value={50}>50 Rows</MenuItem>
-                </Select>
-              </FormControl>
-
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <IconButton
-                    onClick={() => handlePageChange(page - 1)}
-                    disabled={page <= 1}
-                    size="small"
-                  >
-                    <ChevronLeftIcon />
-                  </IconButton>
-                  <Typography variant="body2">Page {page}</Typography>
-                  <IconButton
-                    onClick={() => handlePageChange(page + 1)}
-                    disabled={page >= pagination.totalPages}
-                    size="small"
-                  >
-                    <ChevronRightIcon />
-                  </IconButton>
-                </Stack>
-              </Stack>
-            </Box>
-          </Stack>
-        </ScrollContainer>
-      </Loading>
-      <ManageRolesDialog
-        open={manageRolesDialogOpen}
-        user={selected}
-        onClose={() => {
-          setManageRolesDialogOpen(false)
-          setSelected(null)
-        }}
-        onChange={(updatedUser) => {
-          mutate(
-            {
-              ...data,
-              users: users.map((user) =>
-                user.id === updatedUser.id ? updatedUser : user,
-              ),
-            },
-            false,
-          )
-        }}
-      />
+      {permissions.showMaintenance && <MaintenancePanel />}
     </Stack>
   )
 }
 
-const Groups = () => {
-  const {
-    data,
-    error: errorGroups,
-    mutate,
-    isValidating,
-  } = useSWR('/api/groups', fetcher, {
-    revalidateOnFocus: false,
-  })
-
-  const groups = data?.groups || []
-  const [joiningGroupId, setJoiningGroupId] = useState(null)
-  const { showTopCenter: showSnackbar } = useSnackbar()
-
-  const handleJoinGroup = useCallback(
-    async (groupId) => {
-      setJoiningGroupId(groupId)
-
-      try {
-        // Get current user info first
-        const userResponse = await fetch('/api/auth/session')
-        const session = await userResponse.json()
-
-        if (!session?.user) {
-          showSnackbar('You must be logged in to join a group', 'error')
-          return
-        }
-
-        // Join the group using the existing members endpoint
-        const response = await fetch(`/api/groups/${groupId}/members`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            member: {
-              id: session.user.id,
-            },
-          }),
-        })
-
-        if (response.ok) {
-          showSnackbar('Successfully joined the group!', 'success')
-          // Refresh the groups data
-          mutate()
-        } else {
-          const errorData = await response.json()
-          showSnackbar(errorData.message || 'Failed to join group', 'error')
-        }
-      } catch (error) {
-        console.error('Error joining group:', error)
-        showSnackbar('An error occurred while joining the group', 'error')
-      } finally {
-        setJoiningGroupId(null)
-      }
-    },
-    [showSnackbar, mutate],
-  )
+// Main Admin Layout Component
+const AdminLayout = ({
+  children,
+  roleType,
+  availableTabs,
+  currentTabIndex,
+  onTabChange,
+}) => {
+  const permissions = getRolePermissions(roleType)
 
   return (
-    <Stack width="100%" height={'100%'} p={2} spacing={1}>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Box flex={1}>
-          <Typography variant="h6">Groups Management</Typography>
-        </Box>
-        <Box minWidth="100px">
-          <Typography variant="h6">{groups.length} groups</Typography>
-        </Box>
-      </Stack>
-      <Loading loading={isValidating} error={errorGroups}>
-        <ScrollContainer>
-          <Stack spacing={2}>
-            <DataGrid
-              header={{
-                actions: {
-                  label: 'Actions',
-                  width: '120px',
-                },
-                columns: [
-                  {
-                    label: 'Label',
-                    column: { minWidth: '200px', flexGrow: 1 },
-                    renderCell: (row) => {
-                      return (
-                        <Typography variant="body1" fontWeight="medium">
-                          {row.label}
-                        </Typography>
-                      )
-                    },
-                  },
-                  {
-                    label: 'Members',
-                    column: { width: '100px' },
-                    renderCell: (row) => {
-                      return (
-                        <Typography variant="body2" color="text.secondary">
-                          {row._count.members}
-                        </Typography>
-                      )
-                    },
-                  },
-                  {
-                    label: 'Questions',
-                    column: { width: '100px' },
-                    renderCell: (row) => {
-                      return (
-                        <Typography variant="body2" color="text.secondary">
-                          {row._count.questions}
-                        </Typography>
-                      )
-                    },
-                  },
-                  {
-                    label: 'Evaluations',
-                    column: { width: '100px' },
-                    renderCell: (row) => {
-                      return (
-                        <Typography variant="body2" color="text.secondary">
-                          {row._count.evaluations}
-                        </Typography>
-                      )
-                    },
-                  },
-                  {
-                    label: 'Created By',
-                    column: { width: '280px' },
-                    renderCell: (row) => {
-                      return (
-                        row.createdBy && <UserAvatar user={row.createdBy} />
-                      )
-                    },
-                  },
-                  {
-                    label: 'Created',
-                    column: { width: '140px' },
-                    renderCell: (row) => {
-                      return (
-                        <Typography variant="body2" color="text.secondary">
-                          {new Date(row.createdAt).toLocaleDateString()}
-                        </Typography>
-                      )
-                    },
-                  },
-                ],
-              }}
-              items={groups?.map((group) => ({
-                ...group,
-                meta: {
-                  key: group.id,
-                  actions: !group.isCurrentUserMember
-                    ? [
-                        <LoadingButton
-                          key="join"
-                          color="primary"
-                          variant="text"
-                          size="small"
-                          loading={joiningGroupId === group.id}
-                          onClick={() => handleJoinGroup(group.id)}
-                        >
-                          Join
-                        </LoadingButton>,
-                      ]
-                    : [],
-                },
-              }))}
-            />
-          </Stack>
-        </ScrollContainer>
-      </Loading>
-    </Stack>
-  )
-}
-
-const PageAdmin = () => {
-  const [tabValue, setTabValue] = useState(0)
-
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue)
-  }
-
-  return (
-    <Authorization allowRoles={[Role.SUPER_ADMIN]}>
+    <Authorization allowRoles={permissions.allowedRoles}>
       <LayoutMain
         hideLogo
         header={
-          <Stack direction={'row'}>
-            <Stack direction={'row'} spacing={1} alignItems={'center'} flex={1}>
-              <BackButton backUrl="/" />
-              <Tabs
-                value={tabValue}
-                onChange={handleTabChange}
-                aria-label="admin tabs"
-              >
-                <Tab label="Users" sx={{ opacity: 1, m: 1 }} />
-                <Tab label="Groups" sx={{ opacity: 1, m: 1 }} />
-              </Tabs>
-            </Stack>
-            <MaintenancePanel />
-          </Stack>
+          <AdminHeader
+            roleType={roleType}
+            availableTabs={availableTabs}
+            currentTabIndex={currentTabIndex}
+            onTabChange={onTabChange}
+          />
         }
       >
         <Box sx={{ width: '100%', height: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}></Box>
-          <Box sx={{ height: 'calc(100% - 2px)' }}>
-            {tabValue === 0 && <Users />}
-            {tabValue === 1 && <Groups />}
-          </Box>
+          <Box sx={{ height: 'calc(100% - 2px)' }}>{children}</Box>
         </Box>
       </LayoutMain>
     </Authorization>
   )
 }
 
-const ManageRolesDialog = ({ open, user, onClose, onChange }) => {
-  const [roles, setRoles] = useState(user?.roles)
+// Tab Content Router
+const TabContentRouter = ({ availableTabs, currentPath }) => {
+  // Determine archiving mode based on the specific route
+  if (currentPath.startsWith('/admin/archiving')) {
+    if (currentPath === '/admin/archiving/pending') {
+      return <Archiving mode="pending" />
+    }
+    if (currentPath === '/admin/archiving/done') {
+      return <Archiving mode="done" />
+    }
+    return <Archiving mode="todo" />
+  }
 
-  useEffect(() => {
-    setRoles(user?.roles)
-  }, [user])
+  // Find the matching tab based on current path
+  const activeTab = availableTabs.find(
+    (tab) =>
+      currentPath.startsWith(tab.route) ||
+      (tab.key === 'users' && currentPath === '/admin'),
+  )
 
-  const save = useCallback(async () => {
-    await fetch(`/api/users/${user.id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ roles }),
-    })
-      .then((res) => res.json())
-      .then((updatedUser) => {
-        onChange(updatedUser)
-        return updatedUser
-      })
+  if (activeTab) {
+    const Component = activeTab.component
+    return <Component />
+  }
 
-    onClose()
-  }, [user, roles, onClose, onChange])
+  // Default fallback
+  const defaultTab = availableTabs[0]
+  if (defaultTab) {
+    const Component = defaultTab.component
+    return <Component />
+  }
 
   return (
-    <DialogFeedback
-      open={open}
-      onClose={() => onClose()}
-      onConfirm={() => save()}
-      title="Manage roles"
-      content={
-        roles && (
-          <Stack>
-            <Typography variant="body2">
-              Select the roles for this user
-            </Typography>
-            <Stack direction="row" spacing={1}>
-              <FormGroup>
-                {Object.keys(Role).map((role) => {
-                  return (
-                    <FormControlLabel
-                      key={role}
-                      control={
-                        <Checkbox
-                          checked={roles.includes(role)}
-                          onChange={(ev) => {
-                            if (ev.target.checked) {
-                              setRoles([...roles, role])
-                            } else {
-                              setRoles(roles.filter((r) => r !== role))
-                            }
-                          }}
-                        />
-                      }
-                      label={role}
-                    />
-                  )
-                })}
-              </FormGroup>
-            </Stack>
-          </Stack>
-        )
-      }
-    />
+    <Box sx={{ p: 2 }}>
+      <Typography variant="body1" color="text.secondary">
+        No content available
+      </Typography>
+    </Box>
+  )
+}
+
+// Main Page Component
+const PageAdmin = ({ activeTab = 'users' }) => {
+  const router = useRouter()
+  const { data: session } = useSession()
+
+  // Determine user role and permissions
+  const roleType = getUserRoleType(session)
+  const permissions = getRolePermissions(roleType)
+  const { availableTabs } = permissions
+
+  // Tab navigation logic
+  const getCurrentTabIndex = () => {
+    const currentPath = router.asPath
+    return availableTabs.findIndex(
+      (tab) =>
+        currentPath.startsWith(tab.route) ||
+        (tab.key === 'users' && currentPath === '/admin'),
+    )
+  }
+
+  const handleTabChange = (event, newValue) => {
+    const targetTab = availableTabs[newValue]
+    if (targetTab) {
+      router.push(targetTab.route)
+    }
+  }
+
+  const currentTabIndex = getCurrentTabIndex()
+
+  // Render the appropriate layout
+  return (
+    <AdminLayout
+      roleType={roleType}
+      availableTabs={availableTabs}
+      currentTabIndex={currentTabIndex}
+      onTabChange={handleTabChange}
+    >
+      <TabContentRouter
+        availableTabs={availableTabs}
+        currentPath={router.asPath}
+      />
+    </AdminLayout>
   )
 }
 

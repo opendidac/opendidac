@@ -1,0 +1,14 @@
+<div style="display:flex;flex-direction:column;gap:15px;">
+    {{> studentAnswerHeader studentAnswer}}
+
+    {{#each studentAnswer.code.codeReading.outputs}}
+
+      {{> codeBloc this.codeReadingSnippet.snippet}}
+
+      <div style="display: flex; justify-content: space-between; align-items: flex-start">
+        <label style="width: 150px;">Your Output:</label>
+        <span style="flex:1;">{{> codeBloc this.output}}</span>
+      </div>
+
+    {{/each}}
+</div> 

@@ -18,7 +18,7 @@ import useSWR from 'swr'
 import { Role, StudentAnswerStatus } from '@prisma/client'
 import Authorization from '../../security/Authorization'
 import LayoutSplitScreen from '../../layout/LayoutSplitScreen'
-import { Box, Paper, Stack, Typography } from '@mui/material'
+import { Box, Paper, Stack, Typography, Button, Alert } from '@mui/material'
 import Paging from '../../layout/utils/Paging'
 import { useEffect, useMemo, useState } from 'react'
 import StudentPhaseRedirect from './StudentPhaseRedirect'
@@ -33,6 +33,7 @@ import AnswerCompare from '@/components/answer/AnswerCompare'
 import Overlay from '@/components/ui/Overlay'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
 import Addendum from '@/components/evaluations/addendum/Addendum'
+import NextImage from 'next/image'
 
 const getFilledStatus = (studentAnswerStatus) => {
   switch (studentAnswerStatus) {
@@ -46,6 +47,7 @@ const getFilledStatus = (studentAnswerStatus) => {
       return 'empty'
   }
 }
+
 const PageConsult = () => {
   const router = useRouter()
   const { evaluationId, questionPage } = router.query
@@ -73,6 +75,8 @@ const PageConsult = () => {
   const [evaluationToQuestions, setEvaluationToQuestions] = useState([])
   const [selected, setSelected] = useState()
   const [consultationDisabled, setConsultationDisabled] = useState(false)
+
+  // Inline PDF Export Button
 
   useEffect(() => {
     if (
@@ -126,7 +130,7 @@ const PageConsult = () => {
               {evaluationToQuestions && selected && (
                 <LayoutMain
                   header={
-                    <Stack direction="row" alignItems="center">
+                    <Stack direction="row" alignItems="center" spacing={2}>
                       <Stack flex={1} sx={{ overflow: 'hidden' }}>
                         <Paging
                           items={questionPages}
@@ -140,8 +144,39 @@ const PageConsult = () => {
                       </Stack>
                     </Stack>
                   }
+                  subheader={
+                    <Alert
+                      severity="info"
+                      action={
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() =>
+                            window.open(
+                              `/api/users/evaluations/${evaluationId}/export`,
+                              '_blank',
+                            )
+                          }
+                          startIcon={
+                            <NextImage
+                              alt="Download PDF"
+                              src="/svg/icons/file-pdf.svg"
+                              width="16"
+                              height="16"
+                            />
+                          }
+                        >
+                          Download PDF
+                        </Button>
+                      }
+                    >
+                      This consultation will remain accessible until the
+                      evaluation is archived.
+                    </Alert>
+                  }
                 >
                   <LayoutSplitScreen
+                    sx={{ flex: 1 }}
                     leftPanel={
                       selected && (
                         <QuestionView

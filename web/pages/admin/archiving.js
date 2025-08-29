@@ -13,18 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Role } from '@prisma/client'
-import Authorization from '../components/security/Authorization'
-import IndexPage from '../components/IndexPage'
+import PageAdmin from '@/components/admin/PageAdmin'
 
-const Home = () => {
-  return (
-    <Authorization
-      allowRoles={[Role.PROFESSOR, Role.ARCHIVIST, Role.SUPER_ADMIN]}
-    >
-      <IndexPage />
-    </Authorization>
-  )
+const AdminArchiving = () => {
+  return <PageAdmin />
 }
 
-export default Home
+export default AdminArchiving

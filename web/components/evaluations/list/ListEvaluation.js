@@ -17,14 +17,7 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { EvaluationPhase, EvaluationStatus } from '@prisma/client'
-import {
-  Box,
-  Button,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material'
+import { Box, Button, IconButton, Stack, Tooltip } from '@mui/material'
 
 import { getStudentEntryLink } from '@/code/utils'
 import DisplayPhase from '../DisplayPhase'
@@ -33,21 +26,15 @@ import { weeksAgo } from '@/components/questions/list/utils'
 import DateTimeAgo from '@/components/feedback/DateTimeAgo'
 import AddEvaluationDialog from './AddEvaluationDialog'
 import { phaseGT } from '@/code/phase'
+import ArchivalStatusMiniStamp from '@/components/admin/archiving/ArchivalStatusMiniStamp'
 
 const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
   const [addDialogOpen, setAddDialogOpen] = useState(false)
 
   return (
-    <Box
-      sx={{
-        minWidth: '100%',
-        height: '100%',
-        p: 2,
-        bgcolor: 'background.paper',
-      }}
-    >
+    <Box minWidth="100%" height="100%" p={2} bgcolor="background.paper">
       <GridGrouping
-        label={'Evaluations'}
+        label="Evaluations"
         actions={
           <Button onClick={() => setAddDialogOpen(true)}>
             Create a new evaluation
@@ -65,40 +52,16 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
               renderCell: (row) => row.label,
             },
             {
-              label: 'Updated',
-              column: { width: '120px' },
-              renderCell: (row) => (
-                <DateTimeAgo date={new Date(row.updatedAt)} />
-              ),
-            },
-            {
-              label: 'Questions',
-              column: { width: '80px' },
-              renderCell: (row) => row._count?.evaluationToQuestions || 'N/A',
-            },
-            {
-              label: 'Students',
-              column: { width: '80px' },
-              renderCell: (row) => row.students.length,
+              label: 'Archival',
+              column: { width: '100px' },
+              renderCell: (row) => <ArchivalStatusMiniStamp evaluation={row} />,
             },
             {
               label: 'Phase',
-              column: { width: '130px' },
+              column: { width: '100px' },
               renderCell: (row) => (
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  sx={{ width: '100%' }}
-                  alignItems="center"
-                >
+                <Stack direction="row" spacing={1} alignItems="center">
                   <DisplayPhase phase={row.phase} />
-                  {row.purgedAt && (
-                    <Tooltip title="Student data purged">
-                      <Typography variant="caption" color="error">
-                        <b>purged</b>
-                      </Typography>
-                    </Tooltip>
-                  )}
                   {row.phase === EvaluationPhase.DRAFT && (
                     <Button
                       key="promote-to-in-progress"
@@ -118,6 +81,23 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
                   )}
                 </Stack>
               ),
+            },
+            {
+              label: 'Updated',
+              column: { width: '120px' },
+              renderCell: (row) => (
+                <DateTimeAgo date={new Date(row.updatedAt)} />
+              ),
+            },
+            {
+              label: 'Questions',
+              column: { width: '80px' },
+              renderCell: (row) => row._count?.evaluationToQuestions || 'N/A',
+            },
+            {
+              label: 'Students',
+              column: { width: '80px' },
+              renderCell: (row) => row.students.length,
             },
           ],
         }}
@@ -172,20 +152,18 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
                     </IconButton>
                   </Tooltip>
                 </Link>
-                {evaluation.status === EvaluationStatus.ACTIVE && (
-                  <Tooltip title="Add to archive" key="archive">
-                    <IconButton onClick={(ev) => onDelete(ev, evaluation)}>
-                      <Image
-                        alt="Add to archive"
-                        src="/svg/icons/archive.svg"
-                        width="18"
-                        height="18"
-                      />
-                    </IconButton>
-                  </Tooltip>
-                )}
+                <Tooltip title="Deactivate evaluation" key="deactivate">
+                  <IconButton onClick={(ev) => onDelete(ev, evaluation)}>
+                    <Image
+                      alt="Deactivate evaluation"
+                      src="/svg/icons/archive.svg"
+                      width="18"
+                      height="18"
+                    />
+                  </IconButton>
+                </Tooltip>
 
-                {evaluation.status === EvaluationStatus.ARCHIVED && (
+                {evaluation.status === EvaluationStatus.INACTIVE && (
                   <Tooltip title="Delete definitively" key="archive">
                     <IconButton onClick={(ev) => onDelete(ev, evaluation)}>
                       <Image
@@ -229,4 +207,5 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
     </Box>
   )
 }
+
 export default ListEvaluation

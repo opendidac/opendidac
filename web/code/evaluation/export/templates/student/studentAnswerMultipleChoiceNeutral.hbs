@@ -1,0 +1,34 @@
+<div style="display:flex;flex-direction:column;gap:15px;">
+  {{> studentAnswerHeader studentAnswer}}
+  <div>
+    <h5>Your Answer</h5>
+    <div>
+      <ul style="list-style-type: none; padding-left: 0;">
+        {{#each question.multipleChoice.options}}
+          {{#if (isOptionSelected this.id ../studentAnswer.multipleChoice.options)}}
+            {{!-- SELECTED option --}}
+            <li style="margin-bottom: 10px; padding: 8px; border-radius: 4px; background-color: #e3f2fd; border-left: 4px solid #2196f3;">
+              <label>
+                ✓ {{this.text}} <span style="color: #1976d2; font-weight: bold; margin-left: 10px;">(Selected)</span>
+              </label>
+            </li>
+          {{else}}
+            {{!-- NOT SELECTED option --}}
+            <li style="margin-bottom: 10px; padding: 8px; border-radius: 4px; background-color: #f5f5f5; border-left: 4px solid #e0e0e0;">
+              <label>
+                ○ {{this.text}} <span style="color: #666; margin-left: 10px;">(Not Selected)</span>
+              </label>
+            </li>
+          {{/if}}
+        {{/each}}
+      </ul>
+    </div>
+  </div>
+  
+  {{#if question.multipleChoice.activateStudentComment}}
+    <div>
+      <span style="font-weight: bold;">{{question.multipleChoice.studentCommentLabel}}</span>
+      <p style="background-color: #f9f9f9; padding: 10px; border-radius: 4px; border-left: 4px solid #2196f3;">{{studentAnswer.multipleChoice.comment}}</p>
+    </div>
+  {{/if}}
+</div> 
