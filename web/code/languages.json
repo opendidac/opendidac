@@ -848,10 +848,22 @@
         "snippetWrapperFunctionSignature": "def {{SNIPPET_FUNCTION_NAME}}(): Unit =\n{{SNIPPET_FUNCTION_BODY}}",
         "snippetFunctionCallTemplate": "    if functionName == \"{{SNIPPET_FUNCTION_NAME}}\" then\n      {{SNIPPET_FUNCTION_NAME}}()",
         "snippets": [
-          { "snippet": "var s = \"hello, world\"\ns = s.toUpperCase()\nprintln(s)", "output": "HELLO, WORLD\n" },
-          { "snippet": "for i <- 0 until 3 do\n  println(i)", "output": "0\n1\n2\n" },
-          { "snippet": "var i = 11\nwhile i > 4 do\n  i -= 2\n  print(s\"$i \")", "output": "9 7 5 3 " },
-          { "snippet": "var str = \"\"\nfor c <- 'A' to 'C' do\n  str = str + c + str\nprintln(str)", "output": "ABACABA\n" }
+          {
+            "snippet": "var s = \"hello, world\"\ns = s.toUpperCase()\nprintln(s)",
+            "output": "HELLO, WORLD\n"
+          },
+          {
+            "snippet": "for i <- 0 until 3 do\n  println(i)",
+            "output": "0\n1\n2\n"
+          },
+          {
+            "snippet": "var i = 11\nwhile i > 4 do\n  i -= 2\n  print(s\"$i \")",
+            "output": "9 7 5 3 "
+          },
+          {
+            "snippet": "var str = \"\"\nfor c <- 'A' to 'C' do\n  str = str + c + str\nprintln(str)",
+            "output": "ABACABA\n"
+          }
         ]
       }
     }

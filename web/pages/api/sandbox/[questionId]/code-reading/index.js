@@ -69,9 +69,11 @@ const post = async (req, res, prisma) => {
 
   // --- minimal helpers for uniform body indentation (language-agnostic) ---
   const dedent = (s) => {
-    const lines = String(s ?? '').replace(/\r\n/g, '\n').split('\n')
+    const lines = String(s ?? '')
+      .replace(/\r\n/g, '\n')
+      .split('\n')
     const nonEmpty = lines.filter((l) => l.trim().length > 0)
-    const indents = nonEmpty.map((l) => (l.match(/^(\s*)/)?.[1].length ?? 0))
+    const indents = nonEmpty.map((l) => l.match(/^(\s*)/)?.[1].length ?? 0)
     const min = indents.length ? Math.min(...indents) : 0
     return lines.map((l) => l.slice(Math.min(min, l.length))).join('\n')
   }
