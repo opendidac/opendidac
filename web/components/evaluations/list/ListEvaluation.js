@@ -152,16 +152,18 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
                     </IconButton>
                   </Tooltip>
                 </Link>
-                <Tooltip title="Deactivate evaluation" key="deactivate">
-                  <IconButton onClick={(ev) => onDelete(ev, evaluation)}>
-                    <Image
-                      alt="Deactivate evaluation"
-                      src="/svg/icons/archive.svg"
-                      width="18"
-                      height="18"
-                    />
-                  </IconButton>
-                </Tooltip>
+                {evaluation.status === EvaluationStatus.ACTIVE && (
+                  <Tooltip title="Deactivate evaluation" key="deactivate">
+                    <IconButton onClick={(ev) => onDelete(ev, evaluation)}>
+                      <Image
+                        alt="Deactivate evaluation"
+                        src="/svg/icons/archive.svg"
+                        width="18"
+                        height="18"
+                      />
+                    </IconButton>
+                  </Tooltip>
+                )}
 
                 {evaluation.status === EvaluationStatus.INACTIVE && (
                   <Tooltip title="Delete definitively" key="archive">
