@@ -73,25 +73,25 @@ const Evaluations = () => {
     await router.push(`/${groupScope}/evaluations/${selected.id}/in-progress`)
   }, [groupScope, router, selected])
 
-  const archiveEvaluation = useCallback(async () => {
+  const changeEvaluationStatus = useCallback(async () => {
     await fetch(`/api/${groupScope}/evaluations/${selected.id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ status: EvaluationStatus.ARCHIVED }),
+      body: JSON.stringify({ status: EvaluationStatus.INACTIVE }),
       headers: { 'Content-Type': 'application/json' },
     })
       .then((_) => {
         setEvaluations(
           evaluations.map((evaluation) => {
             if (evaluation.id === selected.id) {
-              evaluation.status = EvaluationStatus.ARCHIVED
+              evaluation.status = EvaluationStatus.INACTIVE
             }
             return evaluation
           }),
         )
-        showSnackbar('evaluation archived', 'success')
+        showSnackbar('evaluation set to inactive', 'success')
       })
       .catch((_) => {
-        showSnackbar('Error archiving collections session', 'error')
+        showSnackbar('Error setting evaluation to inactive', 'error')
       })
     setSelected(null)
   }, [groupScope, evaluations, selected, showSnackbar])
@@ -130,7 +130,7 @@ const Evaluations = () => {
                   aria-label="simple tabs example"
                 >
                   <Tab label="Active" value={EvaluationStatus.ACTIVE} />
-                  <Tab label="Archived" value={EvaluationStatus.ARCHIVED} />
+                  <Tab label="Inactive" value={EvaluationStatus.INACTIVE} />
                 </TabList>
               </Stack>
             }
@@ -152,7 +152,7 @@ const Evaluations = () => {
                 ev.preventDefault()
                 ev.stopPropagation()
                 setSelected(evaluation)
-                if (evaluation.status === EvaluationStatus.ARCHIVED) {
+                if (evaluation.status === EvaluationStatus.INACTIVE) {
                   setDeleteDialogOpen(true)
                 } else {
                   setArchiveDialogOpen(true)
@@ -162,10 +162,10 @@ const Evaluations = () => {
           </LayoutMain>
           <DialogFeedback
             open={archiveDialogOpen}
-            title="Archive this evaluation"
-            content="Are you sure you want to archive this evaluation?"
+            title="Set evaluation to inactive"
+            content="Are you sure you want to set this evaluation to inactive?"
             onClose={() => setArchiveDialogOpen(false)}
-            onConfirm={archiveEvaluation}
+            onConfirm={changeEvaluationStatus}
           />
           <DialogFeedback
             open={deleteDialogOpen}
