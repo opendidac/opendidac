@@ -38,7 +38,24 @@ const get = async (req, res, prisma) => {
         scope: groupScope,
       },
     },
-    include: {
+    select: {
+      id: true,
+      label: true,
+      phase: true,
+      status: true,
+      archivalPhase: true,
+      archivedAt: true,
+      purgedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      startAt: true,
+      endAt: true,
+      durationActive: true,
+      durationHours: true,
+      durationMins: true,
+      accessMode: true,
+      accessList: true,
+      conditions: true,
       _count: {
         select: {
           evaluationToQuestions: true,

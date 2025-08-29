@@ -29,13 +29,7 @@ import {
 } from '@mui/material'
 
 // MUI Icons
-import {
-  ArrowDropDown,
-  RadioButtonUnchecked,
-  Schedule,
-  Archive,
-  DeleteForever,
-} from '@mui/icons-material'
+import { ArrowDropDown } from '@mui/icons-material'
 
 // Third-party imports
 import { format } from 'date-fns'
@@ -45,6 +39,7 @@ import DateTimeAgo from '@/components/feedback/DateTimeAgo'
 import ArchiveImmediatelyForm from './forms/ArchiveImmediatelyForm'
 import MarkForArchivalForm from './forms/MarkForArchivalForm'
 import PurgeConfirmationForm from './forms/PurgeConfirmationForm'
+import { getArchivalPhaseConfig } from './archivalPhaseConfig'
 
 // Helper function to format date
 const formatDate = (date) => {
@@ -197,35 +192,6 @@ const ArchivalWorkflowButton = ({
 
   const currentPhase = getCurrentPhase()
 
-  // Define phases and their display properties
-  const phaseConfig = {
-    ACTIVE: {
-      label: 'Active',
-      color: 'info',
-      icon: RadioButtonUnchecked,
-    },
-    MARKED_FOR_ARCHIVAL: {
-      label: 'Marked for Archive',
-      color: 'warning',
-      icon: Schedule,
-    },
-    ARCHIVED: {
-      label: 'Archived',
-      color: 'success',
-      icon: Archive,
-    },
-    PURGED: {
-      label: 'Purged',
-      color: 'error',
-      icon: DeleteForever,
-    },
-    PURGED_WITHOUT_ARCHIVAL: {
-      label: 'Purged (No Archive)',
-      color: 'error',
-      icon: DeleteForever,
-    },
-  }
-
   // Define available transitions for each phase
   const getAvailableTransitions = (phase) => {
     switch (phase) {
@@ -281,8 +247,8 @@ const ArchivalWorkflowButton = ({
     }
   }
 
-  const currentConfig = phaseConfig[currentPhase]
-  const CurrentIcon = currentConfig?.icon || RadioButtonUnchecked
+  const currentConfig = getArchivalPhaseConfig(currentPhase)
+  const CurrentIcon = currentConfig.icon
   const transitions = getAvailableTransitions(currentPhase)
 
   const handleClick = (event) => {
@@ -467,18 +433,17 @@ const ArchivalWorkflowButton = ({
                         </Typography>
                       </MenuItem>
                       {transitions.map((transition) => {
-                        const TransitionIcon =
-                          phaseConfig[transition.phase]?.icon ||
-                          RadioButtonUnchecked
+                        const transitionConfig = getArchivalPhaseConfig(
+                          transition.phase,
+                        )
+                        const TransitionIcon = transitionConfig.icon
                         return (
                           <MenuItem
                             key={transition.phase}
                             onClick={() => handleTransition(transition.phase)}
                           >
                             <ListItemIcon>
-                              <TransitionIcon
-                                color={phaseConfig[transition.phase]?.color}
-                              />
+                              <TransitionIcon color={transitionConfig.color} />
                             </ListItemIcon>
                             <ListItemText>
                               <Stack>

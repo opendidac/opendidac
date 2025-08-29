@@ -35,6 +35,8 @@ import EvaluationInProgress from '../evaluation/phases/EvaluationInProgress'
 import EvaluationResults from '../evaluation/phases/EvaluationResults'
 import { useEffect, useState } from 'react'
 import { Role, EvaluationPhase } from '@prisma/client'
+import EvaluationArchivalStatus from '../../admin/archiving/EvaluationArchivalStatus'
+import { Box } from '@mui/material'
 
 const STUDENTS_ATTENDANCE_PULL_INTERVAL = 1000
 const STUDENTS_PROGRESS_PULL_INTERVAL = 5000
@@ -162,7 +164,7 @@ const EvaluationPage = () => {
             }
             padding={0}
           >
-            <Stack spacing={1} flex={1}>
+            <Stack spacing={1} flex={1} sx={{ position: 'relative' }}>
               <Stack flex={1}>
                 <LayoutSplitScreen
                   rightWidth={80}
@@ -246,11 +248,69 @@ const EvaluationPage = () => {
                   }
                 />
               </Stack>
+
+              {/* Archival Status Stamp - Bottom Right Corner */}
+              <ArchivalStatusStamp evaluation={evaluation} />
             </Stack>
           </LayoutMain>
         )}
       </Loading>
     </Authorization>
+  )
+}
+
+const ArchivalStatusStamp = ({ evaluation }) => {
+  return (
+    <Box
+      position="fixed"
+      bottom={-30}
+      right={-30}
+      width={300}
+      height={300}
+      zIndex={1000}
+      overflow="hidden"
+      sx={{ pointerEvents: 'none' }}
+    >
+      {/* Colored Track Under Stamp */}
+      {evaluation.archivalPhase && evaluation.archivalPhase !== 'ACTIVE' && (
+        <Box
+          position="absolute"
+          top="50%"
+          left="50%"
+          width="150%"
+          height={45}
+          borderRadius="2px"
+          zIndex={999}
+          sx={{
+            backgroundColor:
+              evaluation.archivalPhase === 'MARKED_FOR_ARCHIVAL'
+                ? '#ed6c02'
+                : evaluation.archivalPhase === 'ARCHIVED'
+                  ? '#2e7d32'
+                  : evaluation.archivalPhase === 'PURGED' ||
+                      evaluation.archivalPhase === 'PURGED_WITHOUT_ARCHIVAL'
+                    ? '#d32f2f'
+                    : '#1976d2',
+            opacity: 0.5,
+            transform: 'translate(-50%, -50%) rotate(-45deg)',
+          }}
+        />
+      )}
+
+      {/* Stamp */}
+      <Box
+        position="absolute"
+        top="50%"
+        left="50%"
+        zIndex={1000}
+        sx={{
+          transform: 'translate(-50%, -50%) rotate(-45deg)',
+          pointerEvents: 'auto',
+        }}
+      >
+        <EvaluationArchivalStatus evaluation={evaluation} />
+      </Box>
+    </Box>
   )
 }
 

@@ -87,7 +87,22 @@ const get = async (req, res, prisma) => {
       id: evaluationId,
     },
     include: {
-      purgedBy: true,
+      purgedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+      archivedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
     },
   })
 
