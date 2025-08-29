@@ -187,7 +187,7 @@ const ArchivalPhaseDetails = ({ evaluation, currentPhase, currentConfig }) => {
   )
 }
 
-const EvaluationArchivalStatus = ({ evaluation, size = 'small' }) => {
+const EvaluationArchivalStatus = ({ evaluation }) => {
   const [anchorEl, setAnchorEl] = useState(null)
   const open = Boolean(anchorEl)
 
@@ -232,24 +232,26 @@ const EvaluationArchivalStatus = ({ evaluation, size = 'small' }) => {
           transition: 'all 0.2s ease-in-out',
         }}
       >
-        <CurrentIcon
-          fontSize="large"
-          sx={{
-            color: currentConfig.colorHex,
-            mb: 0.5,
-          }}
-        />
-        <Typography
-          variant="caption"
-          textAlign="center"
-          textTransform="uppercase"
-          letterSpacing="0.5px"
-          lineHeight={1.1}
-          fontWeight="bold"
-          color={currentConfig.colorHex}
-        >
-          {currentConfig.label}
-        </Typography>
+        <Stack direction="column" spacing={0} alignItems="center">
+          <CurrentIcon
+            fontSize="large"
+            sx={{
+              color: currentConfig.colorHex,
+              mb: 0.5,
+            }}
+          />
+          <Typography
+            variant="caption"
+            textAlign="center"
+            textTransform="uppercase"
+            letterSpacing="0.5px"
+            lineHeight={1.1}
+            fontWeight="bold"
+            color={currentConfig.colorHex}
+          >
+            {currentConfig.label}
+          </Typography>
+        </Stack>
       </Paper>
 
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
@@ -265,4 +267,58 @@ const EvaluationArchivalStatus = ({ evaluation, size = 'small' }) => {
   )
 }
 
-export default EvaluationArchivalStatus
+const ArchivalStatusStamp = ({ evaluation }) => {
+  const currentPhase = getCurrentArchivalPhase(evaluation)
+
+  // Only show if there's archival activity
+  if (currentPhase === ArchivalPhase.ACTIVE) {
+    return null
+  }
+
+  const config = getArchivalPhaseConfig(currentPhase)
+
+  return (
+    <Box
+      position="fixed"
+      bottom={-30}
+      right={-30}
+      width={300}
+      height={300}
+      zIndex={1000}
+      overflow="hidden"
+      sx={{ pointerEvents: 'none' }}
+    >
+      {/* Colored Track Under Stamp */}
+      <Box
+        position="absolute"
+        top="50%"
+        left="50%"
+        width="150%"
+        height={45}
+        borderRadius="2px"
+        zIndex={999}
+        sx={{
+          backgroundColor: config.colorHex,
+          opacity: 0.5,
+          transform: 'translate(-50%, -50%) rotate(-45deg)',
+        }}
+      />
+
+      {/* Stamp */}
+      <Box
+        position="absolute"
+        top="50%"
+        left="50%"
+        zIndex={1000}
+        sx={{
+          transform: 'translate(-50%, -50%) rotate(-45deg)',
+          pointerEvents: 'auto',
+        }}
+      >
+        <EvaluationArchivalStatus evaluation={evaluation} />
+      </Box>
+    </Box>
+  )
+}
+
+export default ArchivalStatusStamp
