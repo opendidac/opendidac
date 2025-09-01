@@ -183,7 +183,7 @@ const PageList = () => {
   const handleImportSuccess = useCallback(
     async (result) => {
       showSnackbar(
-        `Successfully imported ${result.meta.successful} question${result.meta.successful > 1 ? 's' : ''}`,
+        `Successfully imported ${result.count} question${result.count > 1 ? 's' : ''}`,
         'success',
       )
       await mutate() // Refresh the questions list

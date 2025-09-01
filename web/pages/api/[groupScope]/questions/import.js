@@ -63,11 +63,7 @@ import { withPrisma } from '@/middleware/withPrisma'
  *     },
  *     ...
  *   ],
- *   "meta": {
- *     "count": 3,
- *     "successful": 3,
- *     "failed": 0
- *   }
+ *   "count": 3
  * }
  *
  * Error responses:
@@ -115,7 +111,6 @@ const post = async (req, res, prisma) => {
 
   try {
     const importedQuestions = []
-    const errors = []
 
     // Import all questions in a single transaction
     await prisma.$transaction(async (prismaTransaction) => {
@@ -134,15 +129,9 @@ const post = async (req, res, prisma) => {
             id: createdQuestionId,
             title: questionJson.title,
             type: questionJson.type,
-            originalIndex: i,
           })
         } catch (error) {
           console.error(`Error importing question ${i + 1}:`, error)
-          errors.push({
-            index: i + 1,
-            title: questionJson?.title || 'Unknown',
-            error: error.message,
-          })
 
           // Re-throw to rollback the entire transaction
           throw new Error(
@@ -154,16 +143,8 @@ const post = async (req, res, prisma) => {
 
     // If we get here, all questions were imported successfully
     res.status(200).json({
-      imported: importedQuestions.map((q) => ({
-        id: q.id,
-        title: q.title,
-        type: q.type,
-      })),
-      meta: {
-        count: importedQuestions.length,
-        successful: importedQuestions.length,
-        failed: 0,
-      },
+      imported: importedQuestions,
+      count: importedQuestions.length,
     })
   } catch (error) {
     console.error('Error in bulk question import:', error)
@@ -179,11 +160,6 @@ const post = async (req, res, prisma) => {
 
     res.status(500).json({
       error: errorMessage,
-      meta: {
-        attempted: questionsToImport.length,
-        successful: 0,
-        failed: questionsToImport.length,
-      },
     })
   }
 }
