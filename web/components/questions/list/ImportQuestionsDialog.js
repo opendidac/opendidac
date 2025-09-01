@@ -17,15 +17,16 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  LinearProgress,
   Stack,
   Typography,
   styled,
 } from '@mui/material'
-import { LoadingButton } from '@mui/lab'
 import {
   CloudUpload as CloudUploadIcon,
   Upload as UploadIcon,
@@ -54,6 +55,7 @@ const ImportQuestionsDialog = ({
   const [parsedData, setParsedData] = useState(null)
   const [parseError, setParseError] = useState(null)
   const [importing, setImporting] = useState(false)
+  const [importProgress, setImportProgress] = useState(0)
   const fileInputRef = useRef(null)
 
   const handleFileSelect = (event) => {
@@ -119,8 +121,14 @@ const ImportQuestionsDialog = ({
     if (!parsedData || !groupScope) return
 
     setImporting(true)
+    setImportProgress(0)
 
     try {
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setImportProgress((prev) => Math.min(prev + 10, 90))
+      }, 200)
+
       const response = await fetch(`/api/${groupScope}/questions/import`, {
         method: 'POST',
         headers: {
@@ -130,6 +138,9 @@ const ImportQuestionsDialog = ({
         body: JSON.stringify(parsedData.original),
       })
 
+      clearInterval(progressInterval)
+      setImportProgress(100)
+
       if (!response.ok) {
         const error = await response.json()
         throw new Error(error.error || 'Import failed')
@@ -138,11 +149,14 @@ const ImportQuestionsDialog = ({
       const result = await response.json()
 
       // Success
-      onImportSuccess?.(result)
-      handleClose()
+      setTimeout(() => {
+        onImportSuccess?.(result)
+        handleClose()
+      }, 500) // Small delay to show 100% progress
     } catch (error) {
       console.error('Import error:', error)
       setParseError(`Import failed: ${error.message}`)
+      setImportProgress(0)
     } finally {
       setImporting(false)
     }
@@ -155,6 +169,7 @@ const ImportQuestionsDialog = ({
     setParsedData(null)
     setParseError(null)
     setImporting(false)
+    setImportProgress(0)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -228,6 +243,24 @@ const ImportQuestionsDialog = ({
               </Typography>
             </Alert>
           )}
+
+          {/* Import Progress */}
+          {importing && (
+            <Box>
+              <Stack
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                sx={{ mb: 1 }}
+              >
+                <CircularProgress size={20} />
+                <Typography variant="body2">
+                  Importing questions... {importProgress}%
+                </Typography>
+              </Stack>
+              <LinearProgress variant="determinate" value={importProgress} />
+            </Box>
+          )}
         </Stack>
       </DialogContent>
 
@@ -235,19 +268,26 @@ const ImportQuestionsDialog = ({
         <Button onClick={handleClose} disabled={importing}>
           Cancel
         </Button>
-        <LoadingButton
+        <Button
           onClick={handleImport}
           variant="contained"
-          disabled={!parsedData || !!parseError}
-          loading={importing}
-          startIcon={<UploadIcon />}
-          loadingPosition="start"
+          disabled={!parsedData || !!parseError || importing}
+          startIcon={!importing ? <UploadIcon /> : null}
           sx={{
             minWidth: '140px',
+            backgroundColor: 'primary.main',
+            '&:hover': {
+              backgroundColor: 'primary.dark',
+            },
+            '&:disabled': {
+              backgroundColor: 'grey.300',
+            },
           }}
         >
-          {`Import ${parsedData?.count || 0} Question${parsedData?.count !== 1 ? 's' : ''}`}
-        </LoadingButton>
+          {importing
+            ? 'Importing...'
+            : `Import ${parsedData?.count || 0} Question${parsedData?.count !== 1 ? 's' : ''}`}
+        </Button>
       </DialogActions>
     </Dialog>
   )
