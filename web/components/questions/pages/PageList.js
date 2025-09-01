@@ -22,6 +22,10 @@ import Authorization from '../../security/Authorization'
 import QuestionFilter from '../../question/QuestionFilter'
 import MainMenu from '../../layout/MainMenu'
 import { Box, Button, Stack, Typography } from '@mui/material'
+import {
+  Download as DownloadIcon,
+  Upload as UploadIcon,
+} from '@mui/icons-material'
 import { useSnackbar } from '../../../context/SnackbarContext'
 import { useRouter } from 'next/router'
 import AddQuestionDialog from '../list/AddQuestionDialog'
@@ -90,9 +94,11 @@ const ExportQuestionsButton = ({ selection, groupScope, onExportSuccess }) => {
 
   return (
     <Button
-      variant="outlined"
+      variant="text"
       onClick={handleExportSelected}
       disabled={selection.length === 0}
+      startIcon={<DownloadIcon />}
+      color="success"
     >
       Export {selection.length} question{selection.length > 1 ? 's' : ''}
     </Button>
@@ -205,13 +211,14 @@ const PageList = () => {
                     questions={questions}
                     enableSelection={true}
                     actions={
-                      <Stack direction={'row'} spacing={2}>
+                      <Stack direction={'row'} spacing={1}>
                         <Button onClick={() => setAddDialogOpen(true)}>
                           Create a new question
                         </Button>
                         <Button
-                          variant="outlined"
+                          variant="text"
                           onClick={() => setImportDialogOpen(true)}
+                          startIcon={<UploadIcon />}
                         >
                           Import
                         </Button>

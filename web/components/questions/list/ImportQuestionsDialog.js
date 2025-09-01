@@ -27,7 +27,10 @@ import {
   Typography,
   styled,
 } from '@mui/material'
-import { CloudUpload as CloudUploadIcon } from '@mui/icons-material'
+import {
+  CloudUpload as CloudUploadIcon,
+  Upload as UploadIcon,
+} from '@mui/icons-material'
 import { useState, useRef } from 'react'
 
 const VisuallyHiddenInput = styled('input')({
@@ -269,6 +272,17 @@ const ImportQuestionsDialog = ({
           onClick={handleImport}
           variant="contained"
           disabled={!parsedData || !!parseError || importing}
+          startIcon={!importing ? <UploadIcon /> : null}
+          sx={{
+            minWidth: '140px',
+            backgroundColor: 'primary.main',
+            '&:hover': {
+              backgroundColor: 'primary.dark',
+            },
+            '&:disabled': {
+              backgroundColor: 'grey.300',
+            },
+          }}
         >
           {importing
             ? 'Importing...'
