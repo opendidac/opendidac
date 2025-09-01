@@ -22,6 +22,10 @@ import Authorization from '../../security/Authorization'
 import QuestionFilter from '../../question/QuestionFilter'
 import MainMenu from '../../layout/MainMenu'
 import { Box, Button, Stack, Typography } from '@mui/material'
+import {
+  Download as DownloadIcon,
+  Upload as UploadIcon,
+} from '@mui/icons-material'
 import { useSnackbar } from '../../../context/SnackbarContext'
 import { useRouter } from 'next/router'
 import AddQuestionDialog from '../list/AddQuestionDialog'
@@ -31,7 +35,75 @@ import { fetcher } from '../../../code/utils'
 import QuestionUpdate from '../../question/QuestionUpdate'
 import ResizableDrawer from '../../layout/utils/ResizableDrawer'
 import CopyQuestionDialog from '../list/CopyQuestionDialog'
+import ImportQuestionsDialog from '../list/ImportQuestionsDialog'
 import QuestionsGrid from '../list/QuestionsGrid'
+
+const ExportQuestionsButton = ({ selection, groupScope, onExportSuccess }) => {
+  const { show: showSnackbar } = useSnackbar()
+
+  const handleExportSelected = useCallback(async () => {
+    if (selection.length === 0) return
+
+    const questionIds = selection.map((q) => q.id)
+
+    try {
+      const response = await fetch(`/api/${groupScope}/questions/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          questionIds,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Export failed')
+      }
+
+      const result = await response.json()
+
+      // Create and download the JSON file
+      const blob = new Blob([JSON.stringify(result, null, 2)], {
+        type: 'application/json',
+      })
+
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${groupScope}-questions-export-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      showSnackbar(
+        `Successfully exported ${result.questions.length} question${result.questions.length > 1 ? 's' : ''}`,
+        'success',
+      )
+      onExportSuccess?.() // Clear selection after export
+    } catch (error) {
+      console.error('Export error:', error)
+      showSnackbar(`Export failed: ${error.message}`, 'error')
+    }
+  }, [selection, groupScope, showSnackbar, onExportSuccess])
+
+  if (selection.length === 0) return null
+
+  return (
+    <Button
+      variant="text"
+      onClick={handleExportSelected}
+      disabled={selection.length === 0}
+      startIcon={<DownloadIcon />}
+      color="success"
+    >
+      Export {selection.length} question{selection.length > 1 ? 's' : ''}
+    </Button>
+  )
+}
 
 const PageList = () => {
   const router = useRouter()
@@ -58,6 +130,7 @@ const PageList = () => {
   const [openSideUpdate, setOpenSideUpdate] = useState(false)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [copyDialogOpen, setCopyDialogOpen] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
 
   const [selected, setSelected] = useState(undefined)
 
@@ -107,6 +180,17 @@ const PageList = () => {
     [groupScope, showSnackbar, mutate],
   )
 
+  const handleImportSuccess = useCallback(
+    async (result) => {
+      showSnackbar(
+        `Successfully imported ${result.count} question${result.count > 1 ? 's' : ''}`,
+        'success',
+      )
+      await mutate() // Refresh the questions list
+    },
+    [showSnackbar, mutate],
+  )
+
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
       <Loading loading={!questions} errors={[error]}>
@@ -125,10 +209,25 @@ const PageList = () => {
                 <Stack height={'100%'} p={1} pt={2}>
                   <QuestionsGrid
                     questions={questions}
+                    enableSelection={true}
                     actions={
-                      <Button onClick={() => setAddDialogOpen(true)}>
-                        Create a new question
-                      </Button>
+                      <Stack direction={'row'} spacing={1}>
+                        <Button onClick={() => setAddDialogOpen(true)}>
+                          Create a new question
+                        </Button>
+                        <Button
+                          variant="text"
+                          onClick={() => setImportDialogOpen(true)}
+                          startIcon={<UploadIcon />}
+                        >
+                          Import
+                        </Button>
+                        <ExportQuestionsButton
+                          selection={selection}
+                          groupScope={groupScope}
+                          onExportSuccess={() => setSelection([])}
+                        />
+                      </Stack>
                     }
                     setSelected={setSelected}
                     selection={selection}
@@ -199,6 +298,12 @@ const PageList = () => {
               await copyQuestion(selected.id)
               setCopyDialogOpen(false)
             }}
+          />
+          <ImportQuestionsDialog
+            open={importDialogOpen}
+            onClose={() => setImportDialogOpen(false)}
+            onImportSuccess={handleImportSuccess}
+            groupScope={groupScope}
           />
         </LayoutMain>
       </Loading>
