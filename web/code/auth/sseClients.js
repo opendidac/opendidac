@@ -66,7 +66,6 @@ function startSSEHeartbeat(res, intervalMs = 60000) {
   return id
 }
 
-/** Dev-only logging */
 async function logConnectedClients(action, userId) {
   try {
     const prisma = getPrisma()
