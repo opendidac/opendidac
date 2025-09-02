@@ -58,7 +58,10 @@ const ConnectionCheck = () => {
     }
     const setOffline = () => {
       clearTimeout(offlineTimerRef.current)
-      offlineTimerRef.current = setTimeout(() => setIsOnline(false), OFFLINE_DEBOUNCE_MS)
+      offlineTimerRef.current = setTimeout(
+        () => setIsOnline(false),
+        OFFLINE_DEBOUNCE_MS,
+      )
     }
 
     if (navigator.onLine) setOnline()

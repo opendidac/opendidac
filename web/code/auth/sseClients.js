@@ -75,7 +75,9 @@ async function logConnectedClients(action, userId) {
       : []
 
     console.log(`\n=== SSE Clients Update ===`)
-    console.log(`📢 Action: ${action} - User Email: ${current?.email || 'Unknown'}`)
+    console.log(
+      `📢 Action: ${action} - User Email: ${current?.email || 'Unknown'}`,
+    )
     if (users.length) {
       console.log(`🔗 Currently Connected Clients:`)
       users.forEach((u, i) => console.log(`  ${i + 1}. ${u.email}`))

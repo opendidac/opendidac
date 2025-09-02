@@ -1,8 +1,18 @@
 /**
- * Copyright 2022-2025 HEIG-VD
- * Licensed under the Apache License, Version 2.0
+ * Copyright 2022-2024 HEIG-VD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 import { useEffect, useRef, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import LoadingAnimation from '../feedback/Loading'
@@ -30,22 +40,19 @@ const Authentication = ({ children }) => {
     dispatchOnline()
   }, [dispatchOnline])
 
-  const handleMessage = useCallback(
-    (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        console.debug('[SSE] onmessage data:', data)
-        if (data?.status === 'unauthenticated') {
-          console.warn('[SSE] Server reported unauthenticated → signOut()')
-          signOut()
-        }
-      } catch {
-        // Ignore non-JSON (heartbeats/comments don’t hit onmessage anyway)
-        // console.debug('[SSE] onmessage (non-JSON)')
+  const handleMessage = useCallback((event) => {
+    try {
+      const data = JSON.parse(event.data)
+      console.debug('[SSE] onmessage data:', data)
+      if (data?.status === 'unauthenticated') {
+        console.warn('[SSE] Server reported unauthenticated → signOut()')
+        signOut()
       }
-    },
-    [signOut]
-  )
+    } catch {
+      // Ignore non-JSON (heartbeats/comments don’t hit onmessage anyway)
+      // console.debug('[SSE] onmessage (non-JSON)')
+    }
+  }, [])
 
   const handleError = useCallback(
     (es, err) => {
@@ -57,7 +64,7 @@ const Authentication = ({ children }) => {
       dispatchOffline()
       // Do not close: EventSource auto-reconnects per server-sent retry
     },
-    [dispatchOffline]
+    [dispatchOffline],
   )
 
   const openSSE = useCallback(() => {
@@ -142,4 +149,3 @@ const Authentication = ({ children }) => {
 }
 
 export default Authentication
-
