@@ -49,9 +49,11 @@ const UserContextMenu = ({ anchorElUser, handleCloseUserMenu }) => {
           </Link>
         )}
 
-        <Link href={`/groups`}>
-          <Button startIcon={<GroupIcon />}>Manage Groups</Button>
-        </Link>
+        {session.user.roles.includes(Role.PROFESSOR) && (
+          <Link href={`/groups`}>
+            <Button startIcon={<GroupIcon />}>Manage Groups</Button>
+          </Link>
+        )}
         <Button onClick={() => signOut()} startIcon={<LockClosedIcon />}>
           Sign Out
         </Button>

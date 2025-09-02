@@ -50,42 +50,53 @@ const ADMIN_TABS = [
   },
 ]
 
-// User role utilities
-const getUserRoleType = (session) => {
-  if (!session?.user?.roles) return 'none'
+// User role utilities - simplified to work directly with session
+const getRolePermissions = (session) => {
+  if (!session?.user?.roles) {
+    return {
+      allowedRoles: [],
+      availableTabs: [],
+      showMaintenance: false,
+      defaultRedirect: '/',
+      isSuperAdmin: false,
+      isArchivist: false,
+    }
+  }
 
   const roles = session.user.roles
   const isSuperAdmin = roles.includes(Role.SUPER_ADMIN)
   const isArchivist = roles.includes(Role.ARCHIVIST)
 
-  if (isSuperAdmin) return 'super_admin'
-  if (isArchivist) return 'archivist'
-  return 'none'
-}
-
-const getRolePermissions = (roleType) => {
-  const permissions = {
-    super_admin: {
+  if (isSuperAdmin) {
+    return {
       allowedRoles: [Role.SUPER_ADMIN],
       availableTabs: ADMIN_TABS,
       showMaintenance: true,
       defaultRedirect: '/admin/users',
-    },
-    archivist: {
+      isSuperAdmin: true,
+      isArchivist: false,
+    }
+  }
+
+  if (isArchivist) {
+    return {
       allowedRoles: [Role.ARCHIVIST, Role.SUPER_ADMIN],
       availableTabs: ADMIN_TABS.filter((tab) => tab.key === 'archiving'),
       showMaintenance: false,
       defaultRedirect: '/admin/archiving',
-    },
-    none: {
-      allowedRoles: [],
-      availableTabs: [],
-      showMaintenance: false,
-      defaultRedirect: '/',
-    },
+      isSuperAdmin: false,
+      isArchivist: true,
+    }
   }
 
-  return permissions[roleType] || permissions.none
+  return {
+    allowedRoles: [],
+    availableTabs: [],
+    showMaintenance: false,
+    defaultRedirect: '/',
+    isSuperAdmin: false,
+    isArchivist: false,
+  }
 }
 
 // Maintenance Panel Component
@@ -251,15 +262,15 @@ const AdminTabNavigation = ({
 
 // Admin Header Component
 const AdminHeader = ({
-  roleType,
+  session,
   availableTabs,
   currentTabIndex,
   onTabChange,
 }) => {
-  const permissions = getRolePermissions(roleType)
+  const permissions = getRolePermissions(session)
 
   const getHeaderTitle = () => {
-    if (roleType === 'archivist') {
+    if (permissions.isArchivist) {
       return 'Archiving Management'
     }
     return null // For super admin, show tabs instead of title
@@ -270,7 +281,7 @@ const AdminHeader = ({
   return (
     <Stack direction={'row'}>
       <Stack direction={'row'} spacing={1} alignItems={'center'} flex={1}>
-        <BackButton backUrl="/" />
+        {permissions.isSuperAdmin && <BackButton backUrl="/" />}
         {headerTitle ? (
           <Typography variant="h6" sx={{ opacity: 1, m: 1 }}>
             {headerTitle}
@@ -291,12 +302,12 @@ const AdminHeader = ({
 // Main Admin Layout Component
 const AdminLayout = ({
   children,
-  roleType,
+  session,
   availableTabs,
   currentTabIndex,
   onTabChange,
 }) => {
-  const permissions = getRolePermissions(roleType)
+  const permissions = getRolePermissions(session)
 
   return (
     <Authorization allowRoles={permissions.allowedRoles}>
@@ -304,7 +315,7 @@ const AdminLayout = ({
         hideLogo
         header={
           <AdminHeader
-            roleType={roleType}
+            session={session}
             availableTabs={availableTabs}
             currentTabIndex={currentTabIndex}
             onTabChange={onTabChange}
@@ -367,8 +378,7 @@ const PageAdmin = ({ activeTab = 'users' }) => {
   const { data: session } = useSession()
 
   // Determine user role and permissions
-  const roleType = getUserRoleType(session)
-  const permissions = getRolePermissions(roleType)
+  const permissions = getRolePermissions(session)
   const { availableTabs } = permissions
 
   // Tab navigation logic
@@ -393,7 +403,7 @@ const PageAdmin = ({ activeTab = 'users' }) => {
   // Render the appropriate layout
   return (
     <AdminLayout
-      roleType={roleType}
+      session={session}
       availableTabs={availableTabs}
       currentTabIndex={currentTabIndex}
       onTabChange={handleTabChange}

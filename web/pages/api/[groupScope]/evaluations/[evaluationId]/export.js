@@ -271,6 +271,6 @@ const get = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
+    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.ARCHIVIST]),
   }),
 )
