@@ -66,9 +66,7 @@ function startSSEHeartbeat(res, intervalMs = 60000) {
   return id
 }
 
-/** Dev-only logging */
 async function logConnectedClients(action, userId) {
-  if (process.env.NODE_ENV === 'production') return
   try {
     const prisma = getPrisma()
     const current = await prisma.user.findUnique({
