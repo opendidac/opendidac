@@ -238,7 +238,7 @@ async function handleSingleSessionPerUser(user) {
   const activeSessions = await prisma.session.findMany({
     where: { userId: user.id },
   })
-  console.log('handleSingleSessionPerUser', user.id, activeSessions)
+
   if (activeSessions.length > 0) {
     await prisma.session.deleteMany({
       where: { userId: user.id },
