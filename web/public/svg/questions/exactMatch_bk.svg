@@ -1,0 +1,10 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"  viewBox="0 0 32 32"><g stroke-width="2" transform="translate(0, 0)">
+<line data-color="color-2" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="square" stroke-miterlimit="10" x1="17" y1="9" x2="23" y2="9" stroke-linejoin="miter"></line>
+<polyline data-color="color-2" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="square" stroke-miterlimit="10" points="
+	9,9 10,10 13,7 " stroke-linejoin="miter"></polyline>
+<line data-color="color-2" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="square" stroke-miterlimit="10" x1="17" y1="16" x2="23" y2="16" stroke-linejoin="miter"></line>
+<polyline data-color="color-2" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="square" stroke-miterlimit="10" points="
+	9,16 10,17 13,14 " stroke-linejoin="miter"></polyline>
+<line data-color="color-2" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="square" stroke-miterlimit="10" x1="17" y1="23" x2="23" y2="23" stroke-linejoin="miter"></line>
+<line data-color="color-2" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="square" stroke-miterlimit="10" x1="9" y1="23" x2="11" y2="23" stroke-linejoin="miter"></line></g></svg>

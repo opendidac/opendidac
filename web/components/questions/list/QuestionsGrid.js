@@ -104,20 +104,20 @@ const QuestionsGrid = ({
               if (row.type === QuestionType.code) {
                 return (
                   <Stack direction={'row'} spacing={1} alignItems={'center'}>
-                    <QuestionTypeIcon type={row.type} size={24} />
+                    <QuestionTypeIcon type={row.type} size={40} />
                     <CodeQuestionTypeIcon
                       codeType={row.code?.codeType}
-                      size={18}
+                      size={20}
                     />
                     <LanguageIcon
                       language={row.code?.language}
-                      size={18}
+                      size={20}
                       withLabel
                     />
                   </Stack>
                 )
               } else {
-                return <QuestionTypeIcon type={row.type} size={24} withLabel />
+                return <QuestionTypeIcon type={row.type} size={40} withLabel />
               }
             },
           },
