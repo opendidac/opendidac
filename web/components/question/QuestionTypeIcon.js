@@ -13,27 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Image from 'next/image'
-import { Stack, Tooltip, Typography } from '@mui/material'
-import { getTextByType, getTooltipByType } from './types.js'
+import { Stack, Tooltip, Typography, Box } from '@mui/material'
+import { getTextByType, getTooltipByType, getColorByType } from './types.js'
 
-const QuestionTypeIcon = ({ type, size = 32, withLabel = false }) => {
+const QuestionTypeIcon = ({ type, size = 40, withLabel = false }) => {
+  // Calculate SVG size proportionally (60% of container size)
+  const svgSize = Math.round(size * 0.6)
+
   return (
     <Tooltip title={getTooltipByType(type)} placement="top-start">
-      <Stack
-        direction={'row'}
-        spacing={1}
-        alignItems={'center'}
-        minHeight={size}
-        minWidth={size}
-      >
-        <Image
-          alt="Question Type Icon"
-          src={`/svg/questions/${type}.svg`}
+      <Stack direction={'row'} spacing={1} alignItems={'center'}>
+        <Stack
+          bgcolor={getColorByType(type)}
+          borderRadius={1}
+          p={1}
           width={size}
           height={size}
-          priority="1"
-        />
+          justifyContent={'center'}
+          alignItems={'center'}
+        >
+          <Box
+            component="img"
+            src={`/svg/questions/${type}.svg`}
+            alt="Question Type Icon"
+            maxWidth={svgSize}
+            maxHeight={svgSize}
+            sx={{
+              width: svgSize,
+              height: svgSize,
+              display: 'block',
+            }}
+          />
+        </Stack>
         {withLabel && (
           <Typography variant="caption" sx={{ textAlign: 'center' }}>
             <b>{getTextByType(type)}</b>

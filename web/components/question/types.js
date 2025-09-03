@@ -24,6 +24,15 @@ const typesMap = {
   [QuestionType.database]: 'Database',
 }
 
+const colorsMap = {
+  [QuestionType.multipleChoice]: '#2196F3', // Blue
+  [QuestionType.trueFalse]: '#4CAF50', // Green
+  [QuestionType.essay]: '#FF9800', // Orange
+  [QuestionType.code]: '#9C27B0', // Purple
+  [QuestionType.web]: '#E91E63', // Pink
+  [QuestionType.database]: '#607D8B', // Blue Grey
+}
+
 const toArray = () => {
   return Object.keys(typesMap).map((key) => ({
     value: key,
@@ -40,4 +49,14 @@ const getTooltipByType = (type) => {
 
 const getTextByType = (type) => typesMap[type] || 'Unknown Type'
 
-export { typesMap, toArray, types, getTooltipByType, getTextByType }
+const getColorByType = (type) => colorsMap[type] || '#673AB7' // Default purple
+
+export {
+  typesMap,
+  colorsMap,
+  toArray,
+  types,
+  getTooltipByType,
+  getTextByType,
+  getColorByType,
+}

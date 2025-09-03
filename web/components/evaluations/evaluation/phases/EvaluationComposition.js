@@ -473,7 +473,7 @@ const QuestionItem = ({
           <DragHandleSVG />
         </Stack>
       )}
-      <QuestionTypeIcon type={evaluationToQuestion.question.type} size={22} />
+      <QuestionTypeIcon type={evaluationToQuestion.question.type} size={32} />
       <Stack
         direction={'row'}
         alignItems={'center'}
