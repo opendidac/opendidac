@@ -16,138 +16,155 @@
 import { getPrisma } from '@/middleware/withPrisma'
 
 /**
- * Global store for SSE client connections.
- * Map structure: userId -> Set of response objects
- * Each user can have multiple active connections (multiple tabs/browsers)
+ * In-memory store of active SSE connections.
+ * Map<userId, Set<ServerResponse>>
  */
 const __clients = new Map()
 
-/**
- * Logs the current state of SSE connections for debugging purposes.
- * Shows which users are connected and what actions are being performed.
- *
- * @param {string} action - The action being performed (Added/Removed/Notified)
- * @param {string} userId - The ID of the user involved in the action
- */
-async function logConnectedClients(action, userId) {
-  const prisma = getPrisma()
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { email: true },
-  })
-  // Fetch emails for connected users
-  const userIds = Array.from(__clients.keys())
-  const users = await prisma.user.findMany({
-    where: { id: { in: userIds } },
-    select: { id: true, email: true },
-  })
-
-  console.log(`\n=== SSE Clients Update ===`)
-  console.log(`📢 Action: ${action} - User Email: ${user?.email || 'Unknown'}`)
-
-  if (users.length > 0) {
-    console.log(`🔗 Currently Connected Clients:`)
-    users.forEach((user, index) => {
-      console.log(`  ${index + 1}. ${user.email}`)
-    })
-  } else {
-    console.log(`❌ No connected clients.`)
+/** Robust SSE writer (supports JSON or string, event, id) */
+function sseSend(res, { event, id, data }) {
+  if (!res || res.writableEnded || res.destroyed) {
+    throw new Error('SSE response is closed')
   }
 
-  console.log(`===========================\n`)
+  if (id) res.write(`id: ${id}\n`)
+  if (event) res.write(`event: ${event}\n`)
+
+  const payload = typeof data === 'string' ? data : JSON.stringify(data)
+
+  for (const line of payload.split('\n')) {
+    res.write(`data: ${line}\n`)
+  }
+  res.write('\n')
 }
 
-/**
- * Adds a new SSE client connection for a user.
- * Sets up connection cleanup when the client disconnects.
- * Multiple connections per user are supported (e.g., multiple browser tabs).
- *
- * @param {string} userId - The ID of the user establishing the connection
- * @param {object} res - The response object representing the SSE connection
- */
-export function addSSEClient(userId, res) {
-  if (!__clients.has(userId)) {
-    __clients.set(userId, new Set())
+/** Control lines: retry + comments */
+function sseControl(res, { retry, comment } = {}) {
+  if (!res || res.writableEnded || res.destroyed) return false
+  let wrote = false
+
+  if (typeof retry === 'number') {
+    res.write(`retry: ${retry}\n\n`)
+    wrote = true
   }
-  __clients.get(userId).add(res)
+  if (comment) {
+    res.write(`: ${comment}\n\n`)
+    wrote = true
+  }
+  return wrote
+}
 
-  // Automatically remove client when connection closes (browser close/navigation)
+/** Heartbeat using SSE comments */
+function startSSEHeartbeat(res, intervalMs = 60000) {
+  const id = setInterval(() => {
+    try {
+      res.write(`: ping\n\n`)
+    } catch {
+      // will be cleaned up on close
+    }
+  }, intervalMs)
+  return id
+}
 
-  res.on('close', () => {
-    removeSSEClient(userId, res)
-  })
+async function logConnectedClients(action, userId) {
+  try {
+    const prisma = getPrisma()
+    const current = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    })
+
+    const userIds = Array.from(__clients.keys())
+    const users = userIds.length
+      ? await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, email: true },
+        })
+      : []
+
+    console.log(`\n=== SSE Clients Update ===`)
+    console.log(
+      `📢 Action: ${action} - User Email: ${current?.email || 'Unknown'}`,
+    )
+    if (users.length) {
+      console.log(`🔗 Currently Connected Clients:`)
+      users.forEach((u, i) => console.log(`  ${i + 1}. ${u.email}`))
+    } else {
+      console.log(`❌ No connected clients.`)
+    }
+    console.log(`===========================\n`)
+  } catch (e) {
+    console.warn('SSE log error:', e?.message || e)
+  }
+}
+
+/** Add a new client */
+function addSSEClient(userId, res) {
+  if (!__clients.has(userId)) __clients.set(userId, new Set())
+  const set = __clients.get(userId)
+  set.add(res)
+
+  const onClose = () => removeSSEClient(userId, res)
+  res.on('close', onClose)
+  res.on('finish', onClose)
+  res.on('error', onClose)
 
   logConnectedClients('Added', userId)
 }
 
-/**
- * Removes an SSE client connection.
- * If this was the user's last connection, removes the user entry entirely.
- *
- * @param {string} userId - The ID of the user whose connection is being removed
- * @param {object} res - The response object representing the SSE connection to remove
- */
+/** Remove a client */
 function removeSSEClient(userId, res) {
-  if (__clients.has(userId)) {
-    const connections = __clients.get(userId)
-    connections.delete(res)
-    if (connections.size === 0) {
-      __clients.delete(userId) // Clean up user entry if no active connections remain
-    }
-    logConnectedClients('Removed', userId)
-  }
+  const set = __clients.get(userId)
+  if (!set) return
+
+  set.delete(res)
+  if (set.size === 0) __clients.delete(userId)
+
+  logConnectedClients('Removed', userId)
 }
 
-/**
- * Retrieves all active SSE connections for a specific user.
- *
- * @param {string} userId - The ID of the user
- * @returns {Set} A Set of response objects for the user's active connections
- */
-export function getSSEClients(userId) {
+/** Get connections for a user */
+function getSSEClients(userId) {
   return __clients.get(userId) || new Set()
 }
 
-/**
- * Returns the entire client connection map.
- * Useful for system-wide notifications or debugging.
- *
- * @returns {Map} The map of all active SSE connections
- */
-export function getAllSSEClients() {
+/** Get all connections */
+function getAllSSEClients() {
   return __clients
 }
 
-/**
- * Sends a message to all active connections for a specific user.
- * Handles dead connection cleanup if message delivery fails.
- *
- * @param {string} userId - The ID of the user to notify
- * @param {object} message - The message to send (will be JSON stringified)
- */
-export function notifySSEClients(userId, message) {
-  if (__clients.has(userId)) {
-    const connections = __clients.get(userId)
-    const deadConnections = new Set()
+/** Notify all clients of a user */
+function notifySSEClients(userId, message, eventName) {
+  const set = __clients.get(userId)
+  if (!set) return
 
-    // Attempt to send message to each client connection
-    for (const res of connections) {
-      try {
-        res.write(`data: ${JSON.stringify(message)}\n\n`)
-      } catch (error) {
-        // Track failed connections for cleanup
-        deadConnections.add(res)
-      }
+  const dead = []
+  for (const res of set) {
+    if (!res || res.writableEnded || res.destroyed) {
+      dead.push(res)
+      continue
     }
-
-    // Clean up any connections that failed to receive the message
-    if (deadConnections.size > 0) {
-      for (const res of deadConnections) {
-        removeSSEClient(userId, res)
-      }
+    try {
+      sseSend(res, { event: eventName, data: message })
+    } catch {
+      dead.push(res)
     }
-
-    logConnectedClients('Notified', userId)
   }
+
+  if (dead.length) {
+    for (const res of dead) removeSSEClient(userId, res)
+  }
+
+  logConnectedClients('Notified', userId)
+}
+
+export {
+  addSSEClient,
+  getSSEClients,
+  getAllSSEClients,
+  notifySSEClients,
+  // helpers
+  sseSend,
+  sseControl,
+  startSSEHeartbeat,
 }

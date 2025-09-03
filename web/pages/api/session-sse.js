@@ -13,27 +13,63 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { getUser } from '@/code/auth/auth'
-import { addSSEClient } from '@/code/auth/sseClients'
+import {
+  addSSEClient,
+  sseControl,
+  startSSEHeartbeat,
+  sseSend,
+} from '@/code/auth/sseClients'
 
 export default async function handler(req, res) {
   console.log('Opening SSE connection')
 
-  // Set headers for SSE
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
+  // --- SSE / proxy-friendly headers ---
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
   res.setHeader('Connection', 'keep-alive')
+  // Helpful for nginx/ingress to disable buffering
+  res.setHeader('X-Accel-Buffering', 'no')
   res.flushHeaders()
 
-  // Get user session
+  // Keep TCP alive if supported
+  try {
+    res.socket?.setKeepAlive?.(true)
+  } catch {
+    // ignore
+  }
+
+  // Authenticate user
   const user = await getUser(req, res)
   if (!user) {
-    res.write(`data: ${JSON.stringify({ status: 'unauthenticated' })}\n\n`)
-    res.end()
+    try {
+      sseSend(res, { data: { status: 'unauthenticated' } })
+    } finally {
+      res.end()
+    }
     return
   }
 
-  // Store the client connection, the close handler is managed in sseClients.js
+  // Control lines (not JSON): reconnection delay + initial comment
+  sseControl(res, { retry: 3000, comment: 'open' })
+
+  // Heartbeat to keep connection alive
+  const heartbeat = startSSEHeartbeat(res)
+
+  const cleanup = () => {
+    clearInterval(heartbeat)
+  }
+  res.on('close', cleanup)
+  res.on('finish', cleanup)
+  req.on('aborted', cleanup)
+
+  // Register the client
   addSSEClient(user.id, res)
+}
+
+// Ensure Node runtime (not Edge)
+export const config = {
+  api: {
+    bodyParser: false,
+  },
 }
