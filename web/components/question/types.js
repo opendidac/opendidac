@@ -51,4 +51,12 @@ const getTextByType = (type) => typesMap[type] || 'Unknown Type'
 
 const getColorByType = (type) => colorsMap[type] || '#673AB7' // Default purple
 
-export { typesMap, colorsMap, toArray, types, getTooltipByType, getTextByType, getColorByType }
+export {
+  typesMap,
+  colorsMap,
+  toArray,
+  types,
+  getTooltipByType,
+  getTextByType,
+  getColorByType,
+}

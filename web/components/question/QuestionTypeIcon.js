@@ -22,11 +22,7 @@ const QuestionTypeIcon = ({ type, size = 40, withLabel = false }) => {
 
   return (
     <Tooltip title={getTooltipByType(type)} placement="top-start">
-      <Stack
-        direction={'row'}
-        spacing={1}
-        alignItems={'center'}
-      >
+      <Stack direction={'row'} spacing={1} alignItems={'center'}>
         <Stack
           bgcolor={getColorByType(type)}
           borderRadius={1}
