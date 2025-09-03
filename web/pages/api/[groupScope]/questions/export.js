@@ -22,43 +22,6 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 
-/**
- * Export multiple questions in OpenDidac question format
- *
- * POST /api/[groupScope]/questions/export
- *
- * Request Body:
- * {
- *   "questionIds": ["clr123abc", "clr456def", "clr789ghi"]
- * }
- *
- * Response:
- * {
- *   "questions": [
- *     {
- *       "schema": "opendidac.question@1",
- *       "type": "multipleChoice",
- *       "title": "Question Title",
- *       "content": "Question content...",
- *       "data": {
- *         "gradingPolicy": "GRADUAL_CREDIT",
- *         "options": [...]
- *       }
- *     },
- *     ...
- *   ],
- *   "meta": {
- *     "count": 3,
- *     "schema": "opendidac.questions@1"
- *   }
- * }
- *
- * Error responses:
- * - 400: Invalid request body (missing or empty questionIds)
- * - 404: One or more questions not found in the specified group scope
- * - 500: Internal server error during export process
- */
-
 const post = async (req, res, prisma) => {
   const { groupScope } = req.query
   const { questionIds } = req.body
@@ -105,10 +68,6 @@ const post = async (req, res, prisma) => {
 
     res.status(200).json({
       questions: exportedQuestions,
-      meta: {
-        count: exportedQuestions.length,
-        schema: 'opendidac.questions@1',
-      },
     })
   } catch (error) {
     console.error('Error in bulk question export:', error)

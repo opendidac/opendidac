@@ -22,55 +22,6 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 
-/**
- * Import multiple questions from OpenDidac question format
- *
- * POST /api/[groupScope]/questions/import
- *
- * Request Body:
- * {
- *   "questions": [
- *     {
- *       "schema": "opendidac.question@1",
- *       "type": "multipleChoice",
- *       "title": "Question Title",
- *       "content": "Question content...",
- *       "data": {
- *         "gradingPolicy": "GRADUAL_CREDIT",
- *         "options": [...]
- *       }
- *     },
- *     ...
- *   ]
- * }
- *
- * OR (exported format with meta):
- * {
- *   "questions": [...],
- *   "meta": {
- *     "count": 3,
- *     "schema": "opendidac.questions@1"
- *   }
- * }
- *
- * Response:
- * {
- *   "imported": [
- *     {
- *       "id": "clr123abc",
- *       "title": "Question Title",
- *       "type": "multipleChoice"
- *     },
- *     ...
- *   ],
- *   "count": 3
- * }
- *
- * Error responses:
- * - 400: Invalid request body or question format
- * - 500: Internal server error during import process
- */
-
 const post = async (req, res, prisma) => {
   const { groupScope } = req.query
   const requestBody = req.body

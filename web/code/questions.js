@@ -81,7 +81,9 @@ export const questionIncludeClause = (questionIncludeOptions) => {
                   },
                   orderBy: { order: 'asc' },
                 },
-                testCases: true,
+                testCases: {
+                  orderBy: { index: 'asc' },
+                },
               },
             },
             codeReading: {
@@ -182,6 +184,11 @@ export const questionIncludeClause = (questionIncludeOptions) => {
                         },
                       },
                       output: true,
+                    },
+                    orderBy: {
+                      query: {
+                        order: 'asc',
+                      },
                     },
                   },
                 }
