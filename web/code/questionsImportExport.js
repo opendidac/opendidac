@@ -187,7 +187,7 @@ const exportExactMatch = (em) => {
       order: field.order,
       statement: field.statement,
       matchRegex: field.matchRegex,
-    }))
+    })),
   }
 }
 
@@ -386,14 +386,16 @@ const buildWebCreate = (data) => ({
 
 const buildExactMatchCreate = (data) => ({
   create: {
-    fields: data.fields?.length ? {
-      create: data.fields.map((field) => ({
-        order: field.order ?? 0,
-        statement: nn(field.statement),
-        matchRegex: nn(field.matchRegex),
-      }))
-    } : undefined,
-  }
+    fields: data.fields?.length
+      ? {
+          create: data.fields.map((field) => ({
+            order: field.order ?? 0,
+            statement: nn(field.statement),
+            matchRegex: nn(field.matchRegex),
+          })),
+        }
+      : undefined,
+  },
 })
 
 /* ----------------------- import query builder (no I/O) ----------------------- */
@@ -435,7 +437,7 @@ export const buildImportPrismaQuery = (questionJson, group) => {
       typeSpecificCreate = buildWebCreate(data)
       break
     case QuestionType.exactMatch:
-      typeSpecificCreate = buildExactMatchCreate(data);
+      typeSpecificCreate = buildExactMatchCreate(data)
       break
     default:
       typeSpecificCreate = undefined

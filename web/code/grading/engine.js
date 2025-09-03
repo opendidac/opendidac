@@ -200,18 +200,19 @@ const gradeExactMatch = (question, totalPoints, studentAnswer) => {
     return defaultGrading
   }
 
-  const correctFields = studentAnswer?.fields?.reduce((acc, field) => {
-    const expectedField = question.exactMatch.fields.find(
-      (f) => f.id === field.fieldId,
-    )
-    if (!expectedField) {
-      console.error(`Field with ID ${field.fieldId} not found in question.`)
-      return acc
-    }
-    const fieldRegex = expectedField.matchRegex
-    let regex = regexpFromPattern(fieldRegex)
-    return acc + (regex.test(field.value) ? 1 : 0)
-  }, 0) ?? 0
+  const correctFields =
+    studentAnswer?.fields?.reduce((acc, field) => {
+      const expectedField = question.exactMatch.fields.find(
+        (f) => f.id === field.fieldId,
+      )
+      if (!expectedField) {
+        console.error(`Field with ID ${field.fieldId} not found in question.`)
+        return acc
+      }
+      const fieldRegex = expectedField.matchRegex
+      let regex = regexpFromPattern(fieldRegex)
+      return acc + (regex.test(field.value) ? 1 : 0)
+    }, 0) ?? 0
 
   const fieldCount = question.exactMatch.fields.length
 
