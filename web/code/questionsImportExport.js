@@ -46,47 +46,6 @@ const stripEmpty = (x) => {
   return x === null || x === undefined ? undefined : x
 }
 
-/**
- * Extend your shared include to add export-specific needs.
- * (Database authoring queries, ordered test cases, etc.)
- */
-const buildExportInclude = () => {
-  const include = questionIncludeClause({
-    includeTypeSpecific: true,
-    includeOfficialAnswers: true,
-    includeUserAnswers: undefined,
-    includeGradings: false,
-    includeTags: false,
-  })
-
-  // Add database authoring queries
-  if (include.database?.select) {
-    include.database.select.databaseQueries = {
-      select: {
-        order: true,
-        title: true,
-        description: true,
-        lintActive: true,
-        lintRules: true,
-        content: true,
-        template: true,
-        testQuery: true,
-      },
-      orderBy: { order: 'asc' },
-    }
-  }
-
-  // Ensure code-writing test cases are ordered & minimal
-  if (include.code?.select?.codeWriting?.select) {
-    include.code.select.codeWriting.select.testCases = {
-      select: { index: true, exec: true, input: true, expectedOutput: true },
-      orderBy: { index: 'asc' },
-    }
-  }
-
-  return include
-}
-
 /* ----------------- prisma query builders ----------------- */
 
 /**
@@ -95,7 +54,13 @@ const buildExportInclude = () => {
  */
 export const buildExportPrismaQuery = (questionId) => ({
   where: { id: questionId },
-  include: buildExportInclude(),
+  include: questionIncludeClause({
+    includeTypeSpecific: true,
+    includeOfficialAnswers: true,
+    includeUserAnswers: undefined,
+    includeGradings: false,
+    includeTags: false,
+  }),
 })
 
 /**
@@ -189,19 +154,15 @@ const exportDatabase = (db) => {
   if (!db) return {}
   return {
     image: db.image ?? null,
-    queries: (db.databaseQueries || []).map((x) => ({
-      order: x.order,
-      title: x.title ?? null,
-      description: x.description ?? null,
-      lintActive: x.lintActive,
-      lintRules: x.lintRules ?? null,
-      content: x.content ?? null,
-      template: x.template ?? null,
-      testQuery: x.testQuery,
-    })),
-    // Keep solution mapping minimal and stable (by query order).
     solutionQueries: (db.solutionQueries || []).map((sq) => ({
-      queryOrder: sq.query.order,
+      order: sq.query.order,
+      title: sq.query.title ?? null,
+      description: sq.query.description ?? null,
+      lintActive: sq.query.lintActive,
+      lintRules: sq.query.lintRules ?? null,
+      content: sq.query.content ?? null,
+      template: sq.query.template ?? null,
+      testQuery: sq.query.testQuery,
       expectedOutputType: sq.output?.type ?? null,
     })),
   }
@@ -252,7 +213,6 @@ export const serializeQuestion = (q) => {
   }
 
   const payload = stripEmpty({
-    schema: 'opendidac.question@1',
     type: q.type,
     title: q.title,
     content: q.content ?? null,
@@ -260,7 +220,6 @@ export const serializeQuestion = (q) => {
   })
 
   return {
-    schema: 'opendidac.question@1',
     type: payload.type,
     title: payload.title,
     ...(payload.content ? { content: payload.content } : {}),
@@ -283,17 +242,6 @@ export const exportQuestion = async (questionId, prisma) => {
 }
 
 /* ========================= IMPORT FUNCTIONALITY ========================= */
-
-/**
- * Guard: ensure minimal schema string matches.
- */
-const assertSchema = (q) => {
-  if (!q || q.schema !== 'opendidac.question@1') {
-    throw new Error(
-      'Unsupported or missing schema. Expected "opendidac.question@1".',
-    )
-  }
-}
 
 /**
  * Normalize falsy strings to null so we don't store empty strings everywhere.
@@ -406,23 +354,8 @@ const buildCodeCreate = (data) => {
 const buildDatabaseCreate = (data) => ({
   create: {
     image: nn(data.image),
-    // authoring queries can be created inline
-    databaseQueries: data.queries?.length
-      ? {
-          create: data.queries.map((q) => ({
-            order: q.order ?? 0,
-            title: nn(q.title),
-            description: nn(q.description),
-            lintActive: !!q.lintActive,
-            lintRules: q.lintRules ?? null,
-            content: nn(q.content),
-            template: nn(q.template),
-            testQuery: !!q.testQuery,
-          })),
-        }
-      : undefined,
     // DO NOT try to create solutionQueries now; we don't yet have the created query IDs.
-    // We'll link them later in runImportPost() by matching `queryOrder`.
+    // We'll create the queries and link them later in runImportPost().
   },
 })
 
@@ -447,8 +380,6 @@ const buildWebCreate = (data) => ({
  * @returns {{ createData: object, post: object }}
  */
 export const buildImportPrismaQuery = (questionJson, group) => {
-  assertSchema(questionJson)
-
   const { type, title, content, data } = questionJson
   const connectGroup = group?.id
     ? { connect: { id: group.id } }
@@ -457,6 +388,30 @@ export const buildImportPrismaQuery = (questionJson, group) => {
       : null
 
   // Core create data for prisma.question.create
+  let typeSpecificCreate
+  switch (type) {
+    case QuestionType.multipleChoice:
+      typeSpecificCreate = buildMultipleChoiceCreate(data)
+      break
+    case QuestionType.trueFalse:
+      typeSpecificCreate = buildTrueFalseCreate(data)
+      break
+    case QuestionType.essay:
+      typeSpecificCreate = buildEssayCreate(data)
+      break
+    case QuestionType.code:
+      typeSpecificCreate = buildCodeCreate(data)
+      break
+    case QuestionType.database:
+      typeSpecificCreate = buildDatabaseCreate(data)
+      break
+    case QuestionType.web:
+      typeSpecificCreate = buildWebCreate(data)
+      break
+    default:
+      typeSpecificCreate = undefined
+  }
+
   const createData = {
     data: {
       title: title || '',
@@ -464,20 +419,7 @@ export const buildImportPrismaQuery = (questionJson, group) => {
       type,
       ...(connectGroup ? { group: connectGroup } : {}),
       // type-specific nested create
-      [type]:
-        type === QuestionType.multipleChoice
-          ? buildMultipleChoiceCreate(data)
-          : type === QuestionType.trueFalse
-            ? buildTrueFalseCreate(data)
-            : type === QuestionType.essay
-              ? buildEssayCreate(data)
-              : type === QuestionType.code
-                ? buildCodeCreate(data)
-                : type === QuestionType.database
-                  ? buildDatabaseCreate(data)
-                  : type === QuestionType.web
-                    ? buildWebCreate(data)
-                    : undefined,
+      ...(typeSpecificCreate ? { [type]: typeSpecificCreate } : {}),
     },
   }
 
@@ -517,12 +459,18 @@ export const buildImportPrismaQuery = (questionJson, group) => {
     Array.isArray(data?.solutionQueries) &&
     data.solutionQueries.length
   ) {
-    // We only have { queryOrder, expectedOutputType? } in your minimal JSON.
-    // We'll connect each solution entry to the created DatabaseQuery with that "order".
+    // We need to create the queries and then link them as solution queries
     post.dbSolution = {
-      byOrder: data.solutionQueries.map((sq) => ({
-        queryOrder: sq.queryOrder,
-        expectedOutputType: sq.expectedOutputType ?? null, // informational; not used to create output rows unless you want to
+      queries: data.solutionQueries.map((sq) => ({
+        order: sq.order ?? 0,
+        title: nn(sq.title),
+        description: nn(sq.description),
+        lintActive: !!sq.lintActive,
+        lintRules: sq.lintRules ?? null,
+        content: nn(sq.content),
+        template: nn(sq.template),
+        testQuery: !!sq.testQuery,
+        expectedOutputType: sq.expectedOutputType ?? null,
       })),
     }
   }
@@ -596,25 +544,23 @@ export const runImportPost = async (prisma, createdQuestion, postPlan) => {
     }
   }
 
-  // 2) Database solution links
-  if (postPlan.dbSolution && Array.isArray(postPlan.dbSolution.byOrder)) {
-    // Fetch queries we just created for this question so we can match by "order"
-    const queries = await prisma.databaseQuery.findMany({
-      where: { questionId: createdQuestion.id },
-      select: { id: true, order: true },
-      orderBy: { order: 'asc' },
-    })
-    const byOrderMap = new Map(queries.map((q) => [q.order, q.id]))
+  // 2) Database solution queries
+  if (postPlan.dbSolution && Array.isArray(postPlan.dbSolution.queries)) {
+    // Create each query and immediately link it as a solution query
+    for (const queryData of postPlan.dbSolution.queries) {
+      const { expectedOutputType, ...queryFields } = queryData
 
-    for (const entry of postPlan.dbSolution.byOrder) {
-      const queryId = byOrderMap.get(entry.queryOrder)
-      if (!queryId) continue
+      // Create the database query
+      const newQuery = await prisma.databaseQuery.create({
+        data: queryFields,
+        select: { id: true },
+      })
 
-      // Minimal: create the link without an output row (your export only had expectedOutputType meta)
+      // Link it as a solution query
       await prisma.databaseToSolutionQuery.create({
         data: {
           questionId: createdQuestion.id,
-          queryId,
+          queryId: newQuery.id,
           // If you decide to also create a DatabaseQueryOutput, do it here and set outputId.
         },
       })

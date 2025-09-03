@@ -76,9 +76,8 @@ const ImportQuestionsDialog = ({
     reader.onload = (e) => {
       try {
         const jsonData = JSON.parse(e.target.result)
-
-        // Validate the JSON structure
-        const questionsToImport = extractQuestions(jsonData)
+        e
+        const questionsToImport = jsonData.questions
         if (questionsToImport.length === 0) {
           setParseError('No valid questions found in the file')
           return
@@ -94,25 +93,6 @@ const ImportQuestionsDialog = ({
       }
     }
     reader.readAsText(file)
-  }
-
-  const extractQuestions = (jsonData) => {
-    // Handle different JSON formats
-    if (Array.isArray(jsonData)) {
-      return jsonData.filter((item) => item.schema === 'opendidac.question@1')
-    }
-
-    if (jsonData.questions && Array.isArray(jsonData.questions)) {
-      return jsonData.questions.filter(
-        (item) => item.schema === 'opendidac.question@1',
-      )
-    }
-
-    if (jsonData.schema === 'opendidac.question@1') {
-      return [jsonData]
-    }
-
-    return []
   }
 
   const handleImport = async () => {
