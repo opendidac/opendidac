@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Stack, Tooltip, Typography, Box } from '@mui/material'
-import { getTextByType, getTooltipByType } from './types.js'
+import { getTextByType, getTooltipByType, getColorByType } from './types.js'
 
 const QuestionTypeIcon = ({ type, size = 40, withLabel = false }) => {
   // Calculate SVG size proportionally (60% of container size)
@@ -28,7 +28,7 @@ const QuestionTypeIcon = ({ type, size = 40, withLabel = false }) => {
         alignItems={'center'}
       >
         <Stack
-          bgcolor={'#673AB7'}
+          bgcolor={getColorByType(type)}
           borderRadius={1}
           p={1}
           width={size}
