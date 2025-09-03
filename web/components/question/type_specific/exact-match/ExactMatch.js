@@ -63,8 +63,6 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
     }
   }, [isLoadingFields, loadedFields, loadingError, showSnackbar])
 
-  useEffect(() => {}, [loadedFields, isLoadingFields, loadingError])
-
   const onAddField = useCallback(async () => {
     try {
       const response = await fetch(
