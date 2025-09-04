@@ -289,7 +289,7 @@ const QuestionsGrid = ({ evaluationId, evaluationToQuestions, onSubmit }) => {
                   <QuestionTypeIcon
                     type={row.question.type}
                     withLabel
-                    size={22}
+                    size={32}
                   />
                   <Stack
                     direction={'row'}
