@@ -419,7 +419,22 @@ export const questionTypeSpecific = (
             // default fields when creating a new question
             fields: {
               create: [
-                { order: 0, statement: 'Enter your answer:', matchRegex: '.*' },
+                {
+                  order: 0,
+                  statement:
+                    'What is the answer to life, the universe and everything?',
+                  matchRegex: '42',
+                },
+                {
+                  order: 1,
+                  statement: 'Provide a strictly positive even number below 9.',
+                  matchRegex: '[2468]',
+                },
+                {
+                  order: 2,
+                  statement: 'What is the currency of the United States?',
+                  matchRegex: '/dollar(s)?|usd/gi',
+                },
               ],
             },
           }

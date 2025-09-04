@@ -75,8 +75,9 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
           },
           body: JSON.stringify({
             field: {
-              statement: '',
-              matchRegex: '.*',
+              statement:
+                'What is the answer to life, the universe and everything?',
+              matchRegex: '42',
             },
           }),
         },
