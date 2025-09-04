@@ -55,16 +55,16 @@ model User {
   sessions      Session[]
   roles         Role[]
 
-  userOnEvaluation    UserOnEvaluation[]
-  userDeniedAccess    UserOnEvaluationDeniedAccessAttempt[]
-  studentAnswer       StudentAnswer[]
-  gradingSignedBy     StudentQuestionGrading[]
-  groups              UserOnGroup[]
-  groupsCreated       Group[]
-  annotations         Annotation[]
-  purgedEvaluations   Evaluation[]                          @relation("PurgedEvaluations")
-  archivedEvaluations Evaluation[]                          @relation("ArchivedEvaluations")
-  createdEvaluations  Evaluation[]                          @relation("CreatedEvaluations")
+  userOnEvaluation UserOnEvaluation[]
+  userDeniedAccess UserOnEvaluationDeniedAccessAttempt[]
+  studentAnswer    StudentAnswer[]
+  gradingSignedBy  StudentQuestionGrading[]
+  groups           UserOnGroup[]
+  groupsCreated    Group[]
+  annotations      Annotation[]
+  purgedEvaluations Evaluation[] @relation("PurgedEvaluations")
+  archivedEvaluations Evaluation[] @relation("ArchivedEvaluations")
+  createdEvaluations Evaluation[] @relation("CreatedEvaluations")
 }
 
 enum Role {
@@ -127,6 +127,7 @@ model UserOnGroup {
   @@id([userId, groupId])
 }
 
+
 enum QuestionSource {
   BANK // Question bank
   EVAL // Question is part of an evaluation
@@ -179,19 +180,19 @@ model MultipleChoice {
 
   gradingPolicy MultipleChoiceGradingPolicyType @default(GRADUAL_CREDIT)
 
-  activateStudentComment Boolean @default(false) // Allow student to provide a comment/justification
-  studentCommentLabel    String? // Label for the student comment field
-  activateSelectionLimit Boolean @default(false) // Activate the selection limit,
-  selectionLimit         Int?    @default(0) // The number of correct options that the student can select, depends on the number of correct options
+  activateStudentComment Boolean  @default(false) // Allow student to provide a comment/justification
+  studentCommentLabel String?                     // Label for the student comment field
+  activateSelectionLimit Boolean @default(false)  // Activate the selection limit,
+  selectionLimit        Int?    @default(0)       // The number of correct options that the student can select, depends on the number of correct options
 }
 
 model Option {
-  id             String         @id @default(cuid())
-  order          Int            @default(0)
-  multipleChoice MultipleChoice @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
-  questionId     String
-  text           String?
-  isCorrect      Boolean        @default(false)
+  id               String         @id @default(cuid())
+  order            Int            @default(0)
+  multipleChoice   MultipleChoice @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+  questionId       String
+  text             String?
+  isCorrect        Boolean        @default(false)
 
   studentAnswerMultipleChoice StudentAnswerMultipleChoice[]
 }
@@ -519,7 +520,7 @@ model Tag {
 
   questionToTag QuestionToTag[]
 
-  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@id([groupId, label]) // Composite primary key
   @@unique([groupId, label])
@@ -575,14 +576,14 @@ model Evaluation {
   updatedAt  DateTime         @updatedAt
 
   durationActive Boolean @default(false)
-  durationHours  Int?    @default(0)
-  durationMins   Int?    @default(0)
+  durationHours Int? @default(0)
+  durationMins  Int? @default(0)
 
   startAt DateTime?
   endAt   DateTime?
 
   showSolutionsWhenFinished Boolean @default(false)
-  consultationEnabled       Boolean @default(true)
+  consultationEnabled      Boolean @default(true)
 
   accessMode UserOnEvaluationAccessMode @default(LINK_ONLY)
   accessList Json?
@@ -591,29 +592,28 @@ model Evaluation {
 
   // Creator tracking
   createdByUserEmail String?
-  createdBy          User?   @relation("CreatedEvaluations", fields: [createdByUserEmail], references: [email])
+  createdBy          User?     @relation("CreatedEvaluations", fields: [createdByUserEmail], references: [email])
 
-  students UserOnEvaluation[]
+  students              UserOnEvaluation[]
 
   evaluationToQuestions EvaluationToQuestion[]
 
   // Data Cycle Management: Archival fields
-  archivalPhase ArchivalPhase @default(ACTIVE)
+  archivalPhase       ArchivalPhase @default(ACTIVE)
 
   archivedAt          DateTime?
   archivedByUserEmail String?
   archivedBy          User?     @relation("ArchivedEvaluations", fields: [archivedByUserEmail], references: [email])
 
   // Deadline for when the evaluation should be archived
-  archivalDeadline DateTime?
+  archivalDeadline    DateTime?
 
   purgedAt          DateTime?
   purgedByUserEmail String?
   purgedBy          User?     @relation("PurgedEvaluations", fields: [purgedByUserEmail], references: [email])
 
-  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  groupId String
-
+  group                               Group                                 @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId                             String
   userOnEvaluationDeniedAccessAttempt UserOnEvaluationDeniedAccessAttempt[]
 }
 
@@ -651,8 +651,8 @@ model EvaluationToQuestion {
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionId String
 
-  points   Float   @default(0)
-  order    Int     @default(0)
+  points Float @default(0)
+  order  Int   @default(0)
   addendum String?
 
   @@id([evaluationId, questionId])
@@ -687,8 +687,8 @@ model UserOnEvaluation {
   status UserOnEvaluationStatus @default(IN_PROGRESS)
 
   // Tracking session changes during the evaluation
-  originalSessionToken    String? // The session token stored at the registration time
-  hasSessionChanged       Boolean   @default(false) // Flag to indicate if the session has changed
+  originalSessionToken String? // The session token stored at the registration time
+  hasSessionChanged    Boolean @default(false) // Flag to indicate if the session has changed
   sessionChangeDetectedAt DateTime? // Time when the session change was detected
 
   @@id([userEmail, evaluationId])
@@ -735,25 +735,25 @@ model Annotation {
   // This model should be used to store annotations for a specific student answer
   // It should be used for a number of different types of questions, thus having an auto-incrementing id (main entity) raher than a composite key
 
-  id String @id @default(cuid())
+  id             String   @id @default(cuid())
 
-  studentAnswer StudentAnswer @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
-  userEmail     String
-  questionId    String
+  studentAnswer  StudentAnswer @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
+  userEmail      String
+  questionId     String
 
-  entityType AnnotationEntityType @default(CODE_WRITING_FILE)
+  entityType     AnnotationEntityType @default(CODE_WRITING_FILE)
 
   // When attached to student code file
-  fileId String? @unique
-  file   File?   @relation(fields: [fileId], references: [id])
+  fileId         String?  @unique
+  file           File?    @relation(fields: [fileId], references: [id])
 
-  content String
+  content        String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  createdBy   User?   @relation(fields: [createdById], references: [id])
-  createdById String?
+  createdBy      User?    @relation(fields: [createdById], references: [id])
+  createdById    String?
 
   @@unique([entityType, fileId])
 }
@@ -859,9 +859,9 @@ enum StudentAnswerCodeReadingOutputStatus {
 }
 
 model StudentAnswerCodeReadingOutput {
-  questionId String
-  userEmail  String
-  snippetId  String
+  questionId  String
+  userEmail   String
+  snippetId   String
 
   codeReadingSnippet CodeReadingSnippet @relation(fields: [snippetId], references: [id], onDelete: Cascade)
 
