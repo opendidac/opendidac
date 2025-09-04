@@ -23,7 +23,11 @@ import React, {
 import { fetcher } from '../code/utils'
 import useSWR from 'swr'
 import { useRouter } from 'next/router'
-import { StudentAnswerStatus, UserOnEvaluationStatus } from '@prisma/client'
+import {
+  EvaluationPhase,
+  StudentAnswerStatus,
+  UserOnEvaluationStatus,
+} from '@prisma/client'
 import Overlay from '@/components/ui/Overlay'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
 import { Stack, Typography } from '@mui/material'
@@ -73,13 +77,20 @@ export const StudentOnEvaluationProvider = ({ children }) => {
     [evaluation],
   )
 
+  const shouldFetchQuestions = useCallback(
+    () =>
+      evaluation?.evaluation?.phase === EvaluationPhase.IN_PROGRESS &&
+      !hasStudentFinished(),
+    [evaluation?.evaluation?.phase, hasStudentFinished],
+  )
+
   const {
     data: evaluationToQuestions,
     error: errorUserOnEvaluation,
     mutate: mutateUserOnEvaluation,
   } = useSWR(
     `/api/users/evaluations/${evaluationId}/take`,
-    hasStudentFinished() ? null : fetcher,
+    shouldFetchQuestions() ? fetcher : null,
     {
       revalidateOnFocus: true,
       onError: (err) =>
