@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Image from 'next/image'
 import { Stack, Chip, Typography } from '@mui/material'
 import Column from '../layout/utils/Column'
 import ScrollContainer from '../layout/ScrollContainer'
 import MarkdownViewer from '../input/markdown/MarkdownViewer'
+import QuestionTypeIcon from './QuestionTypeIcon'
 
 const QuestionView = ({
   order,
@@ -40,13 +40,7 @@ const QuestionView = ({
     >
       <Stack direction="row" alignItems="center" spacing={1}>
         <Column width="32px">
-          <Image
-            alt={`Question Type Icon`}
-            src={`/svg/questions/${question.type}.svg`}
-            width={32}
-            height={32}
-            priority="1"
-          />
+          <QuestionTypeIcon type={question.type} size={32} />
         </Column>
         <Column right>
           <Typography variant="body1">
