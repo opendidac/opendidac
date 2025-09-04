@@ -32,9 +32,11 @@ import {
   chunkQuestions,
   countDatabasePassedTests,
   equals,
+  exactMatchFieldAnswer,
   formatCode,
   formatMarkdown,
   formatQuestionType,
+  isExactMatchFieldCorrect,
 } from '@/code/evaluation/export/helpers'
 import mainTempate from '@/code/evaluation/export/templates/main.hbs'
 import stylesTemplate from '@/code/evaluation/export/templates/styles.hbs'
@@ -157,6 +159,9 @@ Handlebars.registerHelper(
     return selectedOptions.some((option) => option.id === optionId)
   },
 )
+
+Handlebars.registerHelper('exactMatchFieldAnswer', exactMatchFieldAnswer)
+Handlebars.registerHelper('isExactMatchFieldCorrect', isExactMatchFieldCorrect)
 
 const get = async (req, res, prisma) => {
   const { groupScope, evaluationId } = req.query
