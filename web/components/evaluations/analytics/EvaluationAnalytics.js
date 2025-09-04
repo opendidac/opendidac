@@ -577,11 +577,6 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
                         color: 'error',
                         tooltip: `Incorrect answers [${stat.incorrect.count}]`,
                       },
-                      {
-                        percent: stat.unanswered.percentage,
-                        color: 'info',
-                        tooltip: `Unanswered [${stat.unanswered.count}]`,
-                      },
                     ]}
                     amount={submittedAnswers}
                   />

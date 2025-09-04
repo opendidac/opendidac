@@ -215,9 +215,10 @@ const gradeExactMatch = (question, totalPoints, studentAnswer) => {
     }, 0) ?? 0
 
   const fieldCount = question.exactMatch.fields.length
+  const allCorrect = correctFields === fieldCount
 
   return {
     status: StudentQuestionGradingStatus.AUTOGRADED,
-    pointsObtained: (correctFields / fieldCount) * totalPoints,
+    pointsObtained: allCorrect ? totalPoints : 0,
   }
 }
