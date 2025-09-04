@@ -16,12 +16,6 @@
 import { styled } from '@mui/system'
 import { TextField } from '@mui/material'
 
-const MultiLineTextField = styled(TextField)({
-  '& textarea': {
-    whiteSpace: 'pre-wrap', // Preserves whitespaces and wraps text
-  },
-})
-
 const MonoSpaceTextField = styled(TextField)({
   '& textarea': {
     whiteSpace: 'pre-wrap', // Preserves whitespaces and wraps text
@@ -29,4 +23,4 @@ const MonoSpaceTextField = styled(TextField)({
   },
 })
 
-export { MultiLineTextField, MonoSpaceTextField }
+export { MonoSpaceTextField }

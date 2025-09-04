@@ -22,7 +22,7 @@ import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import DragHandleSVG from '@/components/layout/utils/DragHandleSVG'
 import { useReorderable } from '@/components/layout/utils/ReorderableList'
 import { useTheme } from '@emotion/react'
-import { MonoSpaceTextField } from '@/components/input/MultiLineTextFields'
+import { MonoSpaceTextField } from '@/components/input/MonoSpaceTextField'
 
 const FieldEditor = ({
   index,

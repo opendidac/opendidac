@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Alert, Stack } from '@mui/material'
+import { Alert, Stack, TextField } from '@mui/material'
 import ResizePanel from '@/components/layout/utils/ResizePanel'
 import ScrollContainer from '../layout/ScrollContainer'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
-import {
-  MonoSpaceTextField,
-  MultiLineTextField,
-} from '@/components/input/MultiLineTextFields'
+import { MonoSpaceTextField } from '@/components/input/MonoSpaceTextField'
 import { regexpFromPattern } from '@/code/utils'
 
 const CompareExactMatch = ({ solution, answer }) => {
@@ -51,7 +48,7 @@ const CompareExactMatch = ({ solution, answer }) => {
                   <ResizePanel
                     hideHandle={true}
                     leftPanel={
-                      <MultiLineTextField
+                      <TextField
                         label={'Answer'}
                         multiline
                         variant="standard"

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { MultiLineTextField } from '@/components/input/MultiLineTextFields'
+import { TextField } from '@mui/material'
 
 const AnswerField = ({ fieldId, value, onValueChange }) => {
   return (
-    <MultiLineTextField
+    <TextField
       id={`answer-exact-match-${fieldId}`}
       variant="filled"
       label="Answer"

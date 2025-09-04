@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Stack } from '@mui/material'
+import { Stack, TextField } from '@mui/material'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import ScrollContainer from '@/components/layout/ScrollContainer'
-import { MultiLineTextField } from '@/components/input/MultiLineTextFields'
 
 const ConsultExactMatch = ({ exactMatch, answer }) => {
   return (
@@ -30,7 +29,7 @@ const ConsultExactMatch = ({ exactMatch, answer }) => {
             return (
               <Stack key={field.id} spacing={1} width={'100%'} pb={2}>
                 <MarkdownViewer content={field.statement} />
-                <MultiLineTextField
+                <TextField
                   label={'Answer'}
                   multiline
                   variant="standard"
