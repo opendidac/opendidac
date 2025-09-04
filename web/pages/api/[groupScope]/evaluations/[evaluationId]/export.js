@@ -32,9 +32,11 @@ import {
   chunkQuestions,
   countDatabasePassedTests,
   equals,
+  exactMatchFieldAnswer,
   formatCode,
   formatMarkdown,
   formatQuestionType,
+  isExactMatchFieldCorrect,
 } from '@/code/evaluation/export/helpers'
 import mainTempate from '@/code/evaluation/export/templates/main.hbs'
 import stylesTemplate from '@/code/evaluation/export/templates/styles.hbs'
@@ -50,6 +52,7 @@ import studentAnswerMultipleChoiceTemplate from '@/code/evaluation/export/templa
 import studentAnswerTrueFalseTemplate from '@/code/evaluation/export/templates/studentAnswerTrueFalse.hbs'
 import studentAnswerWebTemplate from '@/code/evaluation/export/templates/studentAnswerWeb.hbs'
 import studentAnswerDatabaseTemplate from '@/code/evaluation/export/templates/studentAnswerDatabase.hbs'
+import studentAnswerExactMatchTemplate from '@/code/evaluation/export/templates/studentAnswerExactMatch.hbs'
 import gradingTemplate from '@/code/evaluation/export/templates/grading.hbs'
 import questionWithSolutionTemplate from '@/code/evaluation/export/templates/questionWithSolution.hbs'
 import sectionHeaderTemplate from '@/code/evaluation/export/templates/sectionHeader.hbs'
@@ -131,6 +134,10 @@ Handlebars.registerPartial(
   'studentAnswerDatabase',
   studentAnswerDatabaseTemplate,
 )
+Handlebars.registerPartial(
+  'studentAnswerExactMatch',
+  studentAnswerExactMatchTemplate,
+)
 Handlebars.registerPartial('studentAnswerGrading', gradingTemplate)
 Handlebars.registerPartial('questionWithSolution', questionWithSolutionTemplate)
 Handlebars.registerPartial('sectionHeader', sectionHeaderTemplate)
@@ -152,6 +159,9 @@ Handlebars.registerHelper(
     return selectedOptions.some((option) => option.id === optionId)
   },
 )
+
+Handlebars.registerHelper('exactMatchFieldAnswer', exactMatchFieldAnswer)
+Handlebars.registerHelper('isExactMatchFieldCorrect', isExactMatchFieldCorrect)
 
 const get = async (req, res, prisma) => {
   const { groupScope, evaluationId } = req.query

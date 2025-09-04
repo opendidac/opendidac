@@ -100,3 +100,14 @@ export const languageBasedOnPathExtension = (path) => {
   const extension = path.split('.').pop()
   return languages.monacoExtensionToLanguage[extension]
 }
+
+/**
+ * Returns a RegExp object constructed from the given pattern, which may or may not contain flags. If it does not, the
+ * default flags are used
+ */
+export const regexpFromPattern = (pattern) => {
+  const parts = pattern.match(/^\/(.*)\/([a-z]*)$/)
+  return !parts || parts.length !== 3
+    ? new RegExp(pattern)
+    : new RegExp(parts[1], parts[2])
+}

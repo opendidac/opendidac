@@ -18,6 +18,7 @@ import { DatabaseQueryOutputStatus } from '@prisma/client'
 import Handlebars from 'handlebars'
 import { Remarkable } from 'remarkable'
 import htmlspecialchars from 'htmlspecialchars'
+import { regexpFromPattern } from '@/code/utils'
 
 const md = new Remarkable({
   html: true,
@@ -100,4 +101,20 @@ export const calculateObtainedPoints = (questions) => {
     (acc, q) => acc + (q.studentAnswer?.studentGrading?.pointsObtained || 0),
     0,
   )
+}
+
+export const exactMatchFieldAnswer = (fieldId, answers) => {
+  if (!answers || !Array.isArray(answers)) return ''
+  const fieldAnswer = answers.find((ans) => ans.fieldId === fieldId)
+  return fieldAnswer ? fieldAnswer.value : ''
+}
+
+export const isExactMatchFieldCorrect = (fieldId, question, answers) => {
+  if (!answers || !Array.isArray(answers)) return false
+  const fieldAnswer = answers.find((ans) => ans.fieldId === fieldId)
+  if (!fieldAnswer) return false
+  const expectedField = question.exactMatch.fields.find((f) => f.id === fieldId)
+  if (!expectedField) return false
+  const fieldRegex = regexpFromPattern(expectedField.matchRegex)
+  return fieldRegex.test(fieldAnswer.value)
 }

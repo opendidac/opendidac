@@ -22,6 +22,7 @@ const typesMap = {
   [QuestionType.code]: 'Code',
   [QuestionType.web]: 'Web',
   [QuestionType.database]: 'Database',
+  [QuestionType.exactMatch]: 'Exact Match',
 }
 
 const colorsMap = {
@@ -31,6 +32,7 @@ const colorsMap = {
   [QuestionType.code]: '#9C27B0', // Purple
   [QuestionType.web]: '#E91E63', // Pink
   [QuestionType.database]: '#607D8B', // Blue Grey
+  [QuestionType.exactMatch]: '#a8512b', // Brown
 }
 
 const toArray = () => {

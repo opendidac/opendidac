@@ -21,6 +21,7 @@ import Web from './type_specific/Web'
 import Database from './type_specific/Database'
 import Essay from './type_specific/Essay'
 import ScrollContainer from '../layout/ScrollContainer'
+import ExactMatch from '@/components/question/type_specific/exact-match/ExactMatch'
 
 const QuestionTypeSpecific = ({
   groupScope,
@@ -80,6 +81,7 @@ const QuestionTypeSpecific = ({
           )
         }
         break
+
       case QuestionType.essay:
         if (question.essay) {
           return (
@@ -97,6 +99,27 @@ const QuestionTypeSpecific = ({
             />
           )
         }
+        break
+
+      case QuestionType.exactMatch:
+        if (question.exactMatch) {
+          return (
+            <ExactMatch
+              groupScope={groupScope}
+              questionId={question.id}
+              fields={question.exactMatch.fields}
+              onFieldsChange={(newFields) => {
+                onUpdate && onUpdate()
+                onTypeSpecificChange(question.type, {
+                  ...question.exactMatch,
+                  fields: newFields,
+                })
+              }}
+            />
+          )
+        }
+        break
+
       default:
         return null // or a default component or some feedback to the users
     }
