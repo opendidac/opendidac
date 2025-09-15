@@ -205,7 +205,7 @@ const get = async (req, res, prisma) => {
           evaluationToQuestions: {
             include: {
               question: {
-                include: questionIncludeClause({
+                select: questionIncludeClause({
                   includeTypeSpecific: true,
                   includeOfficialAnswers: false, // NO SOLUTIONS for students
                   includeUserAnswers: {

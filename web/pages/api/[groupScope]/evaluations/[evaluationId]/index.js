@@ -35,7 +35,7 @@ const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
     },
     include: {
       question: {
-        include: questionIncludeClause({
+        select: questionIncludeClause({
           includeTypeSpecific: true,
           includeOfficialAnswers: true,
         }),

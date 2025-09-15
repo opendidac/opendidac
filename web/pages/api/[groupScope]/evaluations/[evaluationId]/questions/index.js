@@ -60,7 +60,7 @@ const get = async (req, res, prisma) => {
     },
     include: {
       question: {
-        include: questionIncludeClause(questionIncludeOptions),
+        select: questionIncludeClause(questionIncludeOptions),
       },
     },
 

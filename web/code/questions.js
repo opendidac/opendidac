@@ -52,7 +52,8 @@ export const questionIncludeClause = (questionIncludeOptions) => {
     type: true,
     content: true,
     // The original title should never be communicated to the student
-    ...(includeUserAnswers?.strategy === IncludeStrategy.ALL
+    ...(includeUserAnswers &&
+    includeUserAnswers?.strategy === IncludeStrategy.ALL
       ? { title: true }
       : {}),
   }

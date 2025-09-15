@@ -76,13 +76,9 @@ const get = async (req, res, prisma) => {
         include: {
           evaluationToQuestions: {
             include: {
-              question: evaluation.showSolutionsWhenFinished
-                ? {
-                    include: questionClause,
-                  }
-                : {
-                    select: questionClause,
-                  },
+              question: {
+                select: questionClause,
+              },
             },
             orderBy: {
               order: 'asc',

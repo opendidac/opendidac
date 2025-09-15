@@ -121,7 +121,7 @@ const post = async (req, res, prisma) => {
     },
     include: {
       question: {
-        include: questionIncludeClause({
+        select: questionIncludeClause({
           includeTypeSpecific: true,
           includeOfficialAnswers: false,
         }),

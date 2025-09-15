@@ -33,7 +33,7 @@ const get = async (req, res, prisma) => {
       evaluationToQuestions: {
         select: {
           question: {
-            include: questionIncludeClause({
+            select: questionIncludeClause({
               includeUserAnswers: {
                 strategy: IncludeStrategy.ALL,
               },

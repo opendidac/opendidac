@@ -189,7 +189,7 @@ const get = async (req, res, prisma) => {
     },
     include: {
       question: {
-        include: questionIncludeClause({
+        select: questionIncludeClause({
           includeTypeSpecific: true,
           includeOfficialAnswers: true,
           // When purged, we don't need user answers/gradings for export

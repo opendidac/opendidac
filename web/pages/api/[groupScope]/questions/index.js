@@ -179,7 +179,7 @@ const post = async (req, res, prisma) => {
           },
         },
       },
-      include: questionIncludeClause(true, true),
+      select: questionIncludeClause(true, true),
     })
 
     switch (questionType) {
@@ -204,7 +204,7 @@ const post = async (req, res, prisma) => {
           where: {
             id: createdQuestion.id,
           },
-          include: questionIncludeClause(true, true),
+          select: questionIncludeClause(true, true),
         })
         break
       }
@@ -244,7 +244,7 @@ const post = async (req, res, prisma) => {
           where: {
             id: createdQuestion.id,
           },
-          include: questionIncludeClause(true, true),
+          select: questionIncludeClause(true, true),
         })
         break
       }
