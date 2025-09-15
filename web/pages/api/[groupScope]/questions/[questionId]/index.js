@@ -87,6 +87,18 @@ const put = async (req, res, prisma) => {
       trueFalse: { select: { isTrue: true } },
       essay: true,
       web: true,
+      exactMatch: {
+        select: {
+          fields: {
+            select: {
+              id: true,
+              statement: true,
+              matchRegex: true,
+              order: true,
+            },
+          },
+        },
+      },
     },
   })
 

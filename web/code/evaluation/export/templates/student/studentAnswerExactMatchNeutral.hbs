@@ -1,0 +1,17 @@
+<div style="display:flex;flex-direction:column;gap:15px;">
+  {{> studentAnswerHeader studentAnswer}}
+  <div>
+    {{#each question.exactMatch.fields}}
+      <div style="margin-bottom: 20px; padding-left: 10px; border-radius: 4px; border-left: 4px solid #e0e0e0;">
+        <div style="margin-bottom: 10px;">
+          <p>{{this.statement}}</p>
+        </div>
+
+        <div>
+          <i>Your Answer</i>
+          <div>{{exactMatchFieldAnswer this.id ../studentAnswer.exactMatch.fields}}</div>
+        </div>
+      </div>
+    {{/each}}
+  </div>
+</div> 

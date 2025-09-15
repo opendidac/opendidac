@@ -157,6 +157,20 @@ export const questionIncludeClause = (questionIncludeOptions) => {
               : {}),
           },
         },
+        exactMatch: {
+          select: {
+            questionId: true,
+            fields: {
+              select: {
+                id: true,
+                order: true,
+                statement: true,
+                ...(includeOfficialAnswers ? { matchRegex: true } : {}),
+              },
+              orderBy: [{ order: 'asc' }, { id: 'asc' }],
+            },
+          },
+        },
         database: {
           select: {
             image: true,
@@ -297,9 +311,27 @@ export const questionIncludeClause = (questionIncludeOptions) => {
           },
         },
         essay: { select: { content: true } },
+        exactMatch: {
+          select: {
+            fields: {
+              select: {
+                fieldId: true,
+                ...(includeOfficialAnswers
+                  ? {
+                      exactMatchField: {
+                        select: {
+                          matchRegex: true,
+                        },
+                      },
+                    }
+                  : {}),
+                value: true,
+              },
+            },
+          },
+        },
         trueFalse: true,
         web: true,
-        user: true,
       },
     }
 
@@ -378,6 +410,45 @@ export const questionTypeSpecific = (
                       order: o.order,
                       text: o.text,
                       isCorrect: o.isCorrect,
+                    })),
+                  },
+          }
+    case QuestionType.exactMatch:
+      return !question
+        ? {
+            // default fields when creating a new question
+            fields: {
+              create: [
+                {
+                  order: 0,
+                  statement:
+                    'What is the answer to life, the universe and everything?',
+                  matchRegex: '42',
+                },
+                {
+                  order: 1,
+                  statement: 'Provide a strictly positive even number below 9.',
+                  matchRegex: '[2468]',
+                },
+                {
+                  order: 2,
+                  statement: 'What is the currency of the United States?',
+                  matchRegex: '/dollar(s)?|usd/gi',
+                },
+              ],
+            },
+          }
+        : {
+            fields:
+              mode === 'update'
+                ? // exact answer fields are managed on the question level for now
+                  {}
+                : // for copying questions
+                  {
+                    create: question.exactMatch.fields.map((field) => ({
+                      order: field.order,
+                      statement: field.statement,
+                      matchRegex: field.matchRegex,
                     })),
                   },
           }
@@ -630,6 +701,7 @@ export const copyQuestion = async (
     case QuestionType.multipleChoice:
     case QuestionType.trueFalse:
     case QuestionType.web:
+    case QuestionType.exactMatch:
       return copyGenericQuestion(prisma, question)
     case QuestionType.code:
       return copyCodeQuestion(prisma, question)

@@ -89,6 +89,7 @@ enum QuestionType {
   code
   web
   database
+  exactMatch
 }
 
 enum QuestionStatus {
@@ -151,6 +152,7 @@ model Question {
   code           Code?
   web            Web?
   database       Database?
+  exactMatch     ExactMatch?
 
   collection CollectionToQuestion[]
 
@@ -180,7 +182,7 @@ model MultipleChoice {
 
   activateStudentComment Boolean  @default(false) // Allow student to provide a comment/justification
   studentCommentLabel String?                     // Label for the student comment field
-  activateSelectionLimit Boolean @default(false)  // Activate the selection limit, 
+  activateSelectionLimit Boolean @default(false)  // Activate the selection limit,
   selectionLimit        Int?    @default(0)       // The number of correct options that the student can select, depends on the number of correct options
 }
 
@@ -488,6 +490,28 @@ model Web {
   templateCss  String?
   templateJs   String?
 }
+
+model ExactMatch {
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId String   @id
+
+  fields ExactMatchField[]
+}
+
+model ExactMatchField {
+  id String @id @default(cuid())
+
+  exactMatch ExactMatch @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+  questionId String
+
+  order      Int     @default(0)
+  statement  String?
+  matchRegex String?
+
+  // To allow student answer fields to reference the matching field and access the regex that way.
+  StudentAnswerExactMatchField StudentAnswerExactMatchField[]
+}
+
 model Tag {
   label     String
   createdAt DateTime @default(now())
@@ -571,7 +595,7 @@ model Evaluation {
   createdBy          User?     @relation("CreatedEvaluations", fields: [createdByUserEmail], references: [email])
 
   students              UserOnEvaluation[]
-  
+
   evaluationToQuestions EvaluationToQuestion[]
 
   // Data Cycle Management: Archival fields
@@ -625,7 +649,7 @@ model EvaluationToQuestion {
   evaluationId String
 
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  questionId String  
+  questionId String
 
   points Float @default(0)
   order  Int   @default(0)
@@ -649,6 +673,7 @@ model UserOnEvaluationDeniedAccessAttempt {
 
   @@id([userEmail, evaluationId])
 }
+
 model UserOnEvaluation {
   user      User   @relation(fields: [userEmail], references: [email], onDelete: Cascade)
   userEmail String
@@ -690,6 +715,7 @@ model StudentAnswer {
   code           StudentAnswerCode?
   web            StudentAnswerWeb?
   database       StudentAnswerDatabase?
+  exactMatch     StudentAnswerExactMatch?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -710,19 +736,19 @@ model Annotation {
   // It should be used for a number of different types of questions, thus having an auto-incrementing id (main entity) raher than a composite key
 
   id             String   @id @default(cuid())
-  
+
   studentAnswer  StudentAnswer @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
   userEmail      String
   questionId     String
 
   entityType     AnnotationEntityType @default(CODE_WRITING_FILE)
-  
+
   // When attached to student code file
   fileId         String?  @unique
   file           File?    @relation(fields: [fileId], references: [id])
 
-  content        String   
-  
+  content        String
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -836,11 +862,11 @@ model StudentAnswerCodeReadingOutput {
   questionId  String
   userEmail   String
   snippetId   String
-  
+
   codeReadingSnippet CodeReadingSnippet @relation(fields: [snippetId], references: [id], onDelete: Cascade)
-  
+
   studentAnswerCodeReading StudentAnswerCodeReading @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
-  
+
   output String?
   status StudentAnswerCodeReadingOutputStatus @default(NEUTRAL)
 
@@ -899,4 +925,28 @@ model StudentAnswerCodeHistory {
   code String?
 
   @@id([userEmail, questionId, createdAt])
+}
+
+model StudentAnswerExactMatch {
+  studentAnswer StudentAnswer @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
+  userEmail     String
+  questionId    String
+
+  fields StudentAnswerExactMatchField[]
+
+  @@id([userEmail, questionId])
+}
+
+model StudentAnswerExactMatchField {
+  fieldId    String
+  userEmail  String
+  questionId String
+
+  exactMatchField ExactMatchField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  studentAnswerExactMatch StudentAnswerExactMatch @relation(fields: [userEmail, questionId], references: [userEmail, questionId], onDelete: Cascade)
+
+  value String?
+
+  @@id([fieldId, userEmail, questionId])
 }

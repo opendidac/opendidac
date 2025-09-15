@@ -21,6 +21,7 @@ import ConsultCode from './ConsultCode'
 import CompareTrueFalse from './CompareTrueFalse'
 import ConsultDatabase from './ConsultDatabase'
 import ConsultMultipleChoice from './ConsultMultipleChoice'
+import ConsultExactMatch from '@/components/answer/ConsultExactMatch'
 /*
     this component is used to display the users answer and grading to a question in the context of the users's consultation
     it displays the answer and grading, but not the solutions
@@ -55,6 +56,12 @@ const AnswerConsult = ({ id, question, answer }) => {
           )) ||
           (question.type === QuestionType.database && (
             <ConsultDatabase queries={answer.queries} />
+          )) ||
+          (question.type === QuestionType.exactMatch && (
+            <ConsultExactMatch
+              exactMatch={question.exactMatch}
+              answer={answer}
+            />
           )))}
     </Stack>
   )

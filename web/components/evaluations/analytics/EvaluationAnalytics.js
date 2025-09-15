@@ -78,6 +78,10 @@ const questionTypeToLegend = {
     { color: 'success', tooltip: 'Test passed' },
     { color: 'error', tooltip: 'Test failed' },
   ],
+  [QuestionType.exactMatch]: [
+    { color: 'success', tooltip: 'Matching answer' },
+    { color: 'error', tooltip: 'Incorrect answer' },
+  ],
 }
 
 const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
@@ -235,6 +239,27 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
                     : 0,
                 amount: lintFailures,
               },
+            }
+          })
+
+          break
+        case QuestionType.exactMatch:
+          data[question.type].forEach((stat) => {
+            if (maxValue > 0) {
+              stat.correct.percentage = Math.round(
+                (stat.correct.count / maxValue) * 100,
+              )
+              stat.incorrect.percentage = Math.round(
+                (stat.incorrect.count / maxValue) * 100,
+              )
+            } else {
+              stat.correct.percentage = 0
+              stat.incorrect.percentage = 0
+            }
+            stat.unanswered = {
+              count: maxValue - stat.correct.count - stat.incorrect.count,
+              percentage:
+                100 - stat.correct.percentage - stat.incorrect.percentage,
             }
           })
 
@@ -527,6 +552,35 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
                     )}
                   </Stack>
                 </Stack>
+              </>
+            )) ||
+            (questionData.type === QuestionType.exactMatch && (
+              <>
+                {questionData[questionData.type].map((stat, index) => (
+                  <AnalyticsRow
+                    key={index}
+                    label={
+                      <Tooltip title={stat.regex}>
+                        <Typography variant="body1">
+                          {`Field ${index}`}
+                        </Typography>
+                      </Tooltip>
+                    }
+                    segments={[
+                      {
+                        percent: stat.correct.percentage,
+                        color: 'success',
+                        tooltip: `Matching answers [${stat.correct.count}]`,
+                      },
+                      {
+                        percent: stat.incorrect.percentage,
+                        color: 'error',
+                        tooltip: `Incorrect answers [${stat.incorrect.count}]`,
+                      },
+                    ]}
+                    amount={submittedAnswers}
+                  />
+                ))}
               </>
             )))}
         <Stack direction="row" spacing={4} alignItems="center">

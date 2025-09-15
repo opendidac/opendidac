@@ -180,6 +180,17 @@ const exportWeb = (w) => {
   }
 }
 
+const exportExactMatch = (em) => {
+  if (!em) return {}
+  return {
+    fields: (em.fields ?? []).map((field) => ({
+      order: field.order,
+      statement: field.statement,
+      matchRegex: field.matchRegex,
+    })),
+  }
+}
+
 /* ------------------- serialization core ------------------- */
 
 /**
@@ -207,6 +218,9 @@ export const serializeQuestion = (q) => {
       break
     case QuestionType.web:
       data = exportWeb(q.web)
+      break
+    case QuestionType.exactMatch:
+      data = exportExactMatch(q.exactMatch)
       break
     default:
       data = {}
@@ -370,6 +384,20 @@ const buildWebCreate = (data) => ({
   },
 })
 
+const buildExactMatchCreate = (data) => ({
+  create: {
+    fields: data.fields?.length
+      ? {
+          create: data.fields.map((field) => ({
+            order: field.order ?? 0,
+            statement: nn(field.statement),
+            matchRegex: nn(field.matchRegex),
+          })),
+        }
+      : undefined,
+  },
+})
+
 /* ----------------------- import query builder (no I/O) ----------------------- */
 /**
  * Build ONLY the Prisma `.create()` data for a question, and a post-plan
@@ -407,6 +435,9 @@ export const buildImportPrismaQuery = (questionJson, group) => {
       break
     case QuestionType.web:
       typeSpecificCreate = buildWebCreate(data)
+      break
+    case QuestionType.exactMatch:
+      typeSpecificCreate = buildExactMatchCreate(data)
       break
     default:
       typeSpecificCreate = undefined

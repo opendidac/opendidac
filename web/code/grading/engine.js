@@ -20,6 +20,7 @@ import {
   CodeQuestionType,
 } from '@prisma/client'
 import GradingPolicy from './policy'
+import { regexpFromPattern } from '@/code/utils'
 
 /*
     This function is used to grade a users answers to a question.
@@ -49,6 +50,8 @@ export const grading = (question, totalPoints, studentAnswer) => {
     case QuestionType.database:
       // users database submission is graded during users database sandbox run
       return gradeDatabase(totalPoints, studentAnswer)
+    case QuestionType.exactMatch:
+      return gradeExactMatch(question, totalPoints, studentAnswer)
     default:
       return undefined
   }
@@ -190,3 +193,32 @@ const gradeWeb = (answer) => ({
     ? StudentQuestionGradingStatus.UNGRADED
     : StudentQuestionGradingStatus.AUTOGRADED,
 })
+
+const gradeExactMatch = (question, totalPoints, studentAnswer) => {
+  if (studentAnswer === undefined) {
+    // When student joins, studentAnswer is undefined.
+    return defaultGrading
+  }
+
+  const correctFields =
+    studentAnswer?.fields?.reduce((acc, field) => {
+      const expectedField = question.exactMatch.fields.find(
+        (f) => f.id === field.fieldId,
+      )
+      if (!expectedField) {
+        console.error(`Field with ID ${field.fieldId} not found in question.`)
+        return acc
+      }
+      const fieldRegex = expectedField.matchRegex
+      let regex = regexpFromPattern(fieldRegex)
+      return acc + (regex.test(field.value) ? 1 : 0)
+    }, 0) ?? 0
+
+  const fieldCount = question.exactMatch.fields.length
+  const allCorrect = correctFields === fieldCount
+
+  return {
+    status: StudentQuestionGradingStatus.AUTOGRADED,
+    pointsObtained: allCorrect ? totalPoints : 0,
+  }
+}
