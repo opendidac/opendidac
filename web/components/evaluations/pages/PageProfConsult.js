@@ -160,6 +160,20 @@ const PageProfConsult = () => {
 
   const readOnly = evaluation?.phase === EvaluationPhase.IN_PROGRESS
 
+  const student = useMemo(
+    () => selected?.question.studentAnswer[0].user,
+    [selected],
+  )
+  const solution = useMemo(
+    () => selected?.question[selected?.question.type],
+    [selected],
+  )
+
+  const studentAnswer = useMemo(
+    () => selected?.question.studentAnswer[0][selected?.question.type],
+    [selected],
+  )
+
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
       <Loading loading={!evaluation} error={[error]}>
@@ -217,14 +231,10 @@ const PageProfConsult = () => {
                     <AnswerCompare
                       id={`answer-viewer-${selected.question.id}`}
                       readOnly={readOnly}
-                      student={selected.question.studentAnswer[0].user}
+                      student={student}
                       evaluationToQuestion={selected}
-                      solution={selected.question[selected.question.type]}
-                      answer={
-                        selected.question.studentAnswer[0][
-                          selected.question.type
-                        ]
-                      }
+                      solution={solution}
+                      answer={studentAnswer}
                     />
                   </Stack>
                 )

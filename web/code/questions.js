@@ -25,14 +25,25 @@ export const IncludeStrategy = {
   USER_SPECIFIC: 'user_specific',
 }
 
+export const ClauseType = {
+  INCLUDE: 'include',
+  SELECT: 'select',
+}
+
 const defaultQuestionIncludeClause = {
   includeTypeSpecific: true,
   includeOfficialAnswers: false,
   includeUserAnswers: undefined, // { strategy: IncludeStrategy.USER_SPECIFIC, userEmail: <email> } or { strategy: IncludeStrategy.ALL }
   includeGradings: false,
   includeTags: true,
+  clauseType: ClauseType.INCLUDE,
 }
 
+/*
+CAUTION: questionIncludeClause is a heavily used function
+any change to it should be carefully considered
+Make sure to test all the use cases
+*/
 export const questionIncludeClause = (questionIncludeOptions) => {
   // include question related entities based on the specified context
 
@@ -44,17 +55,22 @@ export const questionIncludeClause = (questionIncludeOptions) => {
     includeUserAnswers,
     includeGradings,
     includeTags,
+    clauseType,
   } = options
 
   // Base question fields
   const baseFields = {
-    id: true,
-    type: true,
-    content: true,
-    // The original title should never be communicated to the student
-    ...(includeUserAnswers &&
-    includeUserAnswers?.strategy === IncludeStrategy.ALL
-      ? { title: true }
+    ...(clauseType === ClauseType.SELECT
+      ? {
+          id: true,
+          type: true,
+          content: true,
+          // The original title should never be communicated to the student
+          ...(includeUserAnswers &&
+          includeUserAnswers?.strategy === IncludeStrategy.ALL
+            ? { title: true }
+            : {}),
+        }
       : {}),
   }
 

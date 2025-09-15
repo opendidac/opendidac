@@ -64,6 +64,8 @@ const get = async (req, res, prisma) => {
     includeGradings: true,
   })
 
+  console.log('questionClause', questionClause)
+
   const userOnEvaluation = await prisma.userOnEvaluation.findUnique({
     where: {
       userEmail_evaluationId: {
@@ -77,7 +79,7 @@ const get = async (req, res, prisma) => {
           evaluationToQuestions: {
             include: {
               question: {
-                select: questionClause,
+                include: questionClause,
               },
             },
             orderBy: {
