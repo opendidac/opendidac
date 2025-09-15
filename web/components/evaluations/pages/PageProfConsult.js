@@ -21,7 +21,7 @@ import Loading from '../../feedback/Loading'
 import { EvaluationPhase, Role, StudentAnswerStatus } from '@prisma/client'
 import { fetcher } from '../../../code/utils'
 import LayoutMain from '../../layout/LayoutMain'
-import { Stack } from '@mui/material'
+import { Stack, Typography } from '@mui/material'
 import Paging from '../../layout/utils/Paging'
 import LayoutSplitScreen from '../../layout/LayoutSplitScreen'
 import QuestionView from '../../question/QuestionView'
@@ -86,7 +86,7 @@ const PageProfConsult = () => {
       evaluationToQuestions.map((jstq) => ({
         id: jstq.question.id,
         label: `Q${jstq.order + 1}`,
-        tooltip: `${jstq.question.title} - ${jstq.points} points`,
+        tooltip: `${jstq.title || jstq.question.title} - ${jstq.points} points`,
         fillable: true,
         state: getFilledStatus(jstq.question.studentAnswer[0].status),
       })),
@@ -192,6 +192,9 @@ const PageProfConsult = () => {
               leftPanel={
                 selected && (
                   <QuestionView
+                    title={
+                      <Typography variant="h6">{selected.title}</Typography>
+                    }
                     order={selected.order}
                     points={selected.points}
                     question={selected.question}

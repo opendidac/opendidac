@@ -34,6 +34,7 @@ import ReorderableList from '@/components/layout/utils/ReorderableList'
 import { phaseGreaterThan } from '../phases'
 import { CodeQuestionType, EvaluationPhase, QuestionType } from '@prisma/client'
 import QuestionIncludeDrawer from './composition/QuestionIncludeDrawer'
+import QuestionTitleField from './composition/QuestionTitleField'
 import { useTheme } from '@emotion/react'
 import EvaluationTitleBar from '../layout/EvaluationTitleBar'
 import { useRouter } from 'next/router'
@@ -485,9 +486,17 @@ const QuestionItem = ({
         <Typography variant="body1">
           <b>Q{evaluationToQuestion.order + 1}</b>
         </Typography>
-        <Typography variant="body2">
-          {evaluationToQuestion.question.title}
-        </Typography>
+        <QuestionTitleField
+          id={evaluationToQuestion.questionId}
+          evaluationToQuestion={evaluationToQuestion}
+          readOnly={readOnly}
+          onSave={async (updatedEvaluationToQuestion) => {
+            await debounceSaveCollectionToQuestion(
+              evaluationToQuestion.order,
+              updatedEvaluationToQuestion,
+            )
+          }}
+        />
       </Stack>
       {indicator && indicator}
 

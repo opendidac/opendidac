@@ -298,9 +298,7 @@ const QuestionsGrid = ({ evaluationId, evaluationToQuestions, onSubmit }) => {
                     flexGrow={1}
                     overflow={'hidden'}
                   >
-                    <Typography variant="body2">
-                      {row.question.title}
-                    </Typography>
+                    <Typography variant="body2">{row.title}</Typography>
                   </Stack>
                 </Stack>
               )

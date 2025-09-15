@@ -42,7 +42,7 @@ const StudentResultsGrid = ({
   const gridHeaders = () => {
     let q = results.map((jstq) => ({
       label: <b>{`Q${jstq.order + 1}`}</b>,
-      tooltip: jstq.question.title,
+      tooltip: jstq.title || jstq.question.title,
       column: { width: '35px', align: 'center', minWidth: '35px' },
       renderCell: (row) => {
         const data = row[`Q${jstq.order + 1}`]

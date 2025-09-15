@@ -54,7 +54,7 @@ const get = async (req, res, prisma) => {
     return
   }
 
-  let includeQuestions = questionIncludeClause({
+  let questionClause = questionIncludeClause({
     includeTypeSpecific: true,
     includeOfficialAnswers: evaluation.showSolutionsWhenFinished,
     includeUserAnswers: {
@@ -76,9 +76,13 @@ const get = async (req, res, prisma) => {
         include: {
           evaluationToQuestions: {
             include: {
-              question: {
-                include: includeQuestions,
-              },
+              question: evaluation.showSolutionsWhenFinished
+                ? {
+                    include: questionClause,
+                  }
+                : {
+                    select: questionClause,
+                  },
             },
             orderBy: {
               order: 'asc',

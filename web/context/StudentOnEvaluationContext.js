@@ -139,7 +139,7 @@ export const StudentOnEvaluationProvider = ({ children }) => {
             >{`(${jtq.points} pts)`}</Typography>
           </Stack>
         ),
-        tooltip: `${jtq.question.type} "${jtq.question.title}" - ${jtq.points} points`,
+        tooltip: `${jtq.question.type} "${jtq.title}" - ${jtq.points} points`,
         fillable: true,
         state: getFilledStatus(jtq.question.studentAnswer[0].status),
       }))

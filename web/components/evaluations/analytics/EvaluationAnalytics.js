@@ -297,7 +297,9 @@ const QuestionAnalytics = ({ evaluationToQuestions, showSuccessRate }) => {
             <Typography variant="h6">
               <b>{`Q${evaluationToQuestions.order + 1}`}</b>
             </Typography>
-            <Typography variant="body1">{question.title}</Typography>
+            <Typography variant="body1">
+              {evaluationToQuestions.title || question.title}
+            </Typography>
           </Stack>
           <ColorLegend
             items={getLegend(question.type, question.code?.codeType)}

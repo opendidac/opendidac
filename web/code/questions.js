@@ -46,6 +46,17 @@ export const questionIncludeClause = (questionIncludeOptions) => {
     includeTags,
   } = options
 
+  // Base question fields
+  const baseFields = {
+    id: true,
+    type: true,
+    content: true,
+    // The original title should never be communicated to the student
+    ...(includeUserAnswers?.strategy === IncludeStrategy.ALL
+      ? { title: true }
+      : {}),
+  }
+
   const typeSpecific = includeTypeSpecific
     ? {
         code: {
@@ -212,6 +223,148 @@ export const questionIncludeClause = (questionIncludeOptions) => {
       }
     : {}
 
+  // If we need to exclude title, we need to use select instead of include
+  if (!includeOfficialAnswers) {
+    let select = {
+      ...baseFields,
+      ...typeSpecific,
+    }
+
+    if (includeTags) {
+      select.questionToTag = {
+        include: {
+          tag: true,
+        },
+      }
+    }
+
+    if (includeUserAnswers) {
+      // no "where" for IncludeStrategy.ALL
+      let saWhere =
+        includeUserAnswers.strategy === IncludeStrategy.USER_SPECIFIC
+          ? {
+              userEmail: includeUserAnswers.userEmail,
+            }
+          : undefined
+
+      select.studentAnswer = {
+        where: saWhere,
+        select: {
+          status: true,
+          user: true,
+          code: {
+            select: {
+              codeWriting: {
+                select: {
+                  files: {
+                    where: {
+                      studentPermission: {
+                        not: StudentPermission.HIDDEN,
+                      },
+                    },
+                    include: {
+                      file: {
+                        select: {
+                          updatedAt: true,
+                          path: true,
+                          content: true,
+                          ...(includeGradings
+                            ? { id: true, annotation: true }
+                            : {}),
+                        },
+                      },
+                    },
+                    orderBy: { order: 'asc' },
+                  },
+                  testCaseResults: true,
+                  allTestCasesPassed: true,
+                },
+              },
+              codeReading: {
+                select: {
+                  outputs: {
+                    select: {
+                      output: true,
+                      status: true,
+                      codeReadingSnippet: {
+                        select: {
+                          id: true,
+                          snippet: true,
+                          order: true,
+                        },
+                      },
+                    },
+                    orderBy: {
+                      codeReadingSnippet: {
+                        order: 'asc',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          database: {
+            select: {
+              queries: {
+                include: {
+                  query: true,
+                  studentOutput: true,
+                },
+                orderBy: {
+                  query: { order: 'asc' },
+                },
+              },
+            },
+          },
+          multipleChoice: {
+            select: {
+              comment: true,
+              options: {
+                select: { id: true, order: true, text: true },
+                orderBy: [{ order: 'asc' }, { id: 'asc' }],
+              },
+            },
+          },
+          essay: { select: { content: true } },
+          exactMatch: {
+            select: {
+              fields: {
+                select: {
+                  fieldId: true,
+                  ...(includeOfficialAnswers
+                    ? {
+                        exactMatchField: {
+                          select: {
+                            matchRegex: true,
+                          },
+                        },
+                      }
+                    : {}),
+                  value: true,
+                },
+              },
+            },
+          },
+          trueFalse: true,
+          web: true,
+        },
+      }
+
+      // include gradings
+      if (includeGradings) {
+        select.studentAnswer.select.studentGrading = {
+          include: {
+            signedBy: true,
+          },
+        }
+      }
+    }
+
+    return select
+  }
+
+  // Original include logic for when includeOfficialAnswers is true
   let include = typeSpecific
 
   if (includeTags) {

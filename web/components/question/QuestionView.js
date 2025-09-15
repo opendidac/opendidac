@@ -20,6 +20,7 @@ import MarkdownViewer from '../input/markdown/MarkdownViewer'
 import QuestionTypeIcon from './QuestionTypeIcon'
 
 const QuestionView = ({
+  title,
   order,
   points,
   question,
@@ -52,7 +53,7 @@ const QuestionView = ({
         </Column>
       </Stack>
       <Stack flex={1} spacing={1}>
-        <Typography variant="h6">{question.title}</Typography>
+        {title}
         <ScrollContainer>
           {above}
           <MarkdownViewer
