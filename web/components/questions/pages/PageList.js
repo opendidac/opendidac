@@ -90,17 +90,19 @@ const ExportQuestionsButton = ({ selection, groupScope, onExportSuccess }) => {
     }
   }, [selection, groupScope, showSnackbar, onExportSuccess])
 
-  if (selection.length === 0) return null
+  const isDisabled = selection.length === 0
 
   return (
     <Button
       variant="text"
-      onClick={handleExportSelected}
-      disabled={selection.length === 0}
+      onClick={isDisabled ? undefined : handleExportSelected}
+      disabled={isDisabled}
       startIcon={<DownloadIcon />}
       color="success"
     >
-      Export {selection.length} question{selection.length > 1 ? 's' : ''}
+      {isDisabled
+        ? 'Export questions'
+        : `Export ${selection.length} question${selection.length > 1 ? 's' : ''}`}
     </Button>
   )
 }
