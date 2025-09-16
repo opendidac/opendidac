@@ -22,7 +22,7 @@ import { withPrisma } from '@/middleware/withPrisma'
 import { withRestrictions } from '@/middleware/withRestrictions'
 
 import { getUser } from '@/code/auth/auth'
-import { questionIncludeClause, IncludeStrategy } from '@/code/questions'
+import { questionSelectClause, IncludeStrategy } from '@/code/questions'
 import { isFinished } from './questions/[questionId]/answers/utils'
 import { withPurgeGuard } from '@/middleware/withPurged'
 
@@ -54,7 +54,7 @@ const get = async (req, res, prisma) => {
     return
   }
 
-  let questionClause = questionIncludeClause({
+  let questionClause = questionSelectClause({
     includeTypeSpecific: true,
     includeOfficialAnswers: evaluation.showSolutionsWhenFinished,
     includeUserAnswers: {
@@ -79,7 +79,7 @@ const get = async (req, res, prisma) => {
           evaluationToQuestions: {
             include: {
               question: {
-                include: questionClause,
+                select: questionClause,
               },
             },
             orderBy: {

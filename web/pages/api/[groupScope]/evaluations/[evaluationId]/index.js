@@ -25,7 +25,7 @@ import {
   withGroupScope,
   withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { copyQuestion, questionIncludeClause } from '@/code/questions'
+import { copyQuestion, questionSelectClause } from '@/code/questions'
 
 const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
   // get all the questions related to this evaluation
@@ -35,10 +35,14 @@ const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
     },
     include: {
       question: {
-        include: questionIncludeClause({
-          includeTypeSpecific: true,
-          includeOfficialAnswers: true,
-        }),
+        select: {
+          ...questionSelectClause({
+            includeTypeSpecific: true,
+            includeOfficialAnswers: true,
+            includeTags: true,
+          }),
+          groupId: true, // Need this for copyQuestion function
+        },
       },
     },
   })

@@ -19,7 +19,7 @@ import {
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
-import { IncludeStrategy, questionIncludeClause } from '@/code/questions'
+import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 import { withPurgeGuard } from '@/middleware/withPurged'
 /*
   Professor can consult the users's answers to the questions of a evaluation
@@ -35,7 +35,7 @@ const get = async (req, res, prisma) => {
       evaluationToQuestions: {
         include: {
           question: {
-            include: questionIncludeClause({
+            select: questionSelectClause({
               includeTypeSpecific: true,
               includeOfficialAnswers: true,
               includeUserAnswers: {

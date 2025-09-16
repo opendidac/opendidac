@@ -25,29 +25,26 @@ export const IncludeStrategy = {
   USER_SPECIFIC: 'user_specific',
 }
 
-export const ClauseType = {
-  INCLUDE: 'include',
-  SELECT: 'select',
-}
 /*
 CAUTION: questionIncludeClause is a heavily used function
 any change to it should be carefully considered
 Make sure to test all the use cases
 */
-const defaultQuestionIncludeClause = {
+const defaultQuestionSelectClause = {
+  includeQuestionTitle: true,
   includeTypeSpecific: true,
   includeOfficialAnswers: false,
   includeUserAnswers: undefined, // { strategy: IncludeStrategy.USER_SPECIFIC, userEmail: <email> } or { strategy: IncludeStrategy.ALL }
   includeGradings: false,
   includeTags: true,
-  clauseType: ClauseType.INCLUDE, // default keeps previous behavior
 }
 
-export const questionIncludeClause = (questionIncludeOptions) => {
+export const questionSelectClause = (questionSelectOptions) => {
   // include/select question related entities based on the specified context
-  const options = { ...defaultQuestionIncludeClause, ...questionIncludeOptions }
+  const options = { ...defaultQuestionSelectClause, ...questionSelectOptions }
 
   const {
+    includeQuestionTitle,
     includeTypeSpecific,
     includeOfficialAnswers,
     includeUserAnswers,
@@ -57,20 +54,14 @@ export const questionIncludeClause = (questionIncludeOptions) => {
   } = options
 
   // Base fields only when SELECT-ing at the root
-  const baseQuestionFields =
-    clauseType === ClauseType.SELECT
-      ? {
-          id: true,
-          type: true,
-          content: true,
-          createdAt: true,
-          updatedAt: true,
-          // (policy) never show original title to students unless
-          ...(includeUserAnswers?.strategy === IncludeStrategy.ALL
-            ? { title: true }
-            : {}),
-        }
-      : {}
+  const baseQuestionFields = {
+    id: true,
+    type: true,
+    content: true,
+    createdAt: true,
+    updatedAt: true,
+    ...(includeQuestionTitle ? { title: true } : {}),
+  }
 
   const typeSpecific = includeTypeSpecific
     ? {
@@ -319,16 +310,10 @@ export const questionIncludeClause = (questionIncludeOptions) => {
     }
   }
 
-  // === Final shape depends ONLY on clauseType ===
-  if (clauseType === ClauseType.SELECT) {
-    return {
-      ...baseQuestionFields, // root scalars only valid in SELECT
-      ...relations, // relations (can have nested select/include)
-    }
+  return {
+    ...baseQuestionFields, // root scalars only valid in SELECT
+    ...relations, // relations (can have nested select/include)
   }
-
-  // INCLUDE root: return relations only; root scalars are implicit
-  return relations
 }
 
 /*

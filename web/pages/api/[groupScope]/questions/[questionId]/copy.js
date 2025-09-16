@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Role, QuestionSource } from '@prisma/client'
-import { copyQuestion, questionIncludeClause } from '@/code/questions'
+import { copyQuestion, questionSelectClause } from '@/code/questions'
 import {
   withAuthorization,
   withGroupScope,
@@ -33,10 +33,14 @@ const post = async (req, res, prisma) => {
         scope: groupScope,
       },
     },
-    include: questionIncludeClause({
-      includeTypeSpecific: true,
-      includeOfficialAnswers: true,
-    }),
+    select: {
+      ...questionSelectClause({
+        includeTypeSpecific: true,
+        includeOfficialAnswers: true,
+        includeTags: true,
+      }),
+      groupId: true, // Need this for copyQuestion function
+    },
   })
 
   let questionCopy = null
