@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Role, QuestionStatus } from '@prisma/client'
-import { questionIncludeClause, questionTypeSpecific } from '@/code/questions'
+import { questionSelectClause, questionTypeSpecific } from '@/code/questions'
 import {
   withAuthorization,
   withGroupScope,
@@ -42,7 +42,7 @@ const get = async (req, res, prisma) => {
         scope: groupScope,
       },
     },
-    include: questionIncludeClause({
+    select: questionSelectClause({
       includeTypeSpecific: true,
       includeOfficialAnswers: true,
     }),

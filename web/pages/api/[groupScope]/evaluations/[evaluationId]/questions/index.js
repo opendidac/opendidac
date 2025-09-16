@@ -21,7 +21,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 
-import { IncludeStrategy, questionIncludeClause } from '@/code/questions'
+import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 
 /*
 used by the evaluation pages grading, finished and analytics to fetch the questions of the evaluation with official amswers
@@ -60,7 +60,7 @@ const get = async (req, res, prisma) => {
     },
     include: {
       question: {
-        include: questionIncludeClause(questionIncludeOptions),
+        select: questionSelectClause(questionIncludeOptions),
       },
     },
 

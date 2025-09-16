@@ -21,7 +21,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
-import { questionIncludeClause } from '@/code/questions'
+import { questionSelectClause } from '@/code/questions'
 
 const get = async (req, res, prisma) => {
   const { evaluationId } = req.query
@@ -39,8 +39,8 @@ const get = async (req, res, prisma) => {
       evaluationToQuestions: {
         include: {
           question: {
-            include: {
-              ...questionIncludeClause(questionIncludeOptions),
+            select: {
+              ...questionSelectClause(questionIncludeOptions),
               sourceQuestion: {
                 // Only Active
                 where: {
@@ -121,7 +121,7 @@ const post = async (req, res, prisma) => {
     },
     include: {
       question: {
-        select: questionIncludeClause({
+        select: questionSelectClause({
           includeTypeSpecific: true,
           includeOfficialAnswers: false,
         }),

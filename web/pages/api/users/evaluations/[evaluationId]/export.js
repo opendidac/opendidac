@@ -25,11 +25,7 @@ import { getUser } from '@/code/auth/auth'
 import puppeteer from 'puppeteer'
 import Handlebars from 'handlebars'
 
-import {
-  IncludeStrategy,
-  questionIncludeClause,
-  ClauseType,
-} from '@/code/questions'
+import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 import muiTheme from '@/code/evaluation/muiTheme.json'
 import {
   countDatabasePassedTests,
@@ -207,9 +203,13 @@ const get = async (req, res, prisma) => {
       evaluation: {
         include: {
           evaluationToQuestions: {
-            include: {
+            select: {
+              title: true, // Custom title from EvaluationToQuestion
+              order: true,
+              points: true,
+              questionId: true,
               question: {
-                select: questionIncludeClause({
+                select: questionSelectClause({
                   includeTypeSpecific: true,
                   includeOfficialAnswers: false, // NO SOLUTIONS for students
                   includeUserAnswers: {
@@ -217,7 +217,6 @@ const get = async (req, res, prisma) => {
                     userEmail: currentUserEmail,
                   },
                   includeGradings: true,
-                  clauseType: ClauseType.SELECT,
                 }),
               },
             },
@@ -244,7 +243,10 @@ const get = async (req, res, prisma) => {
 
       return {
         student: userOnEvaluation.user,
-        question: etq.question,
+        question: {
+          ...etq.question,
+          title: etq.title, // Use custom title from EvaluationToQuestion
+        },
         order: etq.order + 1,
         points: etq.points,
         studentAnswer,

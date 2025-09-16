@@ -28,9 +28,8 @@ import {
 import { withPrisma } from '@/middleware/withPrisma'
 import {
   codeInitialUpdateQuery,
-  questionIncludeClause,
+  questionSelectClause,
   questionTypeSpecific,
-  ClauseType,
 } from '@/code/questions'
 
 import languages from '@/code/languages.json'
@@ -137,8 +136,8 @@ const get = async (req, res, prisma) => {
 
   const questions = await prisma.question.findMany({
     ...where,
-    include: {
-      ...questionIncludeClause({
+    select: {
+      ...questionSelectClause({
         includeTypeSpecific: true,
         includeOfficialAnswers: true,
       }),
@@ -166,10 +165,9 @@ export const post = async (req, res, prisma) => {
     return
   }
 
-  const fullSelect = questionIncludeClause({
+  const fullSelect = questionSelectClause({
     includeTypeSpecific: true,
     includeOfficialAnswers: true,
-    clauseType: ClauseType.SELECT,
   })
 
   try {
@@ -235,7 +233,7 @@ export const post = async (req, res, prisma) => {
           break
       }
 
-      // 3) Single, final fetch with full SELECT
+      // 3) Single, final fetch with full INCLUDE
       return tx.question.findUnique({
         where: { id: created.id },
         select: fullSelect,

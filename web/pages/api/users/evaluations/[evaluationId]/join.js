@@ -26,7 +26,7 @@ import {
   CodeQuestionType,
 } from '@prisma/client'
 import { isJoinable } from '@/code/phase'
-import { questionIncludeClause } from '@/code/questions'
+import { questionSelectClause } from '@/code/questions'
 import { grading } from '@/code/grading/engine'
 import { getUser } from '@/code/auth/auth'
 
@@ -99,7 +99,7 @@ const post = async (req, res, prisma) => {
       },
       include: {
         question: {
-          include: questionIncludeClause({
+          select: questionSelectClause({
             includeTypeSpecific: true,
             includeOfficialAnswers: true,
           }),

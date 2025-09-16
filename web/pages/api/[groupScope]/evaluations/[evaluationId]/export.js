@@ -24,7 +24,7 @@ import {
 import puppeteer from 'puppeteer'
 import Handlebars from 'handlebars'
 
-import { IncludeStrategy, questionIncludeClause } from '@/code/questions'
+import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 import muiTheme from '@/code/evaluation/muiTheme.json'
 import {
   calculateObtainedPoints,
@@ -187,9 +187,13 @@ const get = async (req, res, prisma) => {
       evaluationId,
       question: { group: { scope: groupScope } },
     },
-    include: {
+    select: {
+      title: true, // Custom title from EvaluationToQuestion
+      order: true,
+      points: true,
+      questionId: true,
       question: {
-        include: questionIncludeClause({
+        select: questionSelectClause({
           includeTypeSpecific: true,
           includeOfficialAnswers: true,
           // When purged, we don't need user answers/gradings for export
@@ -212,15 +216,15 @@ const get = async (req, res, prisma) => {
           const studentAnswer = q.question.studentAnswer.find(
             (sa) => sa.user.email === student.user.email,
           )
-          const evalToQuestion = evaluation.evaluationToQuestions.find(
-            (etq) => etq.questionId === q.question.id,
-          )
 
           out.questions.push({
             student: student.user,
-            question: q.question,
-            order: evalToQuestion.order + 1,
-            points: evalToQuestion.points,
+            question: {
+              ...q.question,
+              title: q.title, // Use custom title from EvaluationToQuestion
+            },
+            order: q.order + 1,
+            points: q.points,
             studentAnswer,
             studentGrading: studentAnswer?.studentGrading,
           })
@@ -231,13 +235,13 @@ const get = async (req, res, prisma) => {
 
   // Prepare questions for the solutions section
   const questionsWithSolutions = questions.map((q) => {
-    const evalToQuestion = evaluation.evaluationToQuestions.find(
-      (etq) => etq.questionId === q.question.id,
-    )
     return {
-      question: q.question,
-      order: evalToQuestion.order + 1,
-      points: evalToQuestion.points,
+      question: {
+        ...q.question,
+        title: q.title, // Use custom title from EvaluationToQuestion
+      },
+      order: q.order + 1,
+      points: q.points,
     }
   })
 

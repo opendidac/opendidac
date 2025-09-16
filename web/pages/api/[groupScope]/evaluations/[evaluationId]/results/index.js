@@ -20,7 +20,7 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { IncludeStrategy, questionIncludeClause } from '@/code/questions'
+import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 import { withPurgeGuard } from '@/middleware/withPurged'
 
 const get = async (req, res, prisma) => {
@@ -33,7 +33,7 @@ const get = async (req, res, prisma) => {
       evaluationToQuestions: {
         select: {
           question: {
-            select: questionIncludeClause({
+            select: questionSelectClause({
               includeTypeSpecific: true,
               includeOfficialAnswers: true,
               includeUserAnswers: {
