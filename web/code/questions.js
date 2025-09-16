@@ -29,24 +29,22 @@ export const ClauseType = {
   INCLUDE: 'include',
   SELECT: 'select',
 }
-
+/*
+CAUTION: questionIncludeClause is a heavily used function
+any change to it should be carefully considered
+Make sure to test all the use cases
+*/
 const defaultQuestionIncludeClause = {
   includeTypeSpecific: true,
   includeOfficialAnswers: false,
   includeUserAnswers: undefined, // { strategy: IncludeStrategy.USER_SPECIFIC, userEmail: <email> } or { strategy: IncludeStrategy.ALL }
   includeGradings: false,
   includeTags: true,
-  clauseType: ClauseType.INCLUDE,
+  clauseType: ClauseType.INCLUDE, // default keeps previous behavior
 }
 
-/*
-CAUTION: questionIncludeClause is a heavily used function
-any change to it should be carefully considered
-Make sure to test all the use cases
-*/
 export const questionIncludeClause = (questionIncludeOptions) => {
-  // include question related entities based on the specified context
-
+  // include/select question related entities based on the specified context
   const options = { ...defaultQuestionIncludeClause, ...questionIncludeOptions }
 
   const {
@@ -58,21 +56,21 @@ export const questionIncludeClause = (questionIncludeOptions) => {
     clauseType,
   } = options
 
-  // Base question fields
-  const baseFields = {
-    ...(clauseType === ClauseType.SELECT
+  // Base fields only when SELECT-ing at the root
+  const baseQuestionFields =
+    clauseType === ClauseType.SELECT
       ? {
           id: true,
           type: true,
           content: true,
-          // The original title should never be communicated to the student
-          ...(includeUserAnswers &&
-          includeUserAnswers?.strategy === IncludeStrategy.ALL
+          createdAt: true,
+          updatedAt: true,
+          // (policy) never show original title to students unless
+          ...(includeUserAnswers?.strategy === IncludeStrategy.ALL
             ? { title: true }
             : {}),
         }
-      : {}),
-  }
+      : {}
 
   const typeSpecific = includeTypeSpecific
     ? {
@@ -87,9 +85,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
                 ...(includeOfficialAnswers
                   ? {
                       solutionFiles: {
-                        include: {
-                          file: true,
-                        },
+                        include: { file: true },
                         orderBy: { order: 'asc' },
                       },
                     }
@@ -98,20 +94,14 @@ export const questionIncludeClause = (questionIncludeOptions) => {
                   ...(!includeOfficialAnswers
                     ? {
                         where: {
-                          studentPermission: {
-                            not: StudentPermission.HIDDEN,
-                          },
+                          studentPermission: { not: StudentPermission.HIDDEN },
                         },
                       }
                     : {}),
-                  include: {
-                    file: true,
-                  },
+                  include: { file: true },
                   orderBy: { order: 'asc' },
                 },
-                testCases: {
-                  orderBy: { index: 'asc' },
-                },
+                testCases: { orderBy: { index: 'asc' } },
               },
             },
             codeReading: {
@@ -131,9 +121,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
                     snippet: true,
                     ...(includeOfficialAnswers ? { output: true } : {}),
                   },
-                  orderBy: {
-                    order: 'asc',
-                  },
+                  orderBy: { order: 'asc' },
                 },
               },
             },
@@ -141,11 +129,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
         },
         multipleChoice: {
           select: {
-            ...(includeOfficialAnswers
-              ? {
-                  gradingPolicy: true,
-                }
-              : {}),
+            ...(includeOfficialAnswers ? { gradingPolicy: true } : {}),
             activateStudentComment: true,
             studentCommentLabel: true,
             activateSelectionLimit: true,
@@ -218,20 +202,12 @@ export const questionIncludeClause = (questionIncludeOptions) => {
                           lintRules: true,
                           studentPermission: true,
                           testQuery: true,
-                          queryOutputTests: {
-                            select: {
-                              test: true,
-                            },
-                          },
+                          queryOutputTests: { select: { test: true } },
                         },
                       },
                       output: true,
                     },
-                    orderBy: {
-                      query: {
-                        order: 'asc',
-                      },
-                    },
+                    orderBy: { query: { order: 'asc' } },
                   },
                 }
               : {}),
@@ -240,168 +216,20 @@ export const questionIncludeClause = (questionIncludeOptions) => {
       }
     : {}
 
-  // If we need to exclude title, we need to use select instead of include
-  if (!includeOfficialAnswers) {
-    let select = {
-      ...baseFields,
-      ...typeSpecific,
-    }
-
-    if (includeTags) {
-      select.questionToTag = {
-        include: {
-          tag: true,
-        },
-      }
-    }
-
-    if (includeUserAnswers) {
-      // no "where" for IncludeStrategy.ALL
-      let saWhere =
-        includeUserAnswers.strategy === IncludeStrategy.USER_SPECIFIC
-          ? {
-              userEmail: includeUserAnswers.userEmail,
-            }
-          : undefined
-
-      select.studentAnswer = {
-        where: saWhere,
-        select: {
-          status: true,
-          user: true,
-          code: {
-            select: {
-              codeWriting: {
-                select: {
-                  files: {
-                    where: {
-                      studentPermission: {
-                        not: StudentPermission.HIDDEN,
-                      },
-                    },
-                    include: {
-                      file: {
-                        select: {
-                          updatedAt: true,
-                          path: true,
-                          content: true,
-                          ...(includeGradings
-                            ? { id: true, annotation: true }
-                            : {}),
-                        },
-                      },
-                    },
-                    orderBy: { order: 'asc' },
-                  },
-                  testCaseResults: true,
-                  allTestCasesPassed: true,
-                },
-              },
-              codeReading: {
-                select: {
-                  outputs: {
-                    select: {
-                      output: true,
-                      status: true,
-                      codeReadingSnippet: {
-                        select: {
-                          id: true,
-                          snippet: true,
-                          order: true,
-                        },
-                      },
-                    },
-                    orderBy: {
-                      codeReadingSnippet: {
-                        order: 'asc',
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          database: {
-            select: {
-              queries: {
-                include: {
-                  query: true,
-                  studentOutput: true,
-                },
-                orderBy: {
-                  query: { order: 'asc' },
-                },
-              },
-            },
-          },
-          multipleChoice: {
-            select: {
-              comment: true,
-              options: {
-                select: { id: true, order: true, text: true },
-                orderBy: [{ order: 'asc' }, { id: 'asc' }],
-              },
-            },
-          },
-          essay: { select: { content: true } },
-          exactMatch: {
-            select: {
-              fields: {
-                select: {
-                  fieldId: true,
-                  ...(includeOfficialAnswers
-                    ? {
-                        exactMatchField: {
-                          select: {
-                            matchRegex: true,
-                          },
-                        },
-                      }
-                    : {}),
-                  value: true,
-                },
-              },
-            },
-          },
-          trueFalse: true,
-          web: true,
-        },
-      }
-
-      // include gradings
-      if (includeGradings) {
-        select.studentAnswer.select.studentGrading = {
-          include: {
-            signedBy: true,
-          },
-        }
-      }
-    }
-
-    return select
-  }
-
-  // Original include logic for when includeOfficialAnswers is true
-  let include = typeSpecific
+  // === Build relation part once (works for both SELECT and INCLUDE roots) ===
+  let relations = { ...typeSpecific }
 
   if (includeTags) {
-    include.questionToTag = {
-      include: {
-        tag: true,
-      },
-    }
+    relations.questionToTag = { include: { tag: true } }
   }
 
   if (includeUserAnswers) {
-    // no "where" for IncludeStrategy.ALL
-    let saWhere =
+    const saWhere =
       includeUserAnswers.strategy === IncludeStrategy.USER_SPECIFIC
-        ? {
-            userEmail: includeUserAnswers.userEmail,
-          }
+        ? { userEmail: includeUserAnswers.userEmail }
         : undefined
 
-    include.studentAnswer = {
+    relations.studentAnswer = {
       where: saWhere,
       select: {
         status: true,
@@ -412,9 +240,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
               select: {
                 files: {
                   where: {
-                    studentPermission: {
-                      not: StudentPermission.HIDDEN,
-                    },
+                    studentPermission: { not: StudentPermission.HIDDEN },
                   },
                   include: {
                     file: {
@@ -441,18 +267,10 @@ export const questionIncludeClause = (questionIncludeOptions) => {
                     output: true,
                     status: true,
                     codeReadingSnippet: {
-                      select: {
-                        id: true,
-                        snippet: true,
-                        order: true,
-                      },
+                      select: { id: true, snippet: true, order: true },
                     },
                   },
-                  orderBy: {
-                    codeReadingSnippet: {
-                      order: 'asc',
-                    },
-                  },
+                  orderBy: { codeReadingSnippet: { order: 'asc' } },
                 },
               },
             },
@@ -461,13 +279,8 @@ export const questionIncludeClause = (questionIncludeOptions) => {
         database: {
           select: {
             queries: {
-              include: {
-                query: true,
-                studentOutput: true,
-              },
-              orderBy: {
-                query: { order: 'asc' },
-              },
+              include: { query: true, studentOutput: true },
+              orderBy: { query: { order: 'asc' } },
             },
           },
         },
@@ -487,13 +300,7 @@ export const questionIncludeClause = (questionIncludeOptions) => {
               select: {
                 fieldId: true,
                 ...(includeOfficialAnswers
-                  ? {
-                      exactMatchField: {
-                        select: {
-                          matchRegex: true,
-                        },
-                      },
-                    }
+                  ? { exactMatchField: { select: { matchRegex: true } } }
                   : {}),
                 value: true,
               },
@@ -505,17 +312,23 @@ export const questionIncludeClause = (questionIncludeOptions) => {
       },
     }
 
-    // include gradings
     if (includeGradings) {
-      include.studentAnswer.select.studentGrading = {
-        include: {
-          signedBy: true,
-        },
+      relations.studentAnswer.select.studentGrading = {
+        include: { signedBy: true },
       }
     }
   }
 
-  return include
+  // === Final shape depends ONLY on clauseType ===
+  if (clauseType === ClauseType.SELECT) {
+    return {
+      ...baseQuestionFields, // root scalars only valid in SELECT
+      ...relations, // relations (can have nested select/include)
+    }
+  }
+
+  // INCLUDE root: return relations only; root scalars are implicit
+  return relations
 }
 
 /*

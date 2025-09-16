@@ -54,7 +54,7 @@ const stripEmpty = (x) => {
  */
 export const buildExportPrismaQuery = (questionId) => ({
   where: { id: questionId },
-  select: questionIncludeClause({
+  include: questionIncludeClause({
     includeTypeSpecific: true,
     includeOfficialAnswers: true,
     includeUserAnswers: undefined,

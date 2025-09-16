@@ -25,7 +25,11 @@ import { getUser } from '@/code/auth/auth'
 import puppeteer from 'puppeteer'
 import Handlebars from 'handlebars'
 
-import { IncludeStrategy, questionIncludeClause } from '@/code/questions'
+import {
+  IncludeStrategy,
+  questionIncludeClause,
+  ClauseType,
+} from '@/code/questions'
 import muiTheme from '@/code/evaluation/muiTheme.json'
 import {
   countDatabasePassedTests,
@@ -213,6 +217,7 @@ const get = async (req, res, prisma) => {
                     userEmail: currentUserEmail,
                   },
                   includeGradings: true,
+                  clauseType: ClauseType.SELECT,
                 }),
               },
             },
