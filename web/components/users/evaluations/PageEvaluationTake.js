@@ -15,7 +15,7 @@
  */
 import { useEffect } from 'react'
 import { Role } from '@prisma/client'
-import { Box } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 
 import { ResizeObserverProvider } from '@/context/ResizeObserverContext'
 import Authorization from '@/components/security/Authorization'
@@ -93,6 +93,11 @@ const PageEvaluationTake = () => {
               leftPanel={
                 <>
                   <QuestionView
+                    title={
+                      <Typography variant="h6">
+                        {activeQuestion?.title}
+                      </Typography>
+                    }
                     order={activeQuestion?.order}
                     points={activeQuestion?.points}
                     question={activeQuestion?.question}

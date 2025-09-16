@@ -246,7 +246,7 @@ const StudentProgressGrid = ({
     () =>
       progress.map((q) => ({
         label: `Q${q.order + 1}`, // Assuming questions order starts at 0
-        tooltip: q.question.title,
+        tooltip: q.title || q.question.title,
         column: { width: 40, minWidth: 40 },
         renderCell: (row) => (
           <FilledBullet

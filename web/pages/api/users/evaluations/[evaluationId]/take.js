@@ -66,9 +66,16 @@ const get = withEvaluationPhase(
               accessMode: true, // sensitive!
               accessList: true, // sensitive!
               evaluationToQuestions: {
-                include: {
+                select: {
+                  points: true,
+                  order: true,
+                  title: true, // Custom question title for this evaluation
                   question: {
-                    include: {
+                    select: {
+                      id: true,
+                      type: true,
+                      content: true,
+                      // Exclude title - students should only see the custom title from EvaluationToQuestion
                       studentAnswer: {
                         where: {
                           userEmail: email,

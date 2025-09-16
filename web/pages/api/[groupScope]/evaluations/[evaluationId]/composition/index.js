@@ -91,12 +91,23 @@ const post = async (req, res, prisma) => {
 
       const points = latestPoints ? latestPoints.points : undefined
 
+      // Get the question title to initialize the custom title
+      const question = await prisma.question.findUnique({
+        where: { id: questionId },
+        select: { title: true },
+      })
+
+      if (!question) {
+        throw new Error(`Question with id ${questionId} not found`)
+      }
+
       await prisma.evaluationToQuestion.create({
         data: {
           evaluationId: evaluationId,
           questionId: questionId,
           points: points,
           order: order,
+          title: question.title, // Initialize with original question title
         },
       })
 
@@ -110,7 +121,7 @@ const post = async (req, res, prisma) => {
     },
     include: {
       question: {
-        include: questionIncludeClause({
+        select: questionIncludeClause({
           includeTypeSpecific: true,
           includeOfficialAnswers: false,
         }),
@@ -127,6 +138,15 @@ const put = async (req, res, prisma) => {
   // update the collectionToQuestion
   const { evaluationToQuestion } = req.body
 
+  const updateData = {
+    points: parseFloat(evaluationToQuestion.points),
+  }
+
+  // Include title if provided
+  if (evaluationToQuestion.title !== undefined) {
+    updateData.title = evaluationToQuestion.title
+  }
+
   await prisma.evaluationToQuestion.update({
     where: {
       evaluationId_questionId: {
@@ -134,9 +154,7 @@ const put = async (req, res, prisma) => {
         questionId: evaluationToQuestion.questionId,
       },
     },
-    data: {
-      points: parseFloat(evaluationToQuestion.points),
-    },
+    data: updateData,
   })
 
   res.status(200).json({ message: 'OK' })

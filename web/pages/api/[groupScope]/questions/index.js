@@ -30,6 +30,7 @@ import {
   codeInitialUpdateQuery,
   questionIncludeClause,
   questionTypeSpecific,
+  ClauseType,
 } from '@/code/questions'
 
 import languages from '@/code/languages.json'
@@ -151,8 +152,7 @@ const get = async (req, res, prisma) => {
   res.status(200).json(questions)
 }
 
-const post = async (req, res, prisma) => {
-  // create a new question -> at this point we only know the question type
+export const post = async (req, res, prisma) => {
   const { groupScope } = req.query
   const { type, options } = req.body
   const questionType = QuestionType[type]
@@ -161,100 +161,95 @@ const post = async (req, res, prisma) => {
     res.status(400).json({ message: 'Invalid question type' })
     return
   }
+  if (!groupScope) {
+    res.status(400).json({ message: 'Missing groupScope' })
+    return
+  }
 
-  let createdQuestion = undefined
-
-  await prisma.$transaction(async (prisma) => {
-    createdQuestion = await prisma.question.create({
-      data: {
-        type: questionType,
-        title: '',
-        content: '',
-        [questionType]: {
-          create: questionTypeSpecific(questionType, null),
-        },
-        group: {
-          connect: {
-            scope: groupScope,
-          },
-        },
-      },
-      include: questionIncludeClause(true, true),
-    })
-
-    switch (questionType) {
-      /* Code Question starting environment */
-      case QuestionType.code: {
-        const language = options?.language
-        const codeQuestionType = options?.codeQuestionType
-        const defaultCode = defaultCodeBasedOnLanguageAndType(
-          language,
-          codeQuestionType,
-          options,
-        )
-
-        await prisma.code.update(
-          codeInitialUpdateQuery(
-            createdQuestion.id,
-            defaultCode,
-            codeQuestionType,
-          ),
-        )
-        createdQuestion = await prisma.question.findUnique({
-          where: {
-            id: createdQuestion.id,
-          },
-          include: questionIncludeClause(true, true),
-        })
-        break
-      }
-      /* Database Question starting environment */
-      case QuestionType.database: {
-        // First update the database with the image and create queries
-        await prisma.database.update({
-          where: {
-            questionId: createdQuestion.id,
-          },
-          data: {
-            image: databaseTemplate.image,
-            databaseQueries: {
-              create: databaseTemplate.queries.map((query) => ({
-                order: query.order,
-                title: query.title,
-                description: query.description,
-                content: query.content,
-                lintActive: query.lintActive,
-                testQuery: query.testQuery,
-                studentPermission: query.studentPermission,
-                databaseToSolutionQuery: {
-                  create: {
-                    database: {
-                      connect: {
-                        questionId: createdQuestion.id,
-                      },
-                    },
-                  },
-                },
-              })),
-            },
-          },
-        })
-
-        createdQuestion = await prisma.question.findUnique({
-          where: {
-            id: createdQuestion.id,
-          },
-          include: questionIncludeClause(true, true),
-        })
-        break
-      }
-      default:
-        // No additional initialization needed for other question types
-        break
-    }
+  const fullSelect = questionIncludeClause({
+    includeTypeSpecific: true,
+    includeOfficialAnswers: true,
+    clauseType: ClauseType.SELECT,
   })
 
-  res.status(200).json(createdQuestion)
+  try {
+    const createdQuestion = await prisma.$transaction(async (tx) => {
+      // 1) Create with the minimum we need for follow-up updates
+      const created = await tx.question.create({
+        data: {
+          type: questionType,
+          title: '',
+          content: '',
+          [questionType]: {
+            create: questionTypeSpecific(questionType, null),
+          },
+          group: { connect: { scope: groupScope } },
+        },
+        select: { id: true }, // keep payload tiny; we'll fetch once at the end
+      })
+
+      // 2) Type-specific initialization
+      switch (questionType) {
+        case QuestionType.code: {
+          const language = options?.language
+          const codeQuestionType = options?.codeQuestionType
+          const defaultCode = defaultCodeBasedOnLanguageAndType(
+            language,
+            codeQuestionType,
+            options,
+          )
+          await tx.code.update(
+            codeInitialUpdateQuery(created.id, defaultCode, codeQuestionType),
+          )
+          break
+        }
+
+        case QuestionType.database: {
+          await tx.database.update({
+            where: { questionId: created.id },
+            data: {
+              image: databaseTemplate.image,
+              databaseQueries: {
+                create: databaseTemplate.queries.map((q) => ({
+                  order: q.order,
+                  title: q.title,
+                  description: q.description,
+                  content: q.content,
+                  lintActive: q.lintActive,
+                  testQuery: q.testQuery,
+                  studentPermission: q.studentPermission,
+                  databaseToSolutionQuery: {
+                    create: {
+                      database: { connect: { questionId: created.id } },
+                    },
+                  },
+                })),
+              },
+            },
+          })
+          break
+        }
+
+        default:
+          // No additional initialization needed
+          break
+      }
+
+      // 3) Single, final fetch with full SELECT
+      return tx.question.findUnique({
+        where: { id: created.id },
+        select: fullSelect,
+      })
+    })
+
+    console.log('fullSelect: ', fullSelect)
+    console.log('createdQuestion: ', createdQuestion)
+
+    res.status(200).json(createdQuestion)
+  } catch (err) {
+    console.error('POST /question error:', err)
+    res.status(500).json({ message: 'Failed to create question' })
+  }
 }
 
 const defaultCodeBasedOnLanguageAndType = (

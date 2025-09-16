@@ -101,7 +101,7 @@ const PageConsult = () => {
         id: jstq.question.id,
         label: `Q${jstq.order + 1}`,
         fillable: true,
-        tooltip: `${jstq.question.title} - ${jstq.points} points`,
+        tooltip: `${jstq.title} - ${jstq.points} points`,
         state: getFilledStatus(jstq.question.studentAnswer[0].status),
       })),
     [evaluationToQuestions],
@@ -180,6 +180,11 @@ const PageConsult = () => {
                     leftPanel={
                       selected && (
                         <QuestionView
+                          title={
+                            <Typography variant="h6">
+                              {selected.title}
+                            </Typography>
+                          }
                           order={selected.order}
                           points={selected.points}
                           question={selected.question}

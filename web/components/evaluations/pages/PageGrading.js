@@ -387,6 +387,20 @@ const PageGrading = () => {
                   {evaluationToQuestion && (
                     <QuestionView
                       order={evaluationToQuestion.order}
+                      title={
+                        <>
+                          <Typography variant="h6">
+                            {evaluationToQuestion.title}
+                          </Typography>
+                          {evaluationToQuestion.question.title &&
+                            evaluationToQuestion.title !==
+                              evaluationToQuestion.question.title && (
+                              <Typography variant="caption">
+                                ({evaluationToQuestion.question.title})
+                              </Typography>
+                            )}
+                        </>
+                      }
                       points={evaluationToQuestion.points}
                       question={evaluationToQuestion.question}
                       totalPages={evaluationToQuestions.length}

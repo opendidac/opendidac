@@ -157,6 +157,7 @@ const post = async (req, res, prisma) => {
                 },
                 points: true,
                 order: true,
+                title: true,
               },
               orderBy: {
                 order: 'asc',
@@ -186,6 +187,7 @@ const post = async (req, res, prisma) => {
             data: {
               points: templateToQuestion.points,
               order: templateToQuestion.order,
+              title: templateToQuestion.title, // Copy custom title from template
               evaluation: {
                 connect: {
                   id: evaluation.id,
