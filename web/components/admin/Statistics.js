@@ -364,6 +364,30 @@ const Statistics = () => {
           hideCancel={true}
           onClose={handleCloseEvaluationsDialog}
         />
+
+        {/* Questions Dialog */}
+        <DialogFeedback
+          open={questionsDialogOpen}
+          title={`Questions by Type - ${selectedYear ? selectedYear.replace('_', '-') : ''}`}
+          content={
+            <QuestionTypeDisplay data={statsData?.questions_by_type} />
+          }
+          width="lg"
+          hideCancel={true}
+          onClose={handleCloseQuestionsDialog}
+        />
+
+        {/* Student Answers Dialog */}
+        <DialogFeedback
+          open={studentAnswersDialogOpen}
+          title={`Student Answers by Type - ${selectedYear ? selectedYear.replace('_', '-') : ''}`}
+          content={
+            <StudentAnswersDisplay data={statsData?.student_answers_by_type} />
+          }
+          width="lg"
+          hideCancel={true}
+          onClose={handleCloseStudentAnswersDialog}
+        />
       </Stack>
     </Box>
   )
