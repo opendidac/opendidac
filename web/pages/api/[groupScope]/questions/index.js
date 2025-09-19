@@ -240,9 +240,6 @@ export const post = async (req, res, prisma) => {
       })
     })
 
-    console.log('fullSelect: ', fullSelect)
-    console.log('createdQuestion: ', createdQuestion)
-
     res.status(200).json(createdQuestion)
   } catch (err) {
     console.error('POST /question error:', err)

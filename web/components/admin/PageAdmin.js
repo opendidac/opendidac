@@ -37,6 +37,7 @@ import { useSession } from 'next-auth/react'
 import Users from './Users'
 import Groups from './Groups'
 import Archiving from './Archiving'
+import Statistics from './Statistics'
 
 // Constants for tab configuration
 const ADMIN_TABS = [
@@ -47,6 +48,12 @@ const ADMIN_TABS = [
     label: 'Archiving',
     component: Archiving,
     route: '/admin/archiving',
+  },
+  {
+    key: 'statistics',
+    label: 'Statistics',
+    component: Statistics,
+    route: '/admin/statistics',
   },
 ]
 
