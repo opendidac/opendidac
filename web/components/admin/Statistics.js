@@ -369,9 +369,7 @@ const Statistics = () => {
         <DialogFeedback
           open={questionsDialogOpen}
           title={`Questions by Type - ${selectedYear ? selectedYear.replace('_', '-') : ''}`}
-          content={
-            <QuestionTypeDisplay data={statsData?.questions_by_type} />
-          }
+          content={<QuestionTypeDisplay data={statsData?.questions_by_type} />}
           width="lg"
           hideCancel={true}
           onClose={handleCloseQuestionsDialog}
