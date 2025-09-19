@@ -13,34 +13,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Box, Typography, Stack } from '@mui/material'
+import { Box, Card, CardContent, Typography, Stack } from '@mui/material'
+import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 
 const QuestionTypeDisplay = ({ data }) => {
   if (!data || Object.keys(data).length === 0) {
     return (
-      <Typography color="textSecondary">
-        No data available for the selected academic year
-      </Typography>
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Questions by Type
+          </Typography>
+          <Typography color="textSecondary">
+            No data available for the selected academic year
+          </Typography>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <Stack spacing={1}>
-      {Object.entries(data).map(([type, count]) => (
-        <Box
-          key={type}
-          sx={{ display: 'flex', justifyContent: 'space-between' }}
-        >
-          <Typography variant="body1">
-            {type.charAt(0).toUpperCase() +
-              type.slice(1).replace(/([A-Z])/g, ' $1')}
+    <Card>
+      <CardContent>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Typography variant="h6" gutterBottom>
+            Questions by Type
           </Typography>
-          <Typography variant="body1" fontWeight="bold">
-            {count}
-          </Typography>
+          <UserHelpPopper mode="info" size="small">
+            <Box>
+              <Typography variant="body2" paragraph>
+                Shows the distribution of questions created during the academic
+                year by question type. Each question type represents a different
+                assessment method:
+              </Typography>
+            </Box>
+          </UserHelpPopper>
         </Box>
-      ))}
-    </Stack>
+        <Stack spacing={1}>
+          {Object.entries(data).map(([type, count]) => (
+            <Box
+              key={type}
+              sx={{ display: 'flex', justifyContent: 'space-between' }}
+            >
+              <Typography variant="body1">
+                {type.charAt(0).toUpperCase() +
+                  type.slice(1).replace(/([A-Z])/g, ' $1')}
+              </Typography>
+              <Typography variant="body1" fontWeight="bold">
+                {count}
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
+      </CardContent>
+    </Card>
   )
 }
 
