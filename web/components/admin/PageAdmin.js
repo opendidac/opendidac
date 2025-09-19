@@ -54,7 +54,7 @@ const ADMIN_TABS = [
     label: 'Statistics',
     component: Statistics,
     route: '/admin/statistics',
-  }
+  },
 ]
 
 // User role utilities - simplified to work directly with session
