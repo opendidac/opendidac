@@ -44,17 +44,17 @@ const ADMIN_TABS = [
   { key: 'users', label: 'Users', component: Users, route: '/admin/users' },
   { key: 'groups', label: 'Groups', component: Groups, route: '/admin/groups' },
   {
-    key: 'statistics',
-    label: 'Statistics',
-    component: Statistics,
-    route: '/admin/statistics',
-  },
-  {
     key: 'archiving',
     label: 'Archiving',
     component: Archiving,
     route: '/admin/archiving',
   },
+  {
+    key: 'statistics',
+    label: 'Statistics',
+    component: Statistics,
+    route: '/admin/statistics',
+  }
 ]
 
 // User role utilities - simplified to work directly with session
