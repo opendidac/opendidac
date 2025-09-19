@@ -41,7 +41,8 @@ const Statistics = () => {
   const [studentsDialogOpen, setStudentsDialogOpen] = useState(false)
   const [evaluationsDialogOpen, setEvaluationsDialogOpen] = useState(false)
   const [questionsDialogOpen, setQuestionsDialogOpen] = useState(false)
-  const [studentAnswersDialogOpen, setStudentAnswersDialogOpen] = useState(false)
+  const [studentAnswersDialogOpen, setStudentAnswersDialogOpen] =
+    useState(false)
 
   // Handler functions
   const handleViewProfessors = () => {
@@ -306,7 +307,6 @@ const Statistics = () => {
               </Grid>
             </Grid>
 
-
             {/* Excluded Groups */}
             {statsData.test_groups_excluded &&
               statsData.test_groups_excluded.length > 0 && (
@@ -369,9 +369,7 @@ const Statistics = () => {
         <DialogFeedback
           open={questionsDialogOpen}
           title={`Questions by Type - ${selectedYear ? selectedYear.replace('_', '-') : ''}`}
-          content={
-            <QuestionTypeDisplay data={statsData?.questions_by_type} />
-          }
+          content={<QuestionTypeDisplay data={statsData?.questions_by_type} />}
           width="lg"
           hideCancel={true}
           onClose={handleCloseQuestionsDialog}
