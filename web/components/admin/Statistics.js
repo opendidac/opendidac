@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { useState, useEffect } from 'react'
-import { Box, Typography, Grid, Alert, Stack, Divider } from '@mui/material'
+import { Box, Typography, Grid, Alert, Stack } from '@mui/material'
 import useSWR from 'swr'
 import { fetcher } from '@/code/utils'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
@@ -40,6 +40,9 @@ const Statistics = () => {
   const [professorsDialogOpen, setProfessorsDialogOpen] = useState(false)
   const [studentsDialogOpen, setStudentsDialogOpen] = useState(false)
   const [evaluationsDialogOpen, setEvaluationsDialogOpen] = useState(false)
+  const [questionsDialogOpen, setQuestionsDialogOpen] = useState(false)
+  const [studentAnswersDialogOpen, setStudentAnswersDialogOpen] =
+    useState(false)
 
   // Handler functions
   const handleViewProfessors = () => {
@@ -64,6 +67,22 @@ const Statistics = () => {
 
   const handleCloseEvaluationsDialog = () => {
     setEvaluationsDialogOpen(false)
+  }
+
+  const handleViewQuestions = () => {
+    setQuestionsDialogOpen(true)
+  }
+
+  const handleCloseQuestionsDialog = () => {
+    setQuestionsDialogOpen(false)
+  }
+
+  const handleViewStudentAnswers = () => {
+    setStudentAnswersDialogOpen(true)
+  }
+
+  const handleCloseStudentAnswersDialog = () => {
+    setStudentAnswersDialogOpen(false)
   }
 
   // Fetch available academic years
@@ -242,6 +261,8 @@ const Statistics = () => {
                       </Typography>
                     </>
                   }
+                  showViewButton={statsData.questions_total > 0}
+                  onView={handleViewQuestions}
                 />
               </Grid>
             </Grid>
@@ -263,6 +284,8 @@ const Statistics = () => {
                       </Typography>
                     </>
                   }
+                  showViewButton={statsData.student_answers_submitted > 0}
+                  onView={handleViewStudentAnswers}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
@@ -280,20 +303,6 @@ const Statistics = () => {
                       </Typography>
                     </>
                   }
-                />
-              </Grid>
-            </Grid>
-
-            <Divider />
-
-            {/* Data Displays */}
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <QuestionTypeDisplay data={statsData.questions_by_type} />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <StudentAnswersDisplay
-                  data={statsData.student_answers_by_type}
                 />
               </Grid>
             </Grid>
@@ -354,6 +363,28 @@ const Statistics = () => {
           width="lg"
           hideCancel={true}
           onClose={handleCloseEvaluationsDialog}
+        />
+
+        {/* Questions Dialog */}
+        <DialogFeedback
+          open={questionsDialogOpen}
+          title={`Questions by Type - ${selectedYear ? selectedYear.replace('_', '-') : ''}`}
+          content={<QuestionTypeDisplay data={statsData?.questions_by_type} />}
+          width="lg"
+          hideCancel={true}
+          onClose={handleCloseQuestionsDialog}
+        />
+
+        {/* Student Answers Dialog */}
+        <DialogFeedback
+          open={studentAnswersDialogOpen}
+          title={`Student Answers by Type - ${selectedYear ? selectedYear.replace('_', '-') : ''}`}
+          content={
+            <StudentAnswersDisplay data={statsData?.student_answers_by_type} />
+          }
+          width="lg"
+          hideCancel={true}
+          onClose={handleCloseStudentAnswersDialog}
         />
       </Stack>
     </Box>
