@@ -16,6 +16,7 @@
 import LockPersonIcon from '@mui/icons-material/LockPerson'
 import { signIn } from 'next-auth/react'
 import { Box, Button, Typography } from '@mui/material'
+import Link from 'next/link'
 
 const LoginScreen = ({ message }) => {
   return (
@@ -41,6 +42,16 @@ const LoginScreen = ({ message }) => {
       >
         Sign In
       </Button>
+      <Typography
+        variant="caption"
+        color="textSecondary"
+        sx={{ mt: 2, maxWidth: '400px', textAlign: 'center' }}
+      >
+        By signing in, you agree to our{' '}
+        <Link href="/terms" passHref legacyBehavior>
+          Terms of Service and Privacy Policy
+        </Link>.
+      </Typography>
     </Box>
   )
 }

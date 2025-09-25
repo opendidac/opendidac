@@ -36,7 +36,10 @@ inputs:
     required: true
   SSL_PRIVKEY:
     description: 'SSL Privkey'
-    required: true    
+    required: true
+  TERMS_OF_SERVICE:
+    description: 'Terms of Service contents'
+    required: false
     
 runs:
   using: 'composite'
@@ -52,6 +55,8 @@ runs:
         cd /home/heiguser/eval
         # It is important to poivide DATABASE_URL in the web/.env file, it is used by prisma.
         echo "DATABASE_URL=postgresql://${{ inputs.POSTGRES_USER }}:${{ inputs.POSTGRES_PASSWORD }}@db:5432/${{ inputs.POSTGRES_DB }}" > web/.env
+        
+        echo "TERMS_OF_SERVICE=${{ inputs.TERMS_OF_SERVICE }}" > web/.env
         
         mkdir -p deploy/db
         echo "POSTGRES_USER=${{ inputs.POSTGRES_USER }}" > deploy/db/.env.db.prod

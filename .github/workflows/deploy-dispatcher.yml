@@ -29,6 +29,7 @@ jobs:
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
           SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
           SSL_PRIVKEY: ${{ secrets.SSL_PRIVKEY }}
+          TERMS_OF_SERVICE: ${{ secrets.TERMS_OF_SERVICE }}
 
   deploy_to_stage:
     runs-on: [self-hosted, stage-runner]
@@ -49,8 +50,8 @@ jobs:
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
           SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
           SSL_PRIVKEY: ${{ secrets.SSL_PRIVKEY }}
-          
-  
+          TERMS_OF_SERVICE: ${{ secrets.TERMS_OF_SERVICE }}
+
   deploy_to_secure:
     runs-on: [self-hosted, secure-runner]
     if: github.event.inputs.target == 'SECURE'
@@ -70,4 +71,4 @@ jobs:
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
           SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
           SSL_PRIVKEY: ${{ secrets.SSL_PRIVKEY }}
-
+          TERMS_OF_SERVICE: ${{ secrets.TERMS_OF_SERVICE }}
