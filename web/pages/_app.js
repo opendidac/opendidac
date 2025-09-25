@@ -94,6 +94,8 @@ export const themeOptions = {
 const theme = createTheme(themeOptions)
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
+  // Require authorization by default, unless explicitly specified otherwise
+  const requireAuth = (Component.requireAuth === undefined) || Component.requireAuth
   return (
     <ThemeProvider theme={theme}>
       <SessionProvider session={session}>
@@ -101,13 +103,17 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         <SnackbarProvider>
           <CssBaseline />
           <Meta />
-          <Authentication>
-            <TagsProvider>
-              <GroupProvider>
-                <Component {...pageProps} />
-              </GroupProvider>
-            </TagsProvider>
-          </Authentication>
+          {requireAuth ? (
+            <Authentication>
+              <TagsProvider>
+                <GroupProvider>
+                  <Component {...pageProps} />
+                </GroupProvider>
+              </TagsProvider>
+            </Authentication>
+          ) : (
+            <Component {...pageProps} />
+          )}
         </SnackbarProvider>
       </SessionProvider>
     </ThemeProvider>
