@@ -15,6 +15,8 @@
  */
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import { useEffect, useState } from 'react'
+import Loading from '@/components/feedback/Loading'
+import { Card, CardContent } from '@mui/material'
 
 const Terms = () => {
   const [terms, setTerms] = useState()
@@ -35,7 +37,13 @@ const Terms = () => {
     }
   })
   return (
-    <MarkdownViewer content={terms} />
+    <Loading loading={terms === undefined}>
+      <Card variant={'elevation'} sx={{ minWidth: 600, maxWidth: 800, margin: 'auto', marginBlock : 4, p : 3 }}>
+        <CardContent>
+          <MarkdownViewer content={terms} />
+        </CardContent>
+      </Card>
+    </Loading>
   )
 }
 
