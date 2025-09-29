@@ -670,7 +670,7 @@ model UserOnEvaluationDeniedAccessAttempt {
   evaluationId String
   attemptedAt  DateTime @default(now())
 
-  evaluation Evaluation @relation(fields: [evaluationId], references: [id])
+  evaluation Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
 
   @@id([userEmail, evaluationId])
 }
