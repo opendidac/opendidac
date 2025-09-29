@@ -45,6 +45,7 @@ const initialFilters = {
   codeLanguages: environments
     .map((language) => language.language)
     .reduce((obj, language) => ({ ...obj, [language]: true }), {}),
+  unused: false,
 }
 
 const applyFilter = async (toApply) => {
@@ -61,6 +62,9 @@ const applyFilter = async (toApply) => {
     )
   }
   query.questionStatus = toApply.questionStatus
+  if (!toApply.unused) {
+    delete query.unused
+  }
   return query
 }
 
@@ -77,6 +81,7 @@ const queryStringToFilter = (queryString) => {
       params.get('questionStatus') || initialFilters.questionStatus,
     questionTypes: { ...initialFilters.questionTypes },
     codeLanguages: { ...initialFilters.codeLanguages },
+    unused: params.get('unused') === 'true' || initialFilters.unused,
   }
 
   if (params.get('questionTypes')) {
@@ -141,14 +146,14 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
   const isFilterApplied = useCallback(() => {
     // Compare each filter field with its initial value
     return (
-      filter.title !== initialFilters.title ||
-      filter.content !== initialFilters.content ||
+      filter.search !== initialFilters.search ||
       JSON.stringify(filter.tags) !== JSON.stringify(initialFilters.tags) ||
       filter.questionStatus !== initialFilters.questionStatus ||
       JSON.stringify(filter.questionTypes) !==
         JSON.stringify(initialFilters.questionTypes) ||
       JSON.stringify(filter.codeLanguages) !==
-        JSON.stringify(initialFilters.codeLanguages)
+        JSON.stringify(initialFilters.codeLanguages) ||
+      filter.unused !== initialFilters.unused
     )
   }, [filter])
 
@@ -189,6 +194,7 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
             value={questionStatus}
             onChange={(e) => setQuestionStatus(e.target.value)}
             aria-label="question status"
+            sx={{ pl: 0.5 }}
           >
             <FormControlLabel
               value={QuestionStatus.ACTIVE}
@@ -210,6 +216,13 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
             />
           </RadioGroup>
         </Stack>
+
+        <CheckboxLabel
+          label="Show only unused questions"
+          checked={filter.unused}
+          onChange={(checked) => updateFilter('unused', checked)}
+          color="info"
+        />
 
         <QuestionTypeSelection filter={filter} updateFilter={updateFilter} />
         <LanguageSelection filter={filter} updateFilter={updateFilter} />
