@@ -21,14 +21,7 @@ import { withPrisma } from '@/middleware/withPrisma'
 import { Role } from '@prisma/client'
 
 // Test group scopes to exclude (exact matches)
-const EXCLUDED_GROUP_SCOPES = [
-  'test-2023',
-  'test-jfavlam',
-  'demo',
-  'test',
-  'test-import',
-  'demo-2025',
-]
+const EXCLUDED_GROUP_SCOPES = ['demo', 'test']
 
 const handler = async (req, res, prisma) => {
   try {
@@ -228,9 +221,12 @@ const handler = async (req, res, prisma) => {
       })
       .sort((a, b) => b.evaluationCount - a.evaluationCount) // Sort by evaluation count (most active first)
 
-    // 3. Total evaluations (excluding test groups)
+    // 3. Evaluations (FINISHED only, excluding test groups). Also fetch group members to filter external participants without N+1 queries
     const evaluations = await prisma.evaluation.findMany({
-      where: commonEvaluationWhere,
+      where: {
+        ...commonEvaluationWhere,
+        phase: 'FINISHED',
+      },
       select: {
         id: true,
         label: true,
@@ -239,6 +235,13 @@ const handler = async (req, res, prisma) => {
         group: {
           select: {
             label: true,
+            members: {
+              select: {
+                user: {
+                  select: { email: true },
+                },
+              },
+            },
           },
         },
         students: {
@@ -252,41 +255,15 @@ const handler = async (req, res, prisma) => {
       },
     })
 
-    // 4. Real evaluations (exclude those before IN_PROGRESS phase and those with only group members)
-    const realEvaluations = []
-
-    for (const evaluation of evaluations) {
-      // Must be in progress or later
-      if (!['IN_PROGRESS', 'GRADING', 'FINISHED'].includes(evaluation.phase)) {
-        evaluation.isReal = false
-        continue
-      }
-
-      // Check if evaluation has external participants (not just group members)
-      const groupMembers = await prisma.userOnGroup.findMany({
-        where: {
-          groupId: evaluation.groupId,
-        },
-        select: {
-          user: {
-            select: {
-              email: true,
-            },
-          },
-        },
-      })
-
-      const groupMemberEmails = groupMembers.map((member) => member.user.email)
-      const hasExternalParticipants = evaluation.students.some(
-        (student) => !groupMemberEmails.includes(student.userEmail),
+    // 4. Real evaluations = FINISHED phase AND with external participants (filter in-memory, no extra DB calls)
+    const realEvaluations = evaluations.filter((evaluation) => {
+      const groupMemberEmails = new Set(
+        (evaluation.group?.members || []).map((member) => member.user.email),
       )
-
-      evaluation.isReal = hasExternalParticipants
-
-      if (hasExternalParticipants) {
-        realEvaluations.push(evaluation)
-      }
-    }
+      return evaluation.students.some(
+        (student) => !groupMemberEmails.has(student.userEmail),
+      )
+    })
 
     // 5. Total questions (excluding test groups and copied questions)
     const questions = await prisma.question.findMany({
@@ -332,16 +309,15 @@ const handler = async (req, res, prisma) => {
       },
     })
 
-    // Format the response
+    // Format the response (only real evaluations are returned)
     const response = {
       academic_year: academicYear,
       professors_active: professors.length,
       professors_details: professorsDetails,
       students_active: students.length,
       students_details: studentsDetails,
-      evaluations_total: evaluations.length,
-      evaluations_real: realEvaluations.length,
-      evaluations_details: evaluations,
+      evaluations_total: realEvaluations.length,
+      evaluations_details: realEvaluations,
       questions_total: questions.length,
       questions_by_type: questionsByType,
       student_answers_submitted: studentAnswers.length,

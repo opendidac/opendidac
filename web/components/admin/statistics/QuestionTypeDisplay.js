@@ -24,9 +24,11 @@ const QuestionTypeDisplay = ({ data }) => {
     )
   }
 
+  const sortedEntries = Object.entries(data).sort((a, b) => b[1] - a[1])
+
   return (
     <Stack spacing={1}>
-      {Object.entries(data).map(([type, count]) => (
+      {sortedEntries.map(([type, count]) => (
         <Box
           key={type}
           sx={{ display: 'flex', justifyContent: 'space-between' }}

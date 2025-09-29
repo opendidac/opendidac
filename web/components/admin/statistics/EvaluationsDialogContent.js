@@ -44,7 +44,7 @@ const EvaluationsDialogContent = ({ evaluations }) => {
       },
       {
         label: 'Phase',
-        tooltip: 'Current evaluation phase',
+        tooltip: 'Evaluation phase',
         column: { width: '15%' },
         renderCell: (evaluation) => (
           <Chip
@@ -59,20 +59,6 @@ const EvaluationsDialogContent = ({ evaluations }) => {
                     ? 'info'
                     : 'default'
             }
-            variant="outlined"
-          />
-        ),
-      },
-      {
-        label: 'Real',
-        tooltip:
-          'Whether this is a real evaluation (has external participants and is in progress or later)',
-        column: { width: '10%' },
-        renderCell: (evaluation) => (
-          <Chip
-            label={evaluation.isReal ? 'Yes' : 'No'}
-            size="small"
-            color={evaluation.isReal ? 'success' : 'default'}
             variant="outlined"
           />
         ),
