@@ -56,6 +56,8 @@ const get = async (req, res, prisma) => {
       accessMode: true,
       accessList: true,
       conditions: true,
+      consultationEnabled: true,
+      showSolutionsWhenFinished: true,
       _count: {
         select: {
           evaluationToQuestions: true,
