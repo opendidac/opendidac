@@ -116,10 +116,6 @@ const PageList = () => {
 
   const [queryString, setQueryString] = useState('')
 
-  useEffect(() => {
-    setQueryString('')
-  }, [groupScope])
-
   const {
     data: questions,
     error,
@@ -137,6 +133,11 @@ const PageList = () => {
   const [selected, setSelected] = useState(undefined)
 
   const [selection, setSelection] = useState([])
+
+  useEffect(() => {
+    setQueryString('')
+    setSelection([])
+  }, [groupScope])
 
   const createQuestion = useCallback(
     async (type, options) => {
