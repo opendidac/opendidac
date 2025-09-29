@@ -214,26 +214,17 @@ const Statistics = () => {
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <StatCard
-                  title="Total Evaluations"
+                  title="Evaluations"
                   value={statsData.evaluations_total}
-                  subtitle={`${statsData.evaluations_real} real evaluations`}
-                  color="info"
                   helpContent={
                     <>
                       <Typography variant="body2" paragraph>
-                        <strong>Total Evaluations:</strong> All evaluations
-                        created during the academic year (excluding test
-                        groups).
-                      </Typography>
-                      <Typography variant="body2" paragraph>
-                        <strong>Real Evaluations:</strong> Evaluations that
-                        reached IN_PROGRESS phase or later AND have external
-                        participants (user that are not part of the
+                        Evaluations that reached FINISHED phase and include
+                        external participants (users not belonging to the
                         evaluation&apos;s group members).
                       </Typography>
                       <Typography variant="body2" paragraph>
-                        This excludes internal-only evaluations and evaluations
-                        that are created but have not progressed.
+                        Internal-only or not-finished evaluations are excluded.
                       </Typography>
                     </>
                   }
