@@ -54,6 +54,7 @@ const get = async (req, res, prisma) => {
     questionTypes,
     codeLanguages,
     questionStatus,
+    unused,
   } = req.query
 
   questionTypes = questionTypes
@@ -65,6 +66,9 @@ const get = async (req, res, prisma) => {
 
   // Set default status to ACTIVE if not provided, otherwise use the provided status
   const status = questionStatus || QuestionStatus.ACTIVE
+
+  // Convert unused to boolean
+  const isUnused = unused === 'true'
 
   let where = {
     where: {
@@ -125,6 +129,16 @@ const get = async (req, res, prisma) => {
   } else if (questionTypes.length > 0) {
     where.where.AND.push({
       type: { in: questionTypes },
+    })
+  }
+
+  // Filter for unused questions: any BANK or COPY question that has NOT produced
+  // an evaluation copy. Copies created manually should be considered unused
+  // until they themselves get used in an evaluation.
+  if (isUnused) {
+    where.where.AND.push({
+      source: { in: [QuestionSource.BANK, QuestionSource.COPY] },
+      copiedQuestions: { none: { source: QuestionSource.EVAL } },
     })
   }
 
