@@ -28,7 +28,7 @@ const StatCard = ({
   <Card>
     <CardContent>
       <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Typography color="textSecondary" gutterBottom variant="h6">
+        <Typography color="textPrimary" gutterBottom variant="h6">
           {title}
         </Typography>
         <Box display="flex" alignItems="center" gap={1}>
@@ -50,7 +50,7 @@ const StatCard = ({
         {value}
       </Typography>
       {subtitle && (
-        <Typography color="textSecondary" variant="body2">
+        <Typography color="textPrimary" variant="body2">
           {subtitle}
         </Typography>
       )}

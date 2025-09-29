@@ -127,7 +127,9 @@ const Statistics = () => {
     return (
       <Box sx={{ p: 2 }}>
         <Alert severity="error">
-          Failed to load available academic years: {yearsError.message}
+          <Typography color="textPrimary">
+            Failed to load available academic years: {yearsError.message}
+          </Typography>
         </Alert>
       </Box>
     )
@@ -138,20 +140,20 @@ const Statistics = () => {
       <Stack spacing={3}>
         {/* Header and Year Selector */}
         <Box>
-          <Typography variant="h4" gutterBottom>
+          <Typography variant="h4" gutterBottom color="textPrimary">
             Usage Statistics
             {selectedYear && (
               <Typography
                 component="span"
                 variant="h6"
-                color="textSecondary"
+                color="textPrimary"
                 sx={{ ml: 2 }}
               >
                 ({selectedYear.replace('_', '-')})
               </Typography>
             )}
           </Typography>
-          <Typography variant="body1" color="textSecondary" paragraph>
+          <Typography variant="body1" color="textPrimary" paragraph>
             View aggregated usage statistics by academic year (September 1st to
             September 1st next year). This includes regular evaluations and
             remediations. Test groups are automatically excluded from the
@@ -178,7 +180,7 @@ const Statistics = () => {
                 <StatCard
                   title="Active Professors"
                   value={statsData.professors_active}
-                  color="primary"
+                  color="success"
                   helpContent={
                     <>
                       <Typography variant="body2" paragraph>
@@ -197,7 +199,7 @@ const Statistics = () => {
                 <StatCard
                   title="Active Students"
                   value={statsData.students_active}
-                  color="secondary"
+                  color="success"
                   helpContent={
                     <>
                       <Typography variant="body2" paragraph>
@@ -214,26 +216,18 @@ const Statistics = () => {
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <StatCard
-                  title="Total Evaluations"
+                  title="Evaluations"
                   value={statsData.evaluations_total}
-                  subtitle={`${statsData.evaluations_real} real evaluations`}
-                  color="info"
+                  color="success"
                   helpContent={
                     <>
                       <Typography variant="body2" paragraph>
-                        <strong>Total Evaluations:</strong> All evaluations
-                        created during the academic year (excluding test
-                        groups).
-                      </Typography>
-                      <Typography variant="body2" paragraph>
-                        <strong>Real Evaluations:</strong> Evaluations that
-                        reached IN_PROGRESS phase or later AND have external
-                        participants (user that are not part of the
+                        Evaluations that reached FINISHED phase and include
+                        external participants (users not belonging to the
                         evaluation&apos;s group members).
                       </Typography>
                       <Typography variant="body2" paragraph>
-                        This excludes internal-only evaluations and evaluations
-                        that are created but have not progressed.
+                        Internal-only or not-finished evaluations are excluded.
                       </Typography>
                     </>
                   }
@@ -273,7 +267,7 @@ const Statistics = () => {
                 <StatCard
                   title="Student Answers"
                   value={statsData.student_answers_submitted}
-                  color="warning"
+                  color="success"
                   helpContent={
                     <>
                       <Typography variant="body2" paragraph>
@@ -292,7 +286,7 @@ const Statistics = () => {
                 <StatCard
                   title="Active Groups"
                   value={statsData.groups_active}
-                  color="secondary"
+                  color="success"
                   helpContent={
                     <>
                       <Typography variant="body2" paragraph>
@@ -320,8 +314,10 @@ const Statistics = () => {
         {/* No Data State */}
         {!isLoading && !statsData && selectedYear && (
           <Alert severity="info">
-            No data available for the selected academic year:{' '}
-            {selectedYear.replace('_', '-')}
+            <Typography color="textPrimary">
+              No data available for the selected academic year:{' '}
+              {selectedYear.replace('_', '-')}
+            </Typography>
           </Alert>
         )}
 
@@ -354,7 +350,7 @@ const Statistics = () => {
         {/* Evaluations Dialog */}
         <DialogFeedback
           open={evaluationsDialogOpen}
-          title={`Total Evaluations - ${selectedYear ? selectedYear.replace('_', '-') : ''}`}
+          title={`Evaluations - ${selectedYear ? selectedYear.replace('_', '-') : ''}`}
           content={
             <EvaluationsDialogContent
               evaluations={statsData?.evaluations_details}
