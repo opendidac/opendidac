@@ -10,6 +10,7 @@ on:
 
 jobs:
   deploy_to_prod:
+    environment: deployment_env
     runs-on: [self-hosted, prod-runner]
     if: github.event.inputs.target == 'PROD'
     steps:
@@ -32,6 +33,7 @@ jobs:
           TERMS_OF_SERVICE: ${{ secrets.TERMS_OF_SERVICE }}
 
   deploy_to_stage:
+    environment: deployment_env
     runs-on: [self-hosted, stage-runner]
     if: github.event.inputs.target == 'STAGE'
     steps:
@@ -53,6 +55,7 @@ jobs:
           TERMS_OF_SERVICE: ${{ secrets.TERMS_OF_SERVICE }}
 
   deploy_to_secure:
+    environment: deployment_env
     runs-on: [self-hosted, secure-runner]
     if: github.event.inputs.target == 'SECURE'
     steps:
