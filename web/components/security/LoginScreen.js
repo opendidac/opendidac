@@ -50,7 +50,8 @@ const LoginScreen = ({ message }) => {
         By signing in, you agree to our{' '}
         <Link href="/terms" passHref legacyBehavior>
           Terms of Service and Privacy Policy
-        </Link>.
+        </Link>
+        .
       </Typography>
     </Box>
   )

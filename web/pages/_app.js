@@ -95,7 +95,8 @@ const theme = createTheme(themeOptions)
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   // Require authorization by default, unless explicitly specified otherwise
-  const requireAuth = (Component.requireAuth === undefined) || Component.requireAuth
+  const requireAuth =
+    Component.requireAuth === undefined || Component.requireAuth
   return (
     <ThemeProvider theme={theme}>
       <SessionProvider session={session}>
