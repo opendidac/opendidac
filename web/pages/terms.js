@@ -22,7 +22,7 @@ const Terms = () => {
   const [terms, setTerms] = useState()
   useEffect(() => {
     if (!terms) {
-      fetch("/api/terms")
+      fetch('/api/terms')
         .then((res) => {
           if (!res.ok) {
             throw new Error('Failed to fetch terms of service')
@@ -32,13 +32,24 @@ const Terms = () => {
         .then((json) => setTerms(json.terms))
         .catch((err) => {
           console.error('Error fetching terms of service:', err)
-          setTerms('## Terms of service\n*No terms of service configured yet.*\n\nPlease contact the administrator.')
+          setTerms(
+            '## Terms of service\n*No terms of service configured yet.*\n\nPlease contact the administrator.',
+          )
         })
     }
   })
   return (
     <Loading loading={terms === undefined}>
-      <Card variant={'elevation'} sx={{ minWidth: 600, maxWidth: 800, margin: 'auto', marginBlock : 4, p : 3 }}>
+      <Card
+        variant={'elevation'}
+        sx={{
+          minWidth: 600,
+          maxWidth: 800,
+          margin: 'auto',
+          marginBlock: 4,
+          p: 3,
+        }}
+      >
         <CardContent>
           <MarkdownViewer content={terms} />
         </CardContent>
