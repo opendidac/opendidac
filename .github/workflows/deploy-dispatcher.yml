@@ -10,6 +10,7 @@ on:
 
 jobs:
   deploy_to_prod:
+    environment: deployment_env
     runs-on: [self-hosted, prod-runner]
     if: github.event.inputs.target == 'PROD'
     steps:
@@ -29,8 +30,10 @@ jobs:
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
           SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
           SSL_PRIVKEY: ${{ secrets.SSL_PRIVKEY }}
+          TERMS_OF_SERVICE: ${{ vars.TERMS_OF_SERVICE }}
 
   deploy_to_stage:
+    environment: deployment_env
     runs-on: [self-hosted, stage-runner]
     if: github.event.inputs.target == 'STAGE'
     steps:
@@ -49,9 +52,10 @@ jobs:
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
           SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
           SSL_PRIVKEY: ${{ secrets.SSL_PRIVKEY }}
-          
-  
+          TERMS_OF_SERVICE: ${{ vars.TERMS_OF_SERVICE }}
+
   deploy_to_secure:
+    environment: deployment_env
     runs-on: [self-hosted, secure-runner]
     if: github.event.inputs.target == 'SECURE'
     steps:
@@ -70,4 +74,4 @@ jobs:
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
           SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
           SSL_PRIVKEY: ${{ secrets.SSL_PRIVKEY }}
-
+          TERMS_OF_SERVICE: ${{ vars.TERMS_OF_SERVICE }}
