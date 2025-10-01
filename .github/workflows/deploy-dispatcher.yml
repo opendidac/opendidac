@@ -30,7 +30,7 @@ jobs:
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
           SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
           SSL_PRIVKEY: ${{ secrets.SSL_PRIVKEY }}
-          TERMS_OF_SERVICE: ${{ secrets.TERMS_OF_SERVICE }}
+          TERMS_OF_SERVICE: ${{ vars.TERMS_OF_SERVICE }}
 
   deploy_to_stage:
     environment: deployment_env
@@ -52,7 +52,7 @@ jobs:
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
           SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
           SSL_PRIVKEY: ${{ secrets.SSL_PRIVKEY }}
-          TERMS_OF_SERVICE: ${{ secrets.TERMS_OF_SERVICE }}
+          TERMS_OF_SERVICE: ${{ vars.TERMS_OF_SERVICE }}
 
   deploy_to_secure:
     environment: deployment_env
@@ -74,4 +74,4 @@ jobs:
           NEXTAUTH_SWITCH_CLIENT_SECRET: ${{ secrets.NEXTAUTH_SWITCH_CLIENT_SECRET }}
           SSL_FULLCHAIN: ${{ secrets.SSL_FULLCHAIN }}
           SSL_PRIVKEY: ${{ secrets.SSL_PRIVKEY }}
-          TERMS_OF_SERVICE: ${{ secrets.TERMS_OF_SERVICE }}
+          TERMS_OF_SERVICE: ${{ vars.TERMS_OF_SERVICE }}
