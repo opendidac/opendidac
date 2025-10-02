@@ -40,6 +40,7 @@ const get = async (req, res, prisma) => {
                 strategy: IncludeStrategy.ALL,
               },
               includeGradings: true,
+              includeProfessorOnlyInfo: true,
             }),
           },
           order: true,

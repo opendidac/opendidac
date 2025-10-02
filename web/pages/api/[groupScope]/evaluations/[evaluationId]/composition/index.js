@@ -29,6 +29,7 @@ const get = async (req, res, prisma) => {
   let questionIncludeOptions = {
     includeTypeSpecific: true,
     includeOfficialAnswers: true,
+    includeProfessorOnlyInfo: true,
   }
 
   const evaluation = await prisma.evaluation.findUnique({
@@ -124,6 +125,7 @@ const post = async (req, res, prisma) => {
         select: questionSelectClause({
           includeTypeSpecific: true,
           includeOfficialAnswers: false,
+          includeProfessorOnlyInfo: true,
         }),
       },
     },

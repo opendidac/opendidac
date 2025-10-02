@@ -45,6 +45,7 @@ const get = async (req, res, prisma) => {
     select: questionSelectClause({
       includeTypeSpecific: true,
       includeOfficialAnswers: true,
+      includeProfessorOnlyInfo: true,
     }),
   })
   res.status(200).json(question)

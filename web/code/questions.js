@@ -31,7 +31,7 @@ any change to it should be carefully considered
 Make sure to test all the use cases
 */
 const defaultQuestionSelectClause = {
-  includeQuestionTitle: true,
+  includeProfessorOnlyInfo: false,
   includeTypeSpecific: true,
   includeOfficialAnswers: false,
   includeUserAnswers: undefined, // { strategy: IncludeStrategy.USER_SPECIFIC, userEmail: <email> } or { strategy: IncludeStrategy.ALL }
@@ -44,7 +44,7 @@ export const questionSelectClause = (questionSelectOptions) => {
   const options = { ...defaultQuestionSelectClause, ...questionSelectOptions }
 
   const {
-    includeQuestionTitle,
+    includeProfessorOnlyInfo,
     includeTypeSpecific,
     includeOfficialAnswers,
     includeUserAnswers,
@@ -60,7 +60,7 @@ export const questionSelectClause = (questionSelectOptions) => {
     content: true,
     createdAt: true,
     updatedAt: true,
-    ...(includeQuestionTitle ? { title: true } : {}),
+    ...(includeProfessorOnlyInfo ? { title: true, scratchpad: true } : {}),
   }
 
   const typeSpecific = includeTypeSpecific
@@ -441,6 +441,7 @@ export const copyQuestion = async (
     title: appendCopyInTitle ? `Copy of ${question.title}` : question.title,
     content: question.content,
     type: question.type,
+    scratchpad: question.scratchpad,
     group: {
       connect: {
         id: question.groupId,
