@@ -43,6 +43,7 @@ const get = async (req, res, prisma) => {
                 userEmail: userEmail,
               },
               includeGradings: true,
+              includeProfessorOnlyInfo: true,
             }),
           },
         },

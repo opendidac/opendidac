@@ -150,6 +150,8 @@ model Question {
   title   String
   content String?
 
+  scratchpad String? // For professors to leave notes for themselves
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   lastUsed DateTime?

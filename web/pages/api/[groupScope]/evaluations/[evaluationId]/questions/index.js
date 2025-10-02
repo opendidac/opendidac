@@ -34,12 +34,7 @@ const get = async (req, res, prisma) => {
   let questionIncludeOptions = {
     includeTypeSpecific: true,
     includeOfficialAnswers: true,
-    select: {
-      id: true,
-      type: true,
-      title: true,
-      content: true,
-    },
+    includeProfessorOnlyInfo: true,
   }
 
   if (withGradings === 'true') {
