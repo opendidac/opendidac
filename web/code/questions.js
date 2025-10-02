@@ -57,6 +57,7 @@ export const questionSelectClause = (questionSelectOptions) => {
   const baseQuestionFields = {
     id: true,
     type: true,
+    status: true,
     content: true,
     createdAt: true,
     updatedAt: true,
