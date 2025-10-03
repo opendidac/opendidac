@@ -126,7 +126,6 @@ const GroupMembersGrid = ({ group, onUpdate, onSelfRemoved }) => {
             </LoadingButton>
           )}
         </Stack>
-
         {group && group.members && group.members.length > 0 && (
           <DataGrid
             header={{
@@ -144,32 +143,34 @@ const GroupMembersGrid = ({ group, onUpdate, onSelfRemoved }) => {
               meta: {
                 key: member.userId,
                 actions: [
-                  <Tooltip
-                    key={`remove-${member.userId}`}
-                    title={
-                      group.createdById === member.userId
-                        ? 'The creator cannot be removed'
-                        : 'Remove from group'
-                    }
-                  >
-                    <IconButton
-                      size="small"
-                      disabled={group.createdById === member.userId}
-                      onClick={async (ev) => {
-                        ev.preventDefault()
-                        ev.stopPropagation()
-                        if (session?.user?.id === member.userId) {
-                          setRemoveTargetId(member.userId)
-                          setConfirmOpen(true)
-                          return
-                        }
-                        await handleRemoveMember(member.userId)
-                      }}
-                      aria-label={`Remove ${member.user?.name || member.user?.email} from group`}
+                  group.createdById !== member.userId && (
+                    <Tooltip
+                      key={`remove-${member.userId}`}
+                      title={
+                        group.createdById === member.userId
+                          ? 'The creator cannot be removed'
+                          : 'Remove from group'
+                      }
                     >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>,
+                      <IconButton
+                        size="small"
+                        disabled={group.createdById === member.userId}
+                        onClick={async (ev) => {
+                          ev.preventDefault()
+                          ev.stopPropagation()
+                          if (session?.user?.id === member.userId) {
+                            setRemoveTargetId(member.userId)
+                            setConfirmOpen(true)
+                            return
+                          }
+                          await handleRemoveMember(member.userId)
+                        }}
+                        aria-label={`Remove ${member.user?.name || member.user?.email} from group`}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  ),
                 ],
               },
             }))}

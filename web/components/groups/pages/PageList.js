@@ -17,7 +17,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { Role } from '@prisma/client'
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/router'
 import Link from 'next/link'
 
 import { Box, Button, Stack, Typography } from '@mui/material'
@@ -33,6 +32,7 @@ import LayoutSplitScreen from '@/components/layout/LayoutSplitScreen'
 import Authorization from '@/components/security/Authorization'
 import Loading from '@/components/feedback/Loading'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
+import DialogFeedback from '@/components/feedback/DialogFeedback'
 
 import AddGroupDialog from '../list/AddGroupDialog'
 import AddMemberDialog from '../list/AddMemberDialog'
@@ -41,15 +41,12 @@ import GroupMembersGrid from '../list/GroupMembersGrid'
 
 const PageList = () => {
   const { data: session } = useSession()
-  const router = useRouter()
 
-  const currentGroup = session?.user?.selected_group
-
-  const { groups, mutate: mutateGroups, switchGroup } = useGroup()
+  const { groups, mutate: mutateGroups } = useGroup()
 
   const [selectedGroup, setSelectedGroup] = useState()
-  const [updatingCurrentGroup, setUpdatingCurrentGroup] = useState(false)
-  const [activating, setActivating] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const [addGroupDialogOpen, setAddGroupDialogOpen] = useState(false)
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false)
@@ -66,19 +63,8 @@ const PageList = () => {
   useEffect(() => {
     if (!selectedGroup && groups && groups.length > 0) {
       setSelectedGroup(groups[0].group)
-      setUpdatingCurrentGroup(groups[0].group.scope === currentGroup)
     }
-  }, [groups, currentGroup, selectedGroup])
-
-  const onGroupsLeaveOrDelete = useCallback(
-    async (groupId) => {
-      if (selectedGroup && selectedGroup.id === groupId) {
-        setSelectedGroup(null)
-        setUpdatingCurrentGroup(false)
-      }
-    },
-    [selectedGroup, setSelectedGroup],
-  )
+  }, [groups, selectedGroup])
 
   const handleSelfRemoved = useCallback(
     async (groupId) => {
@@ -87,14 +73,33 @@ const PageList = () => {
       const newGroups = updated || groups
       if (newGroups && newGroups.length > 0) {
         setSelectedGroup(newGroups[0].group)
-        setUpdatingCurrentGroup(newGroups[0].group.scope === currentGroup)
       } else {
         setSelectedGroup(null)
-        setUpdatingCurrentGroup(false)
       }
     },
-    [mutateGroups, groups, currentGroup],
+    [mutateGroups, groups],
   )
+
+  const handleDeleteGroup = useCallback(async () => {
+    if (!group) return
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/groups/${group.id}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) {
+        setDeleting(false)
+        setDeleteDialogOpen(false)
+        return
+      }
+      await mutateGroups()
+      setSelectedGroup(null)
+      await mutate()
+    } finally {
+      setDeleting(false)
+      setDeleteDialogOpen(false)
+    }
+  }, [group, mutate, mutateGroups])
 
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
@@ -124,17 +129,9 @@ const PageList = () => {
                 </Stack>
                 <MyGroupsGrid
                   groups={groups}
+                  selectedGroup={selectedGroup}
                   onSelected={(group) => {
                     setSelectedGroup(group)
-                    setUpdatingCurrentGroup(group.scope === currentGroup)
-                  }}
-                  onLeave={async (groupId) => {
-                    await onGroupsLeaveOrDelete(groupId)
-                    await mutateGroups()
-                  }}
-                  onDelete={async (groupId) => {
-                    await onGroupsLeaveOrDelete(groupId)
-                    await mutateGroups()
                   }}
                 />
               </>
@@ -152,20 +149,14 @@ const PageList = () => {
                       Members of {group && group.label}
                     </Typography>
                     <Stack direction={'row'} spacing={1}>
-                      {currentGroup !== group.scope && (
+                      {session?.user?.id === group.createdById && (
                         <LoadingButton
-                          loading={activating}
-                          onClick={async () => {
-                            setActivating(true)
-                            try {
-                              await switchGroup(group.scope)
-                              await router.push(`/${group.scope}/questions`)
-                            } finally {
-                              setActivating(false)
-                            }
-                          }}
+                          color="error"
+                          variant="contained"
+                          loading={deleting}
+                          onClick={() => setDeleteDialogOpen(true)}
                         >
-                          Use this group
+                          Delete this group
                         </LoadingButton>
                       )}
                       <Button onClick={() => setAddMemberDialogOpen(true)}>
@@ -205,6 +196,21 @@ const PageList = () => {
             onClose={() => setAddMemberDialogOpen(false)}
             onSuccess={async () => await mutate()} // force refresh
           />
+          {deleteDialogOpen && (
+            <DialogFeedback
+              open={deleteDialogOpen}
+              title={`Delete group ${group?.label}?`}
+              content={
+                <Typography variant="body2">
+                  This will delete all the related data, including questions,
+                  collections, and evaluations.
+                </Typography>
+              }
+              onClose={() => setDeleteDialogOpen(false)}
+              onConfirm={handleDeleteGroup}
+              confirmButtonProps={{ color: 'error' }}
+            />
+          )}
         </LayoutMain>
       </Loading>
     </Authorization>
