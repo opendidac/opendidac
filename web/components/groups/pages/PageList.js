@@ -204,8 +204,8 @@ const PageList = () => {
               title={`Delete group ${group?.label}?`}
               content={
                 <Typography variant="body2">
-                  This will delete all the related data, including questions,
-                  collections, and evaluations.
+                  This will delete all the related data, including questions and
+                  evaluations.
                 </Typography>
               }
               onClose={() => setDeleteDialogOpen(false)}
