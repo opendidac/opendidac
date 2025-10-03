@@ -17,9 +17,11 @@ import { useState, useEffect, useCallback } from 'react'
 import { Role } from '@prisma/client'
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/router'
 import Link from 'next/link'
 
 import { Box, Button, Stack, Typography } from '@mui/material'
+import { LoadingButton } from '@mui/lab'
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos'
 
 import { fetcher } from '@/code/utils'
@@ -39,14 +41,15 @@ import GroupMembersGrid from '../list/GroupMembersGrid'
 
 const PageList = () => {
   const { data: session } = useSession()
+  const router = useRouter()
 
   const currentGroup = session?.user?.selected_group
 
-  const { groups, mutate: mutateGroups } = useGroup()
+  const { groups, mutate: mutateGroups, switchGroup } = useGroup()
 
   const [selectedGroup, setSelectedGroup] = useState()
   const [updatingCurrentGroup, setUpdatingCurrentGroup] = useState(false)
-  const [backUrl, setBackUrl] = useState('/' + currentGroup + '/questions')
+  const [activating, setActivating] = useState(false)
 
   const [addGroupDialogOpen, setAddGroupDialogOpen] = useState(false)
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false)
@@ -77,13 +80,29 @@ const PageList = () => {
     [selectedGroup, setSelectedGroup],
   )
 
+  const handleSelfRemoved = useCallback(
+    async (groupId) => {
+      // Refresh groups, then select the first group (top of the list)
+      const updated = await mutateGroups()
+      const newGroups = updated || groups
+      if (newGroups && newGroups.length > 0) {
+        setSelectedGroup(newGroups[0].group)
+        setUpdatingCurrentGroup(newGroups[0].group.scope === currentGroup)
+      } else {
+        setSelectedGroup(null)
+        setUpdatingCurrentGroup(false)
+      }
+    },
+    [mutateGroups, groups, currentGroup],
+  )
+
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
       <Loading loading={!group} errors={[error]}>
         <LayoutMain
           header={
             <Box>
-              <Link href={backUrl}>
+              <Link href={'/'}>
                 <Button startIcon={<ArrowBackIosIcon />}>Back</Button>
               </Link>
             </Box>
@@ -132,19 +151,35 @@ const PageList = () => {
                     <Typography variant="h6">
                       Members of {group && group.label}
                     </Typography>
-                    <Button onClick={() => setAddMemberDialogOpen(true)}>
-                      Add a new member
-                    </Button>
+                    <Stack direction={'row'} spacing={1}>
+                      {currentGroup !== group.scope && (
+                        <LoadingButton
+                          loading={activating}
+                          onClick={async () => {
+                            setActivating(true)
+                            try {
+                              await switchGroup(group.scope)
+                              await router.push(`/${group.scope}/questions`)
+                            } finally {
+                              setActivating(false)
+                            }
+                          }}
+                        >
+                          Use this group
+                        </LoadingButton>
+                      )}
+                      <Button onClick={() => setAddMemberDialogOpen(true)}>
+                        Add a new member
+                      </Button>
+                    </Stack>
                   </Stack>
                   <GroupMembersGrid
                     group={group}
                     onUpdate={async (scope) => {
                       await mutate()
                       await mutateGroups()
-                      if (updatingCurrentGroup) {
-                        setBackUrl('/' + scope + '/questions')
-                      }
                     }}
+                    onSelfRemoved={handleSelfRemoved}
                   />
                 </>
               ) : (

@@ -125,32 +125,53 @@ const post = async (req, res, prisma) => {
 }
 
 const del = async (req, res, prisma) => {
-  // remove member from group
+  // remove a member from a group
   const { groupId } = req.query
+  const { userId: targetUserId } = req.body || {}
 
-  const user = await getUser(req, res)
+  const requester = await getUser(req, res)
 
-  // check if the users is a member of the group they are trying to remove a member from
-  const userIsMemberOfGroup = await prisma.group.findFirst({
-    where: {
-      id: groupId,
-      members: {
-        some: {
-          userId: user.id,
-        },
-      },
-    },
-  })
-
-  if (!userIsMemberOfGroup) {
+  if (!requester) {
     res.status(401).json({ message: 'Unauthorized' })
     return
   }
 
+  if (!targetUserId) {
+    res.status(400).json({ message: 'Missing userId' })
+    return
+  }
+
+  // Ensure requester is a member of the group (or SUPER_ADMIN as a safety net)
+  const requesterIsMemberOfGroup = await prisma.group.findFirst({
+    where: {
+      id: groupId,
+      members: {
+        some: {
+          userId: requester.id,
+        },
+      },
+    },
+    select: { id: true, createdById: true },
+  })
+
+  if (!requesterIsMemberOfGroup && !requester.roles?.includes('SUPER_ADMIN')) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  // Prevent removing the creator of the group
+  if (requesterIsMemberOfGroup?.createdById === targetUserId) {
+    res
+      .status(400)
+      .json({ message: 'The creator of the group cannot be removed' })
+    return
+  }
+
+  // Remove the member from the group
   await prisma.userOnGroup.delete({
     where: {
       userId_groupId: {
-        userId: user.id,
+        userId: targetUserId,
         groupId,
       },
     },

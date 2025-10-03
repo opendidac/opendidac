@@ -32,13 +32,19 @@ const MyGroupsGrid = ({ groups, onSelected, onLeave, onDelete }) => {
     async (groupId) => {
       const response = await fetch(`/api/groups/${groupId}/members`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: session.user.id,
+        }),
       })
 
       if (response.status === 200) {
         onLeave && onLeave(groupId)
       }
     },
-    [onLeave],
+    [onLeave, session?.user?.id],
   )
 
   const deleteGroup = useCallback(
