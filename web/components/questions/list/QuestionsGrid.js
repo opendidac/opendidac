@@ -147,6 +147,18 @@ const QuestionsGrid = ({
             column: { width: '90px' },
             renderCell: (row) => <DateTimeAgo date={new Date(row.updatedAt)} />,
           },
+          {
+            label: 'Last Used',
+            column: { width: '100px' },
+            renderCell: (row) =>
+              row.lastUsed ? (
+                <DateTimeAgo date={new Date(row.lastUsed)} />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  -
+                </Typography>
+              ),
+          },
         ],
       }}
       items={questions.map((question) => ({

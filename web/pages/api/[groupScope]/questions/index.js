@@ -19,6 +19,7 @@ import {
   QuestionSource,
   CodeQuestionType,
   QuestionStatus,
+  QuestionUsageStatus,
 } from '@prisma/client'
 import {
   withAuthorization,
@@ -132,13 +133,10 @@ const get = async (req, res, prisma) => {
     })
   }
 
-  // Filter for unused questions: any BANK or COPY question that has NOT produced
-  // an evaluation copy. Copies created manually should be considered unused
-  // until they themselves get used in an evaluation.
+  // Filter for unused questions using the usageStatus field
   if (isUnused) {
     where.where.AND.push({
-      source: { in: [QuestionSource.BANK, QuestionSource.COPY] },
-      copiedQuestions: { none: { source: QuestionSource.EVAL } },
+      usageStatus: QuestionUsageStatus.UNUSED,
     })
   }
 
@@ -151,6 +149,8 @@ const get = async (req, res, prisma) => {
   const questions = await prisma.question.findMany({
     ...where,
     select: {
+      lastUsed: true,
+      usageStatus: true,
       ...questionSelectClause({
         includeTypeSpecific: true,
         includeOfficialAnswers: true,
