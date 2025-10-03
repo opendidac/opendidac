@@ -22,7 +22,6 @@ const DialogFeedback = ({
   open,
   title,
   content,
-  width = 'md',
   hideCancel = false,
   confirmButtonProps = {},
   onClose,
