@@ -102,8 +102,22 @@ const put = withEvaluationPhase(
           },
         })
 
+        // Get the official output for this snippet (already filtered by snippetId in the query)
         const officialOutput =
-          evaluationToQuestion.question.code.codeReading.snippets[0].output
+          evaluationToQuestion.question.code.codeReading.snippets[0]?.output
+
+        if (officialOutput === undefined) {
+          res.status(400).json({ message: 'Snippet not found' })
+          return
+        }
+
+        // Convert to strings and normalize line endings for comparison
+        const normalizeLineEndings = (str) =>
+          String(str || '')
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '\n')
+        const studentOutputStr = normalizeLineEndings(output)
+        const officialOutputStr = normalizeLineEndings(officialOutput)
 
         // update the users answers file for code reading question
         await prisma.studentAnswerCodeReadingOutput.update({
@@ -117,7 +131,7 @@ const put = withEvaluationPhase(
           data: {
             output: output,
             status:
-              output === officialOutput
+              studentOutputStr === officialOutputStr
                 ? StudentAnswerCodeReadingOutputStatus.MATCH
                 : StudentAnswerCodeReadingOutputStatus.MISMATCH,
           },
@@ -135,6 +149,7 @@ const put = withEvaluationPhase(
             outputs: {
               select: {
                 output: true,
+                status: true, // Include status for grading
                 codeReadingSnippet: {
                   select: {
                     output: true,

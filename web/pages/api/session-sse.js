@@ -16,60 +16,70 @@
 import { getUser } from '@/code/auth/auth'
 import {
   addSSEClient,
+  getSSEClients,
+  notifySSEClients,
   sseControl,
   startSSEHeartbeat,
   sseSend,
+  MAX_CONN,
 } from '@/code/auth/sseClients'
 
 export default async function handler(req, res) {
   console.log('Opening SSE connection')
 
-  // --- SSE / proxy-friendly headers ---
-  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
-  res.setHeader('Cache-Control', 'no-cache, no-transform')
-  res.setHeader('Connection', 'keep-alive')
-  // Helpful for nginx/ingress to disable buffering
-  res.setHeader('X-Accel-Buffering', 'no')
-  res.flushHeaders()
-
-  // Keep TCP alive if supported
-  try {
-    res.socket?.setKeepAlive?.(true)
-  } catch {
-    // ignore
-  }
-
-  // Authenticate user
+  // 1) Authenticate FIRST — do NOT switch to SSE unless authenticated
   const user = await getUser(req, res)
   if (!user) {
-    try {
-      sseSend(res, { data: { status: 'unauthenticated' } })
-    } finally {
-      res.end()
-    }
+    // Plain 401 JSON (no SSE auto-reconnect semantics)
+    res.status(401).json({ status: 'unauthenticated' })
     return
   }
 
-  // Control lines (not JSON): reconnection delay + initial comment
-  sseControl(res, { retry: 3000, comment: 'open' })
+  // 2) Now upgrade to SSE (proxy-friendly headers)
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
+  res.setHeader('Connection', 'keep-alive')
+  res.setHeader('X-Accel-Buffering', 'no')
+  res.flushHeaders()
+  try {
+    res.socket?.setKeepAlive?.(true)
+  } catch {}
 
-  // Heartbeat to keep connection alive
+  // Enforce per-user max connections
+  const existing = getSSEClients(user.id)
+  if (existing.size >= MAX_CONN) {
+    // Notify already-connected tabs to show the limit overlay
+    try {
+      notifySSEClients(
+        user.id,
+        {
+          status: 'too_many_connections_active',
+          max: MAX_CONN,
+          current: existing.size,
+        },
+        undefined, // default "message" event
+      )
+    } catch {}
+
+    // Slow auto-retry on the refused tab and explain why
+    sseControl(res, { retry: 60000, comment: 'too-many-connections' })
+    sseSend(res, { data: { status: 'too_many_connections', max: MAX_CONN } })
+    res.end()
+    return
+  }
+
+  // Normal path
+  sseControl(res, { retry: 3000, comment: 'open' })
   const heartbeat = startSSEHeartbeat(res)
 
-  const cleanup = () => {
-    clearInterval(heartbeat)
-  }
+  const cleanup = () => clearInterval(heartbeat)
   res.on('close', cleanup)
   res.on('finish', cleanup)
   req.on('aborted', cleanup)
 
-  // Register the client
   addSSEClient(user.id, res)
 }
 
-// Ensure Node runtime (not Edge)
 export const config = {
-  api: {
-    bodyParser: false,
-  },
+  api: { bodyParser: false },
 }

@@ -29,6 +29,7 @@ import {
 import DragHandleSVG from '@/components/layout/utils/DragHandleSVG'
 import DecimalInput from '@/components/input/DecimalInput'
 import QuestionTypeIcon from '@/components/question/QuestionTypeIcon'
+import CodeQuestionTypeIcon from '@/components/question/type_specific/code/CodeQuestionTypeIcon'
 import ScrollContainer from '@/components/layout/ScrollContainer'
 import ReorderableList from '@/components/layout/utils/ReorderableList'
 import { phaseGreaterThan } from '../phases'
@@ -475,6 +476,12 @@ const QuestionItem = ({
         </Stack>
       )}
       <QuestionTypeIcon type={evaluationToQuestion.question.type} size={32} />
+      {evaluationToQuestion.question.type === QuestionType.code && (
+        <CodeQuestionTypeIcon
+          codeType={evaluationToQuestion.question.code?.codeType}
+          size={20}
+        />
+      )}
       <Stack
         direction={'row'}
         alignItems={'center'}

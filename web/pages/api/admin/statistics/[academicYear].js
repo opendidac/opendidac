@@ -112,14 +112,22 @@ const handler = async (req, res, prisma) => {
     }
 
     // 1. Active professors (users with PROFESSOR role who signed gradings in this academic year)
+    // Only consider gradings linked to questions from non-excluded groups
     const professors = await prisma.user.findMany({
       where: {
         roles: {
-          has: 'PROFESSOR',
+          has: Role.PROFESSOR,
         },
         gradingSignedBy: {
           some: {
             createdAt: dateRangeFilter,
+            studentAnswer: excludeTestGroupsFilter
+              ? {
+                  question: {
+                    groupId: excludeTestGroupsFilter,
+                  },
+                }
+              : undefined,
           },
         },
       },
@@ -130,6 +138,13 @@ const handler = async (req, res, prisma) => {
         gradingSignedBy: {
           where: {
             createdAt: dateRangeFilter,
+            ...(excludeTestGroupsFilter && {
+              studentAnswer: {
+                question: {
+                  groupId: excludeTestGroupsFilter,
+                },
+              },
+            }),
           },
           select: {
             createdAt: true,
@@ -158,6 +173,11 @@ const handler = async (req, res, prisma) => {
         }
       })
       .sort((a, b) => b.gradingCount - a.gradingCount) // Sort by grading count (most active first)
+
+    // Keep only professors with at least one grading after exclusions
+    const filteredProfessorsDetails = professorsDetails.filter(
+      (p) => p.gradingCount > 0,
+    )
 
     // 2. Active students (users with ONLY STUDENT role who registered to evaluations in this academic year)
     const students = await prisma.user.findMany({
@@ -312,8 +332,8 @@ const handler = async (req, res, prisma) => {
     // Format the response (only real evaluations are returned)
     const response = {
       academic_year: academicYear,
-      professors_active: professors.length,
-      professors_details: professorsDetails,
+      professors_active: filteredProfessorsDetails.length,
+      professors_details: filteredProfessorsDetails,
       students_active: students.length,
       students_details: studentsDetails,
       evaluations_total: realEvaluations.length,

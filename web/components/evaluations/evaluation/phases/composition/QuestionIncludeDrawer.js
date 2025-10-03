@@ -61,6 +61,7 @@ const QuestionIncludeDrawer = ({
                   (q) => !isQuestionIncluded(q),
                 )}
                 selection={selection}
+                showRowActions={false}
                 actions={
                   <Stack direction={'row'} spacing={1}>
                     {selection.length > 0 ? (
