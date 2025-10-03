@@ -44,17 +44,30 @@ const IndexPage = () => {
 
     // Handle PROFESSOR users - redirect to group scope (existing logic)
     if (isProfessor) {
-      let selectedGroup = session?.user?.selected_group
+      const selectedGroup = session?.user?.selected_group
+      const availableScopes = groups?.map((g) => g.group.scope) || []
 
-      if (!selectedGroup && groups && groups.length > 0) {
-        selectedGroup = groups[0].group.scope
+      // If user has groups but the selected group is missing or invalid,
+      // present a group selector instead of redirecting
+      let groupToSwitch = null
+      if (groups && groups.length > 0) {
+        if (selectedGroup && availableScopes.includes(selectedGroup)) {
+          groupToSwitch = selectedGroup
+        } else {
+          const firstGroup = availableScopes[0]
+          groupToSwitch = firstGroup
+        }
+        ;(async () => {
+          await switchGroup(groupToSwitch)
+          await router.push(`/${groupToSwitch}/questions`)
+        })()
+        return
       }
 
-      if (selectedGroup) {
-        ;(async () => {
-          await switchGroup(selectedGroup)
-          await router.push(`/${selectedGroup}/questions`)
-        })()
+      // No groups at all: send to groups page to create one
+      if (groups && groups.length === 0) {
+        router.push('/groups')
+        return
       }
     }
 

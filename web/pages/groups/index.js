@@ -15,6 +15,6 @@
  */
 import PageList from '../../components/groups/pages/PageList'
 
-const Exams = () => <PageList />
+const UserGroups = () => <PageList />
 
-export default Exams
+export default UserGroups
