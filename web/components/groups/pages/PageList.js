@@ -17,6 +17,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Role } from '@prisma/client'
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/router'
 import Link from 'next/link'
 
 import { Box, Button, Stack, Typography } from '@mui/material'
@@ -41,6 +42,7 @@ import GroupMembersGrid from '../list/GroupMembersGrid'
 
 const PageList = () => {
   const { data: session } = useSession()
+  const router = useRouter()
 
   const { groups, mutate: mutateGroups } = useGroup()
 

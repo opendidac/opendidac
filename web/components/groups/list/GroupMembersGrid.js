@@ -126,6 +126,7 @@ const GroupMembersGrid = ({ group, onUpdate, onSelfRemoved }) => {
             </LoadingButton>
           )}
         </Stack>
+
         {group && group.members && group.members.length > 0 && (
           <DataGrid
             header={{
