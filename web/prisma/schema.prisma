@@ -134,17 +134,25 @@ enum QuestionSource {
   COPY // Question is a copy of another question
 }
 
+enum QuestionUsageStatus {
+  UNUSED    // Question has never been used in any evaluation
+  USED      // Question has been used in at least one evaluation
+  NOT_APPLICABLE // Question that are part of evaluations, source is EVAL
+}
+
 model Question {
   id     String         @id @default(cuid())
   type   QuestionType
   source QuestionSource @default(BANK)
   status QuestionStatus @default(ACTIVE)
+  usageStatus QuestionUsageStatus @default(UNUSED)
 
   title   String
   content String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  lastUsed DateTime?
 
   multipleChoice MultipleChoice?
   trueFalse      TrueFalse?
