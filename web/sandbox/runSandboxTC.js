@@ -121,7 +121,7 @@ const prepareContent = (files) =>
 
 const startContainer = async (image, filesDirectory, beforeAll) => {
   let container = await new GenericContainer(image)
-    .withResourcesQuota({ cpu: 1, memory: 0.25 })
+    .withResourcesQuota({ cpu: 2, memory: 1 })
     .withWorkingDir('/')
     .withEnvironment('NODE_NO_WARNINGS', '1')
     .withCopyFilesToContainer([
