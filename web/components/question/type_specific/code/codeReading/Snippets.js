@@ -112,30 +112,26 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
   )
 
   const onBeforeRun = useCallback(() => {
-    setStatuses(statuses.map(() => SnippetStatus.RUNNING))
-  }, [statuses])
+    setStatuses((prev) => prev.map(() => SnippetStatus.RUNNING))
+  }, [])
 
-  const onAfterRun = useCallback(
-    async (result) => {
-      setStatuses(
-        statuses.map((_, index) => {
-          if (!result.tests || !result.tests[index]) return SnippetStatus.ERROR
-          return result.tests[index].output
-            ? SnippetStatus.SUCCESS
-            : SnippetStatus.ERROR
-        }),
-      )
+  const onAfterRun = useCallback(async (result) => {
+    setStatuses((prev) =>
+      prev.map((_, index) => {
+        const test = result?.tests?.[index]
+        if (!test) return SnippetStatus.ERROR
+        return test.output ? SnippetStatus.SUCCESS : SnippetStatus.ERROR
+      }),
+    )
 
-      // update snippets with the new outputs
-      setSnippets(
-        snippets.map((snippet, index) => ({
-          ...snippet,
-          output: result.tests[index].output,
-        })),
-      )
-    },
-    [statuses, snippets],
-  )
+    // update snippets with the new outputs while preserving current code
+    setSnippets((prev) =>
+      prev.map((snippet, index) => ({
+        ...snippet,
+        output: result?.tests?.[index]?.output ?? snippet.output,
+      })),
+    )
+  }, [])
 
   return (
     <Loading loading={!data} errors={[error]}>
@@ -217,6 +213,12 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
                   return s
                 })
                 setStatuses(updatedStatuses)
+                // update local snippet immediately to avoid stale overwrite on run
+                setSnippets((prev) =>
+                  prev.map((s, i) =>
+                    i === index ? { ...s, snippet: code, output: null } : s,
+                  ),
+                )
                 debouncedUpdateSnippet(snippet.id, {
                   ...snippet,
                   snippet: code,
@@ -229,6 +231,10 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
                   return s
                 })
                 setStatuses(updatedStatuses)
+                // mirror local output changes as well
+                setSnippets((prev) =>
+                  prev.map((s, i) => (i === index ? { ...s, output } : s)),
+                )
                 debouncedUpdateSnippet(snippet.id, {
                   ...snippet,
                   output,
