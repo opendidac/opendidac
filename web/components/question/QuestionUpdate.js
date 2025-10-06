@@ -32,8 +32,6 @@ import { fetcher } from '../../code/utils'
 import DialogFeedback from '../feedback/DialogFeedback'
 import { QuestionStatus } from '@prisma/client'
 import BottomCollapsiblePanel from '@/components/layout/utils/BottomCollapsiblePanel'
-import BottomPanelHeader from '@/components/layout/utils/BottomPanelHeader'
-import BottomPanelContent from '@/components/layout/utils/BottomPanelContent'
 import ScratchPad from '@/components/question/ScratchPad'
 
 const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
@@ -178,8 +176,14 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
           question && (
             <BottomCollapsiblePanel
               bottomPanel={
-                <ScratchPad/>
-              }>
+                <ScratchPad
+                  content={question.scratchpad}
+                  onChange={(content) =>
+                    onPropertyChange('scratchpad', content)
+                  }
+                />
+              }
+            >
               <Stack spacing={2} sx={{ pl: 2, pt: 1, height: '100%' }}>
                 <Stack direction="row" alignItems="flex-start" spacing={1}>
                   <TextField

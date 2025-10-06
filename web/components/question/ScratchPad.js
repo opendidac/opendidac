@@ -13,17 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Stack, Typography, TextField, Tooltip, Button } from '@mui/material'
+import {
+  Stack,
+  Typography,
+  TextField,
+  Button,
+  Alert,
+  AlertTitle,
+} from '@mui/material'
 
 import { useSnackbar } from '@/context/SnackbarContext'
 import { useBottomPanel } from '@/context/BottomPanelContext'
 
 import BottomPanelHeader from '@/components/layout/utils/BottomPanelHeader'
 import BottomPanelContent from '@/components/layout/utils/BottomPanelContent'
-import { useRef } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import Image from 'next/image'
+import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 
-const ScratchPad = ({ content, onChange }) => {
+const ScratchPad = ({ content, onChange, readOnly }) => {
   const { show: showSnackbar } = useSnackbar()
 
   const { toggleOpen } = useBottomPanel()
@@ -32,48 +40,84 @@ const ScratchPad = ({ content, onChange }) => {
 
   const openScratchPad = () => {
     toggleOpen()
-    setTimeout(() => {
-      textAreaRef.current.focus()
-    }, 100);
+    if (!readOnly && textAreaRef && textAreaRef.current) {
+      setTimeout(() => {
+        textAreaRef.current.focus()
+      }, 100)
+    }
   }
+
+  const [localContent, setLocalContent] = useState(content)
+
+  const onContentChange = useCallback(
+    (newContent) => {
+      setLocalContent(newContent)
+      onChange(newContent)
+    },
+    [onChange],
+  )
 
   return (
     <Stack maxHeight={'calc(100% - 90px)'}>
       <BottomPanelHeader sx={{ cursor: 'pointer', pl: 1 }}>
-        <Button
-          color="info"
-          startIcon={
-            <Image
-              alt="Scratch Pad"
-              src="/svg/icons/update.svg"
-              width="18"
-              height="18"
-            />
-          }
-          onClick={openScratchPad}
-        >
-          Scratch Pad
-        </Button>
+        <Stack direction={'row'}>
+          <Button
+            color="info"
+            startIcon={
+              <Image
+                alt="Scratch Pad"
+                src="/svg/icons/update.svg"
+                width="18"
+                height="18"
+              />
+            }
+            onClick={openScratchPad}
+          >
+            Scratch Pad
+          </Button>
+          <UserHelpPopper>
+            <Alert severity="info">
+              <AlertTitle>Professor-only Scratch Pad</AlertTitle>
+              <Typography variant="body2">
+                The content of the scratch pad will never be shared with
+                students.
+              </Typography>
+              <Typography variant="body2">
+                Use it to store private notes about this question.
+              </Typography>
+            </Alert>
+          </UserHelpPopper>
+        </Stack>
       </BottomPanelHeader>
       <BottomPanelContent sx={{ pl: 2 }}>
-        <Typography sx={{ pb: 2 }} variant="body2" color="textSecondary">
-          This field will never be shown to students. Use it to store notes about this question.
-          { /* TODO make this a small "i" next to the scratch pad button instead of an always-visible text */ }
-        </Typography>
-        <TextField
-          inputRef={textAreaRef}
-          multiline
-          minRows={10}
-          maxRows={20}
-          fullWidth
-          value={content}
-          // onChange={(e) => onChange(e.target.value)}
-          variant="standard"
-          InputProps={{ disableUnderline: true }}
-          placeholder={"Student-hidden notes..."}
-          // background color white
-          sx={{ backgroundColor: 'white', borderRadius: 1, p: 1, mb: 2 }}
-        />
+        {readOnly ? (
+          <Typography
+            variant="body1"
+            sx={{
+              borderRadius: 1,
+              mb: 2,
+              whiteSpace: 'pre-wrap',
+              minHeight: '100px',
+            }}
+          >
+            {localContent || 'No notes...'}
+          </Typography>
+        ) : (
+          <TextField
+            disabled={readOnly}
+            inputRef={textAreaRef}
+            multiline
+            minRows={10}
+            maxRows={20}
+            fullWidth
+            value={localContent}
+            onChange={(e) => onContentChange(e.target.value)}
+            variant="standard"
+            InputProps={{ disableUnderline: true }}
+            placeholder={'Student-hidden notes...'}
+            sx={{ backgroundColor: 'white', borderRadius: 1, p: 1, mb: 2 }}
+          />
+        )}
       </BottomPanelContent>
     </Stack>
   )

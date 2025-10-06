@@ -18,6 +18,8 @@ import Column from '../layout/utils/Column'
 import ScrollContainer from '../layout/ScrollContainer'
 import MarkdownViewer from '../input/markdown/MarkdownViewer'
 import QuestionTypeIcon from './QuestionTypeIcon'
+import ScratchPad from '@/components/question/ScratchPad'
+import BottomCollapsiblePanel from '@/components/layout/utils/BottomCollapsiblePanel'
 
 const QuestionView = ({
   title,
@@ -28,7 +30,7 @@ const QuestionView = ({
   above,
   below,
 }) => {
-  return (
+  const mainContent = (
     <Stack
       height={'100%'}
       width={'100%'}
@@ -66,6 +68,26 @@ const QuestionView = ({
       </Stack>
     </Stack>
   )
+
+  if (question.scratchpad) {
+    return (
+      <BottomCollapsiblePanel
+        height={'100%'}
+        width={'100%'}
+        bottomPanel={
+          <ScratchPad
+            readOnly
+            content={question.scratchpad}
+            onChange={() => {}}
+          />
+        }
+      >
+        {mainContent}
+      </BottomCollapsiblePanel>
+    )
+  } else {
+    return mainContent
+  }
 }
 
 export default QuestionView

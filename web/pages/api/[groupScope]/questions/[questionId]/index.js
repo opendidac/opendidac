@@ -76,6 +76,7 @@ const put = async (req, res, prisma) => {
       title: question.title,
       content: question.content,
       status: question.status,
+      scratchpad: question.scratchpad,
       [question.type]: {
         update: questionTypeSpecific(question.type, question),
       },
