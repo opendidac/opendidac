@@ -22,7 +22,6 @@ import {
   AlertTitle,
 } from '@mui/material'
 
-import { useSnackbar } from '@/context/SnackbarContext'
 import { useBottomPanel } from '@/context/BottomPanelContext'
 
 import BottomPanelHeader from '@/components/layout/utils/BottomPanelHeader'
@@ -32,8 +31,6 @@ import Image from 'next/image'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 
 const ScratchPad = ({ content, onChange, readOnly }) => {
-  const { show: showSnackbar } = useSnackbar()
-
   const { toggleOpen } = useBottomPanel()
 
   const textAreaRef = useRef()
