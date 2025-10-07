@@ -38,6 +38,7 @@ const post = async (req, res, prisma) => {
         includeTypeSpecific: true,
         includeOfficialAnswers: true,
         includeTags: true,
+        includeProfessorOnlyInfo: true,
       }),
       groupId: true, // Need this for copyQuestion function
     },

@@ -55,6 +55,7 @@ const stripEmpty = (x) => {
 export const buildExportPrismaQuery = (questionId) => ({
   where: { id: questionId },
   select: questionSelectClause({
+    includeProfessorOnlyInfo: true,
     includeTypeSpecific: true,
     includeOfficialAnswers: true,
     includeUserAnswers: undefined,
@@ -230,6 +231,7 @@ export const serializeQuestion = (q) => {
     type: q.type,
     title: q.title,
     content: q.content ?? null,
+    scratchpad: q.scratchpad ?? null,
     data,
   })
 
@@ -237,6 +239,7 @@ export const serializeQuestion = (q) => {
     type: payload.type,
     title: payload.title,
     ...(payload.content ? { content: payload.content } : {}),
+    ...(payload.scratchpad ? { scratchpad: payload.scratchpad } : {}),
     data: payload.data || {},
   }
 }
@@ -408,7 +411,7 @@ const buildExactMatchCreate = (data) => ({
  * @returns {{ createData: object, post: object }}
  */
 export const buildImportPrismaQuery = (questionJson, group) => {
-  const { type, title, content, data } = questionJson
+  const { type, title, content, scratchpad, data } = questionJson
   const connectGroup = group?.id
     ? { connect: { id: group.id } }
     : group?.label
@@ -447,6 +450,7 @@ export const buildImportPrismaQuery = (questionJson, group) => {
     data: {
       title: title || '',
       content: nn(content),
+      scratchpad: nn(scratchpad),
       type,
       ...(connectGroup ? { group: connectGroup } : {}),
       // type-specific nested create
