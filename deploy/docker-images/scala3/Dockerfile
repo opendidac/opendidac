@@ -18,29 +18,50 @@ RUN mkdir -p "$SCALA_HOME" && \
     ln -s "$SCALA_HOME/bin/"* /usr/bin/
 
 WORKDIR /src
-# ---- Build an AppCDS archive using the EXACT scalac launcher classpath
-RUN echo 'object Warm { def main(a:Array[String])=println("warm") }' > /tmp/Warm.scala && \
-    /usr/bin/scalac \
+# ---- Copy warmup sources and build an AppCDS archive using the EXACT scalac launcher classpath
+COPY warmup/ /warmup/
+RUN /usr/bin/scalac \
       -J-XX:+UseG1GC \
       -J-XX:ArchiveClassesAtExit=/opt/scala-scalac.jsa \
-      /tmp/Warm.scala && \
-    rm -f /tmp/Warm.scala
+      /warmup/*.scala
+# ---- Build scalac archive (compiler)
+# Use the SAME flags here as in the wrapper later
+RUN /usr/bin/scalac \
+      -J-Xshare:auto \
+      -J-XX:+UseG1GC \
+      -J-XX:TieredStopAtLevel=1 \
+      -J-Xms64m -J-Xmx128m -J-XX:ReservedCodeCacheSize=64m \
+      -J-XX:+UnlockDiagnosticVMOptions \
+      -J-XX:ArchiveClassesAtExit=/opt/scalac.jsa \
+      /warmup/*.scala
 
-# ---- scalac wrapper (G1 to allow CDS heap)
+# ---- Build scala runner archive
+# Compile once and run it so runner paths get archived too
+RUN /usr/bin/scalac /warmup/Main.scala && \
+    /usr/bin/scala \
+      -J-Xshare:auto \
+      -J-XX:+UseG1GC \
+      -J-XX:TieredStopAtLevel=1 \
+      -J-Xms64m -J-Xmx128m -J-XX:ReservedCodeCacheSize=64m \
+      -J-XX:+UnlockDiagnosticVMOptions \
+      -J-XX:ArchiveClassesAtExit=/opt/scala-run.jsa \
+      Main 1 2 3
+
+# ---- scalac wrapper (compiler)
 RUN printf '%s\n' '#!/usr/bin/env bash' \
   'exec /usr/bin/scalac \' \
   '  -J-Xshare:auto \' \
-  '  -J-XX:SharedArchiveFile=/opt/scala-scalac.jsa \' \
+  '  -J-XX:SharedArchiveFile=/opt/scalac.jsa \' \
   '  -J-XX:+UseG1GC \' \
   '  -J-XX:TieredStopAtLevel=1 \' \
   '  -J-Xms64m -J-Xmx128m -J-XX:ReservedCodeCacheSize=64m \' \
   '  "$@"' > /usr/local/bin/scalac && chmod +x /usr/local/bin/scalac
 
-# ---- scala (runner) wrapper (also G1)
+# ---- scala wrapper (runner)
 RUN printf '%s\n' '#!/usr/bin/env bash' \
   'exec /usr/bin/scala \' \
   '  -J-Xshare:auto \' \
-  '  -J-XX:SharedArchiveFile=/opt/scala-scalac.jsa \' \
+  '  -J-XX:SharedArchiveFile=/opt/scala-run.jsa \' \
   '  -J-XX:+UseG1GC \' \
   '  -J-XX:TieredStopAtLevel=1 \' \
   '  -J-Xms64m -J-Xmx128m -J-XX:ReservedCodeCacheSize=64m \' \
