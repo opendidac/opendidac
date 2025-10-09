@@ -37,7 +37,12 @@ const GroupSelector = () => {
 
   const switchGroupLink = (group) => {
     // replaces the root part of the path by the new group scope
-    return asPath.replace(/\/[^\/]*\//, `/${group.scope}/`)
+    const replaced = asPath.replace(/\/[^\/]*\//, `/${group.scope}/`)
+    // If nothing was replaced (e.g., we are at '/'), navigate to questions
+    if (replaced === asPath) {
+      return `/${group.scope}/questions`
+    }
+    return replaced
   }
 
   const handleGroupClick = async (group) => {
@@ -49,8 +54,9 @@ const GroupSelector = () => {
   const [selected, setSelected] = useState(undefined)
 
   useEffect(() => {
-    if (groups) {
-      const group = findGroupBy('scope', groupScope)
+    if (groups && groups.length > 0) {
+      const found = groupScope ? findGroupBy('scope', groupScope) : undefined
+      const group = found || groups[0].group
       setSelected(group)
     }
   }, [groupScope, groups, findGroupBy])

@@ -39,6 +39,7 @@ const QuestionsGrid = ({
   setOpenSideUpdate,
   setCopyDialogOpen,
   actions,
+  showRowActions = true,
 }) => {
   const router = useRouter()
 
@@ -92,10 +93,12 @@ const QuestionsGrid = ({
           item.status === QuestionStatus.ARCHIVED ? 'error.main' : 'none',
       })}
       header={{
-        actions: {
-          label: 'Actions',
-          width: '100px',
-        },
+        actions: showRowActions
+          ? {
+              label: 'Actions',
+              width: '100px',
+            }
+          : undefined,
         columns: [
           {
             label: 'Type',
@@ -144,6 +147,18 @@ const QuestionsGrid = ({
             column: { width: '90px' },
             renderCell: (row) => <DateTimeAgo date={new Date(row.updatedAt)} />,
           },
+          {
+            label: 'Last Used',
+            column: { width: '100px' },
+            renderCell: (row) =>
+              row.lastUsed ? (
+                <DateTimeAgo date={new Date(row.lastUsed)} />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  -
+                </Typography>
+              ),
+          },
         ],
       }}
       items={questions.map((question) => ({
@@ -153,63 +168,65 @@ const QuestionsGrid = ({
           onClick: () => {
             onRowClick && onRowClick(question)
           },
-          actions: [
-            <React.Fragment key="actions">
-              <Tooltip title="Make a copy">
-                <IconButton
-                  onClick={(ev) => {
-                    ev.preventDefault()
-                    ev.stopPropagation()
-                    setSelected && setSelected(question)
-                    setCopyDialogOpen(true)
-                  }}
-                >
-                  <Image
-                    alt={'Make a copy'}
-                    src={'/svg/icons/copy.svg'}
-                    width={16}
-                    height={16}
-                  />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Update in new page">
-                <IconButton
-                  onClick={async (ev) => {
-                    ev.preventDefault()
-                    ev.stopPropagation()
-                    const currentPath = router.asPath // Capture current relative URL
-                    await router.push(
-                      `/${groupScope}/questions/${question.id}?from=${encodeURIComponent(currentPath)}`,
-                    )
-                  }}
-                >
-                  <Image
-                    alt="Update in new page"
-                    src="/svg/icons/update.svg"
-                    width={16}
-                    height={16}
-                  />
-                </IconButton>
-              </Tooltip>
+          actions: showRowActions
+            ? [
+                <React.Fragment key="actions">
+                  <Tooltip title="Make a copy">
+                    <IconButton
+                      onClick={(ev) => {
+                        ev.preventDefault()
+                        ev.stopPropagation()
+                        setSelected && setSelected(question)
+                        setCopyDialogOpen(true)
+                      }}
+                    >
+                      <Image
+                        alt={'Make a copy'}
+                        src={'/svg/icons/copy.svg'}
+                        width={16}
+                        height={16}
+                      />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Update in new page">
+                    <IconButton
+                      onClick={async (ev) => {
+                        ev.preventDefault()
+                        ev.stopPropagation()
+                        const currentPath = router.asPath // Capture current relative URL
+                        await router.push(
+                          `/${groupScope}/questions/${question.id}?from=${encodeURIComponent(currentPath)}`,
+                        )
+                      }}
+                    >
+                      <Image
+                        alt="Update in new page"
+                        src="/svg/icons/update.svg"
+                        width={16}
+                        height={16}
+                      />
+                    </IconButton>
+                  </Tooltip>
 
-              <Tooltip title="Update in overlay">
-                <IconButton
-                  onClick={(ev) => {
-                    ev.preventDefault()
-                    ev.stopPropagation()
-                    setOpenSideUpdate(question)
-                  }}
-                >
-                  <Image
-                    alt={'Update in overlay'}
-                    src={'/svg/icons/aside.svg'}
-                    width={16}
-                    height={16}
-                  />
-                </IconButton>
-              </Tooltip>
-            </React.Fragment>,
-          ],
+                  <Tooltip title="Update in overlay">
+                    <IconButton
+                      onClick={(ev) => {
+                        ev.preventDefault()
+                        ev.stopPropagation()
+                        setOpenSideUpdate(question)
+                      }}
+                    >
+                      <Image
+                        alt={'Update in overlay'}
+                        src={'/svg/icons/aside.svg'}
+                        width={16}
+                        height={16}
+                      />
+                    </IconButton>
+                  </Tooltip>
+                </React.Fragment>,
+              ]
+            : [],
         },
       }))}
       groupings={[

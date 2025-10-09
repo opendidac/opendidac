@@ -116,12 +116,20 @@ const post = withEvaluationPhase(
         return
       }
 
-      // Compare the student output with the official output
+      // Compare the student output with the official output (normalize line endings)
       for (const studentAnswerOutput of studentAnswer.outputs) {
         const snippetId = studentAnswerOutput.codeReadingSnippet.id
         const officialOutput = studentAnswerOutput.codeReadingSnippet.output
         const studentOutput = studentAnswerOutput.output
-        const passed = studentOutput === officialOutput
+
+        // Convert to strings and normalize line endings for comparison
+        const normalizeLineEndings = (str) =>
+          String(str || '')
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '\n')
+        const studentOutputStr = normalizeLineEndings(studentOutput)
+        const officialOutputStr = normalizeLineEndings(officialOutput)
+        const passed = studentOutputStr === officialOutputStr
 
         // Update the student output status
         await prisma.studentAnswerCodeReadingOutput.update({

@@ -16,6 +16,7 @@
 import {
   EvaluationPhase,
   QuestionSource,
+  QuestionUsageStatus,
   Role,
   UserOnEvaluationAccessMode,
 } from '@prisma/client'
@@ -164,6 +165,39 @@ const patch = async (req, res, prisma) => {
     if (nextPhase === EvaluationPhase.IN_PROGRESS) {
       // Set start time when evaluation begins
       data.startAt = new Date()
+
+      // Update usage status for source questions of EVAL questions in this evaluation
+      await prisma.question.updateMany({
+        where: {
+          id: {
+            in: await prisma.evaluationToQuestion
+              .findMany({
+                where: {
+                  evaluationId: evaluationId,
+                  question: {
+                    source: QuestionSource.EVAL,
+                    sourceQuestionId: { not: null },
+                  },
+                },
+                select: {
+                  question: {
+                    select: {
+                      sourceQuestionId: true,
+                    },
+                  },
+                },
+              })
+              .then((results) =>
+                results.map((r) => r.question.sourceQuestionId).filter(Boolean),
+              ),
+          },
+        },
+        data: {
+          usageStatus: QuestionUsageStatus.USED,
+          lastUsed: new Date(),
+        },
+      })
+
       // endAt is not set here - it will be set when moving to GRADING
     }
 

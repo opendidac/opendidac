@@ -13,53 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import Image from 'next/image'
-import { Alert, Box, Button, Chip, Typography } from '@mui/material'
-import LogoutIcon from '@mui/icons-material/Logout'
+import { Box, Chip, Typography } from '@mui/material'
 
 import DataGrid from '@/components/ui/DataGrid'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
-import DialogFeedback from '@/components/feedback/DialogFeedback'
 
-const MyGroupsGrid = ({ groups, onSelected, onLeave, onDelete }) => {
+const MyGroupsGrid = ({ groups, selectedGroup, onSelected }) => {
   const { data: session } = useSession()
-
-  const [deleteGroupId, setDeleteGroupId] = useState(null)
-
-  const leaveGroup = useCallback(
-    async (groupId) => {
-      const response = await fetch(`/api/groups/${groupId}/members`, {
-        method: 'DELETE',
-      })
-
-      if (response.status === 200) {
-        onLeave && onLeave(groupId)
-      }
-    },
-    [onLeave],
-  )
-
-  const deleteGroup = useCallback(
-    async (groupId) => {
-      const response = await fetch(`/api/groups/${groupId}`, {
-        method: 'DELETE',
-      })
-
-      if (response.status === 200) {
-        onDelete && onDelete(groupId)
-      }
-    },
-    [onDelete],
-  )
-
-  const onDeleteGroup = useCallback(
-    (groupId) => {
-      setDeleteGroupId(groupId)
-    },
-    [setDeleteGroupId],
-  )
 
   return (
     <Box sx={{ minWidth: '100%', pl: 2, pr: 2 }}>
@@ -103,15 +64,18 @@ const MyGroupsGrid = ({ groups, onSelected, onLeave, onDelete }) => {
             meta: {
               key: group.id,
               onClick: () => onSelected(group),
-              collapsedActions: true,
-              actions: getMyGroupsActions(
-                group,
-                session.user,
-                leaveGroup,
-                onDeleteGroup,
-              ),
             },
           }))}
+          rowStyle={(item) => ({
+            backgroundColor:
+              selectedGroup?.id === item.id ? 'action.selected' : 'transparent',
+            '&:hover': {
+              backgroundColor:
+                selectedGroup?.id === item.id
+                  ? 'action.selected'
+                  : 'action.hover',
+            },
+          })}
         />
       )}
       {groups && groups.length === 0 && (
@@ -121,66 +85,8 @@ const MyGroupsGrid = ({ groups, onSelected, onLeave, onDelete }) => {
           </Typography>
         </AlertFeedback>
       )}
-      <DialogFeedback
-        open={deleteGroupId !== null}
-        onClose={() => setDeleteGroupId(null)}
-        title="Are you sure you want to delete this group?"
-        content={
-          <Alert severity={'warning'}>
-            <Typography variant="body1">
-              This will delete all the related data, including questions,
-              collections, and evaluation.
-            </Typography>
-          </Alert>
-        }
-        onConfirm={() => {
-          deleteGroup(deleteGroupId)
-          setDeleteGroupId(null)
-        }}
-      />
     </Box>
   )
-}
-
-const getMyGroupsActions = (group, user, onLeave, onDelete) => {
-  const actions = [
-    <Button
-      key="leave-group"
-      startIcon={<LogoutIcon />}
-      onClick={(ev) => {
-        ev.preventDefault()
-        ev.stopPropagation()
-        onLeave(group.id)
-      }}
-    >
-      Leave this group
-    </Button>,
-  ]
-
-  if (group.createdById === user.id) {
-    actions.push(
-      <Button
-        key="delete-group"
-        startIcon={
-          <Image
-            alt="Delete"
-            src="/svg/icons/delete.svg"
-            width="18"
-            height="18"
-          />
-        }
-        onClick={(ev) => {
-          ev.preventDefault()
-          ev.stopPropagation()
-          onDelete(group.id)
-        }}
-      >
-        Delete this group
-      </Button>,
-    )
-  }
-
-  return actions
 }
 
 export default MyGroupsGrid

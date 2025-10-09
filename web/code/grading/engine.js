@@ -18,6 +18,7 @@ import {
   QuestionType,
   DatabaseQueryOutputStatus,
   CodeQuestionType,
+  StudentAnswerCodeReadingOutputStatus,
 } from '@prisma/client'
 import GradingPolicy from './policy'
 import { regexpFromPattern } from '@/code/utils'
@@ -159,9 +160,11 @@ const gradeCode = (question, totalPoints, studentAnswer) => {
   }
 
   const gradeCodeReading = (studentAnswer) => {
+    // Use the existing status from the outputs (already calculated with proper normalization)
     const success = studentAnswer?.outputs?.every(
-      (output) => output.output === output.codeReadingSnippet.output,
+      (output) => output.status === StudentAnswerCodeReadingOutputStatus.MATCH,
     )
+
     grading = {
       ...grading,
       status: StudentQuestionGradingStatus.AUTOGRADED,

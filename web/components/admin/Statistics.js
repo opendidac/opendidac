@@ -218,7 +218,6 @@ const Statistics = () => {
                 <StatCard
                   title="Evaluations"
                   value={statsData.evaluations_total}
-                  color="success"
                   helpContent={
                     <>
                       <Typography variant="body2" paragraph>
