@@ -38,6 +38,7 @@ const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
       question: {
         select: {
           ...questionSelectClause({
+            includeProfessorOnlyInfo: true,
             includeTypeSpecific: true,
             includeOfficialAnswers: true,
             includeTags: true,

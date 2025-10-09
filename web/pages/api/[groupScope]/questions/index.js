@@ -154,6 +154,7 @@ const get = async (req, res, prisma) => {
       ...questionSelectClause({
         includeTypeSpecific: true,
         includeOfficialAnswers: true,
+        includeProfessorOnlyInfo: true,
       }),
       evaluation: true,
     },
@@ -182,6 +183,7 @@ export const post = async (req, res, prisma) => {
   const fullSelect = questionSelectClause({
     includeTypeSpecific: true,
     includeOfficialAnswers: true,
+    includeProfessorOnlyInfo: true,
   })
 
   try {

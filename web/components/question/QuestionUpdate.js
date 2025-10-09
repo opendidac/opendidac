@@ -31,6 +31,8 @@ import Loading from '../feedback/Loading'
 import { fetcher } from '../../code/utils'
 import DialogFeedback from '../feedback/DialogFeedback'
 import { QuestionStatus } from '@prisma/client'
+import BottomCollapsiblePanel from '@/components/layout/utils/BottomCollapsiblePanel'
+import ScratchPad from '@/components/question/ScratchPad'
 
 const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
   const router = useRouter()
@@ -172,98 +174,109 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
       <LayoutSplitScreen
         leftPanel={
           question && (
-            <Stack spacing={2} sx={{ pl: 2, pt: 1, height: '100%' }}>
-              <Stack direction="row" alignItems="flex-start" spacing={1}>
-                <TextField
-                  id={`question-${question.id}-title`}
-                  label="Title"
-                  variant="outlined"
-                  fullWidth
-                  focused
-                  value={title}
-                  onChange={(e) => {
-                    setTitle(e.target.value)
-                    onPropertyChange('title', e.target.value)
-                  }}
+            <BottomCollapsiblePanel
+              bottomPanel={
+                <ScratchPad
+                  content={question.scratchpad}
+                  onChange={(content) =>
+                    onPropertyChange('scratchpad', content)
+                  }
                 />
-              </Stack>
+              }
+            >
+              <Stack spacing={2} sx={{ pl: 2, pt: 1, height: '100%' }}>
+                <Stack direction="row" alignItems="flex-start" spacing={1}>
+                  <TextField
+                    id={`question-${question.id}-title`}
+                    label="Title"
+                    variant="outlined"
+                    fullWidth
+                    focused
+                    value={title}
+                    onChange={(e) => {
+                      setTitle(e.target.value)
+                      onPropertyChange('title', e.target.value)
+                    }}
+                  />
+                </Stack>
 
-              <QuestionTagsSelector
-                groupScope={groupScope}
-                questionId={question.id}
-                onChange={() => onUpdate && onUpdate(question)}
-              />
-              <MarkdownEditor
-                id={`question-${question.id}`}
-                groupScope={groupScope}
-                withUpload
-                title="Problem Statement"
-                rawContent={question.content}
-                onChange={(content) => onPropertyChange('content', content)}
-              />
+                <QuestionTagsSelector
+                  groupScope={groupScope}
+                  questionId={question.id}
+                  onChange={() => onUpdate && onUpdate(question)}
+                />
+                <MarkdownEditor
+                  id={`question-${question.id}`}
+                  groupScope={groupScope}
+                  withUpload
+                  title="Problem Statement"
+                  rawContent={question.content}
+                  onChange={(content) => onPropertyChange('content', content)}
+                />
 
-              <Stack
-                direction="row"
-                justifyContent="flex-end"
-                width={'100%'}
-                pb={1}
-                alignItems={'center'}
-                spacing={2}
-              >
-                {question.status === QuestionStatus.ACTIVE ? (
-                  <Tooltip title="Add to archive">
-                    <Button
-                      startIcon={
-                        <Image
-                          alt="Archive"
-                          src="/svg/icons/archive.svg"
-                          width="18"
-                          height="18"
-                        />
-                      }
-                      onClick={() => setArchiveQuestionDialogOpen(true)}
-                    >
-                      Archive this question
-                    </Button>
-                  </Tooltip>
-                ) : (
-                  <>
-                    <Tooltip title="Restore from archive">
+                <Stack
+                  direction="row"
+                  justifyContent="flex-end"
+                  width={'100%'}
+                  pb={1}
+                  alignItems={'center'}
+                  spacing={2}
+                >
+                  {question.status === QuestionStatus.ACTIVE ? (
+                    <Tooltip title="Add to archive">
                       <Button
-                        color="info"
                         startIcon={
                           <Image
-                            alt="Unarchive"
-                            src="/svg/icons/archive-blue.svg"
+                            alt="Archive"
+                            src="/svg/icons/archive.svg"
                             width="18"
                             height="18"
                           />
                         }
-                        onClick={() => setUnarchiveQuestionDialogOpen(true)}
+                        onClick={() => setArchiveQuestionDialogOpen(true)}
                       >
-                        Unarchive
+                        Archive this question
                       </Button>
                     </Tooltip>
-                    <Tooltip title="Delete permanently">
-                      <Button
-                        color="error"
-                        startIcon={
-                          <Image
-                            alt="Delete"
-                            src="/svg/icons/delete.svg"
-                            width="18"
-                            height="18"
-                          />
-                        }
-                        onClick={() => setDeleteQuestionDialogOpen(true)}
-                      >
-                        Delete permanently
-                      </Button>
-                    </Tooltip>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <Tooltip title="Restore from archive">
+                        <Button
+                          color="info"
+                          startIcon={
+                            <Image
+                              alt="Unarchive"
+                              src="/svg/icons/archive-blue.svg"
+                              width="18"
+                              height="18"
+                            />
+                          }
+                          onClick={() => setUnarchiveQuestionDialogOpen(true)}
+                        >
+                          Unarchive
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title="Delete permanently">
+                        <Button
+                          color="error"
+                          startIcon={
+                            <Image
+                              alt="Delete"
+                              src="/svg/icons/delete.svg"
+                              width="18"
+                              height="18"
+                            />
+                          }
+                          onClick={() => setDeleteQuestionDialogOpen(true)}
+                        >
+                          Delete permanently
+                        </Button>
+                      </Tooltip>
+                    </>
+                  )}
+                </Stack>
               </Stack>
-            </Stack>
+            </BottomCollapsiblePanel>
           )
         }
         rightPanel={

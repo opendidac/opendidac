@@ -145,12 +145,16 @@ model Question {
   type   QuestionType
   source QuestionSource @default(BANK)
   status QuestionStatus @default(ACTIVE)
+  usageStatus QuestionUsageStatus @default(UNUSED)
 
   title   String
   content String?
 
+  scratchpad String? // For professors to leave notes for themselves
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  lastUsed DateTime?
 
   multipleChoice MultipleChoice?
   trueFalse      TrueFalse?
