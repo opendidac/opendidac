@@ -158,7 +158,7 @@ const get = async (req, res, prisma) => {
       evaluation: true,
     },
     orderBy: {
-      updatedAt: 'desc',
+      createdAt: 'desc',
     },
   })
 
