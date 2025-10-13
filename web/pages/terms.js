@@ -17,6 +17,7 @@ import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import { useEffect, useState } from 'react'
 import Loading from '@/components/feedback/Loading'
 import { Card, CardContent } from '@mui/material'
+import BackButton from '@/components/layout/BackButton'
 
 const Terms = () => {
   const [terms, setTerms] = useState()
@@ -50,7 +51,8 @@ const Terms = () => {
           p: 3,
         }}
       >
-        <CardContent>
+        <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <BackButton backUrl={'/'} />
           <MarkdownViewer content={terms} />
         </CardContent>
       </Card>
