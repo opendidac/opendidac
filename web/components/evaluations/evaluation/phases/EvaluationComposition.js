@@ -349,6 +349,7 @@ const QuestionItem = ({
           evaluationToQuestion={evaluationToQuestion}
           readOnly={readOnly}
           onSave={async (updatedEvaluationToQuestion) => {
+            evaluationToQuestion.title = updatedEvaluationToQuestion.title
             await debounceSaveCollectionToQuestion(updatedEvaluationToQuestion)
           }}
         />
@@ -393,6 +394,7 @@ const QuestionItem = ({
               variant="standard"
               rightAdornement={'pts'}
               onChange={async (value) => {
+                evaluationToQuestion.points = value
                 await debounceSaveCollectionToQuestion({
                   ...evaluationToQuestion,
                   points: value,
