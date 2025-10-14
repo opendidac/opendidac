@@ -77,12 +77,15 @@ const QuestionTitleField = ({
     )
   }
 
+  const originalTitle = evaluationToQuestion.question.title
+
+  const isTitleChanged = localTitle !== originalTitle
   return (
     <TextField
       variant="standard"
       size="small"
+      label={isTitleChanged ? originalTitle : null}
       value={localTitle}
-      placeholder={evaluationToQuestion.question.title}
       onChange={handleTitleChange}
       disabled={isSaving}
       sx={{

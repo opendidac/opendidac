@@ -18,7 +18,6 @@ import Image from 'next/image'
 import { useDebouncedCallback } from 'use-debounce'
 import {
   Alert,
-  AlertTitle,
   Button,
   IconButton,
   Stack,
@@ -33,14 +32,18 @@ import CodeQuestionTypeIcon from '@/components/question/type_specific/code/CodeQ
 import ScrollContainer from '@/components/layout/ScrollContainer'
 import ReorderableList from '@/components/layout/utils/ReorderableList'
 import { phaseGreaterThan } from '../phases'
-import { CodeQuestionType, EvaluationPhase, QuestionType } from '@prisma/client'
+import { EvaluationPhase, QuestionType } from '@prisma/client'
 import QuestionIncludeDrawer from './composition/QuestionIncludeDrawer'
 import QuestionTitleField from './composition/QuestionTitleField'
 import { useTheme } from '@emotion/react'
 import EvaluationTitleBar from '../layout/EvaluationTitleBar'
 import { useRouter } from 'next/router'
-import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import { useReorderable } from '@/components/layout/utils/ReorderableList'
+import {
+  ComplianceBanner,
+  useCompositionCompliance,
+} from './composition/CompositionCompliance'
+import useCtrlState from '@/hooks/useCtrlState'
 
 const EvaluationComposition = ({
   groupScope,
@@ -133,122 +136,15 @@ const EvaluationCompositionQuestions = ({
   readOnly,
   onCompositionChanged,
 }) => {
-  const [questions, setQuestions] = useState(composition)
-  const [hasWarnings, setHasWarnings] = useState(false)
-  const [warnings, setWarnings] = useState({})
-  const [pointsWarnings, setPointsWarnings] = useState({})
-  const [globalWarnings, setGlobalWarnings] = useState([])
+  const [questions, setQuestions] = useCtrlState(composition, evaluationId)
+  const { hasWarnings, globalWarnings, getIndicator } =
+    useCompositionCompliance(questions)
 
   useEffect(() => {
     setQuestions(composition)
-  }, [composition])
+  }, [composition, setQuestions])
 
-  const checkGlobalCompliance = useCallback((evaluationToQuestions) => {
-    const warnings = []
-    const totalPoints = evaluationToQuestions.reduce(
-      (sum, eq) => sum + (eq.points || 0),
-      0,
-    )
-
-    if (totalPoints === 0) {
-      warnings.push(
-        'The total points for all questions is 0. Please set points for at least one question.',
-      )
-    }
-
-    return warnings
-  }, [])
-
-  const codeQuestionComplianceCheck = useCallback((collectionToQuestions) => {
-    const warnings = {}
-
-    for (const collectionToQuestion of collectionToQuestions) {
-      // find other question of the type code of opposite code type and same language
-      if (collectionToQuestion.question.type == QuestionType.code) {
-        const warning =
-          'The students may use the code writing code check feature to execute code reading snippets and get the outputs. This can lead to cheating. It is recommended to avoid mixing code reading and code writing questions of the same language in the same collection.'
-
-        const codeType = collectionToQuestion.question.code.codeType
-        const language = collectionToQuestion.question.code.language
-        const oppositeCodeType =
-          codeType === CodeQuestionType.codeWriting
-            ? CodeQuestionType.codeReading
-            : CodeQuestionType.codeWriting
-
-        const oppositeCodeQuestion = collectionToQuestions.filter(
-          (item) =>
-            item.question.type === 'code' &&
-            item.question.code.codeType === oppositeCodeType &&
-            item.question.code.language === language,
-        )
-
-        if (oppositeCodeQuestion.length > 0) {
-          warnings[collectionToQuestion.question.id] = warning
-          for (const oppositeQuestion of oppositeCodeQuestion) {
-            warnings[oppositeQuestion.question.id] = warning
-          }
-        }
-      }
-    }
-    return warnings
-  }, [])
-
-  const pointsComplianceCheck = useCallback((evaluationToQuestions) => {
-    const warnings = {}
-
-    // Individual warnings for questions with 0 points
-    evaluationToQuestions.forEach((eq) => {
-      if (!eq.points || eq.points === 0) {
-        warnings[eq.question.id] =
-          'This question has no points assigned. Please set a value greater than 0.'
-      }
-    })
-
-    return warnings
-  }, [])
-
-  const complianceCheck = useCallback(
-    (evaluationToQuestions) => {
-      const warnings = {}
-
-      // Check code question compliance
-      for (const eq of evaluationToQuestions) {
-        switch (eq.question.type) {
-          case QuestionType.code:
-            Object.assign(
-              warnings,
-              codeQuestionComplianceCheck(evaluationToQuestions),
-            )
-            break
-          default:
-            break
-        }
-      }
-
-      return warnings
-    },
-    [codeQuestionComplianceCheck],
-  )
-
-  useEffect(() => {
-    const newWarnings = complianceCheck(composition)
-    const newPointsWarnings = pointsComplianceCheck(composition)
-    const newGlobalWarnings = checkGlobalCompliance(composition)
-
-    setWarnings(newWarnings)
-    setPointsWarnings(newPointsWarnings)
-    setGlobalWarnings(newGlobalWarnings)
-    setHasWarnings(
-      Object.keys(newWarnings).length > 0 ||
-        Object.keys(newPointsWarnings).length > 0 ||
-        newGlobalWarnings.length > 0,
-    )
-  }, [
-    composition,
-    complianceCheck,
-    pointsComplianceCheck,
-    checkGlobalCompliance,
-  ])
+  // Compliance computed by hook
 
   const saveReOrder = useCallback(
     async (reordered) => {
@@ -289,61 +185,19 @@ const EvaluationCompositionQuestions = ({
       setQuestions(reordered)
 
       await debounceSaveOrdering(reordered)
+      onCompositionChanged && onCompositionChanged()
     },
-    [debounceSaveOrdering, questions, setQuestions],
+    [debounceSaveOrdering, questions, setQuestions, onCompositionChanged],
   )
 
-  const getIndicator = useCallback(
-    (questionId) => {
-      const questionWarnings = []
-
-      // Add individual question warnings
-      if (warnings[questionId]) {
-        questionWarnings.push(warnings[questionId])
-      }
-
-      // Add points warning if applicable
-      if (pointsWarnings[questionId]) {
-        questionWarnings.push(pointsWarnings[questionId])
-      }
-
-      if (questionWarnings.length > 0) {
-        return (
-          <Stack direction="row" spacing={0}>
-            {questionWarnings.map((warning, index) => (
-              <UserHelpPopper key={index} mode={'warning'}>
-                {warning}
-              </UserHelpPopper>
-            ))}
-          </Stack>
-        )
-      }
-      return null
-    },
-    [warnings, pointsWarnings],
-  )
+  // getIndicator provided by hook
 
   return (
     <Stack spacing={1}>
-      {hasWarnings && (
-        <Alert severity="warning" sx={{ mb: 1 }}>
-          <AlertTitle>Compliance warnings</AlertTitle>
-          <Stack spacing={1}>
-            <Typography variant="body2">
-              Click on the warning icon next to the questions to see details.
-            </Typography>
-            {globalWarnings.map((warning, index) => (
-              <Typography key={index} variant="body2">
-                {warning}
-              </Typography>
-            ))}
-            <Typography variant="body1">
-              These warnings can be ignored. You may proceed if you have
-              carefully considered the implications.
-            </Typography>
-          </Stack>
-        </Alert>
-      )}
+      <ComplianceBanner
+        hasWarnings={hasWarnings}
+        globalWarnings={globalWarnings}
+      />
       {readOnly ? (
         <Alert severity="info">
           <Typography variant="body2">
@@ -361,19 +215,15 @@ const EvaluationCompositionQuestions = ({
         </Alert>
       )}
       <ReorderableList disabled={readOnly} onChangeOrder={onChangeOrder}>
-        {questions.map((eToQ, index) => (
+        {questions.map((eToQ) => (
           <QuestionItem
             key={eToQ.id}
             groupScope={groupScope}
             evaluationToQuestion={eToQ}
             readOnly={readOnly}
             indicator={getIndicator(eToQ.question.id)}
-            onChange={(index, updated) => {
-              onCompositionChanged()
-            }}
-            onDelete={() => {
-              onCompositionChanged()
-            }}
+            onUpdate={() => onCompositionChanged()}
+            onDelete={() => onCompositionChanged()}
           />
         ))}
       </ReorderableList>
@@ -385,7 +235,7 @@ const QuestionItem = ({
   groupScope,
   evaluationToQuestion,
   indicator,
-  onChange,
+  onUpdate,
   onDelete,
   readOnly = false,
 }) => {
@@ -419,7 +269,7 @@ const QuestionItem = ({
   )
 
   const saveCollectionToQuestion = useCallback(
-    async (index, updated) => {
+    async (updated) => {
       if (readOnly) return // prevent saving in read-only mode
 
       const response = await fetch(
@@ -435,10 +285,10 @@ const QuestionItem = ({
         },
       )
       if (response.ok) {
-        onChange && onChange(index, updated)
+        onUpdate && onUpdate()
       }
     },
-    [groupScope, onChange, readOnly],
+    [groupScope, onUpdate, readOnly],
   )
 
   const debounceSaveCollectionToQuestion = useDebouncedCallback(
@@ -452,8 +302,9 @@ const QuestionItem = ({
     <Stack
       direction="row"
       alignItems="center"
+      justifyContent="center"
       spacing={1}
-      height={50}
+      height={60}
       pl={1}
       borderBottom={`1px solid ${theme.palette.divider}`}
       sx={getDragStyles(evaluationToQuestion.order)}
@@ -498,10 +349,7 @@ const QuestionItem = ({
           evaluationToQuestion={evaluationToQuestion}
           readOnly={readOnly}
           onSave={async (updatedEvaluationToQuestion) => {
-            await debounceSaveCollectionToQuestion(
-              evaluationToQuestion.order,
-              updatedEvaluationToQuestion,
-            )
+            await debounceSaveCollectionToQuestion(updatedEvaluationToQuestion)
           }}
         />
       </Stack>
@@ -545,13 +393,10 @@ const QuestionItem = ({
               variant="standard"
               rightAdornement={'pts'}
               onChange={async (value) => {
-                await debounceSaveCollectionToQuestion(
-                  evaluationToQuestion.order,
-                  {
-                    ...evaluationToQuestion,
-                    points: value,
-                  },
-                )
+                await debounceSaveCollectionToQuestion({
+                  ...evaluationToQuestion,
+                  points: value,
+                })
               }}
             />
           </>
