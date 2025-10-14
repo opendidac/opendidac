@@ -15,18 +15,20 @@
  */
 
 /**
- * useCtrlState is a hook that manages the state of a component based on id
+ * useCtrlState is a hook that manages a sticky local draft per entity
+ * the state refresh is managed by the key
  */
 
 import { useState, useEffect } from 'react'
 
-const useCtrlState = (initial, id) => {
+const useCtrlState = (initial, key) => {
   const [value, setValue] = useState(initial)
 
   useEffect(() => {
+    //console.log('useCtrlState', key, initial, value)
     setValue(initial)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id])
+  }, [key])
 
   return [value, setValue]
 }

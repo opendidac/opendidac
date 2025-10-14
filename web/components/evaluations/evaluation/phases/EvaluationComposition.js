@@ -44,7 +44,6 @@ import {
   useCompositionCompliance,
 } from './composition/CompositionCompliance'
 import useCtrlState from '@/hooks/useCtrlState'
-import { UpdateDisabled } from '@mui/icons-material'
 
 const EvaluationComposition = ({
   groupScope,
@@ -107,7 +106,7 @@ const EvaluationComposition = ({
         }
       />
       <ScrollContainer spacing={1} px={1} pb={24}>
-        <EvaluationCompositionQuestions
+        <CompositionGrid
           groupScope={groupScope}
           evaluationId={evaluationId}
           composition={composition}
@@ -130,16 +129,18 @@ const EvaluationComposition = ({
   )
 }
 
-const EvaluationCompositionQuestions = ({
+const CompositionGrid = ({
   groupScope,
   evaluationId,
   composition,
   readOnly,
   onCompositionChanged,
 }) => {
+  const [questions, setQuestions] = useCtrlState(
+    composition,
+    `${evaluationId}-composition`,
+  )
 
-
-  const [questions, setQuestions] = useCtrlState(composition, evaluationId)
   const { hasWarnings, globalWarnings, getIndicator } =
     useCompositionCompliance(questions)
 
@@ -147,114 +148,34 @@ const EvaluationCompositionQuestions = ({
     setQuestions(composition)
   }, [composition, setQuestions])
 
-  // Compliance computed by hook
-
-  const saveReOrderNow = useCallback(async (ordered) => {
-    // Send only id + order (see Fix #2)
-    console.log('saveReOrderNow', ordered)
-    await fetch(`/api/${groupScope}/evaluations/${evaluationId}/composition/order`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ questions: ordered }),
-    })
-    onCompositionChanged && onCompositionChanged()
-  }, [groupScope, evaluationId, onCompositionChanged])
-  
-
-
-  const saveEvaluationToQuestion = useCallback(
-    async (updated) => {
-      console.log('saveEvaluationToQuestion', updated, "mixed", updated.title.slice(0, 10) !== updated.question.title.slice(0, 10))
+  const saveReOrder = useCallback(
+    async (ordered) => {
+      // Send only id + order (see Fix #2)
       await fetch(
-        `/api/${groupScope}/evaluations/${updated.evaluationId}/composition`,
+        `/api/${groupScope}/evaluations/${evaluationId}/composition/order`,
         {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            evaluationToQuestion: updated,
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questions: ordered }),
         },
       )
       onCompositionChanged && onCompositionChanged()
     },
-    [groupScope, onCompositionChanged],
+    [groupScope, evaluationId, onCompositionChanged],
   )
 
-  const saveDelete = useCallback(
-    async (evaluationId, questionId) => {
-     // persist deletion
-     await fetch(
-      `/api/${groupScope}/evaluations/${evaluationId}/composition`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ questionId }),
-      },
-    )
-      onCompositionChanged && onCompositionChanged()
+  const onChangeOrder = useCallback(
+    (sourceIndex, targetIndex) => {
+      setQuestions((prev) => {
+        const next = [...prev]
+        const [moved] = next.splice(sourceIndex, 1)
+        next.splice(targetIndex, 0, moved)
+        const nextAfter = next.map((q, i) => ({ ...q, order: i }))
+        return nextAfter
+      })
     },
-    [groupScope, onCompositionChanged],
-  ) 
-
-  const debounceSaveOrdering = useDebouncedCallback((ordered) => {
-    return saveReOrderNow(ordered)
-  }, 300)
-
-  const debounceSaveEvaluationToQuestion = useDebouncedCallback(
-    saveEvaluationToQuestion,
-    300,
+    [setQuestions],
   )
-
-  const detectMixedElement = useCallback((console_log, qtss) => {
-    
-    qtss.forEach((q, i) => {
-      //console.log('q', q.title, "|", q.question.title, "|", q.title.slice(0, 10) === q.question.title.slice(0, 10))
-      const mixedElement = q.title.slice(0, 10) !== q.question.title.slice(0, 10)
-      console.log('mixedElement', console_log, mixedElement, mixedElement ? q : "no mixed element")
-    })
-  }, [])
-
-
-  const onChangeOrder = useCallback((sourceIndex, targetIndex) => {
-    setQuestions(prev => {
-      const next = [...prev]
-      const [moved] = next.splice(sourceIndex, 1)
-      next.splice(targetIndex, 0, moved)
-      const nextAfter = next.map((q, i) => ({ ...q, order: i }))
-      return nextAfter
-    })
-  }, [setQuestions, debounceSaveOrdering])
-  
-
-  const changeQuestion = useCallback(
-    async (updated) => {
-      const newQuestions = [...questions]
-      const index = newQuestions.findIndex(
-        (q) => q.questionId === updated.questionId,
-      )
-      newQuestions[index] = updated
-      setQuestions(newQuestions)
-      await debounceSaveEvaluationToQuestion(updated)
-    },
-    [questions, setQuestions, debounceSaveEvaluationToQuestion],
-  )
-
-  const onDelete = useCallback(
-    async (toDelete) => {
-       // remove locally first
-       const newQuestions = questions.filter(
-        (q) => q.questionId !== toDelete.questionId,
-      )
-      setQuestions(newQuestions)
-      await saveDelete(evaluationId, toDelete.questionId)
-    },
-    [saveDelete, evaluationId, questions, setQuestions],
-  )
-
 
   return (
     <Stack spacing={1}>
@@ -280,21 +201,16 @@ const EvaluationCompositionQuestions = ({
       )}
       <ReorderableList disabled={readOnly} onChangeOrder={onChangeOrder}>
         {questions.map((eToQ) => (
-          <QuestionItem
+          <CompositionItem
             key={eToQ.id}
             groupScope={groupScope}
             evaluationToQuestion={eToQ}
             readOnly={readOnly}
             indicator={getIndicator(eToQ.question.id)}
-            onUpdate={async (updated) => {
-              await changeQuestion(updated)
-            }}
-            onDelete={async (toDelete) => {
-              await onDelete(toDelete)
-            }}
             onHandleDragEnd={async () => {
-              await debounceSaveOrdering(questions)
+              await saveReOrder(questions)
             }}
+            onCompositionChanged={onCompositionChanged}
           />
         ))}
       </ReorderableList>
@@ -302,15 +218,14 @@ const EvaluationCompositionQuestions = ({
   )
 }
 
-const QuestionItem = ({
+const CompositionItem = ({
   groupScope,
   evaluationToQuestion,
   indicator,
-  onUpdate,
   onHandleDragEnd,
-  onDelete,
   readOnly = false,
   disabled = false,
+  onCompositionChanged,
 }) => {
   const router = useRouter()
   const {
@@ -323,6 +238,65 @@ const QuestionItem = ({
 
   const theme = useTheme()
 
+  const questionId = evaluationToQuestion.questionId
+  const evaluationId = evaluationToQuestion.evaluationId
+  const order = evaluationToQuestion.order
+  const originalTitle = evaluationToQuestion.question.title
+  const title = evaluationToQuestion.title
+
+  const key = `${evaluationId}-${questionId}`
+
+  const [points, setPoints] = useCtrlState(evaluationToQuestion.points, key)
+
+  const saveCompositionItem = useCallback(
+    async (property, value) => {
+      console.log('saveCompositionItem', property, value)
+      await fetch(
+        `/api/${groupScope}/evaluations/${evaluationId}/composition/${questionId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            [property]: value,
+          }),
+        },
+      )
+      onCompositionChanged && onCompositionChanged()
+    },
+    [evaluationId, questionId, groupScope, onCompositionChanged],
+  )
+
+  const saveDelete = useCallback(
+    async (evalId, qId) => {
+      // persist deletion
+      await fetch(
+        `/api/${groupScope}/evaluations/${evalId}/composition/${qId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+      onCompositionChanged && onCompositionChanged()
+    },
+    [groupScope, onCompositionChanged],
+  )
+
+  const debounceSaveCompositionItem = useDebouncedCallback(
+    saveCompositionItem,
+    1500,
+  )
+
+  const handleDelete = useCallback(
+    async (toDelete) => {
+      await saveDelete(evaluationId, toDelete.questionId)
+    },
+    [saveDelete, evaluationId],
+  )
+
   return (
     <Stack
       direction="row"
@@ -332,19 +306,18 @@ const QuestionItem = ({
       height={60}
       pl={1}
       borderBottom={`1px solid ${theme.palette.divider}`}
-      sx={getDragStyles(evaluationToQuestion.order)}
+      sx={getDragStyles(order)}
       onDragOver={(e) => {
         if (readOnly || disabled) return
-        handleDragOver(e, evaluationToQuestion.order)
+        handleDragOver(e, order)
       }}
       onDragEnd={(e) => {
         if (readOnly || disabled) return
-        handleDragEnd(e, evaluationToQuestion.order)
+        handleDragEnd(e, order)
         onHandleDragEnd && onHandleDragEnd()
-
       }}
     >
-      {!(readOnly) && (
+      {!readOnly && (
         <Stack
           justifyContent={'center'}
           sx={{
@@ -356,7 +329,11 @@ const QuestionItem = ({
           }}
           pr={1}
           draggable={!dragDisabled}
-          onDragStart={(e) => handleDragStart(e, evaluationToQuestion.order)}
+          onDragStart={(e) => {
+            // cancel the eventual debounced save
+            debounceSaveCompositionItem.cancel()
+            handleDragStart(e, order)
+          }}
         >
           <DragHandleSVG />
         </Stack>
@@ -377,18 +354,15 @@ const QuestionItem = ({
         whiteSpace={'nowrap'}
       >
         <Typography variant="body1">
-          <b>Q{evaluationToQuestion.order + 1}</b>
+          <b>Q{order + 1}</b>
         </Typography>
         <QuestionTitleField
-          id={evaluationToQuestion.questionId}
-          currentTitle={evaluationToQuestion.title}
-          originalTitle={evaluationToQuestion.question.title}
+          id={`${key}-title`}
+          currentTitle={title}
+          originalTitle={originalTitle}
           readOnly={readOnly || disabled}
-          onSaveTitle={async (newTitle) => {
-            onUpdate && onUpdate({
-              ...evaluationToQuestion,
-              title: newTitle,
-            })
+          onChangeTitle={(title) => {
+            debounceSaveCompositionItem('title', title)
           }}
         />
       </Stack>
@@ -430,15 +404,13 @@ const QuestionItem = ({
               </IconButton>
             </Tooltip>
             <DecimalInput
-              value={evaluationToQuestion.points}
+              value={points}
               variant="standard"
               rightAdornement={'pts'}
               onChange={async (value) => {
                 if (readOnly || disabled) return
-                onUpdate && onUpdate({
-                  ...evaluationToQuestion,
-                  points: value,
-                })
+                setPoints(value)
+                debounceSaveCompositionItem('points', value)
               }}
             />
           </>
@@ -451,7 +423,7 @@ const QuestionItem = ({
             onClick={async (ev) => {
               ev.preventDefault()
               ev.stopPropagation()
-              onDelete && onDelete(evaluationToQuestion)
+              await handleDelete(evaluationToQuestion)
             }}
           >
             <Image

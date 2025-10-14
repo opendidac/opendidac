@@ -15,7 +15,6 @@
  */
 import { useCallback } from 'react'
 import { TextField, Typography } from '@mui/material'
-import { useDebouncedCallback } from 'use-debounce'
 import useCtrlState from '@/hooks/useCtrlState'
 
 const QuestionTitleField = ({
@@ -23,27 +22,20 @@ const QuestionTitleField = ({
   currentTitle,
   originalTitle,
   readOnly = false,
-  onSaveTitle,
+  onChangeTitle,
 }) => {
   const [localTitle, setLocalTitle] = useCtrlState(currentTitle, id)
 
-  const debouncedSave = useDebouncedCallback(onSaveTitle, 500)
-
   const handleTitleChange = useCallback(
-    (event) => {
-      const newTitle = event.target.value
-      setLocalTitle(newTitle)
-      debouncedSave(newTitle)
+    (value) => {
+      setLocalTitle(value)
+      onChangeTitle(value)
     },
-    [debouncedSave],
+    [onChangeTitle, setLocalTitle],
   )
 
   if (readOnly) {
-    return (
-      <Typography variant="body2">
-        {currentTitle}
-      </Typography>
-    )
+    return <Typography variant="body2">{currentTitle}</Typography>
   }
 
   const isTitleChanged = localTitle !== originalTitle
@@ -53,8 +45,7 @@ const QuestionTitleField = ({
       size="small"
       label={isTitleChanged ? originalTitle : null}
       value={localTitle}
-      onChange={handleTitleChange}
-      
+      onChange={(event) => handleTitleChange(event.target.value)}
       sx={{
         flexGrow: 1,
         '& .MuiInput-underline:before': {
