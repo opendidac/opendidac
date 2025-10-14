@@ -216,17 +216,26 @@ const EvaluationCompositionQuestions = ({
     300,
   )
 
+  const detectMixedElement = useCallback((console_log, qtss) => {
+    qtss.forEach((q, i) => {
+      const mixedElement = q.title.slice(0, 6) !== q.question.title.slice(0, 6)
+      console.log('mixedElement', mixedElement)
+    })
+  }, [])
+
 
   const onChangeOrder = useCallback((sourceIndex, targetIndex) => {
     setQuestions(prev => {
-      console.log('prev', prev.title, prev.question.title)
       //const mixedElement = prev.title.slice(0, 10) !== prev.question.title.slice(0, 10)
       //console.log('misedElement', mixedElement)
       const next = [...prev];
+      detectMixedElement("next", next)
       const [moved] = next.splice(sourceIndex, 1);
       next.splice(targetIndex, 0, moved);
       // recreate items to avoid mutating shared refs
-      return next.map((q, i) => ({ ...q, order: i }));
+      const nextAfter = next.map((q, i) => ({ ...q, order: i }));
+      detectMixedElement("nextAfter", nextAfter)
+      return nextAfter
     });
   }, [setQuestions]);
   
@@ -235,11 +244,12 @@ const EvaluationCompositionQuestions = ({
     async (updated) => {
       console.log('changeQuestion', updated.title, updated.question.title)
       const newQuestions = [...questions]
-
+      detectMixedElement("newQuestions", newQuestions)
       const index = newQuestions.findIndex(
         (q) => q.questionId === updated.questionId,
       )
       newQuestions[index] = updated
+      detectMixedElement("newQuestions after", newQuestions)
       setQuestions(newQuestions)
       await debounceSaveEvaluationToQuestion(updated)
     },
