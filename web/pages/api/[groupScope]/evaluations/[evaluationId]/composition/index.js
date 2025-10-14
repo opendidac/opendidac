@@ -136,88 +136,10 @@ const post = async (req, res, prisma) => {
   res.status(200).json(evaluationToQuestions)
 }
 
-const put = async (req, res, prisma) => {
-  // update the collectionToQuestion
-  const { evaluationToQuestion } = req.body
-
-  const updateData = {
-    points: parseFloat(evaluationToQuestion.points),
-  }
-
-  // Include title if provided
-  if (evaluationToQuestion.title !== undefined) {
-    updateData.title = evaluationToQuestion.title
-  }
-
-  await prisma.evaluationToQuestion.update({
-    where: {
-      evaluationId_questionId: {
-        evaluationId: evaluationToQuestion.evaluationId,
-        questionId: evaluationToQuestion.questionId,
-      },
-    },
-    data: updateData,
-  })
-
-  res.status(200).json({ message: 'OK' })
-}
-
-const del = async (req, res, prisma) => {
-  // delete a question from a collection
-  const { evaluationId } = req.query
-  const { questionId } = req.body
-
-  // get the order of this question in the evaluation
-  const order = await prisma.evaluationToQuestion.findFirst({
-    where: {
-      AND: [{ evaluationId: evaluationId }, { questionId: questionId }],
-    },
-    orderBy: {
-      order: 'asc',
-    },
-  })
-
-  if (!order) {
-    res.status(404).json({ message: 'question not found' })
-    return
-  }
-
-  await prisma.$transaction(async (prisma) => {
-    // delete the collectionToQuestion
-    const deleted = await prisma.evaluationToQuestion.delete({
-      where: {
-        evaluationId_questionId: {
-          evaluationId: evaluationId,
-          questionId: questionId,
-        },
-      },
-    })
-    // decrement the order of all questions that were after the deleted question
-    await prisma.evaluationToQuestion.updateMany({
-      where: {
-        AND: [{ evaluationId: evaluationId }, { order: { gt: order.order } }],
-      },
-      data: {
-        order: {
-          decrement: 1,
-        },
-      },
-    })
-  })
-
-  res.status(200).json({ message: 'OK' })
-}
-
 export default withGroupScope(
   withMethodHandler({
     GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
     POST: withAuthorization(withEvaluationUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
-    PUT: withAuthorization(withEvaluationUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withEvaluationUpdate(withPrisma(del)), [
       Role.PROFESSOR,
     ]),
   }),
