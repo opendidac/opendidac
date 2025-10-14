@@ -133,10 +133,10 @@ const get = async (req, res, prisma) => {
     })
   }
 
-  // Filter for unused questions using the usageStatus field
+  // Filter for unused questions 
   if (isUnused) {
     where.where.AND.push({
-      usageStatus: QuestionUsageStatus.UNUSED,
+      lastUsed: null,
     })
   }
 
@@ -150,13 +150,11 @@ const get = async (req, res, prisma) => {
     ...where,
     select: {
       lastUsed: true,
-      usageStatus: true,
       ...questionSelectClause({
         includeTypeSpecific: true,
         includeOfficialAnswers: true,
         includeProfessorOnlyInfo: true,
       }),
-      evaluation: true,
     },
     orderBy: {
       createdAt: 'desc',

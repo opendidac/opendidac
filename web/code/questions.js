@@ -18,7 +18,6 @@ import {
   StudentPermission,
   QuestionSource,
   CodeQuestionType,
-  QuestionUsageStatus,
 } from '@prisma/client'
 
 export const IncludeStrategy = {
@@ -443,10 +442,6 @@ export const copyQuestion = async (
     title: appendCopyInTitle ? `Copy of ${question.title}` : question.title,
     content: question.content,
     type: question.type,
-    usageStatus:
-      source === QuestionSource.EVAL
-        ? QuestionUsageStatus.NOT_APPLICABLE
-        : QuestionUsageStatus.UNUSED,
     scratchpad: question.scratchpad,
     group: {
       connect: {
