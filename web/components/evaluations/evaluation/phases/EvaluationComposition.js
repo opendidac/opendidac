@@ -149,31 +149,22 @@ const EvaluationCompositionQuestions = ({
 
   // Compliance computed by hook
 
-  const saveReOrder = useCallback(
-    async () => {
-      // save question order
-      console.log('saveReOrder')
-      detectMixedElement("saveReOrder", questions)
-      await fetch(
-        `/api/${groupScope}/evaluations/${evaluationId}/composition/order`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            questions: questions,
-          }),
-        },
-      )
-      onCompositionChanged && onCompositionChanged()
-    },
-    [groupScope, evaluationId, onCompositionChanged, questions],
-  )
+  const saveReOrderNow = useCallback(async (ordered) => {
+    // Send only id + order (see Fix #2)
+    console.log('saveReOrderNow', ordered)
+    await fetch(`/api/${groupScope}/evaluations/${evaluationId}/composition/order`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questions: ordered }),
+    })
+    onCompositionChanged && onCompositionChanged()
+  }, [groupScope, evaluationId, onCompositionChanged])
+  
 
 
   const saveEvaluationToQuestion = useCallback(
     async (updated) => {
+      console.log('saveEvaluationToQuestion', updated, "mixed", updated.title.slice(0, 10) !== updated.question.title.slice(0, 10))
       await fetch(
         `/api/${groupScope}/evaluations/${updated.evaluationId}/composition`,
         {
@@ -209,7 +200,9 @@ const EvaluationCompositionQuestions = ({
     [groupScope, onCompositionChanged],
   ) 
 
-  const debounceSaveOrdering = useDebouncedCallback(saveReOrder, 300)
+  const debounceSaveOrdering = useDebouncedCallback((ordered) => {
+    return saveReOrderNow(ordered)
+  }, 300)
 
   const debounceSaveEvaluationToQuestion = useDebouncedCallback(
     saveEvaluationToQuestion,
@@ -228,30 +221,22 @@ const EvaluationCompositionQuestions = ({
 
   const onChangeOrder = useCallback((sourceIndex, targetIndex) => {
     setQuestions(prev => {
-      //const mixedElement = prev.title.slice(0, 10) !== prev.question.title.slice(0, 10)
-      //console.log('misedElement', mixedElement)
-      const next = [...prev];
-      detectMixedElement("next", next)
-      const [moved] = next.splice(sourceIndex, 1);
-      next.splice(targetIndex, 0, moved);
-      // recreate items to avoid mutating shared refs
-      const nextAfter = next.map((q, i) => ({ ...q, order: i }));
-      detectMixedElement("nextAfter", nextAfter)
+      const next = [...prev]
+      const [moved] = next.splice(sourceIndex, 1)
+      next.splice(targetIndex, 0, moved)
+      const nextAfter = next.map((q, i) => ({ ...q, order: i }))
       return nextAfter
-    });
-  }, [setQuestions]);
+    })
+  }, [setQuestions, debounceSaveOrdering])
   
 
   const changeQuestion = useCallback(
     async (updated) => {
-      console.log('changeQuestion', updated.title, updated.question.title)
       const newQuestions = [...questions]
-      detectMixedElement("newQuestions", newQuestions)
       const index = newQuestions.findIndex(
         (q) => q.questionId === updated.questionId,
       )
       newQuestions[index] = updated
-      detectMixedElement("newQuestions after", newQuestions)
       setQuestions(newQuestions)
       await debounceSaveEvaluationToQuestion(updated)
     },
@@ -270,7 +255,6 @@ const EvaluationCompositionQuestions = ({
     [saveDelete, evaluationId, questions, setQuestions],
   )
 
-  detectMixedElement("questions list", questions)
 
   return (
     <Stack spacing={1}>
@@ -309,7 +293,7 @@ const EvaluationCompositionQuestions = ({
               await onDelete(toDelete)
             }}
             onHandleDragEnd={async () => {
-              await debounceSaveOrdering()
+              await debounceSaveOrdering(questions)
             }}
           />
         ))}
