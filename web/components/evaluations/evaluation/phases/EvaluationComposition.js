@@ -44,6 +44,7 @@ import {
   useCompositionCompliance,
 } from './composition/CompositionCompliance'
 import useCtrlState from '@/hooks/useCtrlState'
+import { UpdateDisabled } from '@mui/icons-material'
 
 const EvaluationComposition = ({
   groupScope,
@@ -136,6 +137,8 @@ const EvaluationCompositionQuestions = ({
   readOnly,
   onCompositionChanged,
 }) => {
+
+
   const [questions, setQuestions] = useCtrlState(composition, evaluationId)
   const { hasWarnings, globalWarnings, getIndicator } =
     useCompositionCompliance(questions)
@@ -147,8 +150,9 @@ const EvaluationCompositionQuestions = ({
   // Compliance computed by hook
 
   const saveReOrder = useCallback(
-    async (reordered) => {
+    async () => {
       // save question order
+      console.log('saveReOrder')
       await fetch(
         `/api/${groupScope}/evaluations/${evaluationId}/composition/order`,
         {
@@ -157,40 +161,102 @@ const EvaluationCompositionQuestions = ({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            questions: reordered,
+            questions: questions,
           }),
         },
       )
+      onCompositionChanged && onCompositionChanged()
     },
-    [groupScope, evaluationId],
+    [groupScope, evaluationId, onCompositionChanged, questions],
   )
+
+
+  const saveEvaluationToQuestion = useCallback(
+    async (updated) => {
+      console.log('saveEvaluationToQuestion', updated.question.id)
+      await fetch(
+        `/api/${groupScope}/evaluations/${updated.evaluationId}/composition`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            evaluationToQuestion: updated,
+          }),
+        },
+      )
+      onCompositionChanged && onCompositionChanged()
+    },
+    [groupScope, onCompositionChanged],
+  )
+
+  const saveDelete = useCallback(
+    async (evaluationId, questionId) => {
+     // persist deletion
+     await fetch(
+      `/api/${groupScope}/evaluations/${evaluationId}/composition`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ questionId }),
+      },
+    )
+      onCompositionChanged && onCompositionChanged()
+    },
+    [groupScope, onCompositionChanged],
+  ) 
 
   const debounceSaveOrdering = useDebouncedCallback(saveReOrder, 300)
 
-  const onChangeOrder = useCallback(
-    async (sourceIndex, targetIndex) => {
-      const reordered = [...questions]
-
-      // Remove the element from its original position
-      const [removedElement] = reordered.splice(sourceIndex, 1)
-
-      // Insert the element at the target position
-      reordered.splice(targetIndex, 0, removedElement)
-
-      // Update the order properties for all elements
-      reordered.forEach((item, index) => {
-        item.order = index
-      })
-
-      setQuestions(reordered)
-
-      await debounceSaveOrdering(reordered)
-      onCompositionChanged && onCompositionChanged()
-    },
-    [debounceSaveOrdering, questions, setQuestions, onCompositionChanged],
+  const debounceSaveEvaluationToQuestion = useDebouncedCallback(
+    saveEvaluationToQuestion,
+    300,
   )
 
-  // getIndicator provided by hook
+
+  const onChangeOrder = useCallback((sourceIndex, targetIndex) => {
+    setQuestions(prev => {
+      console.log('prev', prev.title, prev.question.title)
+      //const mixedElement = prev.title.slice(0, 10) !== prev.question.title.slice(0, 10)
+      //console.log('misedElement', mixedElement)
+      const next = [...prev];
+      const [moved] = next.splice(sourceIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      // recreate items to avoid mutating shared refs
+      return next.map((q, i) => ({ ...q, order: i }));
+    });
+  }, [setQuestions]);
+  
+
+  const changeQuestion = useCallback(
+    async (updated) => {
+      console.log('changeQuestion', updated.title, updated.question.title)
+      const newQuestions = [...questions]
+
+      const index = newQuestions.findIndex(
+        (q) => q.questionId === updated.questionId,
+      )
+      newQuestions[index] = updated
+      setQuestions(newQuestions)
+      await debounceSaveEvaluationToQuestion(updated)
+    },
+    [questions, setQuestions, debounceSaveEvaluationToQuestion],
+  )
+
+  const onDelete = useCallback(
+    async (toDelete) => {
+       // remove locally first
+       const newQuestions = questions.filter(
+        (q) => q.questionId !== toDelete.questionId,
+      )
+      setQuestions(newQuestions)
+      await saveDelete(evaluationId, toDelete.questionId)
+    },
+    [saveDelete, evaluationId, questions, setQuestions],
+  )
 
   return (
     <Stack spacing={1}>
@@ -222,8 +288,15 @@ const EvaluationCompositionQuestions = ({
             evaluationToQuestion={eToQ}
             readOnly={readOnly}
             indicator={getIndicator(eToQ.question.id)}
-            onUpdate={() => onCompositionChanged()}
-            onDelete={() => onCompositionChanged()}
+            onUpdate={async (updated) => {
+              await changeQuestion(updated)
+            }}
+            onDelete={async (toDelete) => {
+              await onDelete(toDelete)
+            }}
+            onHandleDragEnd={async () => {
+              await debounceSaveOrdering()
+            }}
           />
         ))}
       </ReorderableList>
@@ -236,65 +309,19 @@ const QuestionItem = ({
   evaluationToQuestion,
   indicator,
   onUpdate,
+  onHandleDragEnd,
   onDelete,
   readOnly = false,
+  disabled = false,
 }) => {
   const router = useRouter()
   const {
     handleDragStart,
     handleDragOver,
     handleDragEnd,
-    disabled,
+    disabled: dragDisabled,
     getDragStyles,
   } = useReorderable()
-
-  const deleteCollectionToQuestion = useCallback(
-    async (toDelete) => {
-      if (readOnly) return // prevent deletion in read-only mode
-
-      await fetch(
-        `/api/${groupScope}/evaluations/${toDelete.evaluationId}/composition`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            questionId: toDelete.questionId,
-          }),
-        },
-      )
-    },
-    [groupScope, readOnly],
-  )
-
-  const saveCollectionToQuestion = useCallback(
-    async (updated) => {
-      if (readOnly) return // prevent saving in read-only mode
-
-      const response = await fetch(
-        `/api/${groupScope}/evaluations/${updated.evaluationId}/composition`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            evaluationToQuestion: updated,
-          }),
-        },
-      )
-      if (response.ok) {
-        onUpdate && onUpdate()
-      }
-    },
-    [groupScope, onUpdate, readOnly],
-  )
-
-  const debounceSaveCollectionToQuestion = useDebouncedCallback(
-    saveCollectionToQuestion,
-    300,
-  )
 
   const theme = useTheme()
 
@@ -308,19 +335,29 @@ const QuestionItem = ({
       pl={1}
       borderBottom={`1px solid ${theme.palette.divider}`}
       sx={getDragStyles(evaluationToQuestion.order)}
-      onDragOver={(e) => handleDragOver(e, evaluationToQuestion.order)}
-      onDragEnd={(e) => handleDragEnd(e, evaluationToQuestion.order)}
+      onDragOver={(e) => {
+        if (readOnly || disabled) return
+        handleDragOver(e, evaluationToQuestion.order)
+      }}
+      onDragEnd={(e) => {
+        if (readOnly || disabled) return
+        handleDragEnd(e, evaluationToQuestion.order)
+        onHandleDragEnd && onHandleDragEnd()
+
+      }}
     >
-      {!readOnly && (
+      {!(readOnly) && (
         <Stack
           justifyContent={'center'}
           sx={{
-            cursor: disabled ? 'not-allowed' : 'grab',
+            opacity: disabled ? 0.5 : 1,
+            cursor: dragDisabled ? 'not-allowed' : 'grab',
             '&:active': {
               cursor: 'grabbing',
             },
           }}
-          draggable={!disabled}
+          pr={1}
+          draggable={!dragDisabled}
           onDragStart={(e) => handleDragStart(e, evaluationToQuestion.order)}
         >
           <DragHandleSVG />
@@ -346,11 +383,14 @@ const QuestionItem = ({
         </Typography>
         <QuestionTitleField
           id={evaluationToQuestion.questionId}
-          evaluationToQuestion={evaluationToQuestion}
-          readOnly={readOnly}
-          onSave={async (updatedEvaluationToQuestion) => {
-            evaluationToQuestion.title = updatedEvaluationToQuestion.title
-            await debounceSaveCollectionToQuestion(updatedEvaluationToQuestion)
+          currentTitle={evaluationToQuestion.title}
+          originalTitle={evaluationToQuestion.question.title}
+          readOnly={readOnly || disabled}
+          onSaveTitle={async (newTitle) => {
+            onUpdate && onUpdate({
+              ...evaluationToQuestion,
+              title: newTitle,
+            })
           }}
         />
       </Stack>
@@ -372,9 +412,11 @@ const QuestionItem = ({
           <>
             <Tooltip title="Update in new page">
               <IconButton
+                disabled={readOnly || disabled}
                 onClick={async (ev) => {
                   ev.preventDefault()
                   ev.stopPropagation()
+                  if (readOnly || disabled) return
                   const currentPath = router.asPath // Capture current relative URL
                   await router.push(
                     `/${groupScope}/questions/${evaluationToQuestion?.question.id}?from=${encodeURIComponent(currentPath)}`,
@@ -394,8 +436,8 @@ const QuestionItem = ({
               variant="standard"
               rightAdornement={'pts'}
               onChange={async (value) => {
-                evaluationToQuestion.points = value
-                await debounceSaveCollectionToQuestion({
+                if (readOnly || disabled) return
+                onUpdate && onUpdate({
                   ...evaluationToQuestion,
                   points: value,
                 })
@@ -404,15 +446,14 @@ const QuestionItem = ({
           </>
         )}
       </Stack>
-      {!readOnly && (
+      {!(readOnly || disabled) && (
         <Tooltip title="Remove from collection">
           <IconButton
             key="delete-collection"
             onClick={async (ev) => {
               ev.preventDefault()
               ev.stopPropagation()
-              await deleteCollectionToQuestion(evaluationToQuestion)
-              onDelete && onDelete()
+              onDelete && onDelete(evaluationToQuestion)
             }}
           >
             <Image

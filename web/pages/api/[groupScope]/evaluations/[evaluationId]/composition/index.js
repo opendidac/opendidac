@@ -142,11 +142,7 @@ const put = async (req, res, prisma) => {
 
   const updateData = {
     points: parseFloat(evaluationToQuestion.points),
-  }
-
-  // Include title if provided
-  if (evaluationToQuestion.title !== undefined) {
-    updateData.title = evaluationToQuestion.title
+    title: evaluationToQuestion.title,
   }
 
   await prisma.evaluationToQuestion.update({

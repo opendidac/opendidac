@@ -13,52 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { TextField, Typography } from '@mui/material'
 import { useDebouncedCallback } from 'use-debounce'
+import useCtrlState from '@/hooks/useCtrlState'
 
 const QuestionTitleField = ({
-  evaluationToQuestion,
-  readOnly = false,
-  onSave,
   id,
+  currentTitle,
+  originalTitle,
+  readOnly = false,
+  onSaveTitle,
 }) => {
-  const [localTitle, setLocalTitle] = useState(
-    evaluationToQuestion.title || evaluationToQuestion.question.title,
-  )
-  const [isSaving, setIsSaving] = useState(false)
+  const [localTitle, setLocalTitle] = useCtrlState(currentTitle, id)
 
-  // Update local state when the question ID changes (not just reordering)
-  useEffect(() => {
-    setLocalTitle(
-      evaluationToQuestion.title || evaluationToQuestion.question.title,
-    )
-    // the "id" is used to control the state (reload the title) only when the id changes
-    // this is important to manage the state correctly during reordering
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id])
-
-  const saveTitle = useCallback(
-    async (newTitle) => {
-      if (isSaving) return // Prevent multiple simultaneous saves
-
-      setIsSaving(true)
-      try {
-        await onSave({
-          ...evaluationToQuestion,
-          title: newTitle,
-        })
-      } catch (error) {
-        console.error('Failed to save title:', error)
-        // Optionally show error feedback to user
-      } finally {
-        setIsSaving(false)
-      }
-    },
-    [evaluationToQuestion, onSave, isSaving],
-  )
-
-  const debouncedSave = useDebouncedCallback(saveTitle, 500)
+  const debouncedSave = useDebouncedCallback(onSaveTitle, 500)
 
   const handleTitleChange = useCallback(
     (event) => {
@@ -72,12 +41,10 @@ const QuestionTitleField = ({
   if (readOnly) {
     return (
       <Typography variant="body2">
-        {evaluationToQuestion.title || evaluationToQuestion.question.title}
+        {currentTitle}
       </Typography>
     )
   }
-
-  const originalTitle = evaluationToQuestion.question.title
 
   const isTitleChanged = localTitle !== originalTitle
   return (
@@ -87,7 +54,7 @@ const QuestionTitleField = ({
       label={isTitleChanged ? originalTitle : null}
       value={localTitle}
       onChange={handleTitleChange}
-      disabled={isSaving}
+      
       sx={{
         flexGrow: 1,
         '& .MuiInput-underline:before': {
