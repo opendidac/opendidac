@@ -153,6 +153,7 @@ const EvaluationCompositionQuestions = ({
     async () => {
       // save question order
       console.log('saveReOrder')
+      detectMixedElement("saveReOrder", questions)
       await fetch(
         `/api/${groupScope}/evaluations/${evaluationId}/composition/order`,
         {
@@ -173,7 +174,6 @@ const EvaluationCompositionQuestions = ({
 
   const saveEvaluationToQuestion = useCallback(
     async (updated) => {
-      console.log('saveEvaluationToQuestion', updated.question.id)
       await fetch(
         `/api/${groupScope}/evaluations/${updated.evaluationId}/composition`,
         {
@@ -217,9 +217,11 @@ const EvaluationCompositionQuestions = ({
   )
 
   const detectMixedElement = useCallback((console_log, qtss) => {
+    
     qtss.forEach((q, i) => {
-      const mixedElement = q.title.slice(0, 6) !== q.question.title.slice(0, 6)
-      console.log('mixedElement', mixedElement)
+      //console.log('q', q.title, "|", q.question.title, "|", q.title.slice(0, 10) === q.question.title.slice(0, 10))
+      const mixedElement = q.title.slice(0, 10) !== q.question.title.slice(0, 10)
+      console.log('mixedElement', console_log, mixedElement, mixedElement ? q : "no mixed element")
     })
   }, [])
 
@@ -267,6 +269,8 @@ const EvaluationCompositionQuestions = ({
     },
     [saveDelete, evaluationId, questions, setQuestions],
   )
+
+  detectMixedElement("questions list", questions)
 
   return (
     <Stack spacing={1}>
