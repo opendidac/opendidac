@@ -287,7 +287,7 @@ const CompositionItem = ({
 
   const debounceSaveCompositionItem = useDebouncedCallback(
     saveCompositionItem,
-    1500,
+    300,
   )
 
   const handleDelete = useCallback(
