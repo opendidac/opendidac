@@ -67,7 +67,7 @@ const del = async (req, res, prisma) => {
 
   await prisma.$transaction(async (prisma) => {
     // delete the evaluationToQuestion
-    const deleted = await prisma.evaluationToQuestion.delete({
+    await prisma.evaluationToQuestion.delete({
       where: {
         evaluationId_questionId: {
           evaluationId: evaluationId,
