@@ -155,7 +155,7 @@ const CompositionGrid = ({
     },
     [groupScope, evaluationId, onCompositionChanged],
   )
-
+  
   // Optimistic updates to the questions state before the API call
 
   const onChangeOrder = useCallback(
