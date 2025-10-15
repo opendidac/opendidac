@@ -210,7 +210,6 @@ const EvaluationPage = () => {
                           evaluation={evaluation}
                           composition={composition}
                           onCompositionChanged={() => {
-                            console.log('Page mutateComposition')
                             mutateComposition()
                           }}
                         />
