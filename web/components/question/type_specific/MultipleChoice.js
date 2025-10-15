@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Stack, IconButton, ToggleButton } from '@mui/material'
+import { useCallback, useMemo } from 'react'
+import { Stack, IconButton, ToggleButton, Button } from '@mui/material'
 
 import DeleteIcon from '@mui/icons-material/Delete'
+import AddIcon from '@mui/icons-material/Add'
 import CheckIcon from '@mui/icons-material/Check'
 import ClearIcon from '@mui/icons-material/Clear'
 
@@ -28,53 +29,62 @@ import { useReorderable } from '@/components/layout/utils/ReorderableList'
 import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import { useTheme } from '@emotion/react'
+import useCtrlState from '@/hooks/useCtrlState'
 
 const MultipleChoice = ({
-  id = 'multi_choice',
+  groupScope,
+  questionId,
   limiterActivated,
   options: initial,
   previewMode = false,
-  onChangeOption,
-  onChangeOrder,
-  onDelete,
+  onOptionsChanged,
 }) => {
-  const [options, setOptions] = useState([])
+  const [options, setOptions] = useCtrlState(
+    initial,
+    `${questionId}-multiple-choice-options`,
+  )
 
-  useEffect(() => {
-    if (initial) {
-      if (initial && initial.length > 0) {
-        setOptions(initial)
-      }
-    }
-  }, [initial, id])
+  // Optimistic updates to the options state before the debounced API calls
 
-  const selectOption = (id) => {
-    const option = options.find((option) => option.id === id)
-    option.isCorrect = !option.isCorrect
-    setOptions([...options])
-    onChangeOption(option)
+  const saveReorder = useCallback(
+    async (reordered) => {
+      await fetch(
+        `/api/${groupScope}/questions/${questionId}/multiple-choice/order`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            options: reordered,
+          }),
+        },
+      )
+      onOptionsChanged && (await onOptionsChanged())
+    },
+    [groupScope, questionId, onOptionsChanged],
+  )
+
+  const debounceSaveReorder = useDebouncedCallback(saveReorder, 300)
+
+  const onReorder = async (sourceIndex, targetIndex) => {
+    setOptions((prev) => {
+      const next = [...prev]
+      const [moved] = next.splice(sourceIndex, 1)
+      next.splice(targetIndex, 0, moved)
+      const nextAfter = next.map((q, i) => ({ ...q, order: i }))
+      return nextAfter
+    })
   }
 
-  const onReorder = useCallback(
-    async (sourceIndex, targetIndex) => {
-      const reordered = [...options]
-
-      // Remove the element from its original position
-      const [removedElement] = reordered.splice(sourceIndex, 1)
-
-      // Insert the element at the target position
-      reordered.splice(targetIndex, 0, removedElement)
-
-      // Update the order properties for all elements
-      reordered.forEach((item, index) => {
-        item.order = index
-      })
-
-      setOptions(reordered)
-      onChangeOrder(reordered)
-    },
-    [options, onChangeOrder],
-  )
+  const onOptionChange = async (id, text, isCorrect) => {
+    setOptions((prev) => {
+      const next = [...prev]
+      const index = next.findIndex((opt) => opt.id === id)
+      next[index] = { ...next[index], text, isCorrect }
+      return next
+    })
+  }
 
   const round = useMemo(
     () =>
@@ -84,30 +94,39 @@ const MultipleChoice = ({
 
   return (
     <Stack spacing={2} height="100%">
+      <Stack direction="row" justifyContent="flex-end" px={1}>
+        <AddOptionButton
+          groupScope={groupScope}
+          questionId={questionId}
+          onAdded={async (created) => {
+            setOptions((prev) => [...prev, created])
+            onOptionsChanged && (await onOptionsChanged())
+          }}
+        />
+      </Stack>
       <Stack flex={1} minHeight={0}>
         <ScrollContainer spacing={1}>
           <ReorderableList onChangeOrder={onReorder}>
             {options?.map((option, index) => (
               <MultipleChoiceOptionUpdate
                 key={index}
+                groupScope={groupScope}
+                questionId={questionId}
                 index={index}
                 round={round}
                 option={option}
                 previewMode={previewMode}
-                onSelect={(id) => selectOption(id)}
-                onChangeOption={(value) => {
-                  const newOptions = [...options]
-                  const option = newOptions[index]
-                  option.text = value
-                  setOptions(newOptions)
-                  onChangeOption(option)
+                onHandleDragEnd={async () => {
+                  await debounceSaveReorder(options)
                 }}
-                onDelete={(option) => {
-                  let newOptions = [...options]
-                  const deleted = newOptions.find((opt) => opt.id === option.id)
-                  newOptions.splice(index, 1)
-                  setOptions(newOptions)
-                  onDelete(deleted)
+                onOptionsChanged={onOptionsChanged}
+                onOptionChange={onOptionChange}
+                onDeleteLocal={() => {
+                  setOptions((prev) => {
+                    const next = [...prev]
+                    next.splice(index, 1)
+                    return next
+                  })
                 }}
               />
             ))}
@@ -119,15 +138,28 @@ const MultipleChoice = ({
 }
 
 const MultipleChoiceOptionUpdate = ({
+  groupScope,
+  questionId,
   round = false,
   option,
   previewMode = false,
-  onSelect,
-  onChangeOption,
-  onDelete,
+  onHandleDragEnd,
+  onOptionsChanged,
+  onOptionChange,
+  onDeleteLocal,
   index,
 }) => {
-  const [text, setText] = useState(option.text)
+  const theme = useTheme()
+
+  const [text, setText] = useCtrlState(
+    option.text,
+    `${questionId}-multiple-choice-option-text-${option.id}`,
+  )
+  const [isCorrect, setIsCorrect] = useCtrlState(
+    option.isCorrect,
+    `${questionId}-multiple-choice-option-is-correct-${option.id}`,
+  )
+
   const {
     handleDragStart,
     handleDragOver,
@@ -137,12 +169,38 @@ const MultipleChoiceOptionUpdate = ({
     getDragStyles,
   } = useReorderable()
 
-  useEffect(() => {
-    setText(option.text)
-  }, [option?.text])
+  const onSaveOption = useCallback(
+    async (id, text, isCorrect) => {
+      await fetch(
+        `/api/${groupScope}/questions/${questionId}/multiple-choice/options/${id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            text,
+            isCorrect,
+          }),
+        },
+      )
+      onOptionsChanged && (await onOptionsChanged())
+    },
+    [groupScope, questionId, onOptionsChanged],
+  )
 
-  const debounceOnChange = useDebouncedCallback(onChangeOption, 1000)
-  const theme = useTheme()
+  const debounceSaveOption = useDebouncedCallback(onSaveOption, 300)
+
+  const onChangeOption = useCallback(
+    async (id, text, isCorrect) => {
+      setText(text)
+      setIsCorrect(isCorrect)
+      onOptionChange(id, text, isCorrect)
+      debounceSaveOption(id, text, isCorrect)
+    },
+    [onOptionChange, debounceSaveOption, setText, setIsCorrect],
+  )
 
   return (
     <Stack
@@ -153,7 +211,10 @@ const MultipleChoiceOptionUpdate = ({
       p={2}
       borderRadius={2}
       onDragOver={(e) => handleDragOver(e, index)}
-      onDragEnd={(e) => handleDragEnd(e, index)}
+      onDragEnd={(e) => {
+        handleDragEnd(e, index)
+        onHandleDragEnd && onHandleDragEnd()
+      }}
       bgcolor={theme.palette.background.default}
     >
       <Stack
@@ -171,10 +232,13 @@ const MultipleChoiceOptionUpdate = ({
 
       <ToggleButton
         value="correct"
-        selected={option.isCorrect}
+        selected={isCorrect}
         color="success"
         size="small"
-        onChange={(e) => onSelect(option.id)}
+        onChange={(e) => {
+          e.stopPropagation()
+          onChangeOption(option.id, text, !isCorrect)
+        }}
         disabled={isDragging}
         sx={
           round && {
@@ -194,8 +258,7 @@ const MultipleChoiceOptionUpdate = ({
               title={`Option ${option.order + 1} (markdown)`}
               rawContent={text}
               onChange={(value) => {
-                setText(value)
-                debounceOnChange(value)
+                onChangeOption(option.id, value, isCorrect)
               }}
               withUpload={false}
             />
@@ -208,13 +271,54 @@ const MultipleChoiceOptionUpdate = ({
         color="error"
         disabled={isDragging}
         onClick={() => {
-          onDelete(option)
+          // delete from backend then update local and notify parent
+          fetch(
+            `/api/${groupScope}/questions/${questionId}/multiple-choice/options/${option.id}`,
+            {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+              },
+            },
+          ).then(async (res) => {
+            if (res.status === 200) {
+              onDeleteLocal()
+              onOptionsChanged && (await onOptionsChanged())
+            }
+          })
         }}
         sx={{ mt: 1 }}
       >
         <DeleteIcon />
       </IconButton>
     </Stack>
+  )
+}
+
+const AddOptionButton = ({ groupScope, questionId, onAdded }) => {
+  const handleAdd = useCallback(async () => {
+    const res = await fetch(
+      `/api/${groupScope}/questions/${questionId}/multiple-choice/options`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ option: { text: '', isCorrect: false } }),
+      },
+    )
+    if (res.status === 200) {
+      const created = await res.json()
+      onAdded && onAdded(created)
+    }
+  }, [groupScope, questionId, onAdded])
+
+  return (
+    <Button color="primary" startIcon={<AddIcon />} onClick={() => handleAdd()}>
+      Add Option
+    </Button>
   )
 }
 
