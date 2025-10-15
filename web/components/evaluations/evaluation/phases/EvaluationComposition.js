@@ -75,17 +75,9 @@ const EvaluationComposition = ({
           }),
         },
       )
+      onCompositionChanged && onCompositionChanged()
     },
-    [groupScope, evaluationId],
-  )
-
-  const onInclude = useCallback(
-    async (questionIds) => {
-      await saveIncludeQuestions(questionIds)
-
-      onCompositionChanged()
-    },
-    [saveIncludeQuestions, onCompositionChanged],
+    [groupScope, evaluationId, onCompositionChanged],
   )
 
   return (
@@ -119,7 +111,7 @@ const EvaluationComposition = ({
         groupScope={groupScope}
         includedQuestions={composition.map((eq) => eq.question)}
         onInclude={(questionIds) => {
-          onInclude(questionIds)
+          saveIncludeQuestions(questionIds)
         }}
         onClose={() => {
           setShowIncludeDrawer(false)
@@ -164,6 +156,8 @@ const CompositionGrid = ({
     [groupScope, evaluationId, onCompositionChanged],
   )
 
+  // Optimistic updates to the questions state before the API call
+
   const onChangeOrder = useCallback(
     (sourceIndex, targetIndex) => {
       setQuestions((prev) => {
@@ -172,6 +166,27 @@ const CompositionGrid = ({
         next.splice(targetIndex, 0, moved)
         const nextAfter = next.map((q, i) => ({ ...q, order: i }))
         return nextAfter
+      })
+    },
+    [setQuestions],
+  )
+
+  const onChangeCompositionItem = useCallback(
+    (questionid, property, value) => {
+      setQuestions((prev) => {
+        const next = [...prev]
+        const index = next.findIndex((q) => q.questionId === questionid)
+        next[index][property] = value
+        return next
+      })
+    },
+    [setQuestions],
+  )
+
+  const onDeleteCompositionItem = useCallback(
+    (questionid) => {
+      setQuestions((prev) => {
+        return prev.filter((q) => q.questionId !== questionid)
       })
     },
     [setQuestions],
@@ -210,6 +225,8 @@ const CompositionGrid = ({
             onHandleDragEnd={async () => {
               await saveReOrder(questions)
             }}
+            onChangeCompositionItem={onChangeCompositionItem}
+            onDeleteCompositionItem={onDeleteCompositionItem}
             onCompositionChanged={onCompositionChanged}
           />
         ))}
@@ -225,6 +242,8 @@ const CompositionItem = ({
   onHandleDragEnd,
   readOnly = false,
   disabled = false,
+  onChangeCompositionItem,
+  onDeleteCompositionItem,
   onCompositionChanged,
 }) => {
   const router = useRouter()
@@ -249,8 +268,7 @@ const CompositionItem = ({
   const [points, setPoints] = useCtrlState(evaluationToQuestion.points, key)
 
   const saveCompositionItem = useCallback(
-    async (property, value) => {
-      console.log('saveCompositionItem', property, value)
+    async (questionId, property, value) => {
       await fetch(
         `/api/${groupScope}/evaluations/${evaluationId}/composition/${questionId}`,
         {
@@ -265,7 +283,7 @@ const CompositionItem = ({
       )
       onCompositionChanged && onCompositionChanged()
     },
-    [evaluationId, questionId, groupScope, onCompositionChanged],
+    [evaluationId, groupScope, onCompositionChanged],
   )
 
   const saveDelete = useCallback(
@@ -287,14 +305,15 @@ const CompositionItem = ({
 
   const debounceSaveCompositionItem = useDebouncedCallback(
     saveCompositionItem,
-    300,
+    1000,
   )
 
   const handleDelete = useCallback(
-    async (toDelete) => {
-      await saveDelete(evaluationId, toDelete.questionId)
+    async (evalId, qId) => {
+      onDeleteCompositionItem && onDeleteCompositionItem(qId)
+      await saveDelete(evalId, qId)
     },
-    [saveDelete, evaluationId],
+    [saveDelete, onDeleteCompositionItem],
   )
 
   return (
@@ -331,7 +350,6 @@ const CompositionItem = ({
           draggable={!dragDisabled}
           onDragStart={(e) => {
             // cancel the eventual debounced save
-            debounceSaveCompositionItem.cancel()
             handleDragStart(e, order)
           }}
         >
@@ -362,7 +380,8 @@ const CompositionItem = ({
           originalTitle={originalTitle}
           readOnly={readOnly || disabled}
           onChangeTitle={(title) => {
-            debounceSaveCompositionItem('title', title)
+            onChangeCompositionItem(questionId, 'title', title)
+            debounceSaveCompositionItem(questionId, 'title', title)
           }}
         />
       </Stack>
@@ -410,7 +429,8 @@ const CompositionItem = ({
               onChange={async (value) => {
                 if (readOnly || disabled) return
                 setPoints(value)
-                debounceSaveCompositionItem('points', value)
+                onChangeCompositionItem(questionId, 'points', value)
+                debounceSaveCompositionItem(questionId, 'points', value)
               }}
             />
           </>
@@ -423,7 +443,7 @@ const CompositionItem = ({
             onClick={async (ev) => {
               ev.preventDefault()
               ev.stopPropagation()
-              await handleDelete(evaluationToQuestion)
+              await handleDelete(evaluationId, questionId)
             }}
           >
             <Image
