@@ -540,9 +540,9 @@ const CompositionItem = ({
       >
         {readOnly ? (
           <Typography variant="body2">
-            {evaluationToQuestion.points} grading pts
-            &times; {Math.round(coef * 100) / 100} =
-            {' '}{evaluationToQuestion.weightedPoints} pts
+            {evaluationToQuestion.points} grading pts &times;{' '}
+            {Math.round(coef * 100) / 100} ={' '}
+            {evaluationToQuestion.weightedPoints} pts
           </Typography>
         ) : (
           <>

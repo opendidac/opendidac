@@ -186,7 +186,7 @@ const PageConsult = () => {
                             </Typography>
                           }
                           order={selected.order}
-                          points={selected.points}
+                          points={selected.weightedPoints}
                           question={selected.question}
                           totalPages={evaluationToQuestions.length}
                           above={

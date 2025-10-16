@@ -13,10 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { StudentQuestionGradingStatus } from '@prisma/client'
 import Image from 'next/image'
-import { Box, Paper, Stack, TextField, Tooltip } from '@mui/material'
+import {
+  Chip,
+  Paper,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material'
 import { LoadingButton } from '@mui/lab'
 import { useSession } from 'next-auth/react'
 
@@ -26,7 +33,13 @@ import GradingStatus from './GradingStatus'
 import GradingSigned from './GradingSigned'
 import GradingPointsComment from './GradingPointsComment'
 
-const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
+const GradingSignOff = ({
+  loading,
+  answer: initial,
+  maxPoints,
+  weightedPoints: weightedMaxPoints,
+  onChange,
+}) => {
   const [grading, setGrading] = useState(initial)
   const { data } = useSession()
   const commentInputRef = useRef(null)
@@ -89,6 +102,18 @@ const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
     }
   }, [handleKeyDown])
 
+  const coef = useMemo(() => {
+    return maxPoints > 0 ? weightedMaxPoints / maxPoints : 0
+  }, [maxPoints, weightedMaxPoints])
+
+  const roundedCoef = useMemo(() => {
+    return Math.round(coef * 100) / 100
+  }, [coef])
+
+  const roundedWeightedMaxPoints = useMemo(() => {
+    return Math.round(grading.pointsObtained * coef * 100) / 100
+  }, [grading.pointsObtained, coef])
+
   return (
     <Paper
       sx={{
@@ -136,8 +161,8 @@ const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
           </Stack>
 
           {!grading.signedBy && (
-            <Stack direction="row" alignItems="center" spacing={1} flexGrow={1}>
-              <Box>
+            <Stack direction="row" alignItems="center" spacing={2} flexGrow={1}>
+              <Stack direction={'row'} alignItems={'center'} spacing={1}>
                 <DecimalInput
                   autoFocus
                   label={'Awarded Points'}
@@ -155,7 +180,31 @@ const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
                     onChange(newGrading)
                   }}
                 />
-              </Box>
+                {maxPoints !== weightedMaxPoints && (
+                  <>
+                    <Typography variant={'body2'} sx={{ textWrap: 'nowrap' }}>
+                      &times; {roundedCoef} =
+                    </Typography>
+                    <Chip
+                      variant="outlined"
+                      label={
+                        <>
+                          <Typography
+                            variant="body2"
+                            component="span"
+                            sx={{ mr: 1 }}
+                          >
+                            <b>{roundedWeightedMaxPoints}</b>
+                          </Typography>
+                          <Typography variant="caption" component="span">
+                            / {weightedMaxPoints} pts
+                          </Typography>
+                        </>
+                      }
+                    ></Chip>
+                  </>
+                )}
+              </Stack>
               <TextField
                 ref={commentInputRef}
                 label="Comment"
@@ -178,8 +227,8 @@ const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
 
           {grading.signedBy && (
             <GradingPointsComment
-              points={grading.pointsObtained}
-              maxPoints={maxPoints}
+              points={coef * grading.pointsObtained}
+              maxPoints={roundedWeightedMaxPoints}
               comment={grading.comment}
             />
           )}

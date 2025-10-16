@@ -210,7 +210,7 @@ const PageProfConsult = () => {
                       <Typography variant="h6">{selected.title}</Typography>
                     }
                     order={selected.order}
-                    points={selected.points}
+                    points={selected.weightedPoints}
                     question={selected.question}
                     totalPages={evaluationToQuestions.length}
                     above={
@@ -253,6 +253,7 @@ const PageProfConsult = () => {
                         (ans) => ans.user.email === userEmail,
                       )}
                       maxPoints={selected.points}
+                      weightedPoints={selected.weightedPoints}
                       onChange={onChangeGrading}
                     />
                   </Stack>
