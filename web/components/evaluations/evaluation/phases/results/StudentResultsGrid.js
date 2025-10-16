@@ -53,8 +53,8 @@ const StudentResultsGrid = ({
               ? theme.palette.info.main
               : theme.palette.error.main
           : theme.palette.grey['300']
-        const pointsObtained = data.pointsObtained
-        const totalPoints = data.totalPoints
+        const pointsObtained = Math.round(data.pointsObtained * jstq.coefficient * 100) / 100
+        const totalPoints = Math.round(data.totalPoints * jstq.coefficient * 100) / 100
 
         const selected =
           selectedQuestionCell &&
@@ -160,8 +160,8 @@ const StudentResultsGrid = ({
 
         if (grading?.signedBy !== null) {
           // Accumulate points only for signed evaluations
-          signedObtainedPoints += pointsObtained
-          signedTotalPoints += totalPoints
+          signedObtainedPoints += pointsObtained * jstq.coefficient
+          signedTotalPoints += totalPoints * jstq.coefficient
         }
 
         let successRate =

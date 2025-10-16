@@ -482,21 +482,23 @@ const GradingSummary = ({ results }) => {
 
   // Awarded points
   const awardedPoints = results.reduce(
-    (acc, result) =>
-      acc +
+    (acc, result) => {
+      return acc +
       result.question.studentAnswer
         .filter((answer) => answer.studentGrading.signedBy)
-        .reduce((acc, answer) => acc + answer.studentGrading.pointsObtained, 0),
+        .reduce((acc, answer) => acc + (answer.studentGrading.pointsObtained * result.coefficient), 0)
+    },
     0,
   )
 
   // Total points for signed answers
   const totalPointsForGraded = results.reduce(
-    (acc, result) =>
-      acc +
-      result.question.studentAnswer
-        .filter((answer) => answer.studentGrading.signedBy)
-        .reduce((acc, answer) => acc + result.points, 0),
+    (acc, result) => {
+      return acc +
+        result.question.studentAnswer
+          .filter((answer) => answer.studentGrading.signedBy)
+          .reduce((acc, answer) => acc + result.points * result.coefficient, 0)
+    },
     0,
   )
 

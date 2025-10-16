@@ -46,6 +46,7 @@ const get = async (req, res, prisma) => {
           order: true,
           points: true,
           weightedPoints: true,
+          coefficient: true,
         },
         orderBy: {
           order: 'asc',
