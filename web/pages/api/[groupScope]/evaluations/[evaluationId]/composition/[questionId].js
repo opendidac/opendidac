@@ -27,7 +27,7 @@ const put = async (req, res, prisma) => {
   const { evaluationId, questionId } = req.query
   const body = req.body
 
-  const allowedFields = ['points', 'title', 'weightedPoints']
+  const allowedFields = ['points', 'title', 'gradingPoints']
 
   const data = Object.fromEntries(
     Object.entries(body).filter(([key]) => allowedFields.includes(key)),

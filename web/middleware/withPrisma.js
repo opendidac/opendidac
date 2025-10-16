@@ -22,12 +22,12 @@ function computedFieldsDescriptor() {
   return {
     evaluationToQuestion: {
       coefficient: {
-        needs: { points: true, weightedPoints: true },
+        needs: { points: true, gradingPoints: true },
         compute(evaluationToQuestion) {
-          if (evaluationToQuestion.points === 0) {
+          if (evaluationToQuestion.gradingPoints === 0) {
             return 0
           }
-          return evaluationToQuestion.weightedPoints / evaluationToQuestion.points
+          return evaluationToQuestion.points / evaluationToQuestion.gradingPoints
         },
       }
     }

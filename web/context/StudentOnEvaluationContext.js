@@ -136,10 +136,10 @@ export const StudentOnEvaluationProvider = ({ children }) => {
             <Typography
               variant="caption"
               sx={{ textTransform: 'none' }}
-            >{`(${jtq.weightedPoints} pts)`}</Typography>
+            >{`(${jtq.points} pts)`}</Typography>
           </Stack>
         ),
-        tooltip: `${jtq.question.type} "${jtq.title}" - ${jtq.weightedPoints} points`,
+        tooltip: `${jtq.question.type} "${jtq.title}" - ${jtq.points} points`,
         fillable: true,
         state: getFilledStatus(jtq.question.studentAnswer[0].status),
       }))

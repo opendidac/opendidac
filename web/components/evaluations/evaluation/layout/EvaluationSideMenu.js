@@ -360,7 +360,7 @@ const CompositionSummary = ({ evaluation, composition }) => {
         - {composition?.length} questions.
       </Typography>
       <Typography variant="caption">
-        - {composition?.reduce((acc, q) => acc + q.weightedPoints, 0)} points.
+        - {composition?.reduce((acc, q) => acc + q.points, 0)} points.
       </Typography>
       {phaseGreaterThan(evaluation.phase, EvaluationPhase.COMPOSITION) ? (
         <>
@@ -486,7 +486,7 @@ const GradingSummary = ({ results }) => {
       return acc +
       result.question.studentAnswer
         .filter((answer) => answer.studentGrading.signedBy)
-        .reduce((acc, answer) => acc + (answer.studentGrading.pointsObtained * result.coefficient), 0)
+        .reduce((acc, answer) => acc + (answer.studentGrading.pointsObtained), 0)
     },
     0,
   )
@@ -497,7 +497,7 @@ const GradingSummary = ({ results }) => {
       return acc +
         result.question.studentAnswer
           .filter((answer) => answer.studentGrading.signedBy)
-          .reduce((acc, answer) => acc + result.points * result.coefficient, 0)
+          .reduce((acc, answer) => acc + result.points, 0)
     },
     0,
   )

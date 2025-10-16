@@ -158,7 +158,7 @@ const post = async (req, res, prisma) => {
                   },
                 },
                 points: true,
-                weightedPoints: true,
+                gradingPoints: true,
                 order: true,
                 title: true,
               },

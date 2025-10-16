@@ -206,7 +206,7 @@ const get = async (req, res, prisma) => {
             select: {
               title: true, // Custom title from EvaluationToQuestion
               order: true,
-              weightedPoints: true,
+              points: true,
               questionId: true,
               question: {
                 select: questionSelectClause({

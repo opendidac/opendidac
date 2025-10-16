@@ -661,8 +661,9 @@ model EvaluationToQuestion {
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionId String
 
+  // Maximum points for this question during grading. Then scaled up to match the points field.
+  gradingPoints Float @default(0)
   points Float @default(0)
-  weightedPoints Float @default(0)
 
   order  Int   @default(0)
   title   String? // Custom title for the question in this evaluation

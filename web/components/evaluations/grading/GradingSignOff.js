@@ -36,8 +36,8 @@ import GradingPointsComment from './GradingPointsComment'
 const GradingSignOff = ({
   loading,
   answer: initial,
+  maxGradingPoints,
   maxPoints,
-  weightedPoints: weightedMaxPoints,
   onChange,
 }) => {
   const [grading, setGrading] = useState(initial)
@@ -103,16 +103,19 @@ const GradingSignOff = ({
   }, [handleKeyDown])
 
   const coef = useMemo(() => {
-    return maxPoints > 0 ? weightedMaxPoints / maxPoints : 0
-  }, [maxPoints, weightedMaxPoints])
+    return maxGradingPoints > 0 ? maxPoints / maxGradingPoints : 0
+  }, [maxPoints, maxGradingPoints])
+
+  console.log(grading.pointsObtained, coef, grading.pointsObtained / coef)
+  const gradingPoints = useMemo(() => {
+    return coef > 0 && grading.pointsObtained !== undefined
+      ? Math.round((grading.pointsObtained / coef) * 100) / 100
+      : 0
+  }, [grading.pointsObtained, coef])
 
   const roundedCoef = useMemo(() => {
     return Math.round(coef * 100) / 100
   }, [coef])
-
-  const roundedWeightedMaxPoints = useMemo(() => {
-    return Math.round(grading.pointsObtained * coef * 100) / 100
-  }, [grading.pointsObtained, coef])
 
   return (
     <Paper
@@ -166,21 +169,21 @@ const GradingSignOff = ({
                 <DecimalInput
                   autoFocus
                   label={'Awarded Points'}
-                  value={grading.pointsObtained}
-                  max={maxPoints}
-                  rightAdornement={'/ ' + maxPoints + ' pts'}
+                  value={gradingPoints}
+                  max={maxGradingPoints}
+                  rightAdornement={'/ ' + maxGradingPoints + ' pts'}
                   variant="filled"
                   onChange={async (value) => {
                     const newGrading = {
                       ...grading,
-                      pointsObtained: value,
+                      pointsObtained: Math.round(value * coef * 100 ) / 100,
                       status: StudentQuestionGradingStatus.GRADED,
                     }
                     setGrading(newGrading)
                     onChange(newGrading)
                   }}
                 />
-                {maxPoints !== weightedMaxPoints && (
+                {maxPoints !== maxGradingPoints && (
                   <>
                     <Typography variant={'body2'} sx={{ textWrap: 'nowrap' }}>
                       &times; {roundedCoef} =
@@ -194,10 +197,10 @@ const GradingSignOff = ({
                             component="span"
                             sx={{ mr: 1 }}
                           >
-                            <b>{roundedWeightedMaxPoints}</b>
+                            <b>{grading.pointsObtained}</b>
                           </Typography>
                           <Typography variant="caption" component="span">
-                            / {weightedMaxPoints} pts
+                            / {maxPoints} pts
                           </Typography>
                         </>
                       }
@@ -227,8 +230,8 @@ const GradingSignOff = ({
 
           {grading.signedBy && (
             <GradingPointsComment
-              points={coef * grading.pointsObtained}
-              maxPoints={roundedWeightedMaxPoints}
+              points={grading.pointsObtained}
+              maxPoints={maxPoints}
               comment={grading.comment}
             />
           )}

@@ -99,7 +99,7 @@ const PageEvaluationTake = () => {
                       </Typography>
                     }
                     order={activeQuestion?.order}
-                    points={activeQuestion?.weightedPoints}
+                    points={activeQuestion?.points}
                     question={activeQuestion?.question}
                     page={page}
                     totalPages={pages.length - 1}

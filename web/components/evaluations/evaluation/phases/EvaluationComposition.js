@@ -205,7 +205,7 @@ const CompositionGrid = ({
   )
 
   const hasNonOneCoef = useMemo(() => {
-    return questions.some((q) => q.points !== q.weightedPoints)
+    return questions.some((q) => q.points !== q.gradingPoints)
   }, [questions])
   const [useCoefs, setUseCoefs] = useState(hasNonOneCoef)
 
@@ -338,12 +338,12 @@ const CompositionItem = ({
   const key = `${evaluationId}-${questionId}`
 
   const [points, setPoints] = useCtrlState(evaluationToQuestion.points, key)
-  const [weightedPts, setWeightedPts] = useCtrlState(
-    evaluationToQuestion.weightedPoints,
+  const [gradingPts, setGradingPts] = useCtrlState(
+    evaluationToQuestion.gradingPoints,
     key,
   )
   const [coef, setCoef] = useCtrlState(
-    points > 0 ? weightedPts / points : 0,
+    gradingPts > 0 ? points / gradingPts : 0,
     key,
   )
 
@@ -408,50 +408,49 @@ const CompositionItem = ({
     1000,
   )
 
-  const debounceSaveWeightedPts = useDebouncedCallback(
-    (questionId, newWeightedPts) =>
-      saveCompositionItem(questionId, 'weightedPoints', newWeightedPts),
+  const debounceSaveGradingPts = useDebouncedCallback(
+    (questionId, newGradingPts) =>
+      saveCompositionItem(questionId, 'gradingPoints', newGradingPts),
     1000,
   )
 
   const onPointsChange = useCallback(
-    (questionId, newPoints, newWeightedPts) => {
+    (questionId, newGradingPoints, newPoints) => {
       if (newPoints !== points) {
+        newPoints = Math.round(newPoints * 100) / 100
         setPoints(newPoints)
         onChangeCompositionItem(questionId, 'points', newPoints)
-        debounceSavePoints(questionId, newPoints, newWeightedPts)
+        debounceSavePoints(questionId, newPoints)
       }
-      const newCoef = newPoints === 0 ? 0 : newWeightedPts / newPoints
+      const newCoef = newGradingPoints === 0 ? 0 : newPoints / newGradingPoints
       if (newCoef !== coef) {
         setCoef(newCoef)
       }
-      if (newWeightedPts !== weightedPts) {
-        newWeightedPts = Math.round(newWeightedPts * 100) / 100
-        setWeightedPts(newWeightedPts)
-        onChangeCompositionItem(questionId, 'weightedPts', newWeightedPts)
-        debounceSaveWeightedPts(questionId, newWeightedPts)
+      if (newGradingPoints !== gradingPts) {
+        newGradingPoints = Math.round(newGradingPoints * 100) / 100
+        setGradingPts(newGradingPoints)
+        onChangeCompositionItem(questionId, 'gradingPoints', newGradingPoints)
+        debounceSaveGradingPts(questionId, newGradingPoints)
       }
     },
     [
       coef,
       debounceSavePoints,
-      debounceSaveWeightedPts,
+      debounceSaveGradingPts,
       onChangeCompositionItem,
       points,
       setCoef,
       setPoints,
-      setWeightedPts,
-      weightedPts,
+      setGradingPts,
+      gradingPts,
     ],
   )
 
   useEffect(() => {
-    console.log('use effect for show Coef', showCoef)
     if (!showCoef) {
-      console.log('calling onPointsChange with', questionId, points, points)
-      onPointsChange(questionId, points, points)
+      onPointsChange(questionId, gradingPts, gradingPts)
     }
-  }, [onPointsChange, points, questionId, showCoef])
+  }, [onPointsChange, gradingPts, questionId, showCoef])
 
   const handleDelete = useCallback(
     async (evalId, qId) => {
@@ -540,9 +539,9 @@ const CompositionItem = ({
       >
         {readOnly ? (
           <Typography variant="body2">
-            {evaluationToQuestion.points} grading pts &times;{' '}
+            {evaluationToQuestion.gradingPoints} grading pts &times;{' '}
             {Math.round(coef * 100) / 100} ={' '}
-            {evaluationToQuestion.weightedPoints} pts
+            {evaluationToQuestion.points} pts
           </Typography>
         ) : (
           <>
@@ -569,13 +568,13 @@ const CompositionItem = ({
             </Tooltip>
             <Stack width={showCoef ? 100 : 60}>
               <DecimalInput
-                value={points}
+                value={gradingPts}
                 variant="standard"
                 rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
                 onChange={async (value) => {
                   if (readOnly || disabled) return
-                  const newWeightedPts = value * coef
-                  onPointsChange(questionId, value, newWeightedPts)
+                  const newPoints = value * coef
+                  onPointsChange(questionId, value, newPoints)
                 }}
               />
             </Stack>
@@ -589,21 +588,21 @@ const CompositionItem = ({
                     rightAdornement={'coef'}
                     onChange={async (value) => {
                       if (readOnly || disabled) return
-                      const newWeightedPts = points * value
-                      onPointsChange(questionId, points, newWeightedPts)
+                      const newPoints = gradingPts * value
+                      onPointsChange(questionId, gradingPts, newPoints)
                     }}
                   />
                 </Stack>
                 <Typography>=</Typography>
                 <Stack width={60} direction={'row'}>
                   <DecimalInput
-                    value={weightedPts}
+                    value={points}
                     variant="standard"
                     rightAdornement={'pts'}
                     disabled={points === 0}
                     onChange={async (value) => {
                       if (readOnly || disabled) return
-                      onPointsChange(questionId, points, value)
+                      onPointsChange(questionId, gradingPts, value)
                     }}
                   />
                 </Stack>

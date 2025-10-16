@@ -401,7 +401,7 @@ const PageGrading = () => {
                             )}
                         </>
                       }
-                      points={evaluationToQuestion.weightedPoints}
+                      points={evaluationToQuestion.points}
                       question={evaluationToQuestion.question}
                       totalPages={evaluationToQuestions.length}
                       above={
@@ -471,7 +471,7 @@ const PageGrading = () => {
                         (ans) => ans.user.id === participantId,
                       )}
                       maxPoints={evaluationToQuestion.points}
-                      weightedPoints={evaluationToQuestion.weightedPoints}
+                      maxGradingPoints={evaluationToQuestion.gradingPoints}
                       onChange={onChangeGrading}
                     />
 

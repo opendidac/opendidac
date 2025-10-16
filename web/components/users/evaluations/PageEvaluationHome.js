@@ -96,7 +96,7 @@ const PageEvaluationHome = () => {
                       total of{' '}
                       <b>
                         {evaluationToQuestions.reduce(
-                          (acc, jtq) => acc + jtq.weightedPoints,
+                          (acc, jtq) => acc + jtq.points,
                           0,
                         )}
                       </b>{' '}
@@ -308,7 +308,7 @@ const QuestionsGrid = ({ evaluationId, evaluationToQuestions, onSubmit }) => {
             label: 'Points',
             column: { width: '120px' },
             renderCell: (row) => (
-              <Chip color="info" label={`${row.weightedPoints} pts`} />
+              <Chip color="info" label={`${row.points} pts`} />
             ),
           },
           {
