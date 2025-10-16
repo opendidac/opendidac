@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { useDebouncedCallback } from 'use-debounce'
 import {
   Alert,
+  AlertTitle,
   Button,
   IconButton,
   Stack,
@@ -44,6 +45,10 @@ import {
   useCompositionCompliance,
 } from './composition/CompositionCompliance'
 import useCtrlState from '@/hooks/useCtrlState'
+import CheckboxLabel from '@/components/input/CheckboxLabel'
+import UserHelpPopper from '@/components/feedback/UserHelpPopper'
+import { useSnackbar } from '@/context/SnackbarContext'
+import DialogFeedback from '@/components/feedback/DialogFeedback'
 
 const EvaluationComposition = ({
   groupScope,
@@ -133,6 +138,8 @@ const CompositionGrid = ({
     `${evaluationId}-composition`,
   )
 
+  const { show: showSnackbar } = useSnackbar()
+
   const { hasWarnings, globalWarnings, getIndicator } =
     useCompositionCompliance(questions)
 
@@ -143,17 +150,22 @@ const CompositionGrid = ({
   const saveReOrder = useCallback(
     async (ordered) => {
       // Send only id + order (see Fix #2)
-      await fetch(
-        `/api/${groupScope}/evaluations/${evaluationId}/composition/order`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ questions: ordered }),
-        },
-      )
+      try {
+        await fetch(
+          `/api/${groupScope}/evaluations/${evaluationId}/composition/order`,
+          {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ questions: ordered }),
+          },
+        )
+        showSnackbar('Order saved', 'success')
+      } catch (err) {
+        showSnackbar(`Error while saving`, 'error')
+      }
       onCompositionChanged && onCompositionChanged()
     },
-    [groupScope, evaluationId, onCompositionChanged],
+    [onCompositionChanged, groupScope, evaluationId, showSnackbar],
   )
 
   // Optimistic updates to the questions state before the API call
@@ -192,6 +204,13 @@ const CompositionGrid = ({
     [setQuestions],
   )
 
+  const hasNonOneCoef = useMemo(() => {
+    return questions.some((q) => q.points !== q.weightedPoints)
+  }, [questions])
+  const [useCoefs, setUseCoefs] = useState(hasNonOneCoef)
+
+  const [showConfirmNoCoefs, setShowConfirmNoCoefs] = useState(false)
+
   return (
     <Stack spacing={1}>
       <ComplianceBanner
@@ -225,12 +244,61 @@ const CompositionGrid = ({
             onHandleDragEnd={async () => {
               await saveReOrder(questions)
             }}
+            showCoef={useCoefs}
             onChangeCompositionItem={onChangeCompositionItem}
             onDeleteCompositionItem={onDeleteCompositionItem}
             onCompositionChanged={onCompositionChanged}
           />
         ))}
       </ReorderableList>
+      <Stack flex={1} justifyContent={'right'} direction={'row'}>
+        <CheckboxLabel
+          label={'Use Coefficients'}
+          checked={useCoefs}
+          onChange={(checked) => {
+            if (!checked && hasNonOneCoef) {
+              console.log(hasNonOneCoef)
+              setShowConfirmNoCoefs(true)
+            } else {
+              setUseCoefs(checked)
+            }
+          }}
+        />
+        <UserHelpPopper>
+          <Alert severity="info">
+            <AlertTitle>Using Coefficients</AlertTitle>
+            <Stack gap={1}>
+              <Typography variant="body2">
+                When toggled, you can specify a coefficient that will be applied
+                to the number of points out of which the question will be
+                graded. This lets you decouple the grading scale of a question
+                from its weight in the evaluation.
+              </Typography>
+              <Typography variant="body2">
+                For example, a question might be graded out of 5 points, but
+                should contribute only 3 points to the evaluation. In this case,
+                you can specify that the grading points are 5, and the
+                coefficient is 0.6 (3/5), resulting in the weighted points of 3.
+              </Typography>
+            </Stack>
+          </Alert>
+        </UserHelpPopper>
+        <DialogFeedback
+          open={showConfirmNoCoefs}
+          title={'Disable Coefficients?'}
+          content={
+            <Typography>
+              You will lose any coefficients you have set on questions. Are you
+              sure you want to proceed?
+            </Typography>
+          }
+          onClose={() => setShowConfirmNoCoefs(false)}
+          onConfirm={() => {
+            setShowConfirmNoCoefs(false)
+            setUseCoefs(false)
+          }}
+        />
+      </Stack>
     </Stack>
   )
 }
@@ -242,6 +310,7 @@ const CompositionItem = ({
   onHandleDragEnd,
   readOnly = false,
   disabled = false,
+  showCoef,
   onChangeCompositionItem,
   onDeleteCompositionItem,
   onCompositionChanged,
@@ -255,6 +324,8 @@ const CompositionItem = ({
     getDragStyles,
   } = useReorderable()
 
+  const { show: showSnackbar } = useSnackbar()
+
   const theme = useTheme()
 
   const questionId = evaluationToQuestion.questionId
@@ -266,10 +337,18 @@ const CompositionItem = ({
   const key = `${evaluationId}-${questionId}`
 
   const [points, setPoints] = useCtrlState(evaluationToQuestion.points, key)
+  const [weightedPts, setWeightedPts] = useCtrlState(
+    evaluationToQuestion.weightedPoints,
+    key,
+  )
+  const [coef, setCoef] = useCtrlState(
+    points > 0 ? weightedPts / points : 0,
+    key,
+  )
 
   const saveCompositionItem = useCallback(
-    async (questionId, property, value) => {
-      await fetch(
+    (questionId, property, value) => {
+      fetch(
         `/api/${groupScope}/evaluations/${evaluationId}/composition/${questionId}`,
         {
           method: 'PUT',
@@ -281,9 +360,22 @@ const CompositionItem = ({
           }),
         },
       )
+        .then((value) => {
+          if (!value.ok) {
+            throw new Error(
+              `Error while saving details: ${value.status} ${value.statusText}`,
+            )
+          } else {
+            showSnackbar(`Saved successfully`, 'success')
+          }
+        })
+        .catch((err) => {
+          console.error(err)
+          showSnackbar(`Error while saving`, 'error')
+        })
       onCompositionChanged && onCompositionChanged()
     },
-    [evaluationId, groupScope, onCompositionChanged],
+    [evaluationId, groupScope, onCompositionChanged, showSnackbar],
   )
 
   const saveDelete = useCallback(
@@ -303,10 +395,62 @@ const CompositionItem = ({
     [groupScope, onCompositionChanged],
   )
 
-  const debounceSaveCompositionItem = useDebouncedCallback(
-    saveCompositionItem,
+  const debounceSaveTitle = useDebouncedCallback(
+    (questionId, newTitle) =>
+      saveCompositionItem(questionId, 'title', newTitle),
     1000,
   )
+
+  const debounceSavePoints = useDebouncedCallback(
+    (questionId, newPoints) =>
+      saveCompositionItem(questionId, 'points', newPoints),
+    1000,
+  )
+
+  const debounceSaveWeightedPts = useDebouncedCallback(
+    (questionId, newWeightedPts) =>
+      saveCompositionItem(questionId, 'weightedPoints', newWeightedPts),
+    1000,
+  )
+
+  const onPointsChange = useCallback(
+    (questionId, newPoints, newWeightedPts) => {
+      if (newPoints !== points) {
+        setPoints(newPoints)
+        onChangeCompositionItem(questionId, 'points', newPoints)
+        debounceSavePoints(questionId, newPoints, newWeightedPts)
+      }
+      const newCoef = newPoints === 0 ? 0 : newWeightedPts / newPoints
+      if (newCoef !== coef) {
+        setCoef(newCoef)
+      }
+      if (newWeightedPts !== weightedPts) {
+        newWeightedPts = Math.round(newWeightedPts * 100) / 100
+        setWeightedPts(newWeightedPts)
+        onChangeCompositionItem(questionId, 'weightedPts', newWeightedPts)
+        debounceSaveWeightedPts(questionId, newWeightedPts)
+      }
+    },
+    [
+      coef,
+      debounceSavePoints,
+      debounceSaveWeightedPts,
+      onChangeCompositionItem,
+      points,
+      setCoef,
+      setPoints,
+      setWeightedPts,
+      weightedPts,
+    ],
+  )
+
+  useEffect(() => {
+    console.log('use effect for show Coef', showCoef)
+    if (!showCoef) {
+      console.log('calling onPointsChange with', questionId, points, points)
+      onPointsChange(questionId, points, points)
+    }
+  }, [onPointsChange, points, questionId, showCoef])
 
   const handleDelete = useCallback(
     async (evalId, qId) => {
@@ -381,15 +525,13 @@ const CompositionItem = ({
           readOnly={readOnly || disabled}
           onChangeTitle={(title) => {
             onChangeCompositionItem(questionId, 'title', title)
-            debounceSaveCompositionItem(questionId, 'title', title)
+            debounceSaveTitle(questionId, title)
           }}
         />
       </Stack>
       {indicator && indicator}
 
       <Stack
-        minWidth={100}
-        width={100}
         justifyContent={'flex-end'}
         direction={'row'}
         spacing={1}
@@ -422,17 +564,48 @@ const CompositionItem = ({
                 />
               </IconButton>
             </Tooltip>
-            <DecimalInput
-              value={points}
-              variant="standard"
-              rightAdornement={'pts'}
-              onChange={async (value) => {
-                if (readOnly || disabled) return
-                setPoints(value)
-                onChangeCompositionItem(questionId, 'points', value)
-                debounceSaveCompositionItem(questionId, 'points', value)
-              }}
-            />
+            <Stack width={showCoef ? 100 : 60}>
+              <DecimalInput
+                value={points}
+                variant="standard"
+                rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
+                onChange={async (value) => {
+                  if (readOnly || disabled) return
+                  const newWeightedPts = value * coef
+                  onPointsChange(questionId, value, newWeightedPts)
+                }}
+              />
+            </Stack>
+            {showCoef && (
+              <>
+                <Typography>&times;</Typography>
+                <Stack width={60} direction={'row'}>
+                  <DecimalInput
+                    value={coef}
+                    variant="standard"
+                    rightAdornement={'coef'}
+                    onChange={async (value) => {
+                      if (readOnly || disabled) return
+                      const newWeightedPts = points * value
+                      onPointsChange(questionId, points, newWeightedPts)
+                    }}
+                  />
+                </Stack>
+                <Typography>=</Typography>
+                <Stack width={60} direction={'row'}>
+                  <DecimalInput
+                    value={weightedPts}
+                    variant="standard"
+                    rightAdornement={'pts'}
+                    disabled={points === 0}
+                    onChange={async (value) => {
+                      if (readOnly || disabled) return
+                      onPointsChange(questionId, points, value)
+                    }}
+                  />
+                </Stack>
+              </>
+            )}
           </>
         )}
       </Stack>

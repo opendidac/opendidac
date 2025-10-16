@@ -662,6 +662,8 @@ model EvaluationToQuestion {
   questionId String
 
   points Float @default(0)
+  weightedPoints Float @default(0)
+
   order  Int   @default(0)
   title   String? // Custom title for the question in this evaluation
   addendum String?
