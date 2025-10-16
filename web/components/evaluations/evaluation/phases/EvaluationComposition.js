@@ -254,6 +254,7 @@ const CompositionGrid = ({
       <Stack flex={1} justifyContent={'right'} direction={'row'}>
         <CheckboxLabel
           label={'Use Coefficients'}
+          disabled={readOnly}
           checked={useCoefs}
           onChange={(checked) => {
             if (!checked && hasNonOneCoef) {
@@ -539,7 +540,9 @@ const CompositionItem = ({
       >
         {readOnly ? (
           <Typography variant="body2">
-            {evaluationToQuestion.points} pts
+            {evaluationToQuestion.points} grading pts
+            &times; {Math.round(coef * 100) / 100} =
+            {' '}{evaluationToQuestion.weightedPoints} pts
           </Typography>
         ) : (
           <>

@@ -68,6 +68,7 @@ const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
       await prisma.evaluationToQuestion.create({
         data: {
           points: eToQ.points,
+          weightedPoints: eToQ.weightedPoints,
           order: eToQ.order,
           title: eToQ.title, // Copy the custom title
           evaluation: {
