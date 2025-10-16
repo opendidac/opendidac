@@ -360,7 +360,7 @@ const CompositionSummary = ({ evaluation, composition }) => {
         - {composition?.length} questions.
       </Typography>
       <Typography variant="caption">
-        - {composition?.reduce((acc, q) => acc + q.points, 0)} points.
+        - {composition?.reduce((acc, q) => acc + q.weightedPoints, 0)} points.
       </Typography>
       {phaseGreaterThan(evaluation.phase, EvaluationPhase.COMPOSITION) ? (
         <>

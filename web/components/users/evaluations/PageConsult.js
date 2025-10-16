@@ -101,7 +101,7 @@ const PageConsult = () => {
         id: jstq.question.id,
         label: `Q${jstq.order + 1}`,
         fillable: true,
-        tooltip: `${jstq.title} - ${jstq.points} points`,
+        tooltip: `${jstq.title} - ${jstq.weightedPoints} points`,
         state: getFilledStatus(jstq.question.studentAnswer[0].status),
       })),
     [evaluationToQuestions],

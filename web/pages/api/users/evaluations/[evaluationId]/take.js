@@ -67,7 +67,7 @@ const get = withEvaluationPhase(
               accessList: true, // sensitive!
               evaluationToQuestions: {
                 select: {
-                  points: true,
+                  weightedPoints: true,
                   order: true,
                   title: true, // Custom question title for this evaluation
                   question: {
