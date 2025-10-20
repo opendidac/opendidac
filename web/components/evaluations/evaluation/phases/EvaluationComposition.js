@@ -18,7 +18,6 @@ import Image from 'next/image'
 import { useDebouncedCallback } from 'use-debounce'
 import {
   Alert,
-  AlertTitle,
   Button,
   IconButton,
   Stack,
@@ -33,14 +32,18 @@ import CodeQuestionTypeIcon from '@/components/question/type_specific/code/CodeQ
 import ScrollContainer from '@/components/layout/ScrollContainer'
 import ReorderableList from '@/components/layout/utils/ReorderableList'
 import { phaseGreaterThan } from '../phases'
-import { CodeQuestionType, EvaluationPhase, QuestionType } from '@prisma/client'
+import { EvaluationPhase, QuestionType } from '@prisma/client'
 import QuestionIncludeDrawer from './composition/QuestionIncludeDrawer'
 import QuestionTitleField from './composition/QuestionTitleField'
 import { useTheme } from '@emotion/react'
 import EvaluationTitleBar from '../layout/EvaluationTitleBar'
 import { useRouter } from 'next/router'
-import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import { useReorderable } from '@/components/layout/utils/ReorderableList'
+import {
+  ComplianceBanner,
+  useCompositionCompliance,
+} from './composition/CompositionCompliance'
+import useCtrlState from '@/hooks/useCtrlState'
 
 const EvaluationComposition = ({
   groupScope,
@@ -72,17 +75,9 @@ const EvaluationComposition = ({
           }),
         },
       )
+      onCompositionChanged && onCompositionChanged()
     },
-    [groupScope, evaluationId],
-  )
-
-  const onInclude = useCallback(
-    async (questionIds) => {
-      await saveIncludeQuestions(questionIds)
-
-      onCompositionChanged()
-    },
-    [saveIncludeQuestions, onCompositionChanged],
+    [groupScope, evaluationId, onCompositionChanged],
   )
 
   return (
@@ -103,7 +98,7 @@ const EvaluationComposition = ({
         }
       />
       <ScrollContainer spacing={1} px={1} pb={24}>
-        <EvaluationCompositionQuestions
+        <CompositionGrid
           groupScope={groupScope}
           evaluationId={evaluationId}
           composition={composition}
@@ -116,7 +111,7 @@ const EvaluationComposition = ({
         groupScope={groupScope}
         includedQuestions={composition.map((eq) => eq.question)}
         onInclude={(questionIds) => {
-          onInclude(questionIds)
+          saveIncludeQuestions(questionIds)
         }}
         onClose={() => {
           setShowIncludeDrawer(false)
@@ -126,224 +121,83 @@ const EvaluationComposition = ({
   )
 }
 
-const EvaluationCompositionQuestions = ({
+const CompositionGrid = ({
   groupScope,
   evaluationId,
   composition,
   readOnly,
   onCompositionChanged,
 }) => {
-  const [questions, setQuestions] = useState(composition)
-  const [hasWarnings, setHasWarnings] = useState(false)
-  const [warnings, setWarnings] = useState({})
-  const [pointsWarnings, setPointsWarnings] = useState({})
-  const [globalWarnings, setGlobalWarnings] = useState([])
+  const [questions, setQuestions] = useCtrlState(
+    composition,
+    `${evaluationId}-composition`,
+  )
+
+  const { hasWarnings, globalWarnings, getIndicator } =
+    useCompositionCompliance(questions)
 
   useEffect(() => {
     setQuestions(composition)
-  }, [composition])
-
-  const checkGlobalCompliance = useCallback((evaluationToQuestions) => {
-    const warnings = []
-    const totalPoints = evaluationToQuestions.reduce(
-      (sum, eq) => sum + (eq.points || 0),
-      0,
-    )
-
-    if (totalPoints === 0) {
-      warnings.push(
-        'The total points for all questions is 0. Please set points for at least one question.',
-      )
-    }
-
-    return warnings
-  }, [])
-
-  const codeQuestionComplianceCheck = useCallback((collectionToQuestions) => {
-    const warnings = {}
-
-    for (const collectionToQuestion of collectionToQuestions) {
-      // find other question of the type code of opposite code type and same language
-      if (collectionToQuestion.question.type == QuestionType.code) {
-        const warning =
-          'The students may use the code writing code check feature to execute code reading snippets and get the outputs. This can lead to cheating. It is recommended to avoid mixing code reading and code writing questions of the same language in the same collection.'
-
-        const codeType = collectionToQuestion.question.code.codeType
-        const language = collectionToQuestion.question.code.language
-        const oppositeCodeType =
-          codeType === CodeQuestionType.codeWriting
-            ? CodeQuestionType.codeReading
-            : CodeQuestionType.codeWriting
-
-        const oppositeCodeQuestion = collectionToQuestions.filter(
-          (item) =>
-            item.question.type === 'code' &&
-            item.question.code.codeType === oppositeCodeType &&
-            item.question.code.language === language,
-        )
-
-        if (oppositeCodeQuestion.length > 0) {
-          warnings[collectionToQuestion.question.id] = warning
-          for (const oppositeQuestion of oppositeCodeQuestion) {
-            warnings[oppositeQuestion.question.id] = warning
-          }
-        }
-      }
-    }
-    return warnings
-  }, [])
-
-  const pointsComplianceCheck = useCallback((evaluationToQuestions) => {
-    const warnings = {}
-
-    // Individual warnings for questions with 0 points
-    evaluationToQuestions.forEach((eq) => {
-      if (!eq.points || eq.points === 0) {
-        warnings[eq.question.id] =
-          'This question has no points assigned. Please set a value greater than 0.'
-      }
-    })
-
-    return warnings
-  }, [])
-
-  const complianceCheck = useCallback(
-    (evaluationToQuestions) => {
-      const warnings = {}
-
-      // Check code question compliance
-      for (const eq of evaluationToQuestions) {
-        switch (eq.question.type) {
-          case QuestionType.code:
-            Object.assign(
-              warnings,
-              codeQuestionComplianceCheck(evaluationToQuestions),
-            )
-            break
-          default:
-            break
-        }
-      }
-
-      return warnings
-    },
-    [codeQuestionComplianceCheck],
-  )
-
-  useEffect(() => {
-    const newWarnings = complianceCheck(composition)
-    const newPointsWarnings = pointsComplianceCheck(composition)
-    const newGlobalWarnings = checkGlobalCompliance(composition)
-
-    setWarnings(newWarnings)
-    setPointsWarnings(newPointsWarnings)
-    setGlobalWarnings(newGlobalWarnings)
-    setHasWarnings(
-      Object.keys(newWarnings).length > 0 ||
-        Object.keys(newPointsWarnings).length > 0 ||
-        newGlobalWarnings.length > 0,
-    )
-  }, [
-    composition,
-    complianceCheck,
-    pointsComplianceCheck,
-    checkGlobalCompliance,
-  ])
+  }, [composition, setQuestions])
 
   const saveReOrder = useCallback(
-    async (reordered) => {
-      // save question order
+    async (ordered) => {
+      // Send only id + order (see Fix #2)
       await fetch(
         `/api/${groupScope}/evaluations/${evaluationId}/composition/order`,
         {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            questions: reordered,
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questions: ordered }),
         },
       )
+      onCompositionChanged && onCompositionChanged()
     },
-    [groupScope, evaluationId],
+    [groupScope, evaluationId, onCompositionChanged],
   )
 
-  const debounceSaveOrdering = useDebouncedCallback(saveReOrder, 300)
+  // Optimistic updates to the questions state before the API call
 
   const onChangeOrder = useCallback(
-    async (sourceIndex, targetIndex) => {
-      const reordered = [...questions]
-
-      // Remove the element from its original position
-      const [removedElement] = reordered.splice(sourceIndex, 1)
-
-      // Insert the element at the target position
-      reordered.splice(targetIndex, 0, removedElement)
-
-      // Update the order properties for all elements
-      reordered.forEach((item, index) => {
-        item.order = index
+    (sourceIndex, targetIndex) => {
+      setQuestions((prev) => {
+        const next = [...prev]
+        const [moved] = next.splice(sourceIndex, 1)
+        next.splice(targetIndex, 0, moved)
+        const nextAfter = next.map((q, i) => ({ ...q, order: i }))
+        return nextAfter
       })
-
-      setQuestions(reordered)
-
-      await debounceSaveOrdering(reordered)
     },
-    [debounceSaveOrdering, questions, setQuestions],
+    [setQuestions],
   )
 
-  const getIndicator = useCallback(
-    (questionId) => {
-      const questionWarnings = []
-
-      // Add individual question warnings
-      if (warnings[questionId]) {
-        questionWarnings.push(warnings[questionId])
-      }
-
-      // Add points warning if applicable
-      if (pointsWarnings[questionId]) {
-        questionWarnings.push(pointsWarnings[questionId])
-      }
-
-      if (questionWarnings.length > 0) {
-        return (
-          <Stack direction="row" spacing={0}>
-            {questionWarnings.map((warning, index) => (
-              <UserHelpPopper key={index} mode={'warning'}>
-                {warning}
-              </UserHelpPopper>
-            ))}
-          </Stack>
-        )
-      }
-      return null
+  const onChangeCompositionItem = useCallback(
+    (questionid, property, value) => {
+      setQuestions((prev) => {
+        const next = [...prev]
+        const index = next.findIndex((q) => q.questionId === questionid)
+        next[index][property] = value
+        return next
+      })
     },
-    [warnings, pointsWarnings],
+    [setQuestions],
+  )
+
+  const onDeleteCompositionItem = useCallback(
+    (questionid) => {
+      setQuestions((prev) => {
+        return prev.filter((q) => q.questionId !== questionid)
+      })
+    },
+    [setQuestions],
   )
 
   return (
     <Stack spacing={1}>
-      {hasWarnings && (
-        <Alert severity="warning" sx={{ mb: 1 }}>
-          <AlertTitle>Compliance warnings</AlertTitle>
-          <Stack spacing={1}>
-            <Typography variant="body2">
-              Click on the warning icon next to the questions to see details.
-            </Typography>
-            {globalWarnings.map((warning, index) => (
-              <Typography key={index} variant="body2">
-                {warning}
-              </Typography>
-            ))}
-            <Typography variant="body1">
-              These warnings can be ignored. You may proceed if you have
-              carefully considered the implications.
-            </Typography>
-          </Stack>
-        </Alert>
-      )}
+      <ComplianceBanner
+        hasWarnings={hasWarnings}
+        globalWarnings={globalWarnings}
+      />
       {readOnly ? (
         <Alert severity="info">
           <Typography variant="body2">
@@ -361,19 +215,19 @@ const EvaluationCompositionQuestions = ({
         </Alert>
       )}
       <ReorderableList disabled={readOnly} onChangeOrder={onChangeOrder}>
-        {questions.map((eToQ, index) => (
-          <QuestionItem
+        {questions.map((eToQ) => (
+          <CompositionItem
             key={eToQ.id}
             groupScope={groupScope}
             evaluationToQuestion={eToQ}
             readOnly={readOnly}
             indicator={getIndicator(eToQ.question.id)}
-            onChange={(index, updated) => {
-              onCompositionChanged()
+            onHandleDragEnd={async () => {
+              await saveReOrder(questions)
             }}
-            onDelete={() => {
-              onCompositionChanged()
-            }}
+            onChangeCompositionItem={onChangeCompositionItem}
+            onDeleteCompositionItem={onDeleteCompositionItem}
+            onCompositionChanged={onCompositionChanged}
           />
         ))}
       </ReorderableList>
@@ -381,96 +235,123 @@ const EvaluationCompositionQuestions = ({
   )
 }
 
-const QuestionItem = ({
+const CompositionItem = ({
   groupScope,
   evaluationToQuestion,
   indicator,
-  onChange,
-  onDelete,
+  onHandleDragEnd,
   readOnly = false,
+  disabled = false,
+  onChangeCompositionItem,
+  onDeleteCompositionItem,
+  onCompositionChanged,
 }) => {
   const router = useRouter()
   const {
     handleDragStart,
     handleDragOver,
     handleDragEnd,
-    disabled,
+    disabled: dragDisabled,
     getDragStyles,
   } = useReorderable()
 
-  const deleteCollectionToQuestion = useCallback(
-    async (toDelete) => {
-      if (readOnly) return // prevent deletion in read-only mode
+  const theme = useTheme()
 
+  const questionId = evaluationToQuestion.questionId
+  const evaluationId = evaluationToQuestion.evaluationId
+  const order = evaluationToQuestion.order
+  const originalTitle = evaluationToQuestion.question.title
+  const title = evaluationToQuestion.title
+
+  const key = `${evaluationId}-${questionId}`
+
+  const [points, setPoints] = useCtrlState(evaluationToQuestion.points, key)
+
+  const saveCompositionItem = useCallback(
+    async (questionId, property, value) => {
       await fetch(
-        `/api/${groupScope}/evaluations/${toDelete.evaluationId}/composition`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            questionId: toDelete.questionId,
-          }),
-        },
-      )
-    },
-    [groupScope, readOnly],
-  )
-
-  const saveCollectionToQuestion = useCallback(
-    async (index, updated) => {
-      if (readOnly) return // prevent saving in read-only mode
-
-      const response = await fetch(
-        `/api/${groupScope}/evaluations/${updated.evaluationId}/composition`,
+        `/api/${groupScope}/evaluations/${evaluationId}/composition/${questionId}`,
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            evaluationToQuestion: updated,
+            [property]: value,
           }),
         },
       )
-      if (response.ok) {
-        onChange && onChange(index, updated)
-      }
+      onCompositionChanged && onCompositionChanged()
     },
-    [groupScope, onChange, readOnly],
+    [evaluationId, groupScope, onCompositionChanged],
   )
 
-  const debounceSaveCollectionToQuestion = useDebouncedCallback(
-    saveCollectionToQuestion,
-    300,
+  const saveDelete = useCallback(
+    async (evalId, qId) => {
+      // persist deletion
+      await fetch(
+        `/api/${groupScope}/evaluations/${evalId}/composition/${qId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+      onCompositionChanged && onCompositionChanged()
+    },
+    [groupScope, onCompositionChanged],
   )
 
-  const theme = useTheme()
+  const debounceSaveCompositionItem = useDebouncedCallback(
+    saveCompositionItem,
+    1000,
+  )
+
+  const handleDelete = useCallback(
+    async (evalId, qId) => {
+      onDeleteCompositionItem && onDeleteCompositionItem(qId)
+      await saveDelete(evalId, qId)
+    },
+    [saveDelete, onDeleteCompositionItem],
+  )
 
   return (
     <Stack
       direction="row"
       alignItems="center"
+      justifyContent="center"
       spacing={1}
-      height={50}
+      height={60}
       pl={1}
       borderBottom={`1px solid ${theme.palette.divider}`}
-      sx={getDragStyles(evaluationToQuestion.order)}
-      onDragOver={(e) => handleDragOver(e, evaluationToQuestion.order)}
-      onDragEnd={(e) => handleDragEnd(e, evaluationToQuestion.order)}
+      sx={getDragStyles(order)}
+      onDragOver={(e) => {
+        if (readOnly || disabled) return
+        handleDragOver(e, order)
+      }}
+      onDragEnd={(e) => {
+        if (readOnly || disabled) return
+        handleDragEnd(e, order)
+        onHandleDragEnd && onHandleDragEnd()
+      }}
     >
       {!readOnly && (
         <Stack
           justifyContent={'center'}
           sx={{
-            cursor: disabled ? 'not-allowed' : 'grab',
+            opacity: disabled ? 0.5 : 1,
+            cursor: dragDisabled ? 'not-allowed' : 'grab',
             '&:active': {
               cursor: 'grabbing',
             },
           }}
-          draggable={!disabled}
-          onDragStart={(e) => handleDragStart(e, evaluationToQuestion.order)}
+          pr={1}
+          draggable={!dragDisabled}
+          onDragStart={(e) => {
+            // cancel the eventual debounced save
+            handleDragStart(e, order)
+          }}
         >
           <DragHandleSVG />
         </Stack>
@@ -491,17 +372,16 @@ const QuestionItem = ({
         whiteSpace={'nowrap'}
       >
         <Typography variant="body1">
-          <b>Q{evaluationToQuestion.order + 1}</b>
+          <b>Q{order + 1}</b>
         </Typography>
         <QuestionTitleField
-          id={evaluationToQuestion.questionId}
-          evaluationToQuestion={evaluationToQuestion}
-          readOnly={readOnly}
-          onSave={async (updatedEvaluationToQuestion) => {
-            await debounceSaveCollectionToQuestion(
-              evaluationToQuestion.order,
-              updatedEvaluationToQuestion,
-            )
+          id={`${key}-title`}
+          currentTitle={title}
+          originalTitle={originalTitle}
+          readOnly={readOnly || disabled}
+          onChangeTitle={(title) => {
+            onChangeCompositionItem(questionId, 'title', title)
+            debounceSaveCompositionItem(questionId, 'title', title)
           }}
         />
       </Stack>
@@ -523,9 +403,11 @@ const QuestionItem = ({
           <>
             <Tooltip title="Update in new page">
               <IconButton
+                disabled={readOnly || disabled}
                 onClick={async (ev) => {
                   ev.preventDefault()
                   ev.stopPropagation()
+                  if (readOnly || disabled) return
                   const currentPath = router.asPath // Capture current relative URL
                   await router.push(
                     `/${groupScope}/questions/${evaluationToQuestion?.question.id}?from=${encodeURIComponent(currentPath)}`,
@@ -541,31 +423,27 @@ const QuestionItem = ({
               </IconButton>
             </Tooltip>
             <DecimalInput
-              value={evaluationToQuestion.points}
+              value={points}
               variant="standard"
               rightAdornement={'pts'}
               onChange={async (value) => {
-                await debounceSaveCollectionToQuestion(
-                  evaluationToQuestion.order,
-                  {
-                    ...evaluationToQuestion,
-                    points: value,
-                  },
-                )
+                if (readOnly || disabled) return
+                setPoints(value)
+                onChangeCompositionItem(questionId, 'points', value)
+                debounceSaveCompositionItem(questionId, 'points', value)
               }}
             />
           </>
         )}
       </Stack>
-      {!readOnly && (
+      {!(readOnly || disabled) && (
         <Tooltip title="Remove from collection">
           <IconButton
             key="delete-collection"
             onClick={async (ev) => {
               ev.preventDefault()
               ev.stopPropagation()
-              await deleteCollectionToQuestion(evaluationToQuestion)
-              onDelete && onDelete()
+              await handleDelete(evaluationId, questionId)
             }}
           >
             <Image

@@ -18,10 +18,7 @@ import { useCallback, useState } from 'react'
 import MultipleChoice from './MultipleChoice'
 import Loading from '../../feedback/Loading'
 import { fetcher } from '../../../code/utils'
-import { useDebouncedCallback } from 'use-debounce'
 import { Stack } from '@mui/system'
-import { Button } from '@mui/material'
-import AddIcon from '@mui/icons-material/Add'
 import MultipleChoiceConfig from './multiple-choice/MultipleChoiceConfig'
 import ToggleWithLabel from '@/components/input/ToggleWithLabel'
 
@@ -67,107 +64,15 @@ const ManageMultipleChoice = ({ groupScope, questionId, onUpdate }) => {
     [multipleChoice, saveMultipleChoice, onUpdate],
   )
 
-  const onChangeOption = useCallback(
-    async (newOption) => {
-      await fetch(
-        `/api/${groupScope}/questions/${questionId}/multiple-choice/options`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            option: newOption,
-          }),
-        },
-      )
-        .then(async (res) => {
-          if (res.status === 200) {
-            await mutate()
-          }
-        })
-        .finally(() => {
-          onUpdate && onUpdate()
-        })
-    },
-    [groupScope, questionId, mutate, onUpdate],
-  )
+  // Options CRUD is handled inside MultipleChoice; this callback only triggers refresh
+  const onOptionsChanged = useCallback(async () => {
+    await mutate()
+    onUpdate && onUpdate()
+  }, [mutate, onUpdate])
 
-  const onDeleteOption = useCallback(
-    async (deletedOption) => {
-      await fetch(
-        `/api/${groupScope}/questions/${questionId}/multiple-choice/options`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            option: deletedOption,
-          }),
-        },
-      )
-        .then(async (res) => {
-          if (res.status === 200) {
-            await mutate()
-          }
-        })
-        .finally(() => {
-          onUpdate && onUpdate()
-        })
-    },
-    [groupScope, questionId, mutate, onUpdate],
-  )
+  // Add option is handled inside MultipleChoice
 
-  const onAddOption = useCallback(async () => {
-    await fetch(
-      `/api/${groupScope}/questions/${questionId}/multiple-choice/options`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          option: {
-            text: '',
-            isCorrect: false,
-          },
-        }),
-      },
-    )
-      .then(async (res) => {
-        if (res.status === 200) {
-          await mutate()
-        }
-      })
-      .finally(() => {
-        onUpdate && onUpdate()
-      })
-  }, [groupScope, questionId, mutate, onUpdate])
-
-  const saveReOrder = useCallback(
-    async (reordered) => {
-      // save question order
-      await fetch(
-        `/api/${groupScope}/questions/${questionId}/multiple-choice/order`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            options: reordered,
-          }),
-        },
-      )
-    },
-    [groupScope, questionId],
-  )
-
-  const debounceSaveOrdering = useDebouncedCallback(saveReOrder, 300)
+  // Reorder saving handled inside MultipleChoice
 
   return (
     <Loading loading={!multipleChoice} errors={[error]}>
@@ -193,14 +98,7 @@ const ManageMultipleChoice = ({ groupScope, questionId, onUpdate }) => {
           alignItems="center"
           spacing={2}
         >
-          <Button
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => onAddOption()}
-            px={2}
-          >
-            Add Option
-          </Button>
+          {/* Add moved into MultipleChoice */}
           <ToggleWithLabel
             label="Preview Mode"
             checked={previewMode}
@@ -210,19 +108,12 @@ const ManageMultipleChoice = ({ groupScope, questionId, onUpdate }) => {
 
         <Stack px={2} spacing={2} flex={1}>
           <MultipleChoice
+            groupScope={groupScope}
+            questionId={questionId}
             limiterActivated={multipleChoice?.activateSelectionLimit}
             options={multipleChoice?.options}
             previewMode={previewMode}
-            onAdd={onAddOption}
-            onChangeOption={async (newOption) => {
-              await onChangeOption(newOption)
-            }}
-            onChangeOrder={async (reordered) => {
-              await debounceSaveOrdering(reordered)
-            }}
-            onDelete={async (deletedOption) => {
-              await onDeleteOption(deletedOption)
-            }}
+            onOptionsChanged={onOptionsChanged}
           />
         </Stack>
       </Stack>

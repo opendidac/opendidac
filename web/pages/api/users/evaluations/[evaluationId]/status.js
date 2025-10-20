@@ -90,15 +90,11 @@ const get = async (req, res, prisma) => {
       id: evaluationId,
     },
     select: {
-      id: true,
       phase: true,
       durationActive: true,
       startAt: true,
       endAt: true,
       conditions: true,
-      consultationEnabled: true,
-      accessMode: true, // sensitive!
-      accessList: true, // sensitive!
     },
   })
 
@@ -114,6 +110,10 @@ const get = async (req, res, prisma) => {
         userEmail: studentEmail,
         evaluationId: evaluationId,
       },
+    },
+    select: {
+      status: true,
+      originalSessionToken: true,
     },
   })
 
@@ -135,14 +135,10 @@ const get = async (req, res, prisma) => {
 
   // Return the evaluation and user status
   res.status(200).json({
-    evaluation: {
-      phase: evaluation.phase,
-      durationActive: evaluation.durationActive,
-      startAt: evaluation.startAt,
-      endAt: evaluation.endAt,
-      conditions: evaluation.conditions,
+    evaluation,
+    userOnEvaluation: {
+      status: userOnEvaluation.status,
     },
-    userOnEvaluation: userOnEvaluation,
   })
 }
 

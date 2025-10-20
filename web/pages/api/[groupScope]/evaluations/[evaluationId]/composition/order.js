@@ -26,22 +26,25 @@ import { withEvaluationUpdate } from '@/middleware/withUpdate'
 
 const put = async (req, res, prisma) => {
   // update the order of the questions in the evaluation
+  const { evaluationId } = req.query
   const { questions } = req.body
 
   // update the order of the questions in the evaluation
-  for (const [_, evaluationToQuestion] of questions.entries()) {
-    await prisma.evaluationToQuestion.update({
-      where: {
-        evaluationId_questionId: {
-          evaluationId: evaluationToQuestion.evaluationId,
-          questionId: evaluationToQuestion.questionId,
+  await prisma.$transaction(async (prisma) => {
+    for (const [_, evaluationToQuestion] of questions.entries()) {
+      await prisma.evaluationToQuestion.update({
+        where: {
+          evaluationId_questionId: {
+            evaluationId: evaluationId,
+            questionId: evaluationToQuestion.questionId,
+          },
         },
-      },
-      data: {
-        order: evaluationToQuestion.order,
-      },
-    })
-  }
+        data: {
+          order: evaluationToQuestion.order,
+        },
+      })
+    }
+  })
 
   res.status(200).json({ message: 'OK' })
 }
