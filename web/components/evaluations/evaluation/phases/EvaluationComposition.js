@@ -246,10 +246,8 @@ const CompositionGrid = ({
         >
           <CheckboxLabel
             label={'Use Coefficients'}
-            disabled={readOnly}
             checked={useCoefs}
             onChange={(checked) => {
-              if (readOnly) return
               if (!checked && hasNonOneCoef) {
                 setShowConfirmNoCoefs(true)
               } else {
@@ -298,7 +296,7 @@ const CompositionGrid = ({
             key={eToQ.id}
             groupScope={groupScope}
             evaluationToQuestion={eToQ}
-            readOnly={readOnly}
+            inComposition={!readOnly}
             indicator={getIndicator(eToQ.question.id)}
             onHandleDragEnd={async () => {
               await saveReOrder(questions)
@@ -319,8 +317,7 @@ const CompositionItem = ({
   evaluationToQuestion,
   indicator,
   onHandleDragEnd,
-  readOnly = false,
-  disabled = false,
+  inComposition = true,
   showCoef,
   onChangeCompositionItem,
   onDeleteCompositionItem,
@@ -427,46 +424,85 @@ const CompositionItem = ({
 
   const onPointsChanged = useCallback(
     (newPoints) => {
-      if (newPoints !== points) {
-        newPoints = Math.round(newPoints * 100) / 100
-        setPoints(newPoints)
-        onChangeCompositionItem(questionId, 'points', newPoints)
-        debounceSavePoints(questionId, newPoints)
+      if (inComposition) {
+        const roundedNewPoints = Math.round(newPoints * 100) / 100
+        setPoints(roundedNewPoints)
+        onChangeCompositionItem(questionId, 'points', roundedNewPoints)
+        debounceSavePoints(questionId, roundedNewPoints)
       }
     },
     [
       debounceSavePoints,
+      inComposition,
       onChangeCompositionItem,
-      points,
       questionId,
       setPoints,
     ],
   )
 
   const onGradingPointsChanged = useCallback(
-    (newGradingPts) => {
-      if (newGradingPts !== gradingPts) {
-        newGradingPts = Math.round(newGradingPts * 100) / 100
-        setGradingPts(newGradingPts)
-        onChangeCompositionItem(questionId, 'gradingPoints', newGradingPts)
-        debounceSaveGradingPts(questionId, newGradingPts)
+    (newGradingPoints) => {
+      const roundedGradingPoints = Math.round(newGradingPoints * 100) / 100
+      setGradingPts(roundedGradingPoints)
+      const allowedAfterComposition = !(
+        roundedGradingPoints === 0 && points !== 0
+      )
+      if (inComposition || allowedAfterComposition) {
+        onChangeCompositionItem(
+          questionId,
+          'gradingPoints',
+          roundedGradingPoints,
+        )
+        debounceSaveGradingPts(questionId, roundedGradingPoints)
+      }
+      if (inComposition) {
+        // In composition, changing grading points propagates to points
+        const newPoints = roundedGradingPoints * coef
+        onPointsChanged(newPoints)
       }
     },
     [
-      debounceSaveGradingPts,
-      onChangeCompositionItem,
-      gradingPts,
-      questionId,
       setGradingPts,
+      points,
+      inComposition,
+      onChangeCompositionItem,
+      questionId,
+      debounceSaveGradingPts,
+      coef,
+      onPointsChanged,
     ],
+  )
+
+  const onCoefChanged = useCallback(
+    (newCoef) => {
+      // Coefficient can only change in composition phase
+      if (inComposition) {
+        const newPoints = gradingPts * newCoef
+        onPointsChanged(newPoints)
+      }
+    },
+    [gradingPts, inComposition, onPointsChanged],
   )
 
   useEffect(() => {
     if (!showCoef) {
-      // Reset points to gradingPts
-      onPointsChanged(gradingPts)
+      // Reset coef to 1
+      if (inComposition) {
+        // In composition, keep grading points
+        onPointsChanged(gradingPts)
+      } else {
+        // After composition points may no longer change ; change grading points
+        onGradingPointsChanged(points)
+      }
     }
-  }, [gradingPts, showCoef, onPointsChanged])
+  }, [
+    gradingPts,
+    showCoef,
+    onPointsChanged,
+    inComposition,
+    onGradingPointsChanged,
+    points,
+  ])
 
   const handleDelete = useCallback(
     async (evalId, qId) => {
@@ -487,20 +523,19 @@ const CompositionItem = ({
       borderBottom={`1px solid ${theme.palette.divider}`}
       sx={getDragStyles(order)}
       onDragOver={(e) => {
-        if (readOnly || disabled) return
+        if (!inComposition) return
         handleDragOver(e, order)
       }}
       onDragEnd={(e) => {
-        if (readOnly || disabled) return
+        if (!inComposition) return
         handleDragEnd(e, order)
         onHandleDragEnd && onHandleDragEnd()
       }}
     >
-      {!readOnly && (
+      {inComposition && (
         <Stack
           justifyContent={'center'}
           sx={{
-            opacity: disabled ? 0.5 : 1,
             cursor: dragDisabled ? 'not-allowed' : 'grab',
             '&:active': {
               cursor: 'grabbing',
@@ -538,7 +573,7 @@ const CompositionItem = ({
           id={`${key}-title`}
           currentTitle={title}
           originalTitle={originalTitle}
-          readOnly={readOnly || disabled}
+          readOnly={!inComposition}
           onChangeTitle={(title) => {
             onChangeCompositionItem(questionId, 'title', title)
             debounceSaveTitle(questionId, title)
@@ -553,20 +588,15 @@ const CompositionItem = ({
         spacing={1}
         alignItems={'center'}
       >
-        {readOnly ? (
-          <Typography variant="body2">
-            {evaluationToQuestion.gradingPoints} grading pts &times;{' '}
-            {Math.round(coef * 100) / 100} = {evaluationToQuestion.points} pts
-          </Typography>
-        ) : (
+        {inComposition && (
           <>
             <Tooltip title="Update in new page">
               <IconButton
-                disabled={readOnly || disabled}
+                disabled={!inComposition}
                 onClick={async (ev) => {
                   ev.preventDefault()
                   ev.stopPropagation()
-                  if (readOnly || disabled) return
+                  if (!inComposition) return
                   const currentPath = router.asPath // Capture current relative URL
                   await router.push(
                     `/${groupScope}/questions/${evaluationToQuestion?.question.id}?from=${encodeURIComponent(currentPath)}`,
@@ -581,33 +611,49 @@ const CompositionItem = ({
                 />
               </IconButton>
             </Tooltip>
-            <Stack width={showCoef ? 100 : 60}>
-              <DecimalInput
-                value={gradingPts}
-                variant="standard"
-                rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
-                onChange={async (value) => {
-                  if (readOnly || disabled) return
-                  const newPoints = value * coef
-                  onPointsChanged(newPoints)
-                  onGradingPointsChanged(value)
-                }}
-              />
-            </Stack>
-            {showCoef && (
-              <>
-                <Typography>&times;</Typography>
+          </>
+        )}
+
+        {!inComposition && !showCoef ? (
+          <Typography variant="body2">
+            {evaluationToQuestion.points} pts
+          </Typography>
+        ) : (
+          <Stack width={showCoef ? 100 : 60}>
+            <DecimalInput
+              value={gradingPts}
+              variant="standard"
+              rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
+              min={!inComposition && points !== 0 ? 0.01 : 0}
+              onChange={onGradingPointsChanged}
+            />
+          </Stack>
+        )}
+
+        {showCoef && (
+          <>
+            <Typography>&times;</Typography>
+            <Tooltip
+              disableHoverListener={inComposition}
+              disableTouchListener={inComposition}
+              disableFocusListener={inComposition}
+              enterDelay={500}
+              title={
+                'Coefficient and number of points cannot change after composition phase.'
+              }
+              key={'points-tooltip'}
+            >
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <Stack width={60} direction={'row'}>
                   <DecimalInput
                     value={coef}
                     variant="standard"
                     rightAdornement={'coef'}
-                    disabled={gradingPts === 0 && points === 0}
-                    onChange={async (value) => {
-                      if (readOnly || disabled) return
-                      const newPoints = gradingPts * value
-                      onPointsChanged(newPoints)
-                    }}
+                    disabled={
+                      (gradingPts === 0 && points === 0) || !inComposition
+                    }
+                    min={!inComposition && points !== 0 ? 0.01 : 0}
+                    onChange={onCoefChanged}
                   />
                 </Stack>
                 <Typography>=</Typography>
@@ -616,19 +662,16 @@ const CompositionItem = ({
                     value={points}
                     variant="standard"
                     rightAdornement={'pts'}
-                    disabled={gradingPts === 0}
-                    onChange={async (value) => {
-                      if (readOnly || disabled) return
-                      onPointsChanged(value)
-                    }}
+                    disabled={gradingPts === 0 || !inComposition}
+                    onChange={onPointsChanged}
                   />
                 </Stack>
-              </>
-            )}
+              </Stack>
+            </Tooltip>
           </>
         )}
       </Stack>
-      {!(readOnly || disabled) && (
+      {inComposition && (
         <Tooltip title="Remove from collection">
           <IconButton
             key="delete-collection"
