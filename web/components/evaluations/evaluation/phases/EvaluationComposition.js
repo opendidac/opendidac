@@ -19,6 +19,7 @@ import { useDebouncedCallback } from 'use-debounce'
 import {
   Alert,
   AlertTitle,
+  Box,
   Button,
   IconButton,
   Stack,
@@ -218,22 +219,79 @@ const CompositionGrid = ({
         hasWarnings={hasWarnings}
         globalWarnings={globalWarnings}
       />
-      {readOnly ? (
-        <Alert severity="info">
-          <Typography variant="body2">
-            This evaluation is locked for composition. The full list of
-            questions has been copied to the evaluation.
-          </Typography>
-        </Alert>
-      ) : (
-        <Alert severity="info">
-          <Typography variant="body2">
-            Once you move beyond this phase, the composition will be locked. At
-            that stage, the full list of questions will be copied to the
-            evaluation.
-          </Typography>
-        </Alert>
-      )}
+      <Stack direction="row">
+        <Box flexGrow={1}>
+          {readOnly ? (
+            <Alert severity="info">
+              <Typography variant="body2">
+                This evaluation is locked for composition. The full list of
+                questions has been copied to the evaluation.
+              </Typography>
+            </Alert>
+          ) : (
+            <Alert severity="info">
+              <Typography variant="body2">
+                Once you move beyond this phase, the composition will be locked.
+                At that stage, the full list of questions will be copied to the
+                evaluation.
+              </Typography>
+            </Alert>
+          )}
+        </Box>
+        <Stack
+          flex={1}
+          justifyContent={'right'}
+          direction={'row'}
+          alignItems="center"
+        >
+          <CheckboxLabel
+            label={'Use Coefficients'}
+            disabled={readOnly}
+            checked={useCoefs}
+            onChange={(checked) => {
+              if (readOnly) return
+              if (!checked && hasNonOneCoef) {
+                setShowConfirmNoCoefs(true)
+              } else {
+                setUseCoefs(checked)
+              }
+            }}
+          />
+          <UserHelpPopper>
+            <Alert severity="info">
+              <AlertTitle>Using Coefficients</AlertTitle>
+              <Stack gap={1}>
+                <Typography variant="body2">
+                  When toggled, lets you specify a coefficient for each
+                  question. It will be applied to the points awarded during
+                  grading, to obtain the final points obtained on the question.
+                </Typography>
+                <Typography variant="body2">
+                  For example, if a question is graded out of 5 points, but
+                  should only contribute 3 points to the evaluation, you should
+                  specify that the grading points are 5, and the coefficient is
+                  0.6, resulting in the weighted points of 3.
+                </Typography>
+              </Stack>
+            </Alert>
+          </UserHelpPopper>
+          <DialogFeedback
+            open={showConfirmNoCoefs}
+            title={'Disable Coefficients?'}
+            content={
+              <Typography>
+                You will lose any coefficients you have set on questions. Are
+                you sure you want to proceed?
+              </Typography>
+            }
+            onClose={() => setShowConfirmNoCoefs(false)}
+            onConfirm={() => {
+              setShowConfirmNoCoefs(false)
+              setUseCoefs(false)
+            }}
+          />
+        </Stack>
+      </Stack>
       <ReorderableList disabled={readOnly} onChangeOrder={onChangeOrder}>
         {questions.map((eToQ) => (
           <CompositionItem
@@ -252,55 +310,6 @@ const CompositionGrid = ({
           />
         ))}
       </ReorderableList>
-      <Stack flex={1} justifyContent={'right'} direction={'row'}>
-        <CheckboxLabel
-          label={'Use Coefficients'}
-          disabled={readOnly}
-          checked={useCoefs}
-          onChange={(checked) => {
-            if (readOnly) return
-            if (!checked && hasNonOneCoef) {
-              setShowConfirmNoCoefs(true)
-            } else {
-              setUseCoefs(checked)
-            }
-          }}
-        />
-        <UserHelpPopper>
-          <Alert severity="info">
-            <AlertTitle>Using Coefficients</AlertTitle>
-            <Stack gap={1}>
-              <Typography variant="body2">
-                When toggled, you can specify a coefficient that will be applied
-                to the number of points out of which the question will be
-                graded. This lets you decouple the grading scale of a question
-                from its weight in the evaluation.
-              </Typography>
-              <Typography variant="body2">
-                For example, a question might be graded out of 5 points, but
-                should contribute only 3 points to the evaluation. In this case,
-                you can specify that the grading points are 5, and the
-                coefficient is 0.6 (3/5), resulting in the weighted points of 3.
-              </Typography>
-            </Stack>
-          </Alert>
-        </UserHelpPopper>
-        <DialogFeedback
-          open={showConfirmNoCoefs}
-          title={'Disable Coefficients?'}
-          content={
-            <Typography>
-              You will lose any coefficients you have set on questions. Are you
-              sure you want to proceed?
-            </Typography>
-          }
-          onClose={() => setShowConfirmNoCoefs(false)}
-          onConfirm={() => {
-            setShowConfirmNoCoefs(false)
-            setUseCoefs(false)
-          }}
-        />
-      </Stack>
     </Stack>
   )
 }
@@ -343,7 +352,8 @@ const CompositionItem = ({
     evaluationToQuestion.gradingPoints,
     key,
   )
-  const coef = useMemo(() => computeCoefficient(gradingPts, points),
+  const coef = useMemo(
+    () => computeCoefficient(gradingPts, points),
     [gradingPts, points],
   )
 
@@ -415,7 +425,8 @@ const CompositionItem = ({
     1000,
   )
 
-  const onPointsChanged = useCallback((newPoints) => {
+  const onPointsChanged = useCallback(
+    (newPoints) => {
       if (newPoints !== points) {
         newPoints = Math.round(newPoints * 100) / 100
         setPoints(newPoints)
@@ -423,10 +434,17 @@ const CompositionItem = ({
         debounceSavePoints(questionId, newPoints)
       }
     },
-    [debounceSavePoints, onChangeCompositionItem, points, questionId, setPoints]
+    [
+      debounceSavePoints,
+      onChangeCompositionItem,
+      points,
+      questionId,
+      setPoints,
+    ],
   )
 
-  const onGradingPointsChanged = useCallback((newGradingPts) => {
+  const onGradingPointsChanged = useCallback(
+    (newGradingPts) => {
       if (newGradingPts !== gradingPts) {
         newGradingPts = Math.round(newGradingPts * 100) / 100
         setGradingPts(newGradingPts)
@@ -434,7 +452,13 @@ const CompositionItem = ({
         debounceSaveGradingPts(questionId, newGradingPts)
       }
     },
-    [debounceSaveGradingPts, onChangeCompositionItem, gradingPts, questionId, setGradingPts]
+    [
+      debounceSaveGradingPts,
+      onChangeCompositionItem,
+      gradingPts,
+      questionId,
+      setGradingPts,
+    ],
   )
 
   useEffect(() => {
