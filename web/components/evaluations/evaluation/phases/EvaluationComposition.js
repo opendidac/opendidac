@@ -49,6 +49,7 @@ import CheckboxLabel from '@/components/input/CheckboxLabel'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import { useSnackbar } from '@/context/SnackbarContext'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
+import { computeCoefficient } from '@/code/grading/coefficient'
 
 const EvaluationComposition = ({
   groupScope,
@@ -342,10 +343,10 @@ const CompositionItem = ({
     evaluationToQuestion.gradingPoints,
     key,
   )
-  const coefFromPoints = useCallback((points, gradingPoints) => {
-    return gradingPoints === 0 ? (points === 0 ? 1 : 0) : points / gradingPoints
-  }, [])
-  const [coef, setCoef] = useCtrlState(coefFromPoints(points, gradingPts), key)
+  const [coef, setCoef] = useCtrlState(
+    computeCoefficient(gradingPts, points),
+    key,
+  )
 
   const saveCompositionItem = useCallback(
     (questionId, property, value) => {
@@ -423,7 +424,7 @@ const CompositionItem = ({
         onChangeCompositionItem(questionId, 'points', newPoints)
         debounceSavePoints(questionId, newPoints)
       }
-      const newCoef = coefFromPoints(newPoints, newGradingPoints)
+      const newCoef = computeCoefficient(newGradingPoints, newPoints)
       if (newCoef !== coef) {
         setCoef(newCoef)
       }
@@ -444,7 +445,6 @@ const CompositionItem = ({
       setPoints,
       setGradingPts,
       gradingPts,
-      coefFromPoints,
     ],
   )
 

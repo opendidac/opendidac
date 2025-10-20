@@ -32,6 +32,7 @@ import DecimalInput from '@/components/input/DecimalInput'
 import GradingStatus from './GradingStatus'
 import GradingSigned from './GradingSigned'
 import GradingPointsComment from './GradingPointsComment'
+import { computeCoefficient } from '@/code/grading/coefficient'
 
 const GradingSignOff = ({
   loading,
@@ -102,13 +103,10 @@ const GradingSignOff = ({
     }
   }, [handleKeyDown])
 
-  const coef = useMemo(() => {
-    return maxGradingPoints > 0
-      ? maxPoints / maxGradingPoints
-      : maxPoints > 0
-        ? 0
-        : 1
-  }, [maxPoints, maxGradingPoints])
+  const coef = useMemo(
+    () => computeCoefficient(maxGradingPoints, maxPoints),
+    [maxPoints, maxGradingPoints],
+  )
 
   const gradingPoints = useMemo(() => {
     return coef > 0 && grading.pointsObtained !== undefined
