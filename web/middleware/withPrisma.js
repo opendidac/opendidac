@@ -13,14 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import { withLastUsed } from '@/prisma/extentions/lastUsed'
 import { PrismaClient } from '@prisma/client'
 
-
 if (!global.xyz_prisma) {
-  // Instantiate Prisma and apply the extension
-  global.xyz_prisma = new PrismaClient().$extends(withLastUsed)
+  global.xyz_prisma = new PrismaClient()
 }
 
 export function withPrisma(handler) {
