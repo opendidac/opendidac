@@ -75,7 +75,11 @@ const get = async (req, res, prisma) => {
       evaluation: {
         include: {
           evaluationToQuestions: {
-            include: {
+            select: {
+              points: true,
+              order: true,
+              addendum: true,
+              title: true,
               question: {
                 select: questionClause,
               },
