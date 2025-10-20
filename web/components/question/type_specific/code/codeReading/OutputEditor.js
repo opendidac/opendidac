@@ -77,7 +77,7 @@ const OutputMonacoEditor = ({
         >
           {empty && showErrorWhenEmpty
             ? "Don't forget to run the snippets to get the output"
-            : helperText ?? ' '}
+            : (helperText ?? ' ')}
         </Typography>
       )}
     </Box>
