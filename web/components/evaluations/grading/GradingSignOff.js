@@ -103,10 +103,9 @@ const GradingSignOff = ({
   }, [handleKeyDown])
 
   const coef = useMemo(() => {
-    return maxGradingPoints > 0 ? maxPoints / maxGradingPoints : 0
+    return maxGradingPoints > 0 ? maxPoints / maxGradingPoints : (maxPoints > 0 ? 0 : 1)
   }, [maxPoints, maxGradingPoints])
 
-  console.log(grading.pointsObtained, coef, grading.pointsObtained / coef)
   const gradingPoints = useMemo(() => {
     return coef > 0 && grading.pointsObtained !== undefined
       ? Math.round((grading.pointsObtained / coef) * 100) / 100
@@ -176,7 +175,7 @@ const GradingSignOff = ({
                   onChange={async (value) => {
                     const newGrading = {
                       ...grading,
-                      pointsObtained: Math.round(value * coef * 100 ) / 100,
+                      pointsObtained: Math.round(value * coef * 100) / 100,
                       status: StudentQuestionGradingStatus.GRADED,
                     }
                     setGrading(newGrading)

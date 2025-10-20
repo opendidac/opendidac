@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { useDebouncedCallback } from 'use-debounce'
 import {
@@ -257,8 +257,8 @@ const CompositionGrid = ({
           disabled={readOnly}
           checked={useCoefs}
           onChange={(checked) => {
+            if (readOnly) return
             if (!checked && hasNonOneCoef) {
-              console.log(hasNonOneCoef)
               setShowConfirmNoCoefs(true)
             } else {
               setUseCoefs(checked)
@@ -364,7 +364,7 @@ const CompositionItem = ({
         .then((value) => {
           if (!value.ok) {
             throw new Error(
-              `Error while saving details: ${value.status} ${value.statusText}`,
+              `Error while saving details: ${JSON.stringify(value)}`,
             )
           } else {
             showSnackbar(`Saved successfully`, 'success')
@@ -396,6 +396,7 @@ const CompositionItem = ({
     [groupScope, onCompositionChanged],
   )
 
+  // Separate debouncers since it might ignore quick calls in succession.
   const debounceSaveTitle = useDebouncedCallback(
     (questionId, newTitle) =>
       saveCompositionItem(questionId, 'title', newTitle),

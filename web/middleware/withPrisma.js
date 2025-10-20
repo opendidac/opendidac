@@ -15,29 +15,8 @@
  */
 import { PrismaClient } from '@prisma/client'
 
-/**
- * Generates computed fields descriptor for Prisma models.
- */
-function computedFieldsDescriptor() {
-  return {
-    evaluationToQuestion: {
-      coefficient: {
-        needs: { points: true, gradingPoints: true },
-        compute(evaluationToQuestion) {
-          if (evaluationToQuestion.gradingPoints === 0) {
-            return 0
-          }
-          return evaluationToQuestion.points / evaluationToQuestion.gradingPoints
-        },
-      }
-    }
-  }
-}
-
 if (!global.xyz_prisma) {
-  global.xyz_prisma = new PrismaClient().$extends({
-    result: computedFieldsDescriptor(),
-  })
+  global.xyz_prisma = new PrismaClient()
 }
 
 export function withPrisma(handler) {
