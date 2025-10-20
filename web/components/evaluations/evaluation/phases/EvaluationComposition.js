@@ -600,7 +600,7 @@ const CompositionItem = ({
                     value={points}
                     variant="standard"
                     rightAdornement={'pts'}
-                    disabled={points === 0}
+                    disabled={gradingPts === 0}
                     onChange={async (value) => {
                       if (readOnly || disabled) return
                       onPointsChange(questionId, gradingPts, value)
