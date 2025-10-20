@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import { Typography } from '@mui/material'
 import GradingPolicy from '@/code/grading/policy'

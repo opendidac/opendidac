@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { FormControlLabel, Switch } from '@mui/material'
 
 const ToggleWithLabel = ({ label, checked, disabled = false, onChange }) => {
