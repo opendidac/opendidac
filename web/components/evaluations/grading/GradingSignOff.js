@@ -103,7 +103,11 @@ const GradingSignOff = ({
   }, [handleKeyDown])
 
   const coef = useMemo(() => {
-    return maxGradingPoints > 0 ? maxPoints / maxGradingPoints : (maxPoints > 0 ? 0 : 1)
+    return maxGradingPoints > 0
+      ? maxPoints / maxGradingPoints
+      : maxPoints > 0
+        ? 0
+        : 1
   }, [maxPoints, maxGradingPoints])
 
   const gradingPoints = useMemo(() => {
