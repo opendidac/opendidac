@@ -342,10 +342,10 @@ const CompositionItem = ({
     evaluationToQuestion.gradingPoints,
     key,
   )
-  const [coef, setCoef] = useCtrlState(
-    gradingPts > 0 ? points / gradingPts : 0,
-    key,
-  )
+  const coefFromPoints = useCallback((points, gradingPoints) => {
+    return gradingPoints === 0 ? (points === 0 ? 1 : 0) : points / gradingPoints
+  }, [])
+  const [coef, setCoef] = useCtrlState(coefFromPoints(points, gradingPts), key)
 
   const saveCompositionItem = useCallback(
     (questionId, property, value) => {
@@ -422,7 +422,7 @@ const CompositionItem = ({
         onChangeCompositionItem(questionId, 'points', newPoints)
         debounceSavePoints(questionId, newPoints)
       }
-      const newCoef = newGradingPoints === 0 ? 0 : newPoints / newGradingPoints
+      const newCoef = coefFromPoints(newPoints, newGradingPoints)
       if (newCoef !== coef) {
         setCoef(newCoef)
       }
@@ -443,6 +443,7 @@ const CompositionItem = ({
       setPoints,
       setGradingPts,
       gradingPts,
+      coefFromPoints,
     ],
   )
 
@@ -540,8 +541,7 @@ const CompositionItem = ({
         {readOnly ? (
           <Typography variant="body2">
             {evaluationToQuestion.gradingPoints} grading pts &times;{' '}
-            {Math.round(coef * 100) / 100} ={' '}
-            {evaluationToQuestion.points} pts
+            {Math.round(coef * 100) / 100} = {evaluationToQuestion.points} pts
           </Typography>
         ) : (
           <>
