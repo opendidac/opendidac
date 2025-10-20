@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 import NextAuth from 'next-auth'
-// import KeycloakProvider from 'next-auth/providers/keycloak'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
+import { PrismaAdapter } from '@auth/prisma-adapter'
 import { Role } from '@prisma/client'
 import { getPrisma } from '@/middleware/withPrisma'
 import { getSSEClients, invalidateSSEClients } from '@/code/auth/sseClients'
