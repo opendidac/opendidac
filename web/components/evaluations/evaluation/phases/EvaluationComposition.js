@@ -343,9 +343,8 @@ const CompositionItem = ({
     evaluationToQuestion.gradingPoints,
     key,
   )
-  const [coef, setCoef] = useCtrlState(
-    computeCoefficient(gradingPts, points),
-    key,
+  const coef = useMemo(() => computeCoefficient(gradingPts, points),
+    [gradingPts, points],
   )
 
   const saveCompositionItem = useCallback(
@@ -416,43 +415,34 @@ const CompositionItem = ({
     1000,
   )
 
-  const onPointsChange = useCallback(
-    (questionId, newGradingPoints, newPoints) => {
+  const onPointsChanged = useCallback((newPoints) => {
       if (newPoints !== points) {
         newPoints = Math.round(newPoints * 100) / 100
         setPoints(newPoints)
         onChangeCompositionItem(questionId, 'points', newPoints)
         debounceSavePoints(questionId, newPoints)
       }
-      const newCoef = computeCoefficient(newGradingPoints, newPoints)
-      if (newCoef !== coef) {
-        setCoef(newCoef)
-      }
-      if (newGradingPoints !== gradingPts) {
-        newGradingPoints = Math.round(newGradingPoints * 100) / 100
-        setGradingPts(newGradingPoints)
-        onChangeCompositionItem(questionId, 'gradingPoints', newGradingPoints)
-        debounceSaveGradingPts(questionId, newGradingPoints)
+    },
+    [debounceSavePoints, onChangeCompositionItem, points, questionId, setPoints]
+  )
+
+  const onGradingPointsChanged = useCallback((newGradingPts) => {
+      if (newGradingPts !== gradingPts) {
+        newGradingPts = Math.round(newGradingPts * 100) / 100
+        setGradingPts(newGradingPts)
+        onChangeCompositionItem(questionId, 'gradingPoints', newGradingPts)
+        debounceSaveGradingPts(questionId, newGradingPts)
       }
     },
-    [
-      coef,
-      debounceSavePoints,
-      debounceSaveGradingPts,
-      onChangeCompositionItem,
-      points,
-      setCoef,
-      setPoints,
-      setGradingPts,
-      gradingPts,
-    ],
+    [debounceSaveGradingPts, onChangeCompositionItem, gradingPts, questionId, setGradingPts]
   )
 
   useEffect(() => {
     if (!showCoef) {
-      onPointsChange(questionId, gradingPts, gradingPts)
+      // Reset points to gradingPts
+      onPointsChanged(gradingPts)
     }
-  }, [onPointsChange, gradingPts, questionId, showCoef])
+  }, [gradingPts, showCoef, onPointsChanged])
 
   const handleDelete = useCallback(
     async (evalId, qId) => {
@@ -575,7 +565,8 @@ const CompositionItem = ({
                 onChange={async (value) => {
                   if (readOnly || disabled) return
                   const newPoints = value * coef
-                  onPointsChange(questionId, value, newPoints)
+                  onPointsChanged(newPoints)
+                  onGradingPointsChanged(value)
                 }}
               />
             </Stack>
@@ -590,7 +581,7 @@ const CompositionItem = ({
                     onChange={async (value) => {
                       if (readOnly || disabled) return
                       const newPoints = gradingPts * value
-                      onPointsChange(questionId, gradingPts, newPoints)
+                      onPointsChanged(newPoints)
                     }}
                   />
                 </Stack>
@@ -603,7 +594,7 @@ const CompositionItem = ({
                     disabled={gradingPts === 0}
                     onChange={async (value) => {
                       if (readOnly || disabled) return
-                      onPointsChange(questionId, gradingPts, value)
+                      onPointsChanged(value)
                     }}
                   />
                 </Stack>

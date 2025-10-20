@@ -107,6 +107,7 @@ const post = async (req, res, prisma) => {
           evaluationId: evaluationId,
           questionId: questionId,
           points: points,
+          gradingPoints: points,
           order: order,
           title: question.title, // Initialize with original question title
         },
