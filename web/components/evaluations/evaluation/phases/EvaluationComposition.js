@@ -602,6 +602,7 @@ const CompositionItem = ({
                     value={coef}
                     variant="standard"
                     rightAdornement={'coef'}
+                    disabled={gradingPts === 0 && points === 0}
                     onChange={async (value) => {
                       if (readOnly || disabled) return
                       const newPoints = gradingPts * value
