@@ -37,7 +37,7 @@ RUN /usr/bin/scalac \
 
 # ---- Build scala runner archive
 # Compile once and run it so runner paths get archived too
-RUN /usr/bin/scalac /warmup/Main.scala && \
+RUN /usr/bin/scalac /warmup/Warmup.scala && \
     /usr/bin/scala \
       -J-Xshare:auto \
       -J-XX:+UseG1GC \
@@ -45,9 +45,39 @@ RUN /usr/bin/scalac /warmup/Main.scala && \
       -J-Xms64m -J-Xmx128m -J-XX:ReservedCodeCacheSize=64m \
       -J-XX:+UnlockDiagnosticVMOptions \
       -J-XX:ArchiveClassesAtExit=/opt/scala-run.jsa \
-      Main 1 2 3
+      Warmup 1 2 3
 
-# ---- scalac wrapper (compiler)
+# ---- SBT-like wrapper (compiler) - optimized for fast compilation
+RUN printf '%s\n' '#!/usr/bin/env bash' \
+  'set -e' \
+  'if [ -f "/Main.scala" ]; then' \
+  '  cp /Main.scala /src/Main.scala' \
+  'fi' \
+  'exec /usr/bin/scalac \' \
+  '  -J-Xshare:auto \' \
+  '  -J-XX:SharedArchiveFile=/opt/scalac.jsa \' \
+  '  -J-XX:+UseG1GC \' \
+  '  -J-XX:TieredStopAtLevel=1 \' \
+  '  -J-Xms64m -J-Xmx128m -J-XX:ReservedCodeCacheSize=64m \' \
+  '  "$@"' > /usr/local/bin/sbt-compile && chmod +x /usr/local/bin/sbt-compile
+
+# ---- SBT-like wrapper (runner) - optimized for fast execution
+RUN printf '%s\n' '#!/usr/bin/env bash' \
+  'set -e' \
+  'if [ -f "/Main.scala" ]; then' \
+  '  cp /Main.scala /src/Main.scala' \
+  'fi' \
+  'cd /src' \
+  'exec java \' \
+  '  -Xshare:auto \' \
+  '  -XX:SharedArchiveFile=/opt/scala-run.jsa \' \
+  '  -XX:+UseG1GC \' \
+  '  -XX:TieredStopAtLevel=1 \' \
+  '  -Xms64m -Xmx128m -XX:ReservedCodeCacheSize=64m \' \
+  '  -cp ".:/usr/share/scala/lib/*" \' \
+  '  "$@"' > /usr/local/bin/sbt-run && chmod +x /usr/local/bin/sbt-run
+
+# ---- Original scalac wrapper (compiler) - for compatibility
 RUN printf '%s\n' '#!/usr/bin/env bash' \
   'exec /usr/bin/scalac \' \
   '  -J-Xshare:auto \' \
@@ -57,7 +87,7 @@ RUN printf '%s\n' '#!/usr/bin/env bash' \
   '  -J-Xms64m -J-Xmx128m -J-XX:ReservedCodeCacheSize=64m \' \
   '  "$@"' > /usr/local/bin/scalac && chmod +x /usr/local/bin/scalac
 
-# ---- scala wrapper (runner)
+# ---- Original scala wrapper (runner) - for compatibility
 RUN printf '%s\n' '#!/usr/bin/env bash' \
   'exec /usr/bin/scala \' \
   '  -J-Xshare:auto \' \

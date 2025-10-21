@@ -73,7 +73,8 @@ const get = async (req, res, prisma) => {
     },
     include: {
       evaluation: {
-        include: {
+        select: {
+          showSolutionsWhenFinished: true,
           evaluationToQuestions: {
             include: {
               question: {

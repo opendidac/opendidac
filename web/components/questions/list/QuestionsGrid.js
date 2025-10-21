@@ -143,9 +143,9 @@ const QuestionsGrid = ({
             ),
           },
           {
-            label: 'Updated',
+            label: 'Created',
             column: { width: '90px' },
-            renderCell: (row) => <DateTimeAgo date={new Date(row.updatedAt)} />,
+            renderCell: (row) => <DateTimeAgo date={new Date(row.createdAt)} />,
           },
           {
             label: 'Last Used',
@@ -161,78 +161,80 @@ const QuestionsGrid = ({
           },
         ],
       }}
-      items={questions.map((question) => ({
-        ...question,
-        meta: {
-          key: question.id,
-          onClick: () => {
-            onRowClick && onRowClick(question)
-          },
-          actions: showRowActions
-            ? [
-                <React.Fragment key="actions">
-                  <Tooltip title="Make a copy">
-                    <IconButton
-                      onClick={(ev) => {
-                        ev.preventDefault()
-                        ev.stopPropagation()
-                        setSelected && setSelected(question)
-                        setCopyDialogOpen(true)
-                      }}
-                    >
-                      <Image
-                        alt={'Make a copy'}
-                        src={'/svg/icons/copy.svg'}
-                        width={16}
-                        height={16}
-                      />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Update in new page">
-                    <IconButton
-                      onClick={async (ev) => {
-                        ev.preventDefault()
-                        ev.stopPropagation()
-                        const currentPath = router.asPath // Capture current relative URL
-                        await router.push(
-                          `/${groupScope}/questions/${question.id}?from=${encodeURIComponent(currentPath)}`,
-                        )
-                      }}
-                    >
-                      <Image
-                        alt="Update in new page"
-                        src="/svg/icons/update.svg"
-                        width={16}
-                        height={16}
-                      />
-                    </IconButton>
-                  </Tooltip>
+      items={[...questions]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .map((question) => ({
+          ...question,
+          meta: {
+            key: question.id,
+            onClick: () => {
+              onRowClick && onRowClick(question)
+            },
+            actions: showRowActions
+              ? [
+                  <React.Fragment key="actions">
+                    <Tooltip title="Make a copy">
+                      <IconButton
+                        onClick={(ev) => {
+                          ev.preventDefault()
+                          ev.stopPropagation()
+                          setSelected && setSelected(question)
+                          setCopyDialogOpen(true)
+                        }}
+                      >
+                        <Image
+                          alt={'Make a copy'}
+                          src={'/svg/icons/copy.svg'}
+                          width={16}
+                          height={16}
+                        />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Update in new page">
+                      <IconButton
+                        onClick={async (ev) => {
+                          ev.preventDefault()
+                          ev.stopPropagation()
+                          const currentPath = router.asPath // Capture current relative URL
+                          await router.push(
+                            `/${groupScope}/questions/${question.id}?from=${encodeURIComponent(currentPath)}`,
+                          )
+                        }}
+                      >
+                        <Image
+                          alt="Update in new page"
+                          src="/svg/icons/update.svg"
+                          width={16}
+                          height={16}
+                        />
+                      </IconButton>
+                    </Tooltip>
 
-                  <Tooltip title="Update in overlay">
-                    <IconButton
-                      onClick={(ev) => {
-                        ev.preventDefault()
-                        ev.stopPropagation()
-                        setOpenSideUpdate(question)
-                      }}
-                    >
-                      <Image
-                        alt={'Update in overlay'}
-                        src={'/svg/icons/aside.svg'}
-                        width={16}
-                        height={16}
-                      />
-                    </IconButton>
-                  </Tooltip>
-                </React.Fragment>,
-              ]
-            : [],
-        },
-      }))}
+                    <Tooltip title="Update in overlay">
+                      <IconButton
+                        onClick={(ev) => {
+                          ev.preventDefault()
+                          ev.stopPropagation()
+                          setOpenSideUpdate(question)
+                        }}
+                      >
+                        <Image
+                          alt={'Update in overlay'}
+                          src={'/svg/icons/aside.svg'}
+                          width={16}
+                          height={16}
+                        />
+                      </IconButton>
+                    </Tooltip>
+                  </React.Fragment>,
+                ]
+              : [],
+          },
+        }))}
       groupings={[
         {
-          groupBy: 'updatedAt',
-          option: 'Last Update',
+          groupBy: 'createdAt',
+          option: 'Creation date',
           type: 'date',
           renderLabel: (row) => weeksAgo(row.label),
         },
