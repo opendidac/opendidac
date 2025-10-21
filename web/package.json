@@ -95,7 +95,9 @@
     "vitest": "3.0.7"
   },
   "override-comments": {
-    "cookie": "Latest next-auth@4.24.11 depends on cookie@0.6.1 which has a security vulnerability"
+    "cookie": "Latest next-auth@4.24.11 depends on cookie@0.6.1 which has a security vulnerability",
+    "dompurify": "Latest monaco-editor@4.7.0 depends on dompurify@3.3.0 which has a security vulnerability",
+    "prismjs": "Latest react-syntax-highlighter@15.6.6 depends on prismjs@1.30.0 which has a security vulnerability"
   },
   "overrides": {
     "cookie": "0.7.0",
