@@ -44,10 +44,6 @@ export default defineConfig([
     },
   },
   {
-    ignores: [
-      '.next/**',
-      'node_modules/**',
-      'build/**'
-    ],
+    ignores: ['.next/**', 'node_modules/**', 'build/**'],
   },
 ])
