@@ -38,6 +38,7 @@ import ResizableDrawer from '../../layout/utils/ResizableDrawer'
 import CopyQuestionDialog from '../list/CopyQuestionDialog'
 import ImportQuestionsDialog from '../list/ImportQuestionsDialog'
 import QuestionsGrid from '../list/QuestionsGrid'
+import { usePinnedFilter } from '@/context/PinnedFilterContext'
 
 const ExportQuestionsButton = ({ selection, groupScope, onExportSuccess }) => {
   const { show: showSnackbar } = useSnackbar()
@@ -110,6 +111,8 @@ const ExportQuestionsButton = ({ selection, groupScope, onExportSuccess }) => {
 
 const PageList = () => {
   const router = useRouter()
+
+  const { pinnedFilter } = usePinnedFilter()
 
   const { groupScope } = router.query
 
@@ -201,11 +204,14 @@ const PageList = () => {
         <LayoutMain header={<MainMenu />}>
           <LayoutSplitScreen
             leftPanel={
-              <QuestionFilter
-                withArchived={true}
-                filters={queryString}
-                onApplyFilter={setQueryString}
-              />
+              <>
+                <Typography>pinned query is: {JSON.stringify(pinnedFilter)}</Typography>
+                <QuestionFilter
+                  withArchived={true}
+                  filters={queryString}
+                  onApplyFilter={setQueryString}
+                />
+              </>
             }
             rightWidth={80}
             rightPanel={

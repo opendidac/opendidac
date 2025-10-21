@@ -25,6 +25,7 @@ import {
   RadioGroup,
   FormControlLabel,
 } from '@mui/material'
+import PushPinIcon from '@mui/icons-material/PushPin'
 
 import { toArray as typesToArray } from './types.js'
 import languages from '../../code/languages.json'
@@ -32,6 +33,7 @@ import { useTags } from '../../context/TagContext'
 import TagsSelector from '../input/TagsSelector'
 import CheckboxLabel from '../input/CheckboxLabel.js'
 import { QuestionStatus } from '@prisma/client'
+import { usePinnedFilter } from '@/context/PinnedFilterContext'
 
 const environments = languages.environments
 const types = typesToArray()
@@ -125,6 +127,8 @@ const queryStringToFilter = (queryString) => {
 
 const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
   const tagsContext = useTags() // Get the whole context first
+
+  const { setPinnedFilter } = usePinnedFilter()
 
   const { tags: allTags = [] } = tagsContext // Destructure safely
 
@@ -228,9 +232,17 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
         <QuestionTypeSelection filter={filter} updateFilter={updateFilter} />
         <LanguageSelection filter={filter} updateFilter={updateFilter} />
         <Stack direction={'row'} spacing={2}>
-          <Button variant="contained" color="info" fullWidth type="submit">
+          <Button
+            variant="contained"
+            color="info"
+            fullWidth
+            startIcon={<PushPinIcon />}
+            onClick={() => {
+              setPinnedFilter(filter)
+            }}
+          >
             {' '}
-            Filter{' '}
+            Pin{' '}
           </Button>
           <Button
             variant="outlined"
