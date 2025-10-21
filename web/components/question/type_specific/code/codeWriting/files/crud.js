@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 export const update = (nature, groupScope, questionId, codeToFile) =>
   fetch(
     `/api/${groupScope}/questions/${questionId}/code/code-writing/files/${nature}/${codeToFile.file.id}`,

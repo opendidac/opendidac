@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {
   Role,
   QuestionType,
@@ -159,7 +160,7 @@ const get = async (req, res, prisma) => {
       evaluation: true,
     },
     orderBy: {
-      updatedAt: 'desc',
+      createdAt: 'desc',
     },
   })
 

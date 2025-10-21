@@ -793,9 +793,9 @@
       "label": "Scala",
       "icon": "/svg/languages/scala.svg",
       "sandbox": {
-        "image": "ghcr.io/opendidac/code-check-image/scala3:latest",
+        "image": "ghcr.io/opendidac/code-check-image/scala3-sbt-warm:latest",
         "defaultPath": "/src/Main.scala",
-        "beforeAll": "scalac /src/Main.scala",
+        "beforeAll": "sbt-compile /src/Main.scala",
         "exec": "scala Main"
       },
       "codeWriting": [

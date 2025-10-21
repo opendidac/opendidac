@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { Role } from '@prisma/client'
 import {
   withAuthorization,
@@ -73,7 +74,8 @@ const get = async (req, res, prisma) => {
     },
     include: {
       evaluation: {
-        include: {
+        select: {
+          showSolutionsWhenFinished: true,
           evaluationToQuestions: {
             select: {
               points: true,

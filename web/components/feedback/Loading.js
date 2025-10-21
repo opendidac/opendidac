@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import LoadingAnimation from './LoadingAnimation'
 
 const Loading = ({ children, errors = [], loading = true, message = '' }) => {
