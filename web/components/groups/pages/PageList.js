@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { useState, useEffect, useCallback } from 'react'
 import { Role } from '@prisma/client'
 import useSWR from 'swr'
