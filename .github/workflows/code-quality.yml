@@ -28,7 +28,7 @@ jobs:
       - name: Run ESLint
         run: |
           cd web 
-          npx eslint . --ext .js,.jsx,.ts,.tsx
+          npx eslint '**/*.{js,ts,tsx}'
 
 
       - name: Run Prettier Check
