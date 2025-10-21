@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { Typography } from '@mui/material'
 import SettingsIPRestriction from '../evaluation/phases/settings/SettingsIPRestriction'
 import SettingsAccessMode from '../evaluation/phases/settings/SettingsAccessMode'

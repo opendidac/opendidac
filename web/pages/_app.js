@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import Head from 'next/head'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 

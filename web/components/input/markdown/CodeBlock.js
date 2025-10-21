@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import copyToClipboard from 'clipboard-copy'
 import { useSnackbar } from '@/context/SnackbarContext'

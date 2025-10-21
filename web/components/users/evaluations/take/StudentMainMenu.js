@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { Box, IconButton, Stack } from '@mui/material'
 import ConnectionIndicator from './ConnectionIndicator'
 import EvaluationCountDown from '@/components/evaluations/evaluation/phases/progress/EvaluationCountDown'

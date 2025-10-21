@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { languageBasedOnPathExtension } from '@/code/utils'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
