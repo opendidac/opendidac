@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { Checkbox, Stack, Typography } from '@mui/material'
 import { useCallback } from 'react'
 

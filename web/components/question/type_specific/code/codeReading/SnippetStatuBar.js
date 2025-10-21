@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import React from 'react'
 import { Step, StepConnector, StepLabel, Stepper, Stack } from '@mui/material'
 import StatusDisplay from '@/components/feedback/StatusDisplay'

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import React, { useCallback, useEffect } from 'react'
 import { Button, Stack } from '@mui/material'
 import FieldEditor from '@/components/question/type_specific/exact-match/FieldEditor'

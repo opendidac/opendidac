@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { getObtainedPoints } from '@/components/evaluations/analytics/stats'
 import { Button } from '@mui/material'
 import Image from 'next/image'

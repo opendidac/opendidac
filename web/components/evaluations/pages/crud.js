@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 export const update = async (groupScope, evaluationId, data) => {
   return fetch(`/api/${groupScope}/evaluations/${evaluationId}`, {
     method: 'PATCH',

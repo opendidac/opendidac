@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import React, { useCallback } from 'react'
 import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material'
 import { DatabaseQueryOutputStatus } from '@prisma/client'

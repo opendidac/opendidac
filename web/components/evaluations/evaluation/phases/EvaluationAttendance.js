@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { useSnackbar } from '@/context/SnackbarContext'
 import { Stack, Typography } from '@mui/material'
 import EvaluationTitleBar from '../layout/EvaluationTitleBar'

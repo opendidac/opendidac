@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { getPrisma } from '@/middleware/withPrisma'
 
 export const MAX_CONN = 5

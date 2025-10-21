@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { Box, Collapse } from '@mui/material'
 import { useBottomPanel } from '../../../context/BottomPanelContext'
 

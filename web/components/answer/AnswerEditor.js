@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import React, { useState, useEffect, useCallback } from 'react'
 import useSWR from 'swr'
 import { QuestionType, StudentAnswerStatus } from '@prisma/client'

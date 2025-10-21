@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { Drawer, Stack } from '@mui/material'
 import { useCallback, useEffect, useRef, useState } from 'react'
 const ResizableDrawer = ({ open, width: initial = 70, onClose, children }) => {

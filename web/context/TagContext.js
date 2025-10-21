@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import useSWR from 'swr'
 import { Role } from '@prisma/client'

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import PageUpdate from '../../../../components/questions/pages/PageUpdate'
 
 const UpdateQuestion = () => <PageUpdate />

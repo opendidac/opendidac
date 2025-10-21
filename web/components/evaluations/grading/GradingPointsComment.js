@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { Chip, Stack, TextField, Typography } from '@mui/material'
 const GradingPointsComment = ({ points, maxPoints, comment }) => {
   let color = points > 0 ? 'success' : 'error'

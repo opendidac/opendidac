@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { Role, Prisma } from '@prisma/client'
 import { runSandboxDB } from '@/sandbox/runSandboxDB'
 import { runSQLFluffSandbox } from '@/sandbox/runSQLFluffSandbox'

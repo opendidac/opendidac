@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { Role } from '@prisma/client'
 import { useRouter } from 'next/router'
 import Authentication from '../../security/Authentication'

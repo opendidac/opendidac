@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { Stack, Chip, Typography } from '@mui/material'
 import Column from '../layout/utils/Column'
 import ScrollContainer from '../layout/ScrollContainer'

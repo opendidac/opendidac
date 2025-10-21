@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import PageJoin from '../../../../components/users/evaluations/PageJoin'
 
 const JoinEvaluation = () => <PageJoin />

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { useEffect, useState } from 'react'
 import ToggleWithLabel from '@/components/input/ToggleWithLabel'
 import { Alert, AlertTitle, Typography, Stack } from '@mui/material'

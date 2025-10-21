@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { QuestionType } from '@prisma/client'
 import ManageMultipleChoice from './type_specific/ManageMultipleChoice'
 import Code from './type_specific/Code'

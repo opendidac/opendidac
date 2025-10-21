@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { Stack, Typography, Tooltip } from '@mui/material'
 import Image from 'next/image'
 import React from 'react'

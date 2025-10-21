@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { Box, Typography, Stack } from '@mui/material'
 
 const QuestionTypeDisplay = ({ data }) => {

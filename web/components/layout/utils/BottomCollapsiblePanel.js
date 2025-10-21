@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import BottomPanel from './BottomPanel'
 import { useRef } from 'react'
 import ScrollContainer from '../ScrollContainer'

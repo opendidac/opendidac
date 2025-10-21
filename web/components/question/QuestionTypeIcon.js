@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { Stack, Tooltip, Typography, Box } from '@mui/material'
 import { getTextByType, getTooltipByType, getColorByType } from './types.js'
 
