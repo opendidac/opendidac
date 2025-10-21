@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** @type {import('next').NextConfig} */
+
 const withTM = require('next-transpile-modules')([
   '@uiw/react-md-editor',
   '@uiw/react-markdown-preview',
@@ -22,16 +24,11 @@ const withTM = require('next-transpile-modules')([
 
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   webpack: (config) => {
-    // Add Handlebars loader for evaluation pdf export
     config.module.rules.push({
       test: /\.hbs$/,
       use: 'raw-loader',
     })
-
-    // Further configuration modifications can be placed here
-
     return config
   },
 }

@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Box } from '@mui/material'
+
+import { Box, ClickAwayListener } from '@mui/material'
+
 import { useCallback, useEffect, useState } from 'react'
-import ClickAwayListener from 'react-click-away-listener'
 import { AnnotationState, EditingState } from './types'
 
 const AnnotationHighlight = ({ readOnly, state, children }) => {
@@ -28,9 +29,7 @@ const AnnotationHighlight = ({ readOnly, state, children }) => {
   }, [state])
 
   const onMouseEnter = useCallback(() => {
-    if (readOnly) {
-      return
-    }
+    if (readOnly) return
     if (
       editingState !== EditingState.ACTIVE.value &&
       state !== AnnotationState.ANNOTATED.value
@@ -40,38 +39,34 @@ const AnnotationHighlight = ({ readOnly, state, children }) => {
   }, [editingState, state, readOnly])
 
   const onMouseLeave = useCallback(() => {
-    if (readOnly) {
-      return
-    }
+    if (readOnly) return
     if (editingState !== EditingState.ACTIVE.value) {
       setEditingState(EditingState.INACTIVE.value)
     }
   }, [editingState, readOnly])
 
   const onClickHandler = useCallback(() => {
-    if (readOnly) {
-      return
-    }
+    if (readOnly) return
     setEditingState(EditingState.ACTIVE.value)
   }, [readOnly])
 
   return (
     <ClickAwayListener
-      onClickAway={() => {
-        setEditingState(EditingState.INACTIVE.value)
-      }}
+      onClickAway={() => setEditingState(EditingState.INACTIVE.value)}
     >
       <Box
-        position={'relative'}
-        m={0}
-        p={0}
-        transition={'box-shadow 0.25s ease-in-out'}
-        cursor={'pointer'}
-        boxSizing={'border-box'}
-        {...getCss(editingState, state)}
-        onMouseEnter={() => onMouseEnter()}
-        onMouseLeave={() => onMouseLeave()}
-        onClick={() => onClickHandler()}
+        sx={{
+          position: 'relative',
+          m: 0,
+          p: 0,
+          transition: 'box-shadow 0.25s ease-in-out',
+          cursor: 'pointer',
+          boxSizing: 'border-box',
+          ...getCss(editingState, state),
+        }}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        onClick={onClickHandler}
       >
         {children}
       </Box>
