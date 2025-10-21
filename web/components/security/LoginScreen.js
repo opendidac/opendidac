@@ -57,7 +57,9 @@ const LoginScreen = ({ message }) => {
       >
         By signing in, you agree to our{' '}
         <Link href="/terms" passHref legacyBehavior>
-          <MUILink underline="hover">Terms of Service and Privacy Policy</MUILink>
+          <MUILink underline="hover">
+            Terms of Service and Privacy Policy
+          </MUILink>
         </Link>
         .
       </Typography>

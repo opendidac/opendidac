@@ -28,9 +28,9 @@ const nextConfig = {
     config.module.rules.push({
       test: /\.hbs$/,
       use: 'raw-loader',
-    });
-    return config;
+    })
+    return config
   },
-};
+}
 
-module.exports = withTM(nextConfig);
+module.exports = withTM(nextConfig)

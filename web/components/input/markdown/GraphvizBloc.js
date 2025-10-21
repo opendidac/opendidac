@@ -14,44 +14,50 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useRef } from 'react';
-import * as Viz from '@viz-js/viz';
-import { Box } from '@mui/material';
+import React, { useEffect, useRef } from 'react'
+import * as Viz from '@viz-js/viz'
+import { Box } from '@mui/material'
 
-import ErrorBoundary from '@/components/layout/utils/ErrorBoundary';
+import ErrorBoundary from '@/components/layout/utils/ErrorBoundary'
 
 const GraphvizBloc = ({ code }) => {
-  const containerRef = useRef(null);
+  const containerRef = useRef(null)
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false
 
-    (async () => {
-      const el = containerRef.current;
-      if (!el) return;
-      el.innerHTML = '';
-      if (!code) return;
+    ;(async () => {
+      const el = containerRef.current
+      if (!el) return
+      el.innerHTML = ''
+      if (!code) return
 
-      const viz = await Viz.instance();
-      const svg = viz.renderSVGElement(code, { yInvert: false, fit: true });
-      if (!cancelled) el.appendChild(svg);
-    })();
+      const viz = await Viz.instance()
+      const svg = viz.renderSVGElement(code, { yInvert: false, fit: true })
+      if (!cancelled) el.appendChild(svg)
+    })()
 
     return () => {
-      cancelled = true;
-    };
-  }, [code]);
+      cancelled = true
+    }
+  }, [code])
 
   return (
     <ErrorBoundary>
       <Box
         ref={containerRef}
-        sx={{ width: '100%', height: '100%', overflow: 'auto', lineHeight: 0, display: 'block' }}
+        sx={{
+          width: '100%',
+          height: '100%',
+          overflow: 'auto',
+          lineHeight: 0,
+          display: 'block',
+        }}
         aria-label="Graphviz diagram"
         role="img"
       />
     </ErrorBoundary>
-  );
-};
+  )
+}
 
-export default GraphvizBloc;
+export default GraphvizBloc

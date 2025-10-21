@@ -83,7 +83,7 @@ const exportMultipleChoice = (mc) => {
     gradingPolicy: mc.gradingPolicy,
     activateStudentComment: mc.activateStudentComment,
     studentCommentLabel: mc.studentCommentLabel ?? null,
-    selectionLimit: mc.activateSelectionLimit ? mc.selectionLimit ?? 0 : 0,
+    selectionLimit: mc.activateSelectionLimit ? (mc.selectionLimit ?? 0) : 0,
     options: (mc.options || []).map((o) => ({
       order: o.order,
       text: o.text ?? null,
