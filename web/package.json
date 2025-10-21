@@ -46,10 +46,6 @@
     "clipboard-copy": "^4.0.1",
     "date-fns": "^4.1.0",
     "dockerode": "^4.0.2",
-    "eslint": "^9.38.0",
-    "eslint-config-next": "^15.5.6",
-    "eslint-plugin-header": "^3.1.1",
-    "eslint-plugin-unused-imports": "^4.3.0",
     "handlebars": "^4.7.8",
     "htmlspecialchars": "^1.0.5",
     "javascript-time-ago": "^2.5.9",
@@ -84,6 +80,12 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "eslint": "^9.38.0",
+    "eslint-config-next": "^15.5.6",
+    "eslint-plugin-header": "^3.1.1",
+    "eslint-plugin-unused-imports": "^4.3.0",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.38.0",
     "@testing-library/jest-dom": "^6.4.2",
     "@vitejs/plugin-react": "4.3.4",
     "prettier": "^3.2.5",
