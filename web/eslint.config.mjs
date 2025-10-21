@@ -11,19 +11,20 @@ const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({
     baseDirectory: __dirname,
     recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
+    allConfig: js.configs.all,
 });
 
-export default defineConfig([{
-    extends: compat.extends("next/core-web-vitals"),
+export default defineConfig([
+    ...compat.extends("next/core-web-vitals", "prettier"),
+    {
+        plugins: {
+            header,
+            "unused-imports": unusedImports,
+        },
 
-    plugins: {
-        header,
-        "unused-imports": unusedImports,
+        rules: {
+            "header/header": [2, "license.js"],
+            "unused-imports/no-unused-imports": "error",
+        },
     },
-
-    rules: {
-        "header/header": [2, "license.js"],
-        "unused-imports/no-unused-imports": "error",
-    },
-}]);
+]);
