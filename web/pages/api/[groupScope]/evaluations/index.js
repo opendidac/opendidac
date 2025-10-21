@@ -159,6 +159,7 @@ const post = async (req, res, prisma) => {
                   },
                 },
                 points: true,
+                gradingPoints: true,
                 order: true,
                 title: true,
               },
@@ -188,6 +189,7 @@ const post = async (req, res, prisma) => {
           // create relation between evaluation and a source question
           await prisma.evaluationToQuestion.create({
             data: {
+              gradingPoints: templateToQuestion.gradingPoints,
               points: templateToQuestion.points,
               order: templateToQuestion.order,
               title: templateToQuestion.title, // Copy custom title from template

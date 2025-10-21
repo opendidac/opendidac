@@ -14,10 +14,17 @@
  * limitations under the License.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { StudentQuestionGradingStatus } from '@prisma/client'
 import Image from 'next/image'
-import { Box, Paper, Stack, TextField, Tooltip } from '@mui/material'
+import {
+  Chip,
+  Paper,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material'
 import { LoadingButton } from '@mui/lab'
 import { useSession } from 'next-auth/react'
 
@@ -26,8 +33,15 @@ import DecimalInput from '@/components/input/DecimalInput'
 import GradingStatus from './GradingStatus'
 import GradingSigned from './GradingSigned'
 import GradingPointsComment from './GradingPointsComment'
+import { computeCoefficient } from '@/code/grading/coefficient'
 
-const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
+const GradingSignOff = ({
+  loading,
+  answer: initial,
+  maxGradingPoints,
+  maxPoints,
+  onChange,
+}) => {
   const [grading, setGrading] = useState(initial)
   const { data } = useSession()
   const commentInputRef = useRef(null)
@@ -90,6 +104,21 @@ const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
     }
   }, [handleKeyDown])
 
+  const coef = useMemo(
+    () => computeCoefficient(maxGradingPoints, maxPoints),
+    [maxPoints, maxGradingPoints],
+  )
+
+  const gradingPoints = useMemo(() => {
+    return coef > 0 && grading.pointsObtained !== undefined
+      ? Math.round((grading.pointsObtained / coef) * 100) / 100
+      : 0
+  }, [grading.pointsObtained, coef])
+
+  const roundedCoef = useMemo(() => {
+    return Math.round(coef * 100) / 100
+  }, [coef])
+
   return (
     <Paper
       sx={{
@@ -137,26 +166,50 @@ const GradingSignOff = ({ loading, answer: initial, maxPoints, onChange }) => {
           </Stack>
 
           {!grading.signedBy && (
-            <Stack direction="row" alignItems="center" spacing={1} flexGrow={1}>
-              <Box>
+            <Stack direction="row" alignItems="center" spacing={2} flexGrow={1}>
+              <Stack direction={'row'} alignItems={'center'} spacing={1}>
                 <DecimalInput
                   autoFocus
                   label={'Awarded Points'}
-                  value={grading.pointsObtained}
-                  max={maxPoints}
-                  rightAdornement={'/ ' + maxPoints + ' pts'}
+                  value={gradingPoints}
+                  max={maxGradingPoints}
+                  rightAdornement={'/ ' + maxGradingPoints + ' pts'}
                   variant="filled"
                   onChange={async (value) => {
                     const newGrading = {
                       ...grading,
-                      pointsObtained: value,
+                      pointsObtained: Math.round(value * coef * 100) / 100,
                       status: StudentQuestionGradingStatus.GRADED,
                     }
                     setGrading(newGrading)
                     onChange(newGrading)
                   }}
                 />
-              </Box>
+                {maxPoints !== maxGradingPoints && (
+                  <>
+                    <Typography variant={'body2'} sx={{ textWrap: 'nowrap' }}>
+                      &times; {roundedCoef} =
+                    </Typography>
+                    <Chip
+                      variant="outlined"
+                      label={
+                        <>
+                          <Typography
+                            variant="body2"
+                            component="span"
+                            sx={{ mr: 1 }}
+                          >
+                            <b>{grading.pointsObtained}</b>
+                          </Typography>
+                          <Typography variant="caption" component="span">
+                            / {maxPoints} pts
+                          </Typography>
+                        </>
+                      }
+                    ></Chip>
+                  </>
+                )}
+              </Stack>
               <TextField
                 ref={commentInputRef}
                 label="Comment"

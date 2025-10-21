@@ -472,6 +472,7 @@ const PageGrading = () => {
                         (ans) => ans.user.id === participantId,
                       )}
                       maxPoints={evaluationToQuestion.points}
+                      maxGradingPoints={evaluationToQuestion.gradingPoints}
                       onChange={onChangeGrading}
                     />
 

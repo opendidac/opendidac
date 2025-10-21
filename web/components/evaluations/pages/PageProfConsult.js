@@ -254,6 +254,7 @@ const PageProfConsult = () => {
                         (ans) => ans.user.email === userEmail,
                       )}
                       maxPoints={selected.points}
+                      maxGradingPoints={selected.gradingPoints}
                       onChange={onChangeGrading}
                     />
                   </Stack>

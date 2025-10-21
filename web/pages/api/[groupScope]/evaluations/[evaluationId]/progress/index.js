@@ -42,6 +42,7 @@ const get = async (req, res, prisma) => {
           },
           order: true,
           points: true,
+          gradingPoints: true,
         },
         orderBy: {
           order: 'asc',

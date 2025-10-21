@@ -54,8 +54,8 @@ const StudentResultsGrid = ({
               ? theme.palette.info.main
               : theme.palette.error.main
           : theme.palette.grey['300']
-        const pointsObtained = data.pointsObtained
-        const totalPoints = data.totalPoints
+        const pointsObtained = Math.round(data.pointsObtained * 100) / 100
+        const totalPoints = Math.round(data.totalPoints * 100) / 100
 
         const selected =
           selectedQuestionCell &&
