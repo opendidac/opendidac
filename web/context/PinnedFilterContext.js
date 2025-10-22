@@ -74,7 +74,12 @@ export function PinnedFilterProvider({ children }) {
   // Set pinned filter for a group
   const setPinnedFilter = useCallback(
     (groupId, filter) => {
-      const newFilters = { ...pinnedFilters, [groupId]: filter }
+      const newFilters = { ...pinnedFilters }
+      if (filter === undefined) {
+        delete newFilters[groupId]
+      } else {
+        newFilters[groupId] = filter
+      }
       setPinnedFiltersState(newFilters)
       if (typeof window !== 'undefined') {
         localStorage.setItem('pinnedFilters', JSON.stringify(newFilters))

@@ -24,8 +24,11 @@ import {
   Radio,
   RadioGroup,
   FormControlLabel,
+  Tooltip,
 } from '@mui/material'
 import PushPinIcon from '@mui/icons-material/PushPin'
+import UndoIcon from '@mui/icons-material/Undo';
+import ClearIcon from '@mui/icons-material/Clear';
 
 import { toArray as typesToArray } from './types.js'
 import languages from '../../code/languages.json'
@@ -122,13 +125,11 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
   const { getPinnedFilter, setPinnedFilter } = usePinnedFilter()
 
   const pinnedFilter = useMemo(
-    () => getPinnedFilter(groupId),
+    () => addDefaultsToFilter(getPinnedFilter(groupId)),
     [getPinnedFilter, groupId],
   )
 
   const { tags: allTags = [] } = tagsContext // Destructure safely
-
-  const [questionStatus, setQuestionStatus] = useState(QuestionStatus.ACTIVE)
 
   const [filter, setFilter] = useState(addDefaultsToFilter(initial))
 
@@ -156,6 +157,11 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
     debouncedOnApplyFilter(filter)
   }, [filter, debouncedOnApplyFilter])
 
+  const hasPinnedFilter = useMemo(() => {
+    const pinned = getPinnedFilter(groupId)
+    return pinned && Object.keys(pinned).length > 0
+  }, [groupId, getPinnedFilter])
+
   const filterDiffersFromPinned = useMemo(() => {
     // Compare each filter field with its initial value
     return (
@@ -176,10 +182,11 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
 
   const handleClear = useCallback(() => {
     setFilter(addDefaultsToFilter(initial))
-    setQuestionStatus(
-      pinnedFilter.questionStatus ?? initialFilters.questionStatus,
-    )
-  }, [initial, pinnedFilter.questionStatus])
+  }, [initial])
+
+  const handleReset = useCallback(() => {
+    setPinnedFilter(groupId, undefined)
+  }, [groupId, setPinnedFilter])
 
   return (
     <form>
@@ -207,8 +214,8 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
         <Stack direction="row" justifyContent="flex-start">
           <RadioGroup
             row
-            value={questionStatus}
-            onChange={(e) => setQuestionStatus(e.target.value)}
+            value={filter.questionStatus}
+            onChange={(e) => updateFilter('questionStatus', e.target.value)}
             aria-label="question status"
             sx={{ pl: 0.5 }}
           >
@@ -242,25 +249,57 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
 
         <QuestionTypeSelection filter={filter} updateFilter={updateFilter} />
         <LanguageSelection filter={filter} updateFilter={updateFilter} />
-        <Stack direction={'row'} spacing={2}>
-          <Button
-            variant="contained"
-            color="info"
-            fullWidth
-            startIcon={<PushPinIcon />}
-            onClick={handlePin}
-          >
-            {' '}
-            Pin{' '}
-          </Button>
-          <Button
-            variant="outlined"
-            disabled={!filterDiffersFromPinned}
-            onClick={handleClear}
-          >
-            {' '}
-            Clear{' '}
-          </Button>
+        <Stack direction={'row'} spacing={2} width="100%">
+          { filterDiffersFromPinned && (
+            <Tooltip
+              title={hasPinnedFilter ? 'Revert to pinned filters' : 'Revert to default filters'}
+              enterDelay={500}
+            >
+              <Button
+                variant="outlined"
+                color="info"
+                disabled={!filterDiffersFromPinned}
+                onClick={handleClear}
+                startIcon={<UndoIcon/>}
+                fullWidth
+              >
+                {' '}
+                Revert{' '}
+              </Button>
+            </Tooltip>
+          )}
+          { filterDiffersFromPinned ? (
+            <Tooltip
+              title='Persist current filters for subsequent visits. New questions will inherit tags of pinned filters.'
+              enterDelay={500}
+              >
+              <Button
+                variant="contained"
+                color="info"
+                startIcon={<PushPinIcon />}
+                onClick={handlePin}
+                fullWidth
+              >
+                {' '}
+                Pin{' '}
+              </Button>
+            </Tooltip>
+            ) : (hasPinnedFilter) && (
+            <Tooltip
+              title='Revert back to default filters'
+              enterDelay={500}
+            >
+              <Button
+                variant="outlined"
+                startIcon={<ClearIcon />}
+                onClick={handleReset}
+                fullWidth
+              >
+                {' '}
+                Remove pin{' '}
+              </Button>
+            </Tooltip>
+            )}
         </Stack>
       </Stack>
     </form>
