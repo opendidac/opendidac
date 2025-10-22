@@ -139,6 +139,7 @@ const AddQuestionDialog = ({ inheritedTags, open, onClose, handleAddQuestion }) 
           language,
           codeQuestionType,
           codeWritingTemplate,
+          tags: includeInheritedTags ? (inheritedTags ?? []) : []
         })
       }
     />
