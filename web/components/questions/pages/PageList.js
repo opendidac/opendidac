@@ -313,6 +313,7 @@ const PageList = () => {
             await createQuestion(type, options)
             setAddDialogOpen(false)
           }}
+          inheritedTags={pinnedFilter?.tags || []}
         />
         <CopyQuestionDialog
           open={copyDialogOpen}

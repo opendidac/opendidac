@@ -21,6 +21,7 @@ const QuestionTagsViewer = ({
   tags = [],
   size = 'medium',
   collapseAfter = Infinity,
+  disabled = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false)
 
@@ -28,6 +29,28 @@ const QuestionTagsViewer = ({
   const handleMouseLeave = () => setIsHovered(false)
 
   const displayedTags = isHovered ? tags : tags.slice(0, collapseAfter)
+
+  const renderTagChip = (label, key, variant = 'filled') => (
+    <Chip
+      size={size}
+      key={key}
+      color={disabled ? 'default' : 'info'}
+      variant={variant}
+      label={
+        <Typography
+          variant={'caption'}
+          sx={
+            disabled
+              ? { textDecoration: 'line-through', color: 'text.disabled' }
+              : {}
+          }
+        >
+          {label}
+        </Typography>
+      }
+      sx={{ mr: 1 }}
+    />
+  )
 
   return (
     <Stack
@@ -37,29 +60,9 @@ const QuestionTagsViewer = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {displayedTags.map((tag, index) => (
-        <Chip
-          size={size}
-          key={tag.label}
-          color={'info'}
-          variant="filled"
-          label={<Typography variant={'caption'}>{tag.label}</Typography>}
-          sx={{ mr: 1 }}
-        />
-      ))}
-      {!isHovered && tags.length > collapseAfter && (
-        <Chip
-          size={size}
-          key="more"
-          variant="outlined"
-          label={
-            <Typography variant={'caption'}>{`+${
-              tags.length - collapseAfter
-            }`}</Typography>
-          }
-          sx={{ mr: 1 }}
-        />
-      )}
+      {displayedTags.map((tag) => renderTagChip(tag.label, tag.label))}
+      {!isHovered && tags.length > collapseAfter &&
+        renderTagChip(`+$${tags.length - collapseAfter}`, 'more', 'outlined')}
     </Stack>
   )
 }
