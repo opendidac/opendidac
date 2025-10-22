@@ -51,7 +51,7 @@ const initialFilters = {
   unused: false,
 }
 
-const applyFilter = async (toApply) => {
+const cleanupFilter = (toApply) => {
   const query = { ...toApply }
   query.questionTypes = Object.keys(query.questionTypes).filter(
     (key) => query.questionTypes[key],
@@ -163,9 +163,9 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
   }, [filter])
 
   const handleSubmit = useCallback(
-    async (e) => {
+    (e) => {
       e.preventDefault() // Prevent default form submission which reloads the page
-      const newFilter = await applyFilter({ ...filter, questionStatus })
+      const newFilter = cleanupFilter({ ...filter, questionStatus })
       onApplyFilter && onApplyFilter(new URLSearchParams(newFilter).toString())
     },
     [filter, questionStatus, onApplyFilter],
@@ -238,7 +238,7 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
             fullWidth
             startIcon={<PushPinIcon />}
             onClick={() => {
-              setPinnedFilter(filter)
+              setPinnedFilter(cleanupFilter(filter))
             }}
           >
             {' '}
@@ -253,7 +253,7 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
               onApplyFilter &&
                 onApplyFilter(
                   new URLSearchParams(
-                    await applyFilter(initialFilters),
+                    await cleanupFilter(initialFilters),
                   ).toString(),
                 )
             }}
