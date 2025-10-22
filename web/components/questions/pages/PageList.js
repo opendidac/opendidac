@@ -205,7 +205,9 @@ const PageList = () => {
           <LayoutSplitScreen
             leftPanel={
               <>
-                <Typography>pinned query is: {JSON.stringify(pinnedFilter)}</Typography>
+                <Typography>
+                  pinned query is: {JSON.stringify(pinnedFilter)}
+                </Typography>
                 <QuestionFilter
                   withArchived={true}
                   filters={queryString}

@@ -59,9 +59,7 @@ const AddQuestionDialog = ({ open, onClose, handleAddQuestion }) => {
       title={`Create new question`}
       content={
         <Stack spacing={2} width={'500px'}>
-          <Typography>
-            Pinned filter: {JSON.stringify(pinnedFilter)}
-          </Typography>
+          <Typography>Pinned filter: {JSON.stringify(pinnedFilter)}</Typography>
           <Typography variant="body1">
             Select the type of question you want to create
           </Typography>

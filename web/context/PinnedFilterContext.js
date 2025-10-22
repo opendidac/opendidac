@@ -14,23 +14,61 @@
  * limitations under the License.
  */
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useCallback,
+} from 'react'
 
 const PinnedFilterContext = createContext({
   pinnedFilter: '',
   setPinnedFilter: () => {},
-  pinnedTags: [],
 })
 
-export function PinnedFilterProvider({ children, initialValue = '' }) {
-  const [pinnedFilter, setPinnedFilter] = useState(initialValue)
+export function PinnedFilterProvider({ children }) {
+  // Load initial value from localStorage, or use empty object
+  const [pinnedFilter, setPinnedFilterState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('pinnedFilter')
+      if (stored) {
+        try {
+          return JSON.parse(stored)
+        } catch {
+          return {}
+        }
+      }
+    }
+    return {}
+  })
 
-  const pinnedTags = useMemo(() => {
-    const params = new URLSearchParams(pinnedFilter)
-    return params.get('tags') ? params.get('tags').split(',') : []
-  }, [pinnedFilter])
+  // Listen for storage events to sync pinnedFilter across tabs
+  React.useEffect(() => {
+    function handleStorage(event) {
+      if (event.key === 'pinnedFilter') {
+        if (event.newValue) {
+          try {
+            setPinnedFilterState(JSON.parse(event.newValue))
+          } catch {
+            console.error('Failed to parse pinnedFilter from storage event: ', event.newValue)
+          }
+        }
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, [])
 
-  const value = useMemo(() => ({ pinnedFilter, setPinnedFilter, pinnedTags }), [pinnedFilter, pinnedTags, setPinnedFilter])
+  // Memoize setPinnedFilter to avoid unnecessary re-renders
+  const setPinnedFilter = useCallback((newFilter) => {
+    setPinnedFilterState(newFilter)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pinnedFilter', JSON.stringify(newFilter))
+    }
+  }, [])
+
+  const value = useMemo(() => ({ pinnedFilter, setPinnedFilter }), [pinnedFilter, setPinnedFilter])
 
   return (
     <PinnedFilterContext.Provider value={value}>
