@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Button,
@@ -34,6 +34,7 @@ import TagsSelector from '../input/TagsSelector'
 import CheckboxLabel from '../input/CheckboxLabel.js'
 import { QuestionStatus } from '@prisma/client'
 import { usePinnedFilter } from '@/context/PinnedFilterContext'
+import { useDebouncedCallback } from 'use-debounce'
 
 const environments = languages.environments
 const types = typesToArray()
@@ -71,73 +72,68 @@ const cleanupFilter = (toApply) => {
   return query
 }
 
-const queryStringToFilter = (queryString) => {
-  const params = new URLSearchParams(queryString)
-
+const addDefaultsToFilter = (cleanedFilter) => {
   // Build the filter object based on the query string
   const filter = {
-    search: params.get('search') || initialFilters.search,
-    tags: params.get('tags')
-      ? params.get('tags').split(',')
-      : initialFilters.tags,
+    search: cleanedFilter.search || initialFilters.search,
+    tags: cleanedFilter.tags || initialFilters.tags,
     questionStatus:
-      params.get('questionStatus') || initialFilters.questionStatus,
+      cleanedFilter.questionStatus || initialFilters.questionStatus,
     questionTypes: { ...initialFilters.questionTypes },
     codeLanguages: { ...initialFilters.codeLanguages },
-    unused: params.get('unused') === 'true' || initialFilters.unused,
+    unused: cleanedFilter.unused || initialFilters.unused,
   }
 
-  if (params.get('questionTypes')) {
+  if (cleanedFilter.questionTypes) {
     // set all questionTypes to false
     Object.keys(filter.questionTypes).forEach((type) => {
       filter.questionTypes[type] = false
     })
 
     // Update questionTypes and codeLanguages based on the query string
-    params
-      .get('questionTypes')
-      .split(',')
-      .forEach((type) => {
-        if (filter.questionTypes.hasOwnProperty(type)) {
-          filter.questionTypes[type] = true
-        }
-      })
+    cleanedFilter.questionTypes.forEach((type) => {
+      if (filter.questionTypes.hasOwnProperty(type)) {
+        filter.questionTypes[type] = true
+      }
+    })
   }
 
   // Update codeLanguages based on the query string
-  if (params.get('codeLanguages')) {
+  if (cleanedFilter.codeLanguages) {
     // set all codeLanguages to false
     Object.keys(filter.codeLanguages).forEach((language) => {
       filter.codeLanguages[language] = false
     })
 
     // Update codeLanguages based on the query string
-    params
-      .get('codeLanguages')
-      ?.split(',')
-      .forEach((language) => {
-        if (filter.codeLanguages.hasOwnProperty(language)) {
-          filter.codeLanguages[language] = true
-        }
-      })
+    cleanedFilter.codeLanguages.forEach((language) => {
+      if (filter.codeLanguages.hasOwnProperty(language)) {
+        filter.codeLanguages[language] = true
+      }
+    })
   }
 
   return filter
 }
 
-const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
+const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
   const tagsContext = useTags() // Get the whole context first
 
-  const { setPinnedFilter } = usePinnedFilter()
+  const { getPinnedFilter, setPinnedFilter } = usePinnedFilter()
+
+  const pinnedFilter = useMemo(
+    () => getPinnedFilter(groupId),
+    [getPinnedFilter, groupId],
+  )
 
   const { tags: allTags = [] } = tagsContext // Destructure safely
 
   const [questionStatus, setQuestionStatus] = useState(QuestionStatus.ACTIVE)
 
-  const [filter, setFilter] = useState(queryStringToFilter(initial))
+  const [filter, setFilter] = useState(addDefaultsToFilter(initial))
 
   useEffect(() => {
-    setFilter(queryStringToFilter(initial))
+    setFilter(addDefaultsToFilter(initial))
   }, [initial])
 
   const updateFilter = useCallback(
@@ -148,31 +144,46 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
     [filter],
   )
 
-  const isFilterApplied = useCallback(() => {
+  // Debounce call to onApplyFilter
+  const debouncedOnApplyFilter = useDebouncedCallback(async (newFilter) => {
+    if (onApplyFilter) {
+      const cleaned = cleanupFilter(newFilter)
+      onApplyFilter(cleaned)
+    }
+  }, 300)
+
+  useEffect(() => {
+    debouncedOnApplyFilter(filter)
+  }, [filter, debouncedOnApplyFilter])
+
+  const filterDiffersFromPinned = useMemo(() => {
     // Compare each filter field with its initial value
     return (
-      filter.search !== initialFilters.search ||
-      JSON.stringify(filter.tags) !== JSON.stringify(initialFilters.tags) ||
-      filter.questionStatus !== initialFilters.questionStatus ||
+      filter.search !== pinnedFilter.search ||
+      JSON.stringify(filter.tags) !== JSON.stringify(pinnedFilter.tags) ||
+      filter.questionStatus !== pinnedFilter.questionStatus ||
       JSON.stringify(filter.questionTypes) !==
-        JSON.stringify(initialFilters.questionTypes) ||
+        JSON.stringify(pinnedFilter.questionTypes) ||
       JSON.stringify(filter.codeLanguages) !==
-        JSON.stringify(initialFilters.codeLanguages) ||
-      filter.unused !== initialFilters.unused
+        JSON.stringify(pinnedFilter.codeLanguages) ||
+      filter.unused !== pinnedFilter.unused
     )
-  }, [filter])
+  }, [pinnedFilter, filter])
 
-  const handleSubmit = useCallback(
-    (e) => {
-      e.preventDefault() // Prevent default form submission which reloads the page
-      const newFilter = cleanupFilter({ ...filter, questionStatus })
-      onApplyFilter && onApplyFilter(new URLSearchParams(newFilter).toString())
-    },
-    [filter, questionStatus, onApplyFilter],
-  )
+  const handlePin = useCallback(() => {
+    setPinnedFilter(groupId, cleanupFilter(filter))
+  }, [groupId, filter, setPinnedFilter])
+
+  const handleClear = useCallback(() => {
+    setFilter(addDefaultsToFilter(initial))
+    setQuestionStatus(
+      pinnedFilter.questionStatus ?? initialFilters.questionStatus,
+    )
+  }, [initial, pinnedFilter.questionStatus])
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form>
+      Group : {groupId}
       <Stack spacing={2} padding={2}>
         <TextField
           label={'Search'}
@@ -237,26 +248,15 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
             color="info"
             fullWidth
             startIcon={<PushPinIcon />}
-            onClick={() => {
-              setPinnedFilter(cleanupFilter(filter))
-            }}
+            onClick={handlePin}
           >
             {' '}
             Pin{' '}
           </Button>
           <Button
             variant="outlined"
-            disabled={!isFilterApplied()}
-            onClick={async () => {
-              setFilter(initialFilters)
-              setQuestionStatus(initialFilters.questionStatus)
-              onApplyFilter &&
-                onApplyFilter(
-                  new URLSearchParams(
-                    await cleanupFilter(initialFilters),
-                  ).toString(),
-                )
-            }}
+            disabled={!filterDiffersFromPinned}
+            onClick={handleClear}
           >
             {' '}
             Clear{' '}

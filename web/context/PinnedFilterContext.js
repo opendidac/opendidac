@@ -23,15 +23,15 @@ import React, {
 } from 'react'
 
 const PinnedFilterContext = createContext({
-  pinnedFilter: '',
-  setPinnedFilter: () => {},
+  getPinnedFilter: (groupId) => {},
+  setPinnedFilter: (groupId, filter) => {},
 })
 
 export function PinnedFilterProvider({ children }) {
   // Load initial value from localStorage, or use empty object
-  const [pinnedFilter, setPinnedFilterState] = useState(() => {
+  const [pinnedFilters, setPinnedFiltersState] = useState(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('pinnedFilter')
+      const stored = localStorage.getItem('pinnedFilters')
       if (stored) {
         try {
           return JSON.parse(stored)
@@ -43,15 +43,18 @@ export function PinnedFilterProvider({ children }) {
     return {}
   })
 
-  // Listen for storage events to sync pinnedFilter across tabs
+  // Listen for storage events to sync pinnedFilters across tabs
   React.useEffect(() => {
     function handleStorage(event) {
-      if (event.key === 'pinnedFilter') {
+      if (event.key === 'pinnedFilters') {
         if (event.newValue) {
           try {
-            setPinnedFilterState(JSON.parse(event.newValue))
+            setPinnedFiltersState(JSON.parse(event.newValue))
           } catch {
-            console.error('Failed to parse pinnedFilter from storage event: ', event.newValue)
+            console.error(
+              'Failed to parse pinnedFilters from storage event: ',
+              event.newValue,
+            )
           }
         }
       }
@@ -60,15 +63,30 @@ export function PinnedFilterProvider({ children }) {
     return () => window.removeEventListener('storage', handleStorage)
   }, [])
 
-  // Memoize setPinnedFilter to avoid unnecessary re-renders
-  const setPinnedFilter = useCallback((newFilter) => {
-    setPinnedFilterState(newFilter)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('pinnedFilter', JSON.stringify(newFilter))
-    }
-  }, [])
+  // Get pinned filter for a group
+  const getPinnedFilter = useCallback(
+    (groupId) => {
+      return pinnedFilters[groupId] || {}
+    },
+    [pinnedFilters],
+  )
 
-  const value = useMemo(() => ({ pinnedFilter, setPinnedFilter }), [pinnedFilter, setPinnedFilter])
+  // Set pinned filter for a group
+  const setPinnedFilter = useCallback(
+    (groupId, filter) => {
+      const newFilters = { ...pinnedFilters, [groupId]: filter }
+      setPinnedFiltersState(newFilters)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pinnedFilters', JSON.stringify(newFilters))
+      }
+    },
+    [pinnedFilters],
+  )
+
+  const value = useMemo(
+    () => ({ getPinnedFilter, setPinnedFilter }),
+    [getPinnedFilter, setPinnedFilter],
+  )
 
   return (
     <PinnedFilterContext.Provider value={value}>

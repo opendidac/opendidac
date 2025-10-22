@@ -15,7 +15,7 @@
  */
 
 import useSWR from 'swr'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import LayoutMain from '../../layout/LayoutMain'
 import LayoutSplitScreen from '../../layout/LayoutSplitScreen'
 import { Role } from '@prisma/client'
@@ -112,13 +112,22 @@ const ExportQuestionsButton = ({ selection, groupScope, onExportSuccess }) => {
 const PageList = () => {
   const router = useRouter()
 
-  const { pinnedFilter } = usePinnedFilter()
+  const { getPinnedFilter } = usePinnedFilter()
 
   const { groupScope } = router.query
 
   const { show: showSnackbar } = useSnackbar()
 
   const [queryString, setQueryString] = useState('')
+
+  const pinnedFilter = useMemo(
+    () => getPinnedFilter(groupScope),
+    [getPinnedFilter, groupScope],
+  )
+
+  const setAppliedFilter = useCallback((filter) => {
+    setQueryString(new URLSearchParams(filter).toString())
+  }, [])
 
   const {
     data: questions,
@@ -200,24 +209,25 @@ const PageList = () => {
 
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
-      <Loading loading={!questions} errors={[error]}>
-        <LayoutMain header={<MainMenu />}>
-          <LayoutSplitScreen
-            leftPanel={
-              <>
-                <Typography>
-                  pinned query is: {JSON.stringify(pinnedFilter)}
-                </Typography>
-                <QuestionFilter
-                  withArchived={true}
-                  filters={queryString}
-                  onApplyFilter={setQueryString}
-                />
-              </>
-            }
-            rightWidth={80}
-            rightPanel={
-              questions && (
+      <LayoutMain header={<MainMenu />}>
+        <LayoutSplitScreen
+          leftPanel={
+            <>
+              <Typography>
+                pinned query is: {JSON.stringify(getPinnedFilter(groupScope))}
+              </Typography>
+              <QuestionFilter
+                withArchived={true}
+                filters={pinnedFilter}
+                onApplyFilter={setAppliedFilter}
+                groupId={groupScope}
+              />
+            </>
+          }
+          rightWidth={80}
+          rightPanel={
+            <Loading loading={!questions} errors={[error]}>
+              {questions && (
                 <Stack height={'100%'} p={1} pt={2}>
                   <QuestionsGrid
                     questions={questions}
@@ -292,33 +302,33 @@ const PageList = () => {
                     </AlertFeedback>
                   )}
                 </Stack>
-              )
-            }
-          />
-          <AddQuestionDialog
-            open={addDialogOpen}
-            onClose={() => setAddDialogOpen(false)}
-            handleAddQuestion={async (type, options) => {
-              await createQuestion(type, options)
-              setAddDialogOpen(false)
-            }}
-          />
-          <CopyQuestionDialog
-            open={copyDialogOpen}
-            onClose={() => setCopyDialogOpen(false)}
-            handleCopyQuestion={async () => {
-              await copyQuestion(selected.id)
-              setCopyDialogOpen(false)
-            }}
-          />
-          <ImportQuestionsDialog
-            open={importDialogOpen}
-            onClose={() => setImportDialogOpen(false)}
-            onImportSuccess={handleImportSuccess}
-            groupScope={groupScope}
-          />
-        </LayoutMain>
-      </Loading>
+              )}
+            </Loading>
+          }
+        />
+        <AddQuestionDialog
+          open={addDialogOpen}
+          onClose={() => setAddDialogOpen(false)}
+          handleAddQuestion={async (type, options) => {
+            await createQuestion(type, options)
+            setAddDialogOpen(false)
+          }}
+        />
+        <CopyQuestionDialog
+          open={copyDialogOpen}
+          onClose={() => setCopyDialogOpen(false)}
+          handleCopyQuestion={async () => {
+            await copyQuestion(selected.id)
+            setCopyDialogOpen(false)
+          }}
+        />
+        <ImportQuestionsDialog
+          open={importDialogOpen}
+          onClose={() => setImportDialogOpen(false)}
+          onImportSuccess={handleImportSuccess}
+          groupScope={groupScope}
+        />
+      </LayoutMain>
     </Authorization>
   )
 }
