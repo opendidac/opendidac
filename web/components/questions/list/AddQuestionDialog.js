@@ -59,7 +59,6 @@ const AddQuestionDialog = ({
   )
   const [codeWritingTemplate, setCodeWritingTemplate] = useState('basic')
 
-  const [includeInheritedTags, setIncludeInheritedTags] = useState(true)
   const tagsForViewer = useMemo(
     () =>
       inheritedTags.map((t) => {
@@ -67,6 +66,12 @@ const AddQuestionDialog = ({
       }),
     [inheritedTags],
   )
+  const [includeInheritedTags, setIncludeInheritedTags] = useState(true)
+  useEffect(() => {
+    if (open) {
+      setIncludeInheritedTags(true)
+    }
+  }, [open])
 
   useEffect(() => {
     setCodeWritingTemplate('basic')

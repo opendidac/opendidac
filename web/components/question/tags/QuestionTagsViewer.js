@@ -63,7 +63,7 @@ const QuestionTagsViewer = ({
       {displayedTags.map((tag) => renderTagChip(tag.label, tag.label))}
       {!isHovered &&
         tags.length > collapseAfter &&
-        renderTagChip(`+$${tags.length - collapseAfter}`, 'more', 'outlined')}
+        renderTagChip(`+${tags.length - collapseAfter}`, 'more', 'outlined')}
     </Stack>
   )
 }
