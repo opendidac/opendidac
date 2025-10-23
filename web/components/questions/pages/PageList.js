@@ -112,12 +112,11 @@ const ExportQuestionsButton = ({ selection, groupScope, onExportSuccess }) => {
 const PageList = () => {
   const router = useRouter()
 
-  const { getPinnedFilter } = usePinnedFilter()
-
   const { groupScope } = router.query
 
   const { show: showSnackbar } = useSnackbar()
 
+  const { getPinnedFilter } = usePinnedFilter()
   const pinnedFilter = useMemo(
     () => getPinnedFilter(groupScope),
     [getPinnedFilter, groupScope],
@@ -127,10 +126,6 @@ const PageList = () => {
     pinnedFilter ? new URLSearchParams(pinnedFilter).toString() : '',
   )
 
-  const setAppliedFilter = useCallback((filter) => {
-    setQueryString(new URLSearchParams(filter).toString())
-  }, [])
-
   const {
     data: questions,
     error,
@@ -139,6 +134,10 @@ const PageList = () => {
     `/api/${groupScope}/questions?${queryString}`,
     groupScope ? fetcher : null,
   )
+
+  const setAppliedFilter = useCallback((filter) => {
+    setQueryString(new URLSearchParams(filter).toString())
+  }, [])
 
   const [openSideUpdate, setOpenSideUpdate] = useState(false)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
@@ -150,7 +149,6 @@ const PageList = () => {
   const [selection, setSelection] = useState([])
 
   useEffect(() => {
-    setQueryString('')
     setSelection([])
   }, [groupScope])
 

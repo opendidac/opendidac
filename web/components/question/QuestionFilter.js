@@ -123,6 +123,9 @@ const simpleToDetailedFilter = (simpleFilter) => {
 const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
   const tagsContext = useTags() // Get the whole context first
 
+  const { tags: allTags = [] } = tagsContext // Destructure safely
+
+  // Pinned filter from context
   const { getPinnedFilter, setPinnedFilter } = usePinnedFilter()
 
   const detailedPinnedFilter = useMemo(
@@ -130,9 +133,15 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
     [getPinnedFilter, groupId],
   )
 
-  const { tags: allTags = [] } = tagsContext // Destructure safely
+  const hasPinnedFilter = useMemo(() => {
+    const pinned = getPinnedFilter(groupId)
+    return pinned && Object.keys(pinned).length > 0
+  }, [groupId, getPinnedFilter])
 
-  const [detailedFilter, setDetailedFilter] = useState(simpleToDetailedFilter(initial))
+  // Local filter state
+  const [detailedFilter, setDetailedFilter] = useState(
+    simpleToDetailedFilter(initial),
+  )
 
   useEffect(() => {
     setDetailedFilter(simpleToDetailedFilter(initial))
@@ -146,6 +155,22 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
     [detailedFilter],
   )
 
+  const filterDiffersFromPinned = useMemo(() => {
+    // Compare each filter field with its initial value
+    return (
+      detailedFilter.search !== detailedPinnedFilter.search ||
+      JSON.stringify(detailedFilter.tags) !==
+        JSON.stringify(detailedPinnedFilter.tags) ||
+      detailedFilter.questionStatus !== detailedPinnedFilter.questionStatus ||
+      JSON.stringify(detailedFilter.questionTypes) !==
+        JSON.stringify(detailedPinnedFilter.questionTypes) ||
+      JSON.stringify(detailedFilter.codeLanguages) !==
+        JSON.stringify(detailedPinnedFilter.codeLanguages) ||
+      detailedFilter.unused !== detailedPinnedFilter.unused
+    )
+  }, [detailedPinnedFilter, detailedFilter])
+
+  // Applying the filter
   const debouncedOnApplyFilter = useDebouncedCallback(async (newFilter) => {
     if (onApplyFilter) {
       const cleaned = detailedToSimpleFilter(newFilter)
@@ -157,25 +182,7 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
     debouncedOnApplyFilter(detailedFilter)
   }, [detailedFilter, debouncedOnApplyFilter])
 
-  const hasPinnedFilter = useMemo(() => {
-    const pinned = getPinnedFilter(groupId)
-    return pinned && Object.keys(pinned).length > 0
-  }, [groupId, getPinnedFilter])
-
-  const filterDiffersFromPinned = useMemo(() => {
-    // Compare each filter field with its initial value
-    return (
-      detailedFilter.search !== detailedPinnedFilter.search ||
-      JSON.stringify(detailedFilter.tags) !== JSON.stringify(detailedPinnedFilter.tags) ||
-      detailedFilter.questionStatus !== detailedPinnedFilter.questionStatus ||
-      JSON.stringify(detailedFilter.questionTypes) !==
-        JSON.stringify(detailedPinnedFilter.questionTypes) ||
-      JSON.stringify(detailedFilter.codeLanguages) !==
-        JSON.stringify(detailedPinnedFilter.codeLanguages) ||
-      detailedFilter.unused !== detailedPinnedFilter.unused
-    )
-  }, [detailedPinnedFilter, detailedFilter])
-
+  // Handlers for three buttons: Pin, Clear, Reset
   const handlePin = useCallback(() => {
     setPinnedFilter(groupId, detailedToSimpleFilter(detailedFilter))
   }, [groupId, detailedFilter, setPinnedFilter])
@@ -246,8 +253,14 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
           color="info"
         />
 
-        <QuestionTypeSelection filter={detailedFilter} updateFilter={updateFilter} />
-        <LanguageSelection filter={detailedFilter} updateFilter={updateFilter} />
+        <QuestionTypeSelection
+          filter={detailedFilter}
+          updateFilter={updateFilter}
+        />
+        <LanguageSelection
+          filter={detailedFilter}
+          updateFilter={updateFilter}
+        />
         <Stack direction={'row'} spacing={2} width="100%">
           {filterDiffersFromPinned && (
             <Tooltip

@@ -57,8 +57,9 @@ const AddQuestionDialog = ({
   const [codeQuestionType, setCodeQuestionType] = useState(
     CodeQuestionType.codeWriting,
   )
-  const [includeInheritedTags, setIncludeInheritedTags] = useState(true)
   const [codeWritingTemplate, setCodeWritingTemplate] = useState('basic')
+
+  const [includeInheritedTags, setIncludeInheritedTags] = useState(true)
   const tagsForViewer = useMemo(
     () =>
       inheritedTags.map((t) => {
@@ -78,43 +79,49 @@ const AddQuestionDialog = ({
       title={`Create new question`}
       content={
         <Stack spacing={2} width={'500px'}>
-          <Card
-            elevation={0}
-            sx={{ border: 1, borderColor: 'info.main', borderRadius: 2 }}
-          >
-            <CardContent>
-              <Stack spacing={1} alignItems="flex-start">
-                <Typography variant="title" display="flex" alignItems="center">
-                  <PushPinIcon color="info" sx={{ mr: 1 }} />
-                  Pinned tags
-                </Typography>
-                <Typography variant="body2">
-                  The following tags are part of the currently pinned search,
-                  and may be added to the newly created question.
-                </Typography>
-                <Stack sx={{ p: 1, pl: 0 }}>
-                  <QuestionTagsViewer
-                    size="small"
-                    tags={tagsForViewer}
-                    disabled={!includeInheritedTags}
+          {tagsForViewer.length > 0 && (
+            <Card
+              elevation={0}
+              sx={{ border: 1, borderColor: 'info.main', borderRadius: 2 }}
+            >
+              <CardContent>
+                <Stack spacing={1} alignItems="flex-start">
+                  <Typography
+                    variant="title"
+                    display="flex"
+                    alignItems="center"
+                  >
+                    <PushPinIcon color="info" sx={{ mr: 1 }} />
+                    Pinned tags
+                  </Typography>
+                  <Typography variant="body2">
+                    The following tags are part of the currently pinned search,
+                    and may be added to the newly created question.
+                  </Typography>
+                  <Stack sx={{ p: 1, pl: 0 }}>
+                    <QuestionTagsViewer
+                      size="small"
+                      tags={tagsForViewer}
+                      disabled={!includeInheritedTags}
+                    />
+                  </Stack>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={includeInheritedTags}
+                        onChange={(e) =>
+                          setIncludeInheritedTags(e.target.checked)
+                        }
+                        color="info"
+                        size="small"
+                      />
+                    }
+                    label="Include pinned tags in the new question"
                   />
                 </Stack>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={includeInheritedTags}
-                      onChange={(e) =>
-                        setIncludeInheritedTags(e.target.checked)
-                      }
-                      color="info"
-                      size="small"
-                    />
-                  }
-                  label="Include pinned tags in the new question"
-                />
-              </Stack>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
           <Typography variant="body1">
             Select the type of question you want to create
           </Typography>

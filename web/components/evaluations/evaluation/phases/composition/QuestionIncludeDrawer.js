@@ -38,6 +38,12 @@ const QuestionIncludeDrawer = ({
     setQueryString(new URLSearchParams(filter).toString())
   }, [])
 
+  const { getPinnedFilter } = usePinnedFilter()
+  const pinnedFilter = useMemo(
+    () => getPinnedFilter(groupScope),
+    [getPinnedFilter, groupScope],
+  )
+
   const [selection, setSelection] = useState([])
 
   const { data: searchQuestions, error: errorSearch } = useSWR(
@@ -48,12 +54,6 @@ const QuestionIncludeDrawer = ({
   const isQuestionIncluded = (question) => {
     return includedQuestions.find((q) => q.id === question.id)
   }
-
-  const { getPinnedFilter } = usePinnedFilter()
-  const pinnedFilter = useMemo(
-    () => getPinnedFilter(groupScope),
-    [getPinnedFilter, groupScope],
-  )
 
   return (
     <ResizableDrawer open={open} width={85} onClose={() => onClose()}>
