@@ -31,6 +31,7 @@ import Authentication from '../components/security/Authentication'
 import { TagsProvider } from '../context/TagContext'
 import { GroupProvider } from '../context/GroupContext'
 import ConnectionManager from '@/components/layout/ConnectionManager'
+import { PinnedFilterProvider } from '@/context/PinnedFilterContext'
 
 export const themeOptions = {
   palette: {
@@ -108,9 +109,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
           {requireAuth ? (
             <Authentication>
               <TagsProvider>
-                <GroupProvider>
-                  <Component {...pageProps} />
-                </GroupProvider>
+                <PinnedFilterProvider>
+                  <GroupProvider>
+                    <Component {...pageProps} />
+                  </GroupProvider>
+                </PinnedFilterProvider>
               </TagsProvider>
             </Authentication>
           ) : (

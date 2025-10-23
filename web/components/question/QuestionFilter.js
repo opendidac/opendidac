@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Button,
@@ -24,7 +24,11 @@ import {
   Radio,
   RadioGroup,
   FormControlLabel,
+  Tooltip,
 } from '@mui/material'
+import PushPinIcon from '@mui/icons-material/PushPin'
+import UndoIcon from '@mui/icons-material/Undo'
+import ClearIcon from '@mui/icons-material/Clear'
 
 import { toArray as typesToArray } from './types.js'
 import languages from '../../code/languages.json'
@@ -32,6 +36,8 @@ import { useTags } from '../../context/TagContext'
 import TagsSelector from '../input/TagsSelector'
 import CheckboxLabel from '../input/CheckboxLabel.js'
 import { QuestionStatus } from '@prisma/client'
+import { usePinnedFilter } from '@/context/PinnedFilterContext'
+import { useDebouncedCallback } from 'use-debounce'
 
 const environments = languages.environments
 const types = typesToArray()
@@ -49,126 +55,148 @@ const initialFilters = {
   unused: false,
 }
 
-const applyFilter = async (toApply) => {
-  const query = { ...toApply }
-  query.questionTypes = Object.keys(query.questionTypes).filter(
-    (key) => query.questionTypes[key],
+// Internally, we use a more detailed object format for managing filters.
+const detailedToSimpleFilter = (detailedFilter) => {
+  const simpleFilter = { ...detailedFilter }
+  simpleFilter.questionTypes = Object.keys(simpleFilter.questionTypes).filter(
+    (key) => simpleFilter.questionTypes[key],
   )
-  if (!toApply.questionTypes.code) {
-    delete query.codeLanguages
+  if (!detailedFilter.questionTypes.code) {
+    delete simpleFilter.codeLanguages
   }
-  if (query.codeLanguages) {
-    query.codeLanguages = Object.keys(query.codeLanguages).filter(
-      (key) => query.codeLanguages[key],
+  if (simpleFilter.codeLanguages) {
+    simpleFilter.codeLanguages = Object.keys(simpleFilter.codeLanguages).filter(
+      (key) => simpleFilter.codeLanguages[key],
     )
   }
-  query.questionStatus = toApply.questionStatus
-  if (!toApply.unused) {
-    delete query.unused
+  simpleFilter.questionStatus = detailedFilter.questionStatus
+  if (!detailedFilter.unused) {
+    delete simpleFilter.unused
   }
-  return query
+  return simpleFilter
 }
 
-const queryStringToFilter = (queryString) => {
-  const params = new URLSearchParams(queryString)
-
-  // Build the filter object based on the query string
-  const filter = {
-    search: params.get('search') || initialFilters.search,
-    tags: params.get('tags')
-      ? params.get('tags').split(',')
-      : initialFilters.tags,
+const simpleToDetailedFilter = (simpleFilter) => {
+  // Build the detailed filter based on the simple filter
+  const detailedFilter = {
+    search: simpleFilter.search || initialFilters.search,
+    tags: simpleFilter.tags || initialFilters.tags,
     questionStatus:
-      params.get('questionStatus') || initialFilters.questionStatus,
+      simpleFilter.questionStatus || initialFilters.questionStatus,
     questionTypes: { ...initialFilters.questionTypes },
     codeLanguages: { ...initialFilters.codeLanguages },
-    unused: params.get('unused') === 'true' || initialFilters.unused,
+    unused: simpleFilter.unused || initialFilters.unused,
   }
 
-  if (params.get('questionTypes')) {
+  if (simpleFilter.questionTypes) {
     // set all questionTypes to false
-    Object.keys(filter.questionTypes).forEach((type) => {
-      filter.questionTypes[type] = false
+    Object.keys(detailedFilter.questionTypes).forEach((type) => {
+      detailedFilter.questionTypes[type] = false
     })
 
-    // Update questionTypes and codeLanguages based on the query string
-    params
-      .get('questionTypes')
-      .split(',')
-      .forEach((type) => {
-        if (filter.questionTypes.hasOwnProperty(type)) {
-          filter.questionTypes[type] = true
-        }
-      })
+    // Update questionTypes and codeLanguages based on the simple filter
+    simpleFilter.questionTypes.forEach((type) => {
+      if (detailedFilter.questionTypes.hasOwnProperty(type)) {
+        detailedFilter.questionTypes[type] = true
+      }
+    })
   }
 
-  // Update codeLanguages based on the query string
-  if (params.get('codeLanguages')) {
+  // Update codeLanguages based on the simple filter
+  if (simpleFilter.codeLanguages) {
     // set all codeLanguages to false
-    Object.keys(filter.codeLanguages).forEach((language) => {
-      filter.codeLanguages[language] = false
+    Object.keys(detailedFilter.codeLanguages).forEach((language) => {
+      detailedFilter.codeLanguages[language] = false
     })
 
-    // Update codeLanguages based on the query string
-    params
-      .get('codeLanguages')
-      ?.split(',')
-      .forEach((language) => {
-        if (filter.codeLanguages.hasOwnProperty(language)) {
-          filter.codeLanguages[language] = true
-        }
-      })
+    // Update codeLanguages based on the simple filter
+    simpleFilter.codeLanguages.forEach((language) => {
+      if (detailedFilter.codeLanguages.hasOwnProperty(language)) {
+        detailedFilter.codeLanguages[language] = true
+      }
+    })
   }
 
-  return filter
+  return detailedFilter
 }
 
-const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
+const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
   const tagsContext = useTags() // Get the whole context first
 
   const { tags: allTags = [] } = tagsContext // Destructure safely
 
-  const [questionStatus, setQuestionStatus] = useState(QuestionStatus.ACTIVE)
+  // Pinned filter from context
+  const { getPinnedFilter, setPinnedFilter } = usePinnedFilter()
 
-  const [filter, setFilter] = useState(queryStringToFilter(initial))
+  const detailedPinnedFilter = useMemo(
+    () => simpleToDetailedFilter(getPinnedFilter(groupId)),
+    [getPinnedFilter, groupId],
+  )
+
+  const hasPinnedFilter = useMemo(() => {
+    const pinned = getPinnedFilter(groupId)
+    return pinned && Object.keys(pinned).length > 0
+  }, [groupId, getPinnedFilter])
+
+  // Local filter state
+  const [detailedFilter, setDetailedFilter] = useState(
+    simpleToDetailedFilter(initial),
+  )
 
   useEffect(() => {
-    setFilter(queryStringToFilter(initial))
+    setDetailedFilter(simpleToDetailedFilter(initial))
   }, [initial])
 
   const updateFilter = useCallback(
     (key, value) => {
-      const newFilter = { ...filter, [key]: value }
-      setFilter(newFilter)
+      const newFilter = { ...detailedFilter, [key]: value }
+      setDetailedFilter(newFilter)
     },
-    [filter],
+    [detailedFilter],
   )
 
-  const isFilterApplied = useCallback(() => {
+  const filterDiffersFromPinned = useMemo(() => {
     // Compare each filter field with its initial value
     return (
-      filter.search !== initialFilters.search ||
-      JSON.stringify(filter.tags) !== JSON.stringify(initialFilters.tags) ||
-      filter.questionStatus !== initialFilters.questionStatus ||
-      JSON.stringify(filter.questionTypes) !==
-        JSON.stringify(initialFilters.questionTypes) ||
-      JSON.stringify(filter.codeLanguages) !==
-        JSON.stringify(initialFilters.codeLanguages) ||
-      filter.unused !== initialFilters.unused
+      detailedFilter.search !== detailedPinnedFilter.search ||
+      JSON.stringify(detailedFilter.tags) !==
+        JSON.stringify(detailedPinnedFilter.tags) ||
+      detailedFilter.questionStatus !== detailedPinnedFilter.questionStatus ||
+      JSON.stringify(detailedFilter.questionTypes) !==
+        JSON.stringify(detailedPinnedFilter.questionTypes) ||
+      JSON.stringify(detailedFilter.codeLanguages) !==
+        JSON.stringify(detailedPinnedFilter.codeLanguages) ||
+      detailedFilter.unused !== detailedPinnedFilter.unused
     )
-  }, [filter])
+  }, [detailedPinnedFilter, detailedFilter])
 
-  const handleSubmit = useCallback(
-    async (e) => {
-      e.preventDefault() // Prevent default form submission which reloads the page
-      const newFilter = await applyFilter({ ...filter, questionStatus })
-      onApplyFilter && onApplyFilter(new URLSearchParams(newFilter).toString())
-    },
-    [filter, questionStatus, onApplyFilter],
-  )
+  // Applying the filter
+  const debouncedOnApplyFilter = useDebouncedCallback(async (newFilter) => {
+    if (onApplyFilter) {
+      const cleaned = detailedToSimpleFilter(newFilter)
+      onApplyFilter(cleaned)
+    }
+  }, 300)
+
+  useEffect(() => {
+    debouncedOnApplyFilter(detailedFilter)
+  }, [detailedFilter, debouncedOnApplyFilter])
+
+  // Handlers for three buttons: Pin, Clear, Reset
+  const handlePin = useCallback(() => {
+    setPinnedFilter(groupId, detailedToSimpleFilter(detailedFilter))
+  }, [groupId, detailedFilter, setPinnedFilter])
+
+  const handleClear = useCallback(() => {
+    setDetailedFilter(simpleToDetailedFilter(initial))
+  }, [initial])
+
+  const handleReset = useCallback(() => {
+    setPinnedFilter(groupId, undefined)
+  }, [groupId, setPinnedFilter])
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form>
       <Stack spacing={2} padding={2}>
         <TextField
           label={'Search'}
@@ -176,7 +204,7 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
           fullWidth
           color="info"
           size="small"
-          value={filter.search}
+          value={detailedFilter.search}
           onChange={(e) => updateFilter('search', e.target.value)}
         />
 
@@ -185,15 +213,15 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
           size={'small'}
           color={'info'}
           options={allTags.map((tag) => tag.label)}
-          value={filter.tags}
+          value={detailedFilter.tags}
           onChange={(tags) => updateFilter('tags', tags)}
         />
 
         <Stack direction="row" justifyContent="flex-start">
           <RadioGroup
             row
-            value={questionStatus}
-            onChange={(e) => setQuestionStatus(e.target.value)}
+            value={detailedFilter.questionStatus}
+            onChange={(e) => updateFilter('questionStatus', e.target.value)}
             aria-label="question status"
             sx={{ pl: 0.5 }}
           >
@@ -220,35 +248,76 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
 
         <CheckboxLabel
           label="Show only unused questions"
-          checked={filter.unused}
+          checked={detailedFilter.unused}
           onChange={(checked) => updateFilter('unused', checked)}
           color="info"
         />
 
-        <QuestionTypeSelection filter={filter} updateFilter={updateFilter} />
-        <LanguageSelection filter={filter} updateFilter={updateFilter} />
-        <Stack direction={'row'} spacing={2}>
-          <Button variant="contained" color="info" fullWidth type="submit">
-            {' '}
-            Filter{' '}
-          </Button>
-          <Button
-            variant="outlined"
-            disabled={!isFilterApplied()}
-            onClick={async () => {
-              setFilter(initialFilters)
-              setQuestionStatus(initialFilters.questionStatus)
-              onApplyFilter &&
-                onApplyFilter(
-                  new URLSearchParams(
-                    await applyFilter(initialFilters),
-                  ).toString(),
-                )
-            }}
-          >
-            {' '}
-            Clear{' '}
-          </Button>
+        <QuestionTypeSelection
+          filter={detailedFilter}
+          updateFilter={updateFilter}
+        />
+        <LanguageSelection
+          filter={detailedFilter}
+          updateFilter={updateFilter}
+        />
+        <Stack direction={'row'} spacing={2} width="100%">
+          {filterDiffersFromPinned && (
+            <Tooltip
+              title={
+                hasPinnedFilter
+                  ? 'Revert to pinned filters.'
+                  : 'Revert to default filters.'
+              }
+              enterDelay={500}
+            >
+              <Button
+                variant="outlined"
+                color="info"
+                disabled={!filterDiffersFromPinned}
+                onClick={handleClear}
+                startIcon={<UndoIcon />}
+                fullWidth
+              >
+                {' '}
+                Revert{' '}
+              </Button>
+            </Tooltip>
+          )}
+          {filterDiffersFromPinned ? (
+            <Tooltip
+              title={`Persist current filters for subsequent visits.${hasPinnedFilter ? ' Will replace existing pinned filters.' : ''} New questions will inherit tags of pinned filters.`}
+              enterDelay={500}
+            >
+              <Button
+                variant="contained"
+                color="info"
+                startIcon={<PushPinIcon />}
+                onClick={handlePin}
+                fullWidth
+              >
+                {' '}
+                Pin{' '}
+              </Button>
+            </Tooltip>
+          ) : (
+            hasPinnedFilter && (
+              <Tooltip
+                title="Remove pinned filters and revert back to default filters."
+                enterDelay={500}
+              >
+                <Button
+                  variant="outlined"
+                  startIcon={<ClearIcon />}
+                  onClick={handleReset}
+                  fullWidth
+                >
+                  {' '}
+                  Remove pin{' '}
+                </Button>
+              </Tooltip>
+            )
+          )}
         </Stack>
       </Stack>
     </form>
