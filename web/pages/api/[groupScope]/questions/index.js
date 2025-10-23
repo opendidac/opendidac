@@ -257,7 +257,11 @@ export const post = async (req, res, prisma) => {
       }
 
       // 3) Tags initialization (if any)
-      if (options.tags && Array.isArray(options.tags) && options.tags.length > 0) {
+      if (
+        options.tags &&
+        Array.isArray(options.tags) &&
+        options.tags.length > 0
+      ) {
         await Promise.all(
           options.tags.map((tag) =>
             tx.questionToTag.create({

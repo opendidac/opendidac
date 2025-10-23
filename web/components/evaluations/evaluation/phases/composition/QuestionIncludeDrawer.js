@@ -21,8 +21,9 @@ import QuestionFilter from '@/components/question/QuestionFilter'
 import QuestionsGrid from '@/components/questions/list/QuestionsGrid'
 import { Alert, Button, Box, Stack } from '@mui/material'
 
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import useSWR from 'swr'
+import { usePinnedFilter } from '@/context/PinnedFilterContext'
 
 const QuestionIncludeDrawer = ({
   groupScope,
@@ -32,6 +33,10 @@ const QuestionIncludeDrawer = ({
   onInclude,
 }) => {
   const [queryString, setQueryString] = useState('')
+
+  const setAppliedFilter = useCallback((filter) => {
+    setQueryString(new URLSearchParams(filter).toString())
+  }, [])
 
   const [selection, setSelection] = useState([])
 
@@ -44,13 +49,20 @@ const QuestionIncludeDrawer = ({
     return includedQuestions.find((q) => q.id === question.id)
   }
 
+  const { getPinnedFilter } = usePinnedFilter()
+  const pinnedFilter = useMemo(
+    () => getPinnedFilter(groupScope),
+    [getPinnedFilter, groupScope],
+  )
+
   return (
     <ResizableDrawer open={open} width={85} onClose={() => onClose()}>
       <Stack direction={'row'} flex={1}>
-        <Box minWidth={'250px'}>
+        <Box minWidth={'300px'} maxWidth={'300px'}>
           <QuestionFilter
-            filters={queryString}
-            onApplyFilter={setQueryString}
+            filters={pinnedFilter}
+            onApplyFilter={setAppliedFilter}
+            groupId={groupScope}
           />
         </Box>
         <Loading loading={!searchQuestions}>

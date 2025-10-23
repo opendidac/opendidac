@@ -118,11 +118,13 @@ const PageList = () => {
 
   const { show: showSnackbar } = useSnackbar()
 
-  const [queryString, setQueryString] = useState('')
-
   const pinnedFilter = useMemo(
     () => getPinnedFilter(groupScope),
     [getPinnedFilter, groupScope],
+  )
+
+  const [queryString, setQueryString] = useState(
+    pinnedFilter ? new URLSearchParams(pinnedFilter).toString() : '',
   )
 
   const setAppliedFilter = useCallback((filter) => {
@@ -212,17 +214,11 @@ const PageList = () => {
       <LayoutMain header={<MainMenu />}>
         <LayoutSplitScreen
           leftPanel={
-            <>
-              <Typography>
-                pinned query is: {JSON.stringify(getPinnedFilter(groupScope))}
-              </Typography>
-              <QuestionFilter
-                withArchived={true}
-                filters={pinnedFilter}
-                onApplyFilter={setAppliedFilter}
-                groupId={groupScope}
-              />
-            </>
+            <QuestionFilter
+              filters={pinnedFilter}
+              onApplyFilter={setAppliedFilter}
+              groupId={groupScope}
+            />
           }
           rightWidth={80}
           rightPanel={

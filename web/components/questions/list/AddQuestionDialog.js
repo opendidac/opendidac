@@ -17,7 +17,15 @@
 import { QuestionType, CodeQuestionType } from '@prisma/client'
 import React, { useEffect, useMemo, useState } from 'react'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
-import { Stack, Typography, MenuItem, Card, CardContent, Checkbox, FormControlLabel } from '@mui/material'
+import {
+  Stack,
+  Typography,
+  MenuItem,
+  Card,
+  CardContent,
+  Checkbox,
+  FormControlLabel,
+} from '@mui/material'
 import { toArray as typesToArray } from '@/components/question/types'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
 import QuestionTypeIcon from '@/components/question/QuestionTypeIcon'
@@ -38,7 +46,12 @@ const listOfCodeQuestionTypes = Object.keys(CodeQuestionType).map((key) => ({
   value: key,
 }))
 
-const AddQuestionDialog = ({ inheritedTags, open, onClose, handleAddQuestion }) => {
+const AddQuestionDialog = ({
+  inheritedTags,
+  open,
+  onClose,
+  handleAddQuestion,
+}) => {
   const [type, setType] = useState(types[0].value)
   const [language, setLanguage] = useState(defaultLanguage)
   const [codeQuestionType, setCodeQuestionType] = useState(
@@ -65,7 +78,10 @@ const AddQuestionDialog = ({ inheritedTags, open, onClose, handleAddQuestion }) 
       title={`Create new question`}
       content={
         <Stack spacing={2} width={'500px'}>
-          <Card elevation={0} sx={{ border: 1, borderColor: 'info.main', borderRadius: 2 }}>
+          <Card
+            elevation={0}
+            sx={{ border: 1, borderColor: 'info.main', borderRadius: 2 }}
+          >
             <CardContent>
               <Stack spacing={1} alignItems="flex-start">
                 <Typography variant="title" display="flex" alignItems="center">
@@ -76,19 +92,25 @@ const AddQuestionDialog = ({ inheritedTags, open, onClose, handleAddQuestion }) 
                   The following tags are part of the currently pinned search,
                   and may be added to the newly created question.
                 </Typography>
-                <Stack sx={{p: 1, pl: 0}}>
-                  <QuestionTagsViewer size="small" tags={tagsForViewer} disabled={!includeInheritedTags}/>
+                <Stack sx={{ p: 1, pl: 0 }}>
+                  <QuestionTagsViewer
+                    size="small"
+                    tags={tagsForViewer}
+                    disabled={!includeInheritedTags}
+                  />
                 </Stack>
                 <FormControlLabel
                   control={
                     <Checkbox
                       checked={includeInheritedTags}
-                      onChange={e => setIncludeInheritedTags(e.target.checked)}
+                      onChange={(e) =>
+                        setIncludeInheritedTags(e.target.checked)
+                      }
                       color="info"
                       size="small"
                     />
                   }
-                  label="Include inherited tags in new question"
+                  label="Include pinned tags in the new question"
                 />
               </Stack>
             </CardContent>
@@ -139,7 +161,7 @@ const AddQuestionDialog = ({ inheritedTags, open, onClose, handleAddQuestion }) 
           language,
           codeQuestionType,
           codeWritingTemplate,
-          tags: includeInheritedTags ? (inheritedTags ?? []) : []
+          tags: includeInheritedTags ? (inheritedTags ?? []) : [],
         })
       }
     />

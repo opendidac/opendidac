@@ -27,8 +27,8 @@ import {
   Tooltip,
 } from '@mui/material'
 import PushPinIcon from '@mui/icons-material/PushPin'
-import UndoIcon from '@mui/icons-material/Undo';
-import ClearIcon from '@mui/icons-material/Clear';
+import UndoIcon from '@mui/icons-material/Undo'
+import ClearIcon from '@mui/icons-material/Clear'
 
 import { toArray as typesToArray } from './types.js'
 import languages from '../../code/languages.json'
@@ -190,7 +190,6 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
 
   return (
     <form>
-      Group : {groupId}
       <Stack spacing={2} padding={2}>
         <TextField
           label={'Search'}
@@ -250,9 +249,13 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
         <QuestionTypeSelection filter={filter} updateFilter={updateFilter} />
         <LanguageSelection filter={filter} updateFilter={updateFilter} />
         <Stack direction={'row'} spacing={2} width="100%">
-          { filterDiffersFromPinned && (
+          {filterDiffersFromPinned && (
             <Tooltip
-              title={hasPinnedFilter ? 'Revert to pinned filters' : 'Revert to default filters'}
+              title={
+                hasPinnedFilter
+                  ? 'Revert to pinned filters.'
+                  : 'Revert to default filters.'
+              }
               enterDelay={500}
             >
               <Button
@@ -260,7 +263,7 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
                 color="info"
                 disabled={!filterDiffersFromPinned}
                 onClick={handleClear}
-                startIcon={<UndoIcon/>}
+                startIcon={<UndoIcon />}
                 fullWidth
               >
                 {' '}
@@ -268,11 +271,11 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
               </Button>
             </Tooltip>
           )}
-          { filterDiffersFromPinned ? (
+          {filterDiffersFromPinned ? (
             <Tooltip
-              title='Persist current filters for subsequent visits. New questions will inherit tags of pinned filters.'
+              title={`Persist current filters for subsequent visits.${hasPinnedFilter ? ' Will replace existing pinned filters.' : ''} New questions will inherit tags of pinned filters.`}
               enterDelay={500}
-              >
+            >
               <Button
                 variant="contained"
                 color="info"
@@ -284,22 +287,24 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
                 Pin{' '}
               </Button>
             </Tooltip>
-            ) : (hasPinnedFilter) && (
-            <Tooltip
-              title='Revert back to default filters'
-              enterDelay={500}
-            >
-              <Button
-                variant="outlined"
-                startIcon={<ClearIcon />}
-                onClick={handleReset}
-                fullWidth
+          ) : (
+            hasPinnedFilter && (
+              <Tooltip
+                title="Remove pinned filters and revert back to default filters."
+                enterDelay={500}
               >
-                {' '}
-                Remove pin{' '}
-              </Button>
-            </Tooltip>
-            )}
+                <Button
+                  variant="outlined"
+                  startIcon={<ClearIcon />}
+                  onClick={handleReset}
+                  fullWidth
+                >
+                  {' '}
+                  Remove pin{' '}
+                </Button>
+              </Tooltip>
+            )
+          )}
         </Stack>
       </Stack>
     </form>
