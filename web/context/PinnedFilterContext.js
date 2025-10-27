@@ -30,14 +30,12 @@ const PinnedFilterContext = createContext({
 export function PinnedFilterProvider({ children }) {
   // Load initial value from localStorage, or use empty object
   const [pinnedFilters, setPinnedFiltersState] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('pinnedFilters')
-      if (stored) {
-        try {
-          return JSON.parse(stored)
-        } catch {
-          return {}
-        }
+    const stored = localStorage.getItem('pinnedFilters')
+    if (stored) {
+      try {
+        return JSON.parse(stored)
+      } catch {
+        return {}
       }
     }
     return {}
@@ -45,7 +43,7 @@ export function PinnedFilterProvider({ children }) {
 
   // Listen for storage events to sync pinnedFilters across tabs
   React.useEffect(() => {
-    function handleStorage(event) {
+    const handleStorage = (event) => {
       if (event.key === 'pinnedFilters') {
         if (event.newValue) {
           try {
