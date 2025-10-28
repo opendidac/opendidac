@@ -21,50 +21,112 @@
  * - Works with server endpoint /api/[groupScope]/questions/tags
  */
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState, useTransition } from 'react'
 import useSWR from 'swr'
-import { Chip, Stack } from '@mui/material'
+import { Chip, Stack, TextField } from '@mui/material'
 import Loading from '../feedback/Loading'
 import { fetcher } from '../../code/utils'
 
+/**
+ * TagsSelector (optimized)
+ * - Displays top-N tags by usage.
+ * - Allows temporary expansion for searching.
+ * - Resets to compact mode after any selection.
+ */
 const TagsSelector = ({ groupScope, value = [], onChange, limit = 10 }) => {
+  const [expanded, setExpanded] = useState(false)
+  const [search, setSearch] = useState('')
+  const [isPending, startTransition] = useTransition()
+
   const selectedCsv = useMemo(() => value.join(','), [value])
 
-  const { data: popular, error } = useSWR(
+  const { data: popular = [], error } = useSWR(
     groupScope
       ? `/api/${groupScope}/questions/tags?selected=${encodeURIComponent(selectedCsv)}`
       : null,
-    groupScope ? fetcher : null,
-    { fallbackData: [] },
+    fetcher,
+    { keepPreviousData: true },
   )
 
+  /** --- Derived data --- */
+  const { selectedItems, visibleNonSelected, hasMore } = useMemo(() => {
+    const selectedSet = new Set(value)
+    const selectedItems = popular.filter(({ label }) => selectedSet.has(label))
+    const nonSelected = popular.filter(({ label }) => !selectedSet.has(label))
+
+    const filteredNonSelected = expanded
+      ? nonSelected.filter(({ label }) =>
+          label.toLowerCase().includes(search.toLowerCase()),
+        )
+      : nonSelected.slice(0, limit)
+
+    return {
+      selectedItems,
+      visibleNonSelected: filteredNonSelected,
+      hasMore: !expanded && nonSelected.length > limit,
+    }
+  }, [popular, expanded, search, value, limit])
+
+  /** --- Handlers --- */
   const handleToggle = useCallback(
     (label) => {
       const isSelected = value.includes(label)
       const next = isSelected
         ? value.filter((t) => t !== label)
         : [...value, label]
-      onChange && onChange(next)
+
+      // Use transition to keep UI responsive during revalidation
+      startTransition(() => onChange?.(next))
+
+      // Reset discovery mode
+      setExpanded(false)
+      setSearch('')
     },
     [value, onChange],
   )
 
+  const handleExpand = useCallback(() => {
+    setExpanded(true)
+    setSearch('')
+  }, [])
+
+  const handleSearchChange = useCallback((e) => {
+    setSearch(e.target.value)
+  }, [])
+
+  /** --- Render --- */
+  const allTags = useMemo(
+    () => [...selectedItems, ...visibleNonSelected],
+    [selectedItems, visibleNonSelected],
+  )
+
   return (
-    <Loading loading={!popular} errors={[error]}>
+    <Loading loading={!popular.length && !error} errors={[error]}>
       <Stack spacing={1}>
+        {expanded && (
+          <TextField
+            size="small"
+            placeholder="Search tags…"
+            value={search}
+            onChange={handleSearchChange}
+            inputProps={{ 'aria-label': 'Search tags' }}
+            autoFocus
+          />
+        )}
+
         <Stack
           direction="row"
           spacing={1}
           useFlexGap
-          flexWrap={'wrap'}
-          justifyContent={'flex-start'}
+          flexWrap="wrap"
+          justifyContent="flex-start"
         >
-          {popular?.slice(0, limit).map(({ label, count }) => {
+          {allTags.map(({ label }) => {
             const selected = value.includes(label)
             return (
               <Chip
                 key={label}
-                label={`${label} (${count})`}
+                label={label}
                 color={selected ? 'info' : 'default'}
                 variant={selected ? 'filled' : 'outlined'}
                 onClick={() => handleToggle(label)}
@@ -72,7 +134,23 @@ const TagsSelector = ({ groupScope, value = [], onChange, limit = 10 }) => {
               />
             )
           })}
+
+          {hasMore && (
+            <Chip
+              key="load-more"
+              label="+"
+              color="default"
+              variant="outlined"
+              onClick={handleExpand}
+              size="small"
+              aria-label="Load more tags"
+            />
+          )}
         </Stack>
+
+        {isPending && (
+          <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Updating…</div>
+        )}
       </Stack>
     </Loading>
   )
