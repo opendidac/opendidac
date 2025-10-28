@@ -123,7 +123,11 @@ const queryStringToFilter = (queryString) => {
   return filter
 }
 
+import { useRouter } from 'next/router'
+
 const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
+  const router = useRouter()
+  const { groupScope } = router.query
   const tagsContext = useTags() // Get the whole context first
 
   const { tags: allTags = [] } = tagsContext // Destructure safely
@@ -181,10 +185,7 @@ const QuestionFilter = ({ filters: initial, onApplyFilter }) => {
         />
 
         <TagsSelector
-          label={'Tags'}
-          size={'small'}
-          color={'info'}
-          options={allTags.map((tag) => tag.label)}
+          groupScope={groupScope}
           value={filter.tags}
           onChange={(tags) => updateFilter('tags', tags)}
         />

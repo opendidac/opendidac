@@ -17,7 +17,7 @@
 import { useTags } from '../../../context/TagContext'
 import { useCallback } from 'react'
 import useSWR from 'swr'
-import TagsSelector from '../../input/TagsSelector'
+import TagsEditor from '../../input/TagsEditor'
 import Loading from '../../feedback/Loading'
 import { fetcher } from '../../../code/utils'
 
@@ -47,7 +47,7 @@ const QuestionTagsSelector = ({ groupScope, questionId, size, onChange }) => {
 
   return (
     <Loading loading={!tags} errors={[error]}>
-      <TagsSelector
+      <TagsEditor
         size={size}
         options={allTags.map((tag) => tag.label)}
         value={tags.map((tag) => tag.label)}

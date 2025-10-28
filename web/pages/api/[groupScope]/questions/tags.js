@@ -23,23 +23,54 @@ import {
 import { withPrisma } from '@/middleware/withPrisma'
 
 /**
- * List of tahs of a group
+ * List of tags of a group
  *
- * get: list tags of a group used by the question filtering by tags autocomplete
+ * GET behaviors:
+ * - Default: list tags of a group used by the question filtering by tags autocomplete
+ * - Optional query param `selected`: returns tags with usage counts, AND-conditioned by selected tags.
+ *   Frontend is responsible for applying any display limits/slicing.
+ *   Query params:
+ *     - selected: CSV of currently selected tags (AND semantics)
  */
 
 const get = async (req, res, prisma) => {
-  const { groupScope } = req.query
-  // get all tags for this group
-  const tags = await prisma.tag.findMany({
+  const { groupScope, selected } = req.query
+
+  const selectedTags = selected ? selected.split(',').filter(Boolean) : []
+
+  const baseQuestionWhere = {
+    group: { scope: groupScope },
+    AND: selectedTags.length
+      ? [
+          {
+            AND: selectedTags.map((tag) => ({
+              questionToTag: {
+                some: {
+                  label: { equals: tag, mode: 'insensitive' },
+                },
+              },
+            })),
+          },
+        ]
+      : undefined,
+  }
+
+  const grouped = await prisma.questionToTag.groupBy({
+    by: ['label'],
     where: {
-      group: {
-        scope: groupScope,
-      },
+      question: baseQuestionWhere,
+      tag: { group: { scope: groupScope } },
     },
+    _count: { questionId: true },
+    orderBy: { _count: { questionId: 'desc' } },
   })
 
-  res.status(200).json(tags)
+  const result = grouped.map((g) => ({
+    label: g.label,
+    count: g._count.questionId,
+  }))
+
+  res.status(200).json(result)
 }
 
 export default withGroupScope(

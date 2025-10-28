@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import TagsSelector from '@/components/input/TagsSelector'
+import TagsEditor from '@/components/input/TagsEditor'
 import {
   Alert,
   AlertTitle,
@@ -90,7 +90,7 @@ const SettingsAccessMode = ({
             <Typography variant="body2">
               Supported separators are: comma, semicolon, newline.{' '}
             </Typography>
-            <TagsSelector
+            <TagsEditor
               label="Access list"
               placeholder="email1@heig-vd.ch, email2@heig-vd.ch..."
               value={accessList}
