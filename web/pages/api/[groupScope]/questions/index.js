@@ -189,6 +189,12 @@ export const post = async (req, res, prisma) => {
 
   try {
     const createdQuestion = await prisma.$transaction(async (tx) => {
+      // Fetch the group to get its id
+      const group = await tx.group.findUnique({
+        where: { scope: groupScope },
+        select: { id: true },
+      })
+      if (!group) throw new Error('Group not found for scope: ' + groupScope)
       // 1) Create with the minimum we need for follow-up updates
       const created = await tx.question.create({
         data: {
@@ -250,7 +256,26 @@ export const post = async (req, res, prisma) => {
           break
       }
 
-      // 3) Single, final fetch with full INCLUDE
+      // 3) Tags initialization (if any)
+      if (
+        options.tags &&
+        Array.isArray(options.tags) &&
+        options.tags.length > 0
+      ) {
+        await Promise.all(
+          options.tags.map((tag) =>
+            tx.questionToTag.create({
+              data: {
+                questionId: created.id,
+                groupId: group.id,
+                label: tag,
+              },
+            }),
+          ),
+        )
+      }
+
+      // 4) Single, final fetch with full INCLUDE
       return tx.question.findUnique({
         where: { id: created.id },
         select: fullSelect,

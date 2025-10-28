@@ -15,9 +15,17 @@
  */
 
 import { QuestionType, CodeQuestionType } from '@prisma/client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
-import { Stack, Typography, MenuItem } from '@mui/material'
+import {
+  Stack,
+  Typography,
+  MenuItem,
+  Card,
+  CardContent,
+  Checkbox,
+  FormControlLabel,
+} from '@mui/material'
 import { toArray as typesToArray } from '@/components/question/types'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
 import QuestionTypeIcon from '@/components/question/QuestionTypeIcon'
@@ -27,6 +35,8 @@ import TypeSelector from '@/components/question/TypeSelector'
 import languages from '@/code/languages.json'
 import DropDown from '@/components/input/DropDown'
 import CodeQuestionTypeIcon from '@/components/question/type_specific/code/CodeQuestionTypeIcon'
+import QuestionTagsViewer from '@/components/question/tags/QuestionTagsViewer'
+import PushPinIcon from '@mui/icons-material/PushPin'
 
 const types = typesToArray()
 
@@ -36,14 +46,32 @@ const listOfCodeQuestionTypes = Object.keys(CodeQuestionType).map((key) => ({
   value: key,
 }))
 
-const AddQuestionDialog = ({ open, onClose, handleAddQuestion }) => {
+const AddQuestionDialog = ({
+  inheritedTags,
+  open,
+  onClose,
+  handleAddQuestion,
+}) => {
   const [type, setType] = useState(types[0].value)
   const [language, setLanguage] = useState(defaultLanguage)
   const [codeQuestionType, setCodeQuestionType] = useState(
     CodeQuestionType.codeWriting,
   )
-
   const [codeWritingTemplate, setCodeWritingTemplate] = useState('basic')
+
+  const tagsForViewer = useMemo(
+    () =>
+      inheritedTags.map((t) => {
+        return { label: t }
+      }),
+    [inheritedTags],
+  )
+  const [includeInheritedTags, setIncludeInheritedTags] = useState(true)
+  useEffect(() => {
+    if (open) {
+      setIncludeInheritedTags(true)
+    }
+  }, [open])
 
   useEffect(() => {
     setCodeWritingTemplate('basic')
@@ -56,6 +84,49 @@ const AddQuestionDialog = ({ open, onClose, handleAddQuestion }) => {
       title={`Create new question`}
       content={
         <Stack spacing={2} width={'500px'}>
+          {tagsForViewer.length > 0 && (
+            <Card
+              elevation={0}
+              sx={{ border: 1, borderColor: 'info.main', borderRadius: 2 }}
+            >
+              <CardContent>
+                <Stack spacing={1} alignItems="flex-start">
+                  <Typography
+                    variant="title"
+                    display="flex"
+                    alignItems="center"
+                  >
+                    <PushPinIcon color="info" sx={{ mr: 1 }} />
+                    Pinned tags
+                  </Typography>
+                  <Typography variant="body2">
+                    The following tags are part of the currently pinned search,
+                    and may be added to the newly created question.
+                  </Typography>
+                  <Stack sx={{ p: 1, pl: 0 }}>
+                    <QuestionTagsViewer
+                      size="small"
+                      tags={tagsForViewer}
+                      disabled={!includeInheritedTags}
+                    />
+                  </Stack>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={includeInheritedTags}
+                        onChange={(e) =>
+                          setIncludeInheritedTags(e.target.checked)
+                        }
+                        color="info"
+                        size="small"
+                      />
+                    }
+                    label="Include pinned tags in the new question"
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+          )}
           <Typography variant="body1">
             Select the type of question you want to create
           </Typography>
@@ -102,6 +173,7 @@ const AddQuestionDialog = ({ open, onClose, handleAddQuestion }) => {
           language,
           codeQuestionType,
           codeWritingTemplate,
+          tags: includeInheritedTags ? (inheritedTags ?? []) : [],
         })
       }
     />
