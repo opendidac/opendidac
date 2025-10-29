@@ -32,17 +32,19 @@ const QuestionIncludeDrawer = ({
   onClose,
   onInclude,
 }) => {
-  const [queryString, setQueryString] = useState('')
-
-  const setAppliedFilter = useCallback((filter) => {
-    setQueryString(new URLSearchParams(filter).toString())
-  }, [])
-
   const { getPinnedFilter } = usePinnedFilter()
   const pinnedFilter = useMemo(
     () => getPinnedFilter(groupScope),
     [getPinnedFilter, groupScope],
   )
+
+  const [queryString, setQueryString] = useState(
+    pinnedFilter ? new URLSearchParams(pinnedFilter).toString() : '',
+  )
+
+  const setAppliedFilter = useCallback((filter) => {
+    setQueryString(new URLSearchParams(filter).toString())
+  }, [])
 
   const [selection, setSelection] = useState([])
 

@@ -21,53 +21,43 @@ import {
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
+import { questionsFilterWhereClause } from '@/code/questionsFilter'
 
 /**
- * List of tags of a group
+ * List of tags for a group
  *
- * GET behaviors:
- * - Default: list tags of a group used by the question filtering by tags autocomplete
- * - Optional query param `selected`: returns tags with usage counts, AND-conditioned by selected tags.
- *   Frontend is responsible for applying any display limits/slicing.
- *   Query params:
- *     - selected: CSV of currently selected tags (AND semantics)
+ * GET /api/[groupScope]/questions/tags
+ *
+ * Behaviors:
+ * - Returns tags with usage counts, filtered by the same query params as /questions
+ * - Supports AND semantics for tags filtering
+ *
+ * Query params (same as /questions):
+ *   - tags: CSV of tag labels (AND filter)
+ *   - search
+ *   - questionTypes
+ *   - codeLanguages
+ *   - questionStatus
+ *   - unused
+ *
  */
-
 const get = async (req, res, prisma) => {
-  const { groupScope, selected } = req.query
+  const where = questionsFilterWhereClause(req.query)
 
-  const selectedTags = selected ? selected.split(',').filter(Boolean) : []
-
-  const baseQuestionWhere = {
-    group: { scope: groupScope },
-    AND: selectedTags.length
-      ? [
-          {
-            AND: selectedTags.map((tag) => ({
-              questionToTag: {
-                some: {
-                  label: { equals: tag, mode: 'insensitive' },
-                },
-              },
-            })),
-          },
-        ]
-      : undefined,
-  }
-
+  // Group tags from filtered questions
   const grouped = await prisma.questionToTag.groupBy({
     by: ['label'],
     where: {
-      question: baseQuestionWhere,
-      tag: { group: { scope: groupScope } },
+      question: where.where,
     },
-    _count: { questionId: true },
-    orderBy: { _count: { questionId: 'desc' } },
+    _count: { label: true },
+    orderBy: { _count: { label: 'desc' } },
   })
 
+  // Transform result
   const result = grouped.map((g) => ({
     label: g.label,
-    count: g._count.questionId,
+    count: g._count.label,
   }))
 
   res.status(200).json(result)
