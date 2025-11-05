@@ -23,7 +23,7 @@
 
 import { useCallback, useMemo, useState, useTransition } from 'react'
 import useSWR from 'swr'
-import { Chip, Stack, TextField, Typography } from '@mui/material'
+import { Chip, Stack, TextField } from '@mui/material'
 import Loading from '../feedback/Loading'
 import { fetcher } from '../../code/utils'
 
@@ -52,7 +52,11 @@ const TagsSelector = ({
 
   // Fetch popular/refined tags from backend
   const shouldFetch = Boolean(groupScope && Object.keys(questionFilters).length)
-  const { data: tagData, error, isLoading } = useSWR(
+  const {
+    data: tagData,
+    error,
+    isLoading,
+  } = useSWR(
     shouldFetch ? `/api/${groupScope}/questions/tags?${queryParams}` : null,
     fetcher,
     { keepPreviousData: true },
@@ -106,10 +110,10 @@ const TagsSelector = ({
   }, [])
 
   /** --- Render --- */
-  const allTags = useMemo(() => [...selectedItems, ...visibleNonSelected], [
-    selectedItems,
-    visibleNonSelected,
-  ])
+  const allTags = useMemo(
+    () => [...selectedItems, ...visibleNonSelected],
+    [selectedItems, visibleNonSelected],
+  )
 
   return (
     <Loading loading={isLoading} errors={[error]}>
@@ -125,15 +129,7 @@ const TagsSelector = ({
           />
         )}
 
-        {allTags.length === 0 && !isPending ? (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ fontStyle: 'italic', pt: 1 }}
-          >
-            No tags available for the current filters.
-          </Typography>
-        ) : (
+        {allTags.length === 0 && !isPending ? null : (
           <>
             <Stack
               direction="row"
