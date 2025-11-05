@@ -26,7 +26,6 @@ import {
   withGroupScope,
   withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { phaseGT } from '@/code/phase'
 
 const get = async (req, res, prisma) => {
   const { evaluationId } = req.query
@@ -178,8 +177,6 @@ const patch = async (req, res, prisma) => {
     data.status = status
   }
 
-  // Duration settings can change while IN_PROGRESS. Persist updates and
-  // recompute optimistic endAt when applicable.
   const didReceiveDurationFields =
     durationActive !== undefined ||
     durationHours !== undefined ||
@@ -190,14 +187,9 @@ const patch = async (req, res, prisma) => {
     if (durationHours !== undefined) data.durationHours = durationHours
     if (durationMins !== undefined) data.durationMins = durationMins
 
-    // Duration can be changed in any phase up to and including IN_PROGRESS.
-    // If startAt exists, recompute optimistic endAt using final duration settings.
-    const isAfterInProgress = phaseGT(
-      currentEvaluation.phase,
-      EvaluationPhase.IN_PROGRESS,
-    )
-
-    if (!isAfterInProgress) {
+    if (currentEvaluation.phase === EvaluationPhase.IN_PROGRESS) {
+      // Duration settings can change while IN_PROGRESS. Persist updates and
+      // recompute optimistic endAt.
       const finalActive =
         (durationActive ?? currentEvaluation.durationActive) === true
       const finalHours = Number(
@@ -211,8 +203,6 @@ const patch = async (req, res, prisma) => {
         const startDate = new Date(currentEvaluation.startAt)
         data.endAt = new Date(startDate.getTime() + totalMs)
       }
-      // If finalActive is false or duration is zero, we leave endAt untouched
-      // to avoid unexpectedly clearing the countdown.
     }
   }
 
