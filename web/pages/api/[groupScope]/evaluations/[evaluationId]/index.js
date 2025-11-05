@@ -26,7 +26,6 @@ import {
   withGroupScope,
   withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { phaseGT } from '@/code/phase'
 
 const get = async (req, res, prisma) => {
   const { evaluationId } = req.query
