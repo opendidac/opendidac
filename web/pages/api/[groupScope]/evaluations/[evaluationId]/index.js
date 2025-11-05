@@ -177,19 +177,19 @@ const patch = async (req, res, prisma) => {
     data.status = status
   }
 
-  if (currentEvaluation.phase === EvaluationPhase.IN_PROGRESS) {
-    // Duration settings can change while IN_PROGRESS. Persist updates and
-    // recompute optimistic endAt when applicable.
-    const didReceiveDurationFields =
-      durationActive !== undefined ||
-      durationHours !== undefined ||
-      durationMins !== undefined
+  const didReceiveDurationFields =
+    durationActive !== undefined ||
+    durationHours !== undefined ||
+    durationMins !== undefined
 
-    if (didReceiveDurationFields) {
-      if (durationActive !== undefined) data.durationActive = durationActive
-      if (durationHours !== undefined) data.durationHours = durationHours
-      if (durationMins !== undefined) data.durationMins = durationMins
+  if (didReceiveDurationFields) {
+    if (durationActive !== undefined) data.durationActive = durationActive
+    if (durationHours !== undefined) data.durationHours = durationHours
+    if (durationMins !== undefined) data.durationMins = durationMins
 
+    if (currentEvaluation.phase === EvaluationPhase.IN_PROGRESS) {
+      // Duration settings can change while IN_PROGRESS. Persist updates and
+      // recompute optimistic endAt.
       const finalActive =
         (durationActive ?? currentEvaluation.durationActive) === true
       const finalHours = Number(
