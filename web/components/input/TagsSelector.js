@@ -52,7 +52,7 @@ const TagsSelector = ({
 
   // Fetch popular/refined tags from backend
   const shouldFetch = Boolean(groupScope && Object.keys(questionFilters).length)
-  const { data: tagData = [], error } = useSWR(
+  const { data: tagData, error, isLoading } = useSWR(
     shouldFetch ? `/api/${groupScope}/questions/tags?${queryParams}` : null,
     fetcher,
     { keepPreviousData: true },
@@ -60,9 +60,10 @@ const TagsSelector = ({
 
   /** --- Derived data --- */
   const { selectedItems, visibleNonSelected, hasMore } = useMemo(() => {
+    const list = tagData ?? []
     const selectedSet = new Set(tags)
-    const selectedItems = tagData.filter(({ label }) => selectedSet.has(label))
-    const nonSelected = tagData.filter(({ label }) => !selectedSet.has(label))
+    const selectedItems = list.filter(({ label }) => selectedSet.has(label))
+    const nonSelected = list.filter(({ label }) => !selectedSet.has(label))
 
     const filteredNonSelected = expanded
       ? nonSelected.filter(({ label }) =>
@@ -105,13 +106,13 @@ const TagsSelector = ({
   }, [])
 
   /** --- Render --- */
-  const allTags = useMemo(
-    () => [...selectedItems, ...visibleNonSelected],
-    [selectedItems, visibleNonSelected],
-  )
+  const allTags = useMemo(() => [...selectedItems, ...visibleNonSelected], [
+    selectedItems,
+    visibleNonSelected,
+  ])
 
   return (
-    <Loading loading={tagData === undefined} errors={[error]}>
+    <Loading loading={isLoading} errors={[error]}>
       <Stack spacing={1}>
         {expanded && (
           <TextField
