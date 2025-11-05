@@ -32,7 +32,6 @@ import ClearIcon from '@mui/icons-material/Clear'
 
 import { toArray as typesToArray } from './types.js'
 import languages from '../../code/languages.json'
-import { useTags } from '../../context/TagContext'
 import TagsSelector from '../input/TagsSelector'
 import CheckboxLabel from '../input/CheckboxLabel.js'
 import { QuestionStatus } from '@prisma/client'
@@ -120,10 +119,11 @@ const simpleToDetailedFilter = (simpleFilter) => {
   return detailedFilter
 }
 
-const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
-  const tagsContext = useTags() // Get the whole context first
+import { useRouter } from 'next/router'
 
-  const { tags: allTags = [] } = tagsContext // Destructure safely
+const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
+  const router = useRouter()
+  const { groupScope } = router.query
 
   // Pinned filter from context
   const { getPinnedFilter, setPinnedFilter } = usePinnedFilter()
@@ -209,11 +209,8 @@ const QuestionFilter = ({ filters: initial, onApplyFilter, groupId }) => {
         />
 
         <TagsSelector
-          label={'Tags'}
-          size={'small'}
-          color={'info'}
-          options={allTags.map((tag) => tag.label)}
-          value={detailedFilter.tags}
+          groupScope={groupScope}
+          questionFilters={detailedToSimpleFilter(detailedFilter)}
           onChange={(tags) => updateFilter('tags', tags)}
         />
 
@@ -361,8 +358,8 @@ const LanguageSelection = ({ filter, updateFilter }) => {
     [filter.codeLanguages, updateFilter, allLanguagesSelected],
   )
 
-  const is_intermediate = someLanguagesSelected && !allLanguagesSelected
-  const color = is_intermediate ? 'primary' : 'info'
+  const isIntermediate = someLanguagesSelected && !allLanguagesSelected
+  const color = isIntermediate ? 'primary' : 'info'
 
   return (
     filter.questionTypes.code && (
@@ -375,7 +372,7 @@ const LanguageSelection = ({ filter, updateFilter }) => {
           <CheckboxLabel
             label={'All'}
             checked={allLanguagesSelected}
-            intermediate={is_intermediate}
+            intermediate={isIntermediate}
             color={color}
             onChange={(checked) => {
               if (allLanguagesSelected) {
@@ -436,8 +433,8 @@ const QuestionTypeSelection = ({ filter, updateFilter }) => {
     [filter.questionTypes, updateFilter, allTypesSelected],
   )
 
-  const is_intermediate = someTypesSelected && !allTypesSelected
-  const color = is_intermediate ? 'primary' : 'info'
+  const isIntermediate = someTypesSelected && !allTypesSelected
+  const color = isIntermediate ? 'primary' : 'info'
 
   return (
     <Box>
@@ -448,7 +445,7 @@ const QuestionTypeSelection = ({ filter, updateFilter }) => {
         <CheckboxLabel
           label={'All'}
           checked={allTypesSelected}
-          intermediate={is_intermediate}
+          intermediate={isIntermediate}
           color={color}
           onChange={(checked) => {
             if (allTypesSelected) {

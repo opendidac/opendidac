@@ -14,257 +14,164 @@
  * limitations under the License.
  */
 
-import {
-  Alert,
-  Autocomplete,
-  Chip,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { createFilterOptions } from '@mui/material/Autocomplete'
+/**
+ * Filtering-oriented TagsSelector
+ * - Shows top N popular tags as chips in descending order of usage
+ * - AND semantics: each selection refines the next suggestions
+ * - Works with /api/[groupScope]/questions/tags
+ */
 
-const filterOptions = createFilterOptions({
-  matchFrom: 'start',
-  ignoreCase: true,
-  ignoreAccents: true,
-  stringify: (option) => option || '',
-})
+import { useCallback, useMemo, useState, useTransition } from 'react'
+import useSWR from 'swr'
+import { Chip, Stack, TextField } from '@mui/material'
+import Loading from '../feedback/Loading'
+import { fetcher } from '../../code/utils'
 
-const SEPARATORS = [',', ';', '\n']
-
+/**
+ * TagsSelector
+ * - Displays top-N tags by usage.
+ * - Reads tags directly from questionFilters.tags.
+ * - Sends all current filters to /questions/tags for refined suggestions.
+ */
 const TagsSelector = ({
-  options,
-  value: initialValue = [],
-  label = 'Tags',
-  placeholder = '+',
-  color = 'primary',
-  size = 'medium',
-  fullWidth = false,
-  validateTag = () => true,
-  formatTag = (tag) => tag,
+  groupScope,
+  questionFilters,
   onChange,
+  limit = 10,
 }) => {
-  const [inputValue, setInputValue] = useState('')
-  const [value, setValue] = useState(initialValue)
-  const [invalidTags, setInvalidTags] = useState([])
+  const [expanded, setExpanded] = useState(false)
+  const [search, setSearch] = useState('')
+  const [isPending, startTransition] = useTransition()
 
-  useEffect(() => {
-    if (initialValue && initialValue !== value) {
-      setValue(initialValue)
-      setInvalidTags(initialValue.filter((tag) => !validateTag(tag)))
+  const tags = useMemo(() => questionFilters?.tags ?? [], [questionFilters])
+
+  // Build query string for all current filters
+  const queryParams = useMemo(() => {
+    return new URLSearchParams(questionFilters).toString()
+  }, [questionFilters])
+
+  // Fetch popular/refined tags from backend
+  const shouldFetch = Boolean(groupScope && Object.keys(questionFilters).length)
+  const {
+    data: tagData,
+    error,
+    isLoading,
+  } = useSWR(
+    shouldFetch ? `/api/${groupScope}/questions/tags?${queryParams}` : null,
+    fetcher,
+    { keepPreviousData: true },
+  )
+
+  /** --- Derived data --- */
+  const { selectedItems, visibleNonSelected, hasMore } = useMemo(() => {
+    const list = tagData ?? []
+    const selectedSet = new Set(tags)
+    const selectedItems = list.filter(({ label }) => selectedSet.has(label))
+    const nonSelected = list.filter(({ label }) => !selectedSet.has(label))
+
+    const filteredNonSelected = expanded
+      ? nonSelected.filter(({ label }) =>
+          label.toLowerCase().includes(search.toLowerCase()),
+        )
+      : nonSelected.slice(0, limit)
+
+    return {
+      selectedItems,
+      visibleNonSelected: filteredNonSelected,
+      hasMore: !expanded && nonSelected.length > limit,
     }
-  }, [initialValue, validateTag, value])
+  }, [tagData, expanded, search, tags, limit])
 
-  // Update the logic to handle both addition and deletion of tags
-  const onChangeValue = useCallback(
-    (_, newValue) => {
-      // Directly update the value with newValue as it includes both added and removed tags
-      setValue(newValue)
-      // Update invalidTags based on the new set of tags
-      setInvalidTags(newValue.filter((tag) => !validateTag(tag)))
+  /** --- Handlers --- */
+  const handleToggle = useCallback(
+    (label) => {
+      const isSelected = tags.includes(label)
+      const next = isSelected
+        ? tags.filter((t) => t !== label)
+        : [...tags, label]
 
-      // Invoke the external onChange handler with all tags, if provided
-      if (onChange) {
-        onChange(newValue)
-      }
+      // Keep UI responsive
+      startTransition(() => onChange?.(next))
+
+      // Reset discovery state
+      setExpanded(false)
+      setSearch('')
     },
-    [validateTag, onChange],
+    [tags, onChange],
   )
 
-  const updateTags = useCallback(
-    (newTags, index = null, editedTag = null) => {
-      let updatedTags = [...value]
-      // Check if this is an edit action
-      if (index !== null && editedTag !== null) {
-        updatedTags[index] = formatTag(editedTag) // Update the specific tag
-      } else {
-        // Handle adding new tags
-        const formattedTags = newTags.map(formatTag)
-        updatedTags = Array.from(new Set([...updatedTags, ...formattedTags]))
-      }
-      setValue(updatedTags)
-      setInvalidTags(updatedTags.filter((tag) => !validateTag(tag)))
-      if (onChange) {
-        onChange(updatedTags)
-      }
-    },
-    [value, formatTag, validateTag, onChange],
-  )
-
-  const handleInputChange = useCallback(
-    (event, newInputValue, reason) => {
-      if (reason === 'input') {
-        setInputValue(newInputValue)
-      }
-      if (reason === 'reset') {
-        setInputValue('')
-      }
-    },
-    [setInputValue],
-  )
-
-  const handleKeyDown = useCallback(
-    (event) => {
-      if (SEPARATORS.includes(event.key)) {
-        event.preventDefault()
-        if (inputValue) {
-          const newTags = inputValue
-            .split(new RegExp(SEPARATORS.join('|')))
-            .filter((tag) => tag)
-          updateTags(newTags)
-          setInputValue('')
-        }
-      }
-    },
-    [inputValue, updateTags],
-  )
-
-  const handlePaste = useCallback(
-    (event) => {
-      const paste = event.clipboardData.getData('text')
-      const newTags = paste
-        .split(new RegExp(SEPARATORS.join('|')))
-        .filter((tag) => tag)
-      if (newTags.length) {
-        event.preventDefault()
-        updateTags(newTags)
-      }
-    },
-    [updateTags],
-  )
-
-  const renderTag = useCallback(
-    (getTagProps, tag, index, size) => (
-      <Tag
-        key={tag}
-        tag={tag}
-        size={size}
-        index={index}
-        getTagProps={getTagProps}
-        validateTag={validateTag}
-        onChange={(index, editedTag) => updateTags(value, index, editedTag)}
-      />
-    ),
-    [validateTag, value, updateTags],
-  )
-
-  return (
-    <>
-      <Autocomplete
-        multiple
-        id="tags-outlined"
-        options={options}
-        getOptionLabel={(option) => option || ''}
-        value={value}
-        inputValue={inputValue}
-        onInputChange={handleInputChange}
-        onChange={onChangeValue}
-        filterSelectedOptions
-        filterOptions={filterOptions}
-        fullWidth={fullWidth}
-        freeSolo
-        size={size}
-        onKeyDown={handleKeyDown}
-        renderTags={(tagValue, getTagProps) =>
-          tagValue.map((option, index) =>
-            renderTag(getTagProps, option, index, size),
-          )
-        }
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label={label}
-            color={color}
-            size={size}
-            onPaste={handlePaste}
-            placeholder={placeholder}
-          />
-        )}
-      />
-      {invalidTags.length > 0 && (
-        <Alert severity="error" style={{ marginTop: '8px' }}>
-          <Typography
-            variant="caption"
-            style={{ color: 'red', marginTop: '8px' }}
-          >
-            {invalidTags.length} invalid value
-            {invalidTags.length > 1 ? 's' : ''}!
-          </Typography>
-        </Alert>
-      )}
-    </>
-  )
-}
-
-const Tag = ({
-  tag: initial,
-  index,
-  validateTag,
-  getTagProps,
-  size,
-  onChange,
-}) => {
-  const [tag, setTag] = useState(initial)
-  const [mode, setMode] = useState('view')
-  const inputRef = useRef(null) // Ref for the TextField
-
-  useEffect(() => {
-    setTag(initial)
-  }, [initial])
-
-  useEffect(() => {
-    // When mode changes to 'edit', focus the input
-    if (mode === 'edit' && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [mode])
-
-  const handleDoubleClick = useCallback((event) => {
-    event.stopPropagation() // Prevent the event from bubbling up
-    setMode('edit')
+  const handleExpand = useCallback(() => {
+    setExpanded(true)
+    setSearch('')
   }, [])
 
-  const handleKeyPress = useCallback(
-    (event) => {
-      // Stop event propagation on key press to prevent it from affecting Autocomplete
-      event.stopPropagation()
+  const handleSearchChange = useCallback((e) => {
+    setSearch(e.target.value)
+  }, [])
 
-      // Optional: Implement custom behavior for specific keys if needed
-      if (event.key === 'Enter') {
-        setMode('view')
-        onChange(index, tag)
-      }
-    },
-    [tag, onChange, index],
+  /** --- Render --- */
+  const allTags = useMemo(
+    () => [...selectedItems, ...visibleNonSelected],
+    [selectedItems, visibleNonSelected],
   )
 
   return (
-    <Stack direction="row" spacing={1}>
-      {mode === 'view' ? (
-        <Chip
-          variant="outlined"
-          color={validateTag(tag) ? 'default' : 'error'}
-          label={tag}
-          size={size}
-          {...getTagProps({ index })}
-          onDoubleClick={handleDoubleClick}
-        />
-      ) : (
-        <TextField
-          size="small"
-          value={tag}
-          onChange={(e) => setTag(e.target.value)}
-          onBlur={() => {
-            setMode('view')
-            onChange(index, tag)
-          }}
-          onKeyDown={handleKeyPress}
-          inputRef={inputRef}
-        />
-      )}
-    </Stack>
+    <Loading loading={isLoading} errors={[error]}>
+      <Stack spacing={1}>
+        {expanded && (
+          <TextField
+            size="small"
+            placeholder="Search tags…"
+            value={search}
+            onChange={handleSearchChange}
+            inputProps={{ 'aria-label': 'Search tags' }}
+            autoFocus
+          />
+        )}
+
+        {allTags.length === 0 && !isPending ? null : (
+          <>
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              flexWrap="wrap"
+              justifyContent="flex-start"
+            >
+              {allTags.map(({ label }) => {
+                const selected = tags.includes(label)
+                return (
+                  <Chip
+                    key={label}
+                    label={label}
+                    color={selected ? 'info' : 'default'}
+                    variant={selected ? 'filled' : 'outlined'}
+                    onClick={() => handleToggle(label)}
+                    size="small"
+                  />
+                )
+              })}
+
+              {hasMore && (
+                <Chip
+                  key="load-more"
+                  label="+"
+                  color="default"
+                  variant="outlined"
+                  onClick={handleExpand}
+                  size="small"
+                  aria-label="Load more tags"
+                />
+              )}
+            </Stack>
+
+            {isPending && (
+              <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Updating…</div>
+            )}
+          </>
+        )}
+      </Stack>
+    </Loading>
   )
 }
 

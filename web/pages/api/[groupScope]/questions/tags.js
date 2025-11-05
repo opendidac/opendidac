@@ -21,25 +21,46 @@ import {
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
+import { questionsFilterWhereClause } from '@/code/questionsFilter'
 
 /**
- * List of tahs of a group
+ * List of tags for a group
  *
- * get: list tags of a group used by the question filtering by tags autocomplete
+ * GET /api/[groupScope]/questions/tags
+ *
+ * Behaviors:
+ * - Returns tags with usage counts, filtered by the same query params as /questions
+ * - Supports AND semantics for tags filtering
+ *
+ * Query params (same as /questions):
+ *   - tags: CSV of tag labels (AND filter)
+ *   - search
+ *   - questionTypes
+ *   - codeLanguages
+ *   - questionStatus
+ *   - unused
+ *
  */
-
 const get = async (req, res, prisma) => {
-  const { groupScope } = req.query
-  // get all tags for this group
-  const tags = await prisma.tag.findMany({
+  const where = questionsFilterWhereClause(req.query)
+
+  // Group tags from filtered questions
+  const grouped = await prisma.questionToTag.groupBy({
+    by: ['label'],
     where: {
-      group: {
-        scope: groupScope,
-      },
+      question: where.where,
     },
+    _count: { label: true },
+    orderBy: { _count: { label: 'desc' } },
   })
 
-  res.status(200).json(tags)
+  // Transform result
+  const result = grouped.map((g) => ({
+    label: g.label,
+    count: g._count.label,
+  }))
+
+  res.status(200).json(result)
 }
 
 export default withGroupScope(

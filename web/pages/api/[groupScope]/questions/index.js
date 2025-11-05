@@ -14,14 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  Role,
-  QuestionType,
-  QuestionSource,
-  CodeQuestionType,
-  QuestionStatus,
-  QuestionUsageStatus,
-} from '@prisma/client'
+import { Role, QuestionType, CodeQuestionType } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
@@ -33,7 +26,7 @@ import {
   questionSelectClause,
   questionTypeSpecific,
 } from '@/code/questions'
-
+import { questionsFilterWhereClause } from '@/code/questionsFilter'
 import languages from '@/code/languages.json'
 import databaseTemplate from '@/code/database.json'
 
@@ -49,103 +42,7 @@ const environments = languages.environments
  */
 
 const get = async (req, res, prisma) => {
-  let {
-    groupScope,
-    search,
-    tags,
-    questionTypes,
-    codeLanguages,
-    questionStatus,
-    unused,
-  } = req.query
-
-  questionTypes = questionTypes
-    ? questionTypes.split(',').map((type) => QuestionType[type])
-    : []
-  codeLanguages = codeLanguages ? codeLanguages.split(',') : []
-
-  tags = tags ? tags.split(',') : []
-
-  // Set default status to ACTIVE if not provided, otherwise use the provided status
-  const status = questionStatus || QuestionStatus.ACTIVE
-
-  // Convert unused to boolean
-  const isUnused = unused === 'true'
-
-  let where = {
-    where: {
-      group: {
-        scope: groupScope,
-      },
-      source: {
-        in: [QuestionSource.BANK, QuestionSource.COPY],
-      },
-      status: status,
-      AND: [],
-    },
-  }
-
-  // use AND for title and content
-  if (search) {
-    where.where.AND.push({
-      OR: [
-        { title: { contains: search, mode: 'insensitive' } },
-        { content: { contains: search, mode: 'insensitive' } },
-      ],
-    })
-  }
-
-  if (tags.length > 0) {
-    where.where.AND.push({
-      AND: tags.map((tag) => ({
-        questionToTag: {
-          some: {
-            label: {
-              equals: tag,
-              mode: 'insensitive',
-            },
-          },
-        },
-      })),
-    })
-  }
-
-  const questionTypesWithoutCode = questionTypes.filter(
-    (type) => type !== QuestionType.code,
-  )
-
-  if (questionTypes.includes(QuestionType.code) && codeLanguages.length > 0) {
-    where.where.AND.push({
-      OR: [
-        {
-          type: { in: questionTypesWithoutCode },
-        },
-        {
-          AND: [
-            { type: QuestionType.code },
-            { code: { language: { in: codeLanguages } } },
-          ],
-        },
-      ],
-    })
-  } else if (questionTypes.length > 0) {
-    where.where.AND.push({
-      type: { in: questionTypes },
-    })
-  }
-
-  // Filter for unused questions using the usageStatus field
-  if (isUnused) {
-    where.where.AND.push({
-      usageStatus: QuestionUsageStatus.UNUSED,
-    })
-  }
-
-  if (where.where.AND.length === 0) {
-    delete where.where.AND
-  }
-
-  // console.log("where: ", util.inspect(where, {showHidden: false, depth: null}))
+  const where = questionsFilterWhereClause(req.query)
 
   const questions = await prisma.question.findMany({
     ...where,
