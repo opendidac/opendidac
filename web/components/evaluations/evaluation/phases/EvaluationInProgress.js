@@ -35,24 +35,24 @@ const EvaluationInProgress = ({
 
   const { show: showSnackbar } = useSnackbar()
 
-  const handleDurationChange = useCallback(
-    async (newEndAt) => {
-      // get time from newEndAt date
-      const time = new Date(newEndAt).toLocaleTimeString()
-      await fetch(`/api/${groupScope}/evaluations/${evaluationId}`, {
+  const handleAdjustDuration = useCallback(
+    async (action, minutes) => {
+      await fetch(`/api/${groupScope}/evaluations/${evaluationId}/progress`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
-        body: JSON.stringify({ endAt: newEndAt }),
+        body: JSON.stringify({ action, amountMinutes: minutes }),
       })
-        .then(async (reponse) => {
-          if (reponse.ok) {
-            onDurationChanged(await reponse.json(), false)
+        .then(async (response) => {
+          if (response.ok) {
+            const updated = await response.json()
+            const time = new Date(updated.endAt).toLocaleTimeString()
+            onDurationChanged(updated, false)
             showSnackbar(`evaluation will end at ${time}`)
           } else {
-            reponse.json().then((json) => {
+            response.json().then((json) => {
               showSnackbar(json.message, 'error')
             })
           }
@@ -79,7 +79,7 @@ const EvaluationInProgress = ({
         evaluation.durationActive && (
           <DurationManager
             evaluation={evaluation}
-            onChange={handleDurationChange}
+            onAdjust={handleAdjustDuration}
           />
         )}
 
@@ -93,7 +93,7 @@ const EvaluationInProgress = ({
   )
 }
 
-const DurationManager = ({ evaluation, onChange, onEvaluationEnd }) => {
+const DurationManager = ({ evaluation, onAdjust, onEvaluationEnd }) => {
   return (
     <Stack pt={4} pb={4} spacing={2}>
       <Stack
@@ -106,11 +106,7 @@ const DurationManager = ({ evaluation, onChange, onEvaluationEnd }) => {
           label={'Reduce by'}
           color="primary"
           onClick={async (minutes) => {
-            // remove minutes to endAt
-            let newEndAt = new Date(evaluation.endAt)
-            newEndAt.setMinutes(newEndAt.getMinutes() - minutes)
-            newEndAt = new Date(newEndAt).toISOString()
-            onChange(newEndAt)
+            onAdjust('reduce', minutes)
           }}
         />
         <Stack direction={'row'} alignItems={'center'} spacing={2}>
@@ -130,11 +126,7 @@ const DurationManager = ({ evaluation, onChange, onEvaluationEnd }) => {
           label={'Extend for'}
           color="info"
           onClick={async (minutes) => {
-            // add minutes to endAt
-            let newEndAt = new Date(evaluation.endAt)
-            newEndAt.setMinutes(newEndAt.getMinutes() + minutes)
-            newEndAt = new Date(newEndAt).toISOString()
-            onChange(newEndAt)
+            onAdjust('extend', minutes)
           }}
         />
       </Stack>

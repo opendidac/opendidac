@@ -127,7 +127,7 @@ const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
   }
 
   const changePhase = async () => {
-    await fetch(`/api/${groupScope}/evaluations/${evaluation.id}`, {
+    await fetch(`/api/${groupScope}/evaluations/${evaluation.id}/phase`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

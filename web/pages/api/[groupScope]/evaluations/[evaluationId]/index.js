@@ -15,11 +15,10 @@
  */
 
 import {
-  EvaluationPhase,
-  QuestionSource,
-  QuestionUsageStatus,
   Role,
   UserOnEvaluationAccessMode,
+  QuestionSource,
+  EvaluationPhase,
 } from '@prisma/client'
 import { withPrisma } from '@/middleware/withPrisma'
 import {
@@ -27,66 +26,7 @@ import {
   withGroupScope,
   withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { copyQuestion, questionSelectClause } from '@/code/questions'
-
-const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
-  // get all the questions related to this evaluation
-  const evaluationToQuestions = await prisma.evaluationToQuestion.findMany({
-    where: {
-      evaluationId: evaluationId,
-    },
-    include: {
-      question: {
-        select: {
-          ...questionSelectClause({
-            includeProfessorOnlyInfo: true,
-            includeTypeSpecific: true,
-            includeOfficialAnswers: true,
-            includeTags: true,
-          }),
-          groupId: true, // Need this for copyQuestion function
-        },
-      },
-    },
-  })
-
-  await prisma.$transaction(async (prisma) => {
-    // unlink the questions from the evaluation
-    await prisma.evaluationToQuestion.deleteMany({
-      where: {
-        evaluationId: evaluationId,
-      },
-    })
-
-    for (const eToQ of evaluationToQuestions) {
-      // copy the question
-      const newQuestion = await copyQuestion(
-        prisma,
-        eToQ.question,
-        QuestionSource.EVAL,
-      )
-      // create relation between evaluation and question
-      await prisma.evaluationToQuestion.create({
-        data: {
-          points: eToQ.points,
-          gradingPoints: eToQ.gradingPoints,
-          order: eToQ.order,
-          title: eToQ.title, // Copy the custom title
-          evaluation: {
-            connect: {
-              id: evaluationId,
-            },
-          },
-          question: {
-            connect: {
-              id: newQuestion.id,
-            },
-          },
-        },
-      })
-    }
-  })
-}
+import { phaseGT } from '@/code/phase'
 
 const get = async (req, res, prisma) => {
   const { evaluationId } = req.query
@@ -128,6 +68,7 @@ const patch = async (req, res, prisma) => {
     select: {
       phase: true,
       startAt: true,
+      durationActive: true,
       durationHours: true,
       durationMins: true,
       accessMode: true,
@@ -140,13 +81,14 @@ const patch = async (req, res, prisma) => {
   }
 
   const {
-    phase: nextPhase,
     label,
     conditions,
     durationActive,
     durationHours,
     durationMins,
-    endAt,
+    action,
+    amountMinutes,
+
     status,
     consultationEnabled,
     showSolutionsWhenFinished,
@@ -157,60 +99,71 @@ const patch = async (req, res, prisma) => {
 
   let data = {}
 
-  if (nextPhase) {
-    data.phase = nextPhase
-
-    if (nextPhase === EvaluationPhase.REGISTRATION) {
-      // Freeze the composition of the evaluation
-      await copyQuestionsForEvaluation(prisma, evaluationId)
+  // Dedicated handler for duration adjustments from In-Progress page
+  if (action) {
+    const allowedActions = ['reduce', 'extend']
+    if (!allowedActions.includes(action)) {
+      res.status(400).json({ message: 'Invalid action' })
+      return
+    }
+    const minutes = Number(amountMinutes)
+    if (!Number.isFinite(minutes) || minutes <= 0) {
+      res
+        .status(400)
+        .json({ message: 'amountMinutes must be a positive number' })
+      return
     }
 
-    if (nextPhase === EvaluationPhase.IN_PROGRESS) {
-      // Set start time when evaluation begins
-      data.startAt = new Date()
+    const current = await prisma.evaluation.findUnique({
+      where: { id: evaluationId },
+      select: {
+        phase: true,
+        durationActive: true,
+        endAt: true,
+      },
+    })
 
-      // Update usage status for source questions of EVAL questions in this evaluation
-      await prisma.question.updateMany({
-        where: {
-          id: {
-            in: await prisma.evaluationToQuestion
-              .findMany({
-                where: {
-                  evaluationId: evaluationId,
-                  question: {
-                    source: QuestionSource.EVAL,
-                    sourceQuestionId: { not: null },
-                  },
-                },
-                select: {
-                  question: {
-                    select: {
-                      sourceQuestionId: true,
-                    },
-                  },
-                },
-              })
-              .then((results) =>
-                results.map((r) => r.question.sourceQuestionId).filter(Boolean),
-              ),
-          },
-        },
-        data: {
-          usageStatus: QuestionUsageStatus.USED,
-          lastUsed: new Date(),
-        },
+    if (!current) {
+      res.status(404).json({ message: 'evaluation not found' })
+      return
+    }
+
+    if (current.phase !== 'IN_PROGRESS') {
+      res
+        .status(400)
+        .json({ message: 'Duration can only be adjusted in IN_PROGRESS phase' })
+      return
+    }
+    if (!current.durationActive) {
+      res.status(400).json({
+        message: 'Duration adjustments require durationActive to be enabled',
       })
-
-      // endAt is not set here - it will be set when moving to GRADING
+      return
+    }
+    if (!current.endAt) {
+      res.status(400).json({ message: 'endAt is not set yet' })
+      return
     }
 
-    if (
-      currentEvaluation.phase === EvaluationPhase.IN_PROGRESS &&
-      nextPhase === EvaluationPhase.GRADING
-    ) {
-      // Set end time when professor ends the evaluation
-      data.endAt = new Date()
-    }
+    const deltaMs = minutes * 60 * 1000
+    const signedDelta = action === 'reduce' ? -deltaMs : deltaMs
+    const newEndAt = new Date(new Date(current.endAt).getTime() + signedDelta)
+
+    const updated = await prisma.evaluation.update({
+      where: { id: evaluationId },
+      data: { endAt: newEndAt },
+    })
+
+    res.status(200).json(updated)
+    return
+  }
+
+  // Reject phase changes here; use /phase endpoint instead
+  if (req.body?.phase) {
+    res
+      .status(400)
+      .json({ message: 'Phase changes must be done via the /phase endpoint.' })
+    return
   }
 
   if (label !== undefined) {
@@ -225,10 +178,42 @@ const patch = async (req, res, prisma) => {
     data.status = status
   }
 
-  if (durationActive !== undefined) {
-    data.durationActive = durationActive
-    data.durationHours = durationHours
-    data.durationMins = durationMins
+  // Duration settings can change while IN_PROGRESS. Persist updates and
+  // recompute optimistic endAt when applicable.
+  const didReceiveDurationFields =
+    durationActive !== undefined ||
+    durationHours !== undefined ||
+    durationMins !== undefined
+
+  if (didReceiveDurationFields) {
+    if (durationActive !== undefined) data.durationActive = durationActive
+    if (durationHours !== undefined) data.durationHours = durationHours
+    if (durationMins !== undefined) data.durationMins = durationMins
+
+    // Duration can be changed in any phase up to and including IN_PROGRESS.
+    // If startAt exists, recompute optimistic endAt using final duration settings.
+    const isAfterInProgress = phaseGT(
+      currentEvaluation.phase,
+      EvaluationPhase.IN_PROGRESS,
+    )
+
+    if (!isAfterInProgress) {
+      const finalActive =
+        (durationActive ?? currentEvaluation.durationActive) === true
+      const finalHours = Number(
+        durationHours ?? currentEvaluation.durationHours ?? 0,
+      )
+      const finalMins = Number(
+        durationMins ?? currentEvaluation.durationMins ?? 0,
+      )
+      const totalMs = (finalHours * 60 + finalMins) * 60 * 1000
+      if (finalActive && totalMs > 0 && currentEvaluation.startAt) {
+        const startDate = new Date(currentEvaluation.startAt)
+        data.endAt = new Date(startDate.getTime() + totalMs)
+      }
+      // If finalActive is false or duration is zero, we leave endAt untouched
+      // to avoid unexpectedly clearing the countdown.
+    }
   }
 
   // endAt is automatically managed during phase transitions
