@@ -17,8 +17,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import useSWR from 'swr'
 import { useRouter } from 'next/router'
-import { EvaluationPhase, EvaluationStatus, Role } from '@prisma/client'
-import { Typography, Stack, Tab } from '@mui/material'
+import { EvaluationStatus, Role } from '@prisma/client'
+import { Stack, Tab } from '@mui/material'
 import LayoutMain from '@/components/layout/LayoutMain'
 
 import { useSnackbar } from '@/context/SnackbarContext'
@@ -53,26 +53,12 @@ const Evaluations = () => {
 
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [endOfDraftDialogOpen, setEndOfDraftDialogOpen] = useState(false)
 
   useEffect(() => {
     if (data) {
       setEvaluations(data)
     }
   }, [data])
-
-  const endDraftPhase = useCallback(async () => {
-    setEndOfDraftDialogOpen(false)
-    await fetch(`/api/${groupScope}/evaluations/${selected.id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ phase: EvaluationPhase.IN_PROGRESS }),
-    })
-    await router.push(`/${groupScope}/evaluations/${selected.id}/in-progress`)
-  }, [groupScope, router, selected])
 
   const changeEvaluationStatus = useCallback(async () => {
     await fetch(`/api/${groupScope}/evaluations/${selected.id}`, {
@@ -143,12 +129,6 @@ const Evaluations = () => {
                   (evaluation) => evaluation.status === tab,
                 ) || []
               }
-              onStart={(ev, session) => {
-                ev.stopPropagation()
-                ev.preventDefault()
-                setSelected(session)
-                setEndOfDraftDialogOpen(true)
-              }}
               onDelete={(ev, evaluation) => {
                 ev.preventDefault()
                 ev.stopPropagation()
@@ -174,45 +154,6 @@ const Evaluations = () => {
             content="Are you sure you want to delete this evaluation?"
             onClose={() => setDeleteDialogOpen(false)}
             onConfirm={deleteEvaluation}
-          />
-          <DialogFeedback
-            open={endOfDraftDialogOpen}
-            title="End of DRAFT phase"
-            content={
-              <>
-                <Typography variant="body1" gutterBottom>
-                  This evaluation is about to go to the <b>in-progress</b>{' '}
-                  phase.
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  Registered students will be able to start with their
-                  evaluation.
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  Late student registrations will still be possible.
-                </Typography>
-                {selected &&
-                  (selected.durationHours > 0 || selected.durationMins > 0) && (
-                    <Typography variant="body1" gutterBottom>
-                      End time estimated at{' '}
-                      <b>
-                        {new Date(
-                          Date.now() +
-                            selected.durationHours * 3600000 +
-                            selected.durationMins * 60000,
-                        ).toLocaleTimeString()}
-                      </b>
-                      .
-                    </Typography>
-                  )}
-                <Typography variant="button" gutterBottom>
-                  {' '}
-                  Are you sure you want to continue?`
-                </Typography>
-              </>
-            }
-            onClose={() => setEndOfDraftDialogOpen(false)}
-            onConfirm={endDraftPhase}
           />
         </TabContext>
       </Loading>

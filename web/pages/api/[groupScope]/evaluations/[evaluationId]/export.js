@@ -69,6 +69,7 @@ const generatePDF = async (html, header) => {
   page.setDefaultTimeout(1800000)
 
   await page.setContent(html, { waitUntil: 'networkidle0', timeout: 1800000 })
+  await page.emulateMediaType('screen')
 
   // Adjust styles for @page directive
   await page.evaluate(() => {
@@ -93,6 +94,7 @@ const generatePDF = async (html, header) => {
       right: '5mm',
       top: '10mm',
     },
+    printBackground: true,
     displayHeaderFooter: true,
     footerTemplate: `
       <div style="font-size: 10px; width: 100%; color: #aaa;">
@@ -275,10 +277,10 @@ const get = async (req, res, prisma) => {
       evaluation.group.label,
     )
     const fileName = `evaluation_${evaluation.id}.pdf`
+    res.status(200)
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
-    res.setHeader('Content-Length', pdfBuffer.length)
-    res.send(pdfBuffer)
+    res.end(Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer))
   } catch (error) {
     console.error(error)
     res.status(500).send('Error generating PDF')

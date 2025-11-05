@@ -53,8 +53,67 @@ const get = async (req, res, prisma) => {
   res.status(200).json(evaluation.evaluationToQuestions)
 }
 
+const patch = async (req, res, prisma) => {
+  const { evaluationId } = req.query
+  const { action, amountMinutes } = req.body
+
+  const allowedActions = ['reduce', 'extend']
+  if (!allowedActions.includes(action)) {
+    res.status(400).json({ message: 'Invalid action' })
+    return
+  }
+  const minutes = Number(amountMinutes)
+  if (!Number.isFinite(minutes) || minutes <= 0) {
+    res.status(400).json({ message: 'amountMinutes must be a positive number' })
+    return
+  }
+
+  const current = await prisma.evaluation.findUnique({
+    where: { id: evaluationId },
+    select: {
+      phase: true,
+      durationActive: true,
+      endAt: true,
+    },
+  })
+
+  if (!current) {
+    res.status(404).json({ message: 'evaluation not found' })
+    return
+  }
+
+  if (current.phase !== 'IN_PROGRESS') {
+    res
+      .status(400)
+      .json({ message: 'Duration can only be adjusted in IN_PROGRESS phase' })
+    return
+  }
+  if (!current.durationActive) {
+    res.status(400).json({
+      message: 'Duration adjustments require durationActive to be enabled',
+    })
+    return
+  }
+  if (!current.endAt) {
+    res.status(400).json({ message: 'endAt is not set yet' })
+    return
+  }
+
+  const deltaMs = minutes * 60 * 1000
+  const signedDelta = action === 'reduce' ? -deltaMs : deltaMs
+  const newEndAt = new Date(new Date(current.endAt).getTime() + signedDelta)
+
+  const updated = await prisma.evaluation.update({
+    where: { id: evaluationId },
+    data: { endAt: newEndAt },
+  })
+
+  res.status(200).json(updated)
+}
+
 export default withGroupScope(
   withMethodHandler({
     GET: withAuthorization(withPurgeGuard(withPrisma(get)), [Role.PROFESSOR]),
+    PATCH: withAuthorization(withPrisma(patch), [Role.PROFESSOR]),
   }),
 )
