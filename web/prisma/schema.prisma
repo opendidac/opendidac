@@ -600,6 +600,8 @@ model Evaluation {
 
   ipRestrictions String?
 
+  desktopAppRequired Boolean @default(false)
+
   // Creator tracking
   createdByUserEmail String?
   createdBy          User?     @relation("CreatedEvaluations", fields: [createdByUserEmail], references: [email])

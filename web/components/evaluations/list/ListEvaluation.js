@@ -120,7 +120,10 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
                         ev.stopPropagation()
                         ;(async () => {
                           await navigator.clipboard.writeText(
-                            getStudentEntryLink(evaluation.id),
+                            getStudentEntryLink(
+                              evaluation.id,
+                              evaluation.desktopAppRequired || false,
+                            ),
                           )
                         })()
                       }}

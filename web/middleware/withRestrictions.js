@@ -124,6 +124,14 @@ export const withRestrictions = (handler) => {
       })
     }
 
+    if (!user || !user.email) {
+      return res.status(401).json({
+        type: 'error',
+        id: 'unauthorized',
+        message: 'Authentication required. Please log in again.',
+      })
+    }
+
     const userEmail = user.email
     // Check if user is in access list
     const isAllowedAccessList = await isUserInAccessList(

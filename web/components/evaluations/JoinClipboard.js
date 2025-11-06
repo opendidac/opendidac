@@ -17,9 +17,11 @@
 import { Paper, Stack, Typography, ListItemButton } from '@mui/material'
 import { getStudentEntryLink } from '@/code/utils'
 
-const JoinClipboard = ({ evaluationId }) => {
+const JoinClipboard = ({ evaluationId, desktopAppRequired = false }) => {
+  const link = getStudentEntryLink(evaluationId, desktopAppRequired)
+
   const onClick = async () => {
-    await navigator.clipboard.writeText(getStudentEntryLink(evaluationId))
+    await navigator.clipboard.writeText(link)
   }
 
   return (
@@ -28,7 +30,7 @@ const JoinClipboard = ({ evaluationId }) => {
         <Stack direction="row" spacing={2} alignItems="center" flex={1}>
           <Stack flex={1}>
             <Typography variant="caption" size="small">
-              {getStudentEntryLink(evaluationId)}
+              {link}
             </Typography>
           </Stack>
           <Typography variant="button" color="secondary">

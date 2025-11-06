@@ -72,7 +72,12 @@ const EvaluationInProgress = ({
     <Stack flex={1} px={1}>
       <EvaluationTitleBar
         title="Student Progress"
-        action={<JoinClipboard evaluationId={evaluationId} />}
+        action={
+          <JoinClipboard
+            evaluationId={evaluationId}
+            desktopAppRequired={evaluation.desktopAppRequired || false}
+          />
+        }
       />
 
       {evaluation.phase === EvaluationPhase.IN_PROGRESS &&
