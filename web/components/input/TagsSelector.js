@@ -26,6 +26,7 @@ import useSWR from 'swr'
 import { Chip, Stack, TextField } from '@mui/material'
 import Loading from '../feedback/Loading'
 import { fetcher } from '../../code/utils'
+import { useDebounce } from 'use-debounce'
 
 /**
  * TagsSelector
@@ -37,7 +38,7 @@ const TagsSelector = ({
   groupScope,
   questionFilters,
   onChange,
-  limit = 10,
+  limit = 20,
 }) => {
   const [expanded, setExpanded] = useState(false)
   const [search, setSearch] = useState('')
@@ -50,6 +51,9 @@ const TagsSelector = ({
     return new URLSearchParams(questionFilters).toString()
   }, [questionFilters])
 
+  // Avoid refetch on each keystroke in parent
+  const [debouncedQueryParams] = useDebounce(queryParams, 300)
+
   // Fetch popular/refined tags from backend
   const shouldFetch = Boolean(groupScope && Object.keys(questionFilters).length)
   const {
@@ -57,7 +61,9 @@ const TagsSelector = ({
     error,
     isLoading,
   } = useSWR(
-    shouldFetch ? `/api/${groupScope}/questions/tags?${queryParams}` : null,
+    shouldFetch
+      ? `/api/${groupScope}/questions/tags?${debouncedQueryParams}`
+      : null,
     fetcher,
     { keepPreviousData: true },
   )
