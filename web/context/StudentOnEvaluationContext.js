@@ -29,11 +29,13 @@ import {
   StudentAnswerStatus,
   UserOnEvaluationStatus,
 } from '@prisma/client'
-import Overlay from '@/components/ui/Overlay'
-import AlertFeedback from '@/components/feedback/AlertFeedback'
 import { Stack, Typography } from '@mui/material'
 import StudentPhaseRedirect from '@/components/users/evaluations/StudentPhaseRedirect'
 import ConsoleLog from '@/components/layout/utils/ConsoleLog'
+import {
+  EvaluationCompletedDialog,
+  EvaluationRestrictionGuard,
+} from '@/components/users/evaluations/security/EvaluationRestrictionGuard'
 
 const getFilledStatus = (studentAnswerStatus) => {
   switch (studentAnswerStatus) {
@@ -81,10 +83,13 @@ export const StudentOnEvaluationProvider = ({ children }) => {
   const shouldFetchQuestions = useCallback(
     () =>
       evaluation?.evaluation?.phase === EvaluationPhase.IN_PROGRESS &&
-      !hasStudentFinished(),
-    [evaluation?.evaluation?.phase, hasStudentFinished],
+      !hasStudentFinished() &&
+      !errorEvaluationStatus, // Don't fetch if /status has an error
+    [evaluation?.evaluation?.phase, hasStudentFinished, errorEvaluationStatus],
   )
 
+  // Only fetch /take endpoint when we need questions and /status succeeded
+  // The /status endpoint also uses withRestrictions, so it will catch restriction errors
   const {
     data: evaluationToQuestions,
     error: errorUserOnEvaluation,
@@ -99,16 +104,8 @@ export const StudentOnEvaluationProvider = ({ children }) => {
     },
   )
 
-  const isStudentNotInAccessList = useCallback(
-    () => errorUserOnEvaluation?.id === 'access-list',
-    [errorUserOnEvaluation],
-  )
-  const isStudentIpRestricted = useCallback(
-    () => errorUserOnEvaluation?.id === 'ip-restriction',
-    [errorUserOnEvaluation],
-  )
-
-  const errorMessage = errorUserOnEvaluation?.message
+  // Use the data from /take when available
+  const validEvaluationToQuestions = evaluationToQuestions
 
   /*
   evaluationToQuestions: 
@@ -119,7 +116,11 @@ export const StudentOnEvaluationProvider = ({ children }) => {
     - It also contains the status of the student answer (missing, in progress, submitted) used in paging and home page
   */
   const activeQuestion =
-    evaluationToQuestions && evaluationToQuestions[pageIndex - 1]
+    validEvaluationToQuestions && validEvaluationToQuestions[pageIndex - 1]
+
+  // Check both /status and /take errors for restriction errors
+  // /status uses withRestrictions, so it will catch restriction errors
+  // /take also uses withRestrictions and may have additional errors
   const error = errorEvaluationStatus || errorUserOnEvaluation
 
   // States
@@ -128,8 +129,8 @@ export const StudentOnEvaluationProvider = ({ children }) => {
   const [pages, setPages] = useState([])
 
   useEffect(() => {
-    if (evaluationToQuestions) {
-      const pages = evaluationToQuestions.map((jtq) => ({
+    if (validEvaluationToQuestions) {
+      const pages = validEvaluationToQuestions.map((jtq) => ({
         id: jtq.question.id,
         label: (
           <Stack direction="row" spacing={0.5} alignItems="center">
@@ -147,7 +148,7 @@ export const StudentOnEvaluationProvider = ({ children }) => {
       setPages(pages)
       setLoaded(true)
     }
-  }, [evaluationToQuestions])
+  }, [validEvaluationToQuestions])
 
   useEffect(() => {
     setPage(parseInt(pageIndex))
@@ -159,9 +160,11 @@ export const StudentOnEvaluationProvider = ({ children }) => {
 
   const submitAnswerToggle = useCallback(
     (questionId, isSubmitting) => {
+      if (!validEvaluationToQuestions) return
+
       // it is important to find the appropriate index rather than using the pageIndex
       // The student might move to another question before the callback is called in case of high latency
-      const index = evaluationToQuestions.findIndex(
+      const index = validEvaluationToQuestions.findIndex(
         (jtq) => jtq.question.id === questionId,
       )
       if (index !== -1) {
@@ -172,14 +175,16 @@ export const StudentOnEvaluationProvider = ({ children }) => {
         })
       }
 
-      const jstq = evaluationToQuestions.find(
+      const jstq = validEvaluationToQuestions.find(
         (jtq) => jtq.question.id === questionId,
       )
-      jstq.question.studentAnswer[0].status = isSubmitting
-        ? StudentAnswerStatus.SUBMITTED
-        : StudentAnswerStatus.IN_PROGRESS
+      if (jstq) {
+        jstq.question.studentAnswer[0].status = isSubmitting
+          ? StudentAnswerStatus.SUBMITTED
+          : StudentAnswerStatus.IN_PROGRESS
+      }
     },
-    [evaluationToQuestions],
+    [validEvaluationToQuestions],
   )
 
   const submitAnswer = useCallback(
@@ -198,22 +203,28 @@ export const StudentOnEvaluationProvider = ({ children }) => {
 
   const changeAnswer = useCallback(
     (questionId, updatedStudentAnswer) => {
-      const jstq = evaluationToQuestions.find(
+      if (!validEvaluationToQuestions) return
+
+      const jstq = validEvaluationToQuestions.find(
         (jtq) => jtq.question.id === questionId,
       )
-      jstq.question.studentAnswer[0] = updatedStudentAnswer
-      // it is important to find the appropriate index rather than using the pageIndex
-      // The student might move to another question before the callback is called in case of high latency
-      const index = evaluationToQuestions.findIndex(
-        (jtq) => jtq.question.id === questionId,
-      )
-      setPages((prevPages) => {
-        const newPages = [...prevPages]
-        newPages[index].state = getFilledStatus(updatedStudentAnswer.status)
-        return newPages
-      })
+      if (jstq) {
+        jstq.question.studentAnswer[0] = updatedStudentAnswer
+        // it is important to find the appropriate index rather than using the pageIndex
+        // The student might move to another question before the callback is called in case of high latency
+        const index = validEvaluationToQuestions.findIndex(
+          (jtq) => jtq.question.id === questionId,
+        )
+        if (index !== -1) {
+          setPages((prevPages) => {
+            const newPages = [...prevPages]
+            newPages[index].state = getFilledStatus(updatedStudentAnswer.status)
+            return newPages
+          })
+        }
+      }
     },
-    [evaluationToQuestions],
+    [validEvaluationToQuestions],
   )
 
   return (
@@ -221,7 +232,7 @@ export const StudentOnEvaluationProvider = ({ children }) => {
       value={{
         evaluationId,
         evaluation: evaluation?.evaluation,
-        evaluationToQuestions,
+        evaluationToQuestions: validEvaluationToQuestions,
         activeQuestion,
         loaded,
         error,
@@ -233,57 +244,12 @@ export const StudentOnEvaluationProvider = ({ children }) => {
         mutate,
       }}
     >
-      <StudentPhaseRedirect phase={evaluation?.evaluation?.phase}>
-        <ConsoleLog>test</ConsoleLog>
-        {hasStudentFinished() ? (
-          <EvaluationCompletedDialog />
-        ) : isStudentNotInAccessList() ? (
-          <StudentNotAllowedDialog message={errorMessage} />
-        ) : isStudentIpRestricted() ? (
-          <StudentIpRestrictedDialog message={errorMessage} />
-        ) : (
-          children
-        )}
-      </StudentPhaseRedirect>
+      <EvaluationRestrictionGuard error={error} evaluationId={evaluationId}>
+        <StudentPhaseRedirect phase={evaluation?.evaluation?.phase}>
+          <ConsoleLog>test</ConsoleLog>
+          {hasStudentFinished() ? <EvaluationCompletedDialog /> : children}
+        </StudentPhaseRedirect>
+      </EvaluationRestrictionGuard>
     </StudentOnEvaluationContext.Provider>
   )
 }
-
-const EvaluationCompletedDialog = () => (
-  <Overlay>
-    <AlertFeedback severity="info">
-      <Stack spacing={1}>
-        <Typography variant="h5">Evaluation Completed</Typography>
-        <Typography variant="body1">
-          You have finished your evaluation. Submissions are now closed.
-        </Typography>
-        <Typography variant="body2">
-          If you believe this is an error or if you have any questions, please
-          reach out to your professor.
-        </Typography>
-      </Stack>
-    </AlertFeedback>
-  </Overlay>
-)
-
-const StudentNotAllowedDialog = ({ message }) => (
-  <Overlay>
-    <AlertFeedback severity="warning">
-      <Stack spacing={1}>
-        <Typography variant="h5">You are not allowed to participate</Typography>
-        <Typography variant="body2">{message}</Typography>
-      </Stack>
-    </AlertFeedback>
-  </Overlay>
-)
-
-const StudentIpRestrictedDialog = ({ message }) => (
-  <Overlay>
-    <AlertFeedback severity="warning">
-      <Stack spacing={1}>
-        <Typography variant="h5">You are not allowed to participate</Typography>
-        <Typography variant="body2">{message}</Typography>
-      </Stack>
-    </AlertFeedback>
-  </Overlay>
-)

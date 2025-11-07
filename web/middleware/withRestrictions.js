@@ -107,8 +107,21 @@ export const withRestrictions = (handler) => {
     }
 
     // Skip IP check for non-student users
-    if (req.user && req.user.roles && !req.user.roles.includes(Role.STUDENT)) {
+    if (user && user.roles && !user.roles.includes(Role.STUDENT)) {
       return handler(req, res)
+    }
+
+    // Check if desktop app is required
+    if (evaluation.desktopAppRequired) {
+      const userAgent = req.headers['user-agent'] || ''
+      if (!userAgent.includes('OpenDidacDesktop')) {
+        return res.status(401).json({
+          type: 'error',
+          id: 'desktop-app-required',
+          message:
+            'This evaluation requires the OpenDidac desktop application. Please use the desktop app to access this evaluation.',
+        })
+      }
     }
 
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress
@@ -124,28 +137,23 @@ export const withRestrictions = (handler) => {
       })
     }
 
-    if (!user || !user.email) {
-      return res.status(401).json({
-        type: 'error',
-        id: 'unauthorized',
-        message: 'Authentication required. Please log in again.',
-      })
-    }
+    const userEmail = user?.email
 
-    const userEmail = user.email
-    // Check if user is in access list
-    const isAllowedAccessList = await isUserInAccessList(
-      userEmail,
-      evaluation,
-      prisma,
-    )
-    if (!isAllowedAccessList) {
-      return res.status(401).json({
-        type: 'info',
-        id: 'access-list',
-        message:
-          'Your attempt to access this evaluation has been registered. Awaiting approval.',
-      })
+    // Check if user is in access list (only if user is authenticated)
+    if (userEmail) {
+      const isAllowedAccessList = await isUserInAccessList(
+        userEmail,
+        evaluation,
+        prisma,
+      )
+      if (!isAllowedAccessList) {
+        return res.status(401).json({
+          type: 'info',
+          id: 'access-list',
+          message:
+            'Your attempt to access this evaluation has been registered. Awaiting approval.',
+        })
+      }
     }
 
     return handler(req, res)

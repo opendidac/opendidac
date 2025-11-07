@@ -1,0 +1,232 @@
+/**
+ * Copyright 2022-2024 HEIG-VD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Stack,
+  Typography,
+} from '@mui/material'
+import DownloadIcon from '@mui/icons-material/Download'
+import Image from 'next/image'
+import BackButton from '@/components/layout/BackButton'
+
+// https://github.com/opendidac/opendidac_desktop/releases/download/untagged-bf652a78b7675648a9e0/opendidac_desktop-1.0.0.Setup.exe
+
+const GITHUB_RELEASE_URL =
+  'https://github.com/opendidac/opendidac_desktop/releases/download/untagged-bf652a78b7675648a9e0/'
+
+const OS_DOWNLOADS = [
+  {
+    id: 'windows',
+    name: 'Windows',
+    iconPath: '/svg/os/windows.svg',
+    downloadUrl: `${GITHUB_RELEASE_URL}/opendidac_desktop-1.0.0.Setup.exe`,
+    filename: 'opendidac_desktop-1.0.0.Setup.exe',
+    instructions: [
+      'Download the Windows installer (.exe file)',
+      'Run the installer',
+      'The setup will install and run the application automatically.',
+      'You can use the special link, in your browser, provided by your professor to access the evaluation',
+    ],
+  },
+  {
+    id: 'macos',
+    name: 'macOS',
+    iconPath: '/svg/os/macos.svg',
+    downloadUrl: `${GITHUB_RELEASE_URL}/opendidac_desktop-darwin-arm64-1.0.0.zip`,
+    filename: 'opendidac_desktop-darwin-arm64-1.0.0.zip',
+    instructions: [
+      'Download the macOS application (.zip file)',
+      'Extract the ZIP file and run the application',
+      'If you see a security warning, go to System Preferences > Security & Privacy and click "Open Anyway"',
+      'You can use the special link, in your browser, provided by your professor to access the evaluation',
+    ],
+  },
+  {
+    id: 'linux',
+    name: 'Linux',
+    iconPath: '/svg/os/linux.svg',
+    downloadUrl: {
+      deb: `${GITHUB_RELEASE_URL}/opendidac-desktop_1.0.0_amd64.deb`,
+      rpm: `${GITHUB_RELEASE_URL}/opendidac_desktop-1.0.0-1.x86_64.rpm`,
+    },
+    filename: {
+      deb: 'opendidac-desktop_1.0.0_amd64.deb',
+      rpm: 'opendidac_desktop-1.0.0-1.x86_64.rpm',
+    },
+    instructions: [
+      'Download the appropriate package for your distribution (.deb or .rpm)',
+      'Install using your package manager',
+      'Run the application from your applications menu',
+      'You can use the special link, in your browser, provided by your professor to access the evaluation',
+    ],
+  },
+]
+
+const DownloadCard = ({ os }) => {
+  const isLinux = os.id === 'linux'
+
+  return (
+    <Card
+      sx={{
+        maxWidth: 500,
+        margin: 'auto',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: 'white',
+      }}
+    >
+      <CardContent
+        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
+      >
+        <Stack spacing={3} alignItems="center" sx={{ mb: 2 }}>
+          <Box
+            sx={{
+              width: 64,
+              height: 64,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Image
+              src={os.iconPath}
+              alt={`${os.name} icon`}
+              width={64}
+              height={64}
+              style={{ objectFit: 'contain' }}
+            />
+          </Box>
+          <Typography variant="h4" component="h2" textAlign="center">
+            {os.name}
+          </Typography>
+        </Stack>
+
+        <Stack spacing={2} sx={{ flexGrow: 1 }}>
+          {isLinux ? (
+            <Stack spacing={1}>
+              <Button
+                variant="contained"
+                startIcon={<DownloadIcon />}
+                href={os.downloadUrl.deb}
+                target="_blank"
+                rel="noopener noreferrer"
+                fullWidth
+                sx={{ mb: 1 }}
+              >
+                Download .deb (Debian/Ubuntu)
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<DownloadIcon />}
+                href={os.downloadUrl.rpm}
+                target="_blank"
+                rel="noopener noreferrer"
+                fullWidth
+              >
+                Download .rpm (Red Hat/Fedora)
+              </Button>
+            </Stack>
+          ) : (
+            <Button
+              variant="contained"
+              startIcon={<DownloadIcon />}
+              href={os.downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              fullWidth
+              size="large"
+            >
+              Download for {os.name}
+            </Button>
+          )}
+
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Installation Instructions:
+            </Typography>
+            <Stack component="ol" spacing={1} sx={{ pl: 2.5, mt: 1 }}>
+              {os.instructions.map((instruction, index) => (
+                <Typography
+                  key={index}
+                  component="li"
+                  variant="body2"
+                  sx={{ whiteSpace: 'pre-line' }}
+                >
+                  {instruction}
+                </Typography>
+              ))}
+            </Stack>
+          </Box>
+        </Stack>
+      </CardContent>
+    </Card>
+  )
+}
+
+const Downloads = () => {
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Stack spacing={4}>
+        <Box>
+          <BackButton backUrl={'/'} />
+          <Typography
+            variant="h3"
+            component="h1"
+            textAlign="center"
+            gutterBottom
+          >
+            Download OpenDidac Desktop
+          </Typography>
+          <Typography variant="body1" textAlign="center" color="text.secondary">
+            Choose your operating system to download the desktop application
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              md: 'repeat(3, 1fr)',
+            },
+            gap: 4,
+            mt: 4,
+          }}
+        >
+          {OS_DOWNLOADS.map((os) => (
+            <DownloadCard key={os.id} os={os} />
+          ))}
+        </Box>
+
+        <Box sx={{ textAlign: 'center', mt: 4 }}>
+          <Typography variant="body2" color="text.secondary">
+            Reach out to your professor for any questions or support.
+          </Typography>
+        </Box>
+      </Stack>
+    </Container>
+  )
+}
+
+Downloads.requireAuth = false
+
+export default Downloads
