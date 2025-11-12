@@ -86,7 +86,11 @@ const OS_DOWNLOADS = [
       'Download the appropriate package for your distribution (.deb or .rpm)',
       'Install using your package manager',
       'Run the application from your applications menu',
+<<<<<<< HEAD
       'You can use the desktop app link, in your browser, provided by your professor to access the evaluation',
+=======
+      'You can use the special link, in your browser, provided by your professor to access the evaluation',
+>>>>>>> 256f29be4e173e71d75d3e09f5fa58db8aa98736
     ],
   },
 ]

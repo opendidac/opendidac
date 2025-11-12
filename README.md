@@ -1,20 +1,20 @@
-# EVAL
+# OpenDidac
 
-Eval is an educational platform designed to create and distribute training exercises and conduct exams across engineering and other disciplines. With a core focus on ease of use and simplicity, Eval ensures a seamless experience for educators and students.
+OpenDidac is an educational platform designed to create and distribute training exercises and conduct exams across engineering and other disciplines. With a core focus on ease of use and simplicity, OpenDidac ensures a seamless experience for educators and students.
 
-Eval provides comprehensive insights into student engagement and understanding, enabling more effective assessments of student performance and comprehension.
+OpenDidac provides comprehensive insights into student engagement and understanding, enabling more effective assessments of student performance and comprehension.
 
-Originally developed for HEIG-VD, EVAL is now available to the wider educational community, offering robust tools for creating and managing online evaluations.
+Originally developed for HEIG-VD, OpenDidac is now available to the wider educational community, offering robust tools for creating and managing online evaluations.
 
 ## Features
 
 ### Questions
 
-Eval sets itself apart with a specialized set of questions tailored for software engineering, offering unique capabilities.
+OpenDidac sets itself apart with a specialized set of questions tailored for software engineering, offering unique capabilities.
 
 Code Writing question enables students to write and execute code (JavaScript, Python, Java, C, C++, Golang, etc.) in a sand-boxed environment using an online editor powered by Monaco, similar to Visual Studio Code. This feature allows students to make sure their code meets the expected output, providing a more interactive and engaging experience.
 
-Eval is also committed to expanding its offerings by tailoring question types adapted for a wide range of educational fields in science and beyond.
+OpenDidac is also committed to expanding its offerings by tailoring question types adapted for a wide range of educational fields in science and beyond.
 
 - **True/False**: Simple binary questions.
 - **Multiple Choice**: Questions with multiple possible answers.
@@ -26,13 +26,13 @@ Eval is also committed to expanding its offerings by tailoring question types ad
 
 ### Evaluation Management
 
-EVAL simplifies evaluation management through four distinct phases:
+OpenDidac simplifies evaluation management through four distinct phases:
 
 1. **Draft Phase**: Educators can create and customize evaluations by selecting a collection of questions, organizing their order, and assigning point values. Students register using an evaluation link, with optional access restrictions.
 
 2. **In Progress Phase**: Educators monitor registered students and their progress in real-time, allowing or prohibiting access to the evaluation and gaining insights from the analytics page.
 
-3. **Grading Phase**: EVAL streamlines grading with automation, allowing educators to review, adjust grades, provide comments, and sign off. Annotations can be added for specific question types, and overall results are visible as grading progresses.
+3. **Grading Phase**: OpenDidac streamlines grading with automation, allowing educators to review, adjust grades, provide comments, and sign off. Annotations can be added for specific question types, and overall results are visible as grading progresses.
 
 4. **Finished Phase**: Students receive their grades and feedback, while educators have access to comprehensive results, with options to update grades and download reports in CSV and PDF formats.
 
@@ -43,7 +43,7 @@ EVAL simplifies evaluation management through four distinct phases:
 
 ## Development Setup
 
-The current implementation of EVAL uses Keycloak as the Identity Provider (IDP).
+The current implementation of OpenDidac uses Keycloak as the Identity Provider (IDP).
 
 However, the platform is built on Next.js and uses NextAuth, making it easy to configure with other IDPs or with your existing IDP.
 
@@ -72,22 +72,22 @@ docker compose up
 
 Once the container is running, you can access the Keycloak admin console at `http://localhost:8080/`, with the default credentials `admin` for both username and password. You are then able to setup your Keycloak environment.
 
-- Create a new realm called `eval` (`Manage realms > Create realms`, no need to provide a resource file).
-- Create a new client called `eval-client` in the realm `eval`:
-  - Make sure the `eval` realm is selected on the `Manage realms` page, then go to `Clients > Create Client`.
-  - Client Type `OpenID Connect`, ClientID and Name `eval-client`, then hit `Next`;
+- Create a new realm called `OpenDidac` (`Manage realms > Create realms`, no need to provide a resource file).
+- Create a new client called `OpenDidac-client` in the realm `OpenDidac`:
+  - Make sure the `OpenDidac` realm is selected on the `Manage realms` page, then go to `Clients > Create Client`.
+  - Client Type `OpenID Connect`, ClientID and Name `OpenDidac-client`, then hit `Next`;
   - Client Authentication: `On`, the rest left as default, then hit `Next`.
-  - Root Url: `https://localhost:3000` (the url of your eval app on localhost), the rest left as default, then hit `Next`.
-- Create your first eval user by going to `Users > Create User`, while the `eval` realm is selected.
+  - Root Url: `https://localhost:3000` (the url of your OpenDidac app on localhost), the rest left as default, then hit `Next`.
+- Create your first OpenDidac user by going to `Users > Create User`, while the `OpenDidac` realm is selected.
   - Fill in the following fields, then submit.
-    - Username: `eval-user`
-    - Email: `eval-user@eval.com` (email is mandatory as NextAuth uses email as uniq identifier)
+    - Username: `OpenDidac-user`
+    - Email: `OpenDidac-user@OpenDidac.com` (email is mandatory as NextAuth uses email as uniq identifier)
     - Arbitrary First and Last name
   - Go to the `Credentials` tab and hit `Set Password`
-    - Set the password: `eval-user`
+    - Set the password: `OpenDidac-user`
     - Temporary: `off`
 
-Finally, you will need to configure Next.js to be able to connect to Keycloak using the client you just created. To this end, in the Keycloak admin console, go to `Clients > eval-client > Credentials` and copy the `Client Secret`.
+Finally, you will need to configure Next.js to be able to connect to Keycloak using the client you just created. To this end, in the Keycloak admin console, go to `Clients > OpenDidac-client > Credentials` and copy the `Client Secret`.
 
 You may now create a `.env.local` file in the `web` directory with the following content:
 
@@ -97,7 +97,7 @@ NEXTAUTH_KEYCLOAK_CLIENT_SECRET=<client secret>
 NEXTAUTH_KEYCLOAK_ISSUER_BASE_URL=http://localhost:8080/realms/eval
 ```
 
-### Eval Environment Variables
+### OpenDidac Environment Variables
 
 You will now need to configure the Next.js app to be able to use the SWITCH edu-id as the IDP. This will require a SWITCH client secret that is available in the [IICT Vault](https://vault.iict-heig-vd.in/). You may need to ask someone from the IICT team to provide you with access to the vault.
 
@@ -158,7 +158,7 @@ You might need to clear your browser cache for the page to load correctly.
 
 ### Setup your super admin user
 
-#### Signing into eval
+#### Signing into OpenDidac
 
 Open your browser and go to `https://localhost:3000`. Hit Sign in, then Sign in with SWITCH edu-id. Use your SWITCH edu-id credentials to sign in.
 
@@ -188,4 +188,4 @@ Now, you can refresh the page.
 
 You will see the message has change to `You are not a member of any groups.` with the possibility to create a new group.
 
-You are now done! Feel free to create your very first group through the interface. Welcome to eval!
+You are now done! Feel free to create your very first group through the interface. Welcome to OpenDidac!
