@@ -116,8 +116,8 @@ export const EvaluationRestrictionGuard = ({
                     Step 1: Install the Desktop Application
                   </Typography>
                   <Typography variant="body2" color="text.secondary" paragraph>
-                    <b>If you don't have OpenDidac Desktop yet</b>, download and
-                    install it on your computer first.
+                    <b>If you don&apos;t have OpenDidac Desktop yet</b>,
+                    download and install it on your computer first.
                   </Typography>
                   <Button
                     component={Link}

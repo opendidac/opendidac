@@ -243,8 +243,9 @@ const Downloads = () => {
               Important: Authentication Requirements
             </Typography>
             <Typography variant="body2" component="div">
-              Since you will be using the desktop application, your browser&apos;s
-              saved passwords will not be available. Make sure you have:
+              Since you will be using the desktop application, your
+              browser&apos;s saved passwords will not be available. Make sure
+              you have:
             </Typography>
             <Stack component="ul" spacing={0.5} sx={{ pl: 2.5, mt: 1, mb: 0 }}>
               <Typography component="li" variant="body2">
