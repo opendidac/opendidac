@@ -15,6 +15,7 @@
  */
 
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -27,21 +28,20 @@ import DownloadIcon from '@mui/icons-material/Download'
 import Image from 'next/image'
 import BackButton from '@/components/layout/BackButton'
 
-// https://github.com/opendidac/opendidac_desktop/releases/download/untagged-bf652a78b7675648a9e0/opendidac_desktop-1.0.0.Setup.exe
-
 const GITHUB_RELEASE_URL =
-  'https://github.com/opendidac/opendidac_desktop/releases/download/untagged-bf652a78b7675648a9e0/'
+  'https://github.com/opendidac/opendidac_desktop_release/releases/download/v1.0.0'
 
 const OS_DOWNLOADS = [
   {
     id: 'windows',
     name: 'Windows',
     iconPath: '/svg/os/windows.svg',
-    downloadUrl: `${GITHUB_RELEASE_URL}/opendidac_desktop-1.0.0.Setup.exe`,
-    filename: 'opendidac_desktop-1.0.0.Setup.exe',
+    downloadUrl: `${GITHUB_RELEASE_URL}/OpenDidac.Desktop-1.0.0.Setup.exe`,
+    filename: 'OpenDidac.Desktop-1.0.0.Setup.exe',
     instructions: [
       'Download the Windows installer (.exe file)',
       'Run the installer',
+      'If Windows Defender displays "Windows protected your PC", click on "More info" and then "Run anyway"',
       'The setup will install and run the application automatically.',
       'You can use the special link, in your browser, provided by your professor to access the evaluation',
     ],
@@ -50,12 +50,23 @@ const OS_DOWNLOADS = [
     id: 'macos',
     name: 'macOS',
     iconPath: '/svg/os/macos.svg',
-    downloadUrl: `${GITHUB_RELEASE_URL}/opendidac_desktop-darwin-arm64-1.0.0.zip`,
-    filename: 'opendidac_desktop-darwin-arm64-1.0.0.zip',
+    downloadUrl: {
+      arm64: `${GITHUB_RELEASE_URL}/OpenDidac.Desktop-darwin-arm64-1.0.0.zip`,
+      x64: `${GITHUB_RELEASE_URL}/OpenDidac.Desktop-darwin-x64-1.0.0.zip`,
+    },
+    filename: {
+      arm64: 'OpenDidac.Desktop-darwin-arm64-1.0.0.zip',
+      x64: 'OpenDidac.Desktop-darwin-x64-1.0.0.zip',
+    },
     instructions: [
-      'Download the macOS application (.zip file)',
-      'Extract the ZIP file and run the application',
+      'Download the macOS application (.zip file) for your Mac type:',
+      '• Apple Silicon (M1, M2, M3, etc.) - ARM64 version',
+      '• Intel Mac - x64 version',
+      'Extract the ZIP file to your Applications folder',
+      'Open Terminal and run the following command (replace with your actual path):',
+      '  xattr -d com.apple.quarantine "/Applications/OpenDidac Desktop.app"',
       'If you see a security warning, go to System Preferences > Security & Privacy and click "Open Anyway"',
+      'Launch OpenDidac Desktop from your Applications folder',
       'You can use the special link, in your browser, provided by your professor to access the evaluation',
     ],
   },
@@ -82,6 +93,7 @@ const OS_DOWNLOADS = [
 
 const DownloadCard = ({ os }) => {
   const isLinux = os.id === 'linux'
+  const isMacOS = os.id === 'macos'
 
   return (
     <Card
@@ -145,6 +157,30 @@ const DownloadCard = ({ os }) => {
                 Download .rpm (Red Hat/Fedora)
               </Button>
             </Stack>
+          ) : isMacOS ? (
+            <Stack spacing={1}>
+              <Button
+                variant="contained"
+                startIcon={<DownloadIcon />}
+                href={os.downloadUrl.arm64}
+                target="_blank"
+                rel="noopener noreferrer"
+                fullWidth
+                sx={{ mb: 1 }}
+              >
+                Download for Apple Silicon (ARM64)
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<DownloadIcon />}
+                href={os.downloadUrl.x64}
+                target="_blank"
+                rel="noopener noreferrer"
+                fullWidth
+              >
+                Download for Intel (x64)
+              </Button>
+            </Stack>
           ) : (
             <Button
               variant="contained"
@@ -199,6 +235,26 @@ const Downloads = () => {
           <Typography variant="body1" textAlign="center" color="text.secondary">
             Choose your operating system to download the desktop application
           </Typography>
+        </Box>
+
+        <Box>
+          <Alert severity="warning">
+            <Typography variant="h6" gutterBottom fontWeight="bold">
+              Important: Authentication Requirements
+            </Typography>
+            <Typography variant="body2" component="div">
+              Since you will be using the desktop application, your browser&apos;s
+              saved passwords will not be available. Make sure you have:
+            </Typography>
+            <Stack component="ul" spacing={0.5} sx={{ pl: 2.5, mt: 1, mb: 0 }}>
+              <Typography component="li" variant="body2">
+                Your Switch edu ID username and password
+              </Typography>
+              <Typography component="li" variant="body2">
+                Access to your authenticator app
+              </Typography>
+            </Stack>
+          </Alert>
         </Box>
 
         <Box
