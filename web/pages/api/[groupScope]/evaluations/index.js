@@ -59,6 +59,7 @@ const get = async (req, res, prisma) => {
       conditions: true,
       consultationEnabled: true,
       showSolutionsWhenFinished: true,
+      desktopAppRequired: true,
       _count: {
         select: {
           evaluationToQuestions: true,
@@ -117,6 +118,7 @@ const post = async (req, res, prisma) => {
       durationMins: templateEvaluation.durationMins,
       consultationEnabled: templateEvaluation.consultationEnabled,
       showSolutionsWhenFinished: templateEvaluation.showSolutionsWhenFinished,
+      desktopAppRequired: templateEvaluation.desktopAppRequired,
     }
   } else {
     data = {
@@ -127,6 +129,7 @@ const post = async (req, res, prisma) => {
       accessMode: settings.restrictAccess
         ? UserOnEvaluationAccessMode.LINK_AND_ACCESS_LIST
         : UserOnEvaluationAccessMode.LINK_ONLY,
+      desktopAppRequired: settings.desktopAppRequired,
     }
   }
 

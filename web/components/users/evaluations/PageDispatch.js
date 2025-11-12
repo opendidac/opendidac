@@ -23,6 +23,7 @@ import { useEffect } from 'react'
 import { studentPhaseRedirect } from '../../../code/phase'
 import { fetcher } from '../../../code/utils'
 import Loading from '../../feedback/Loading'
+import { EvaluationRestrictionGuard } from '@/components/users/evaluations/security/EvaluationRestrictionGuard'
 
 const PageDispatch = () => {
   const router = useRouter()
@@ -56,7 +57,12 @@ const PageDispatch = () => {
   return (
     <Authentication>
       <Authorization allowRoles={[Role.STUDENT, Role.PROFESSOR]}>
-        <Loading errors={[dispatchError].filter(Boolean)} loading={!data} />
+        <EvaluationRestrictionGuard
+          error={dispatchError}
+          evaluationId={evaluationId}
+        >
+          <Loading errors={[dispatchError].filter(Boolean)} loading={!data} />
+        </EvaluationRestrictionGuard>
       </Authorization>
     </Authentication>
   )

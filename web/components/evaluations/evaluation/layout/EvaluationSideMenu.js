@@ -144,7 +144,10 @@ const EvaluationSideMenu = ({
                   ev.stopPropagation()
                   ;(async () => {
                     await navigator.clipboard.writeText(
-                      getStudentEntryLink(evaluation.id),
+                      getStudentEntryLink(
+                        evaluation.id,
+                        evaluation.desktopAppRequired || false,
+                      ),
                     )
                   })()
                 }}
@@ -328,6 +331,15 @@ const SettingsSummary = ({ evaluation }) => {
       {evaluation.ipRestrictions && (
         <Typography variant="caption" pl={2}>
           - IP restrictions are active.
+        </Typography>
+      )}
+      {evaluation.desktopAppRequired ? (
+        <Typography variant="caption">
+          - Desktop application is required.
+        </Typography>
+      ) : (
+        <Typography variant="caption">
+          - Desktop application is not required.
         </Typography>
       )}
       {evaluation.conditions ? (

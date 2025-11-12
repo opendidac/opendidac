@@ -29,6 +29,7 @@ import {
 import useSWR from 'swr'
 import { fetcher } from '@/code/utils'
 import { phaseGT } from '@/code/phase'
+import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 
 const Presets = [
   {
@@ -39,6 +40,7 @@ const Presets = [
       showSolutionWhenFinished: false, // No solutions after exam
       restrictAccess: true, // Restricted access only
       consultationEnabled: false, // Consultation is disabled for exams
+      desktopAppRequired: false, // Desktop app requirement disabled by default
     },
   },
   {
@@ -49,6 +51,7 @@ const Presets = [
       showSolutionWhenFinished: true, // Solutions available after TE is finished
       restrictAccess: true, // Restricted access for TE
       consultationEnabled: true, // Consultation is allowed for TE
+      desktopAppRequired: false, // Desktop app requirement disabled by default
     },
   },
   {
@@ -59,6 +62,7 @@ const Presets = [
       showSolutionWhenFinished: true, // Solutions available after training
       restrictAccess: false, // No restrictions for training
       consultationEnabled: true, // Consultation is allowed
+      desktopAppRequired: false, // Desktop app requirement disabled by default
     },
   },
   {
@@ -127,6 +131,7 @@ const AddEvaluationDialog = ({ existingEvaluations, open, onClose }) => {
             selected.accessMode ===
             UserOnEvaluationAccessMode.LINK_AND_ACCESS_LIST,
           grade: selected.grade || true,
+          desktopAppRequired: selected.desktopAppRequired || false,
         }
       }
     }
@@ -278,6 +283,57 @@ const PresetSummary = ({ preset }) => {
   return (
     preset && (
       <>
+        <Stack direction="row" alignItems="center">
+          <Typography variant="body2">
+            {preset.desktopAppRequired ? (
+              <>
+                Desktop application <b>is</b> required to access this evaluation
+              </>
+            ) : (
+              <>
+                Desktop application <b>is not</b> required to access this
+                evaluation
+              </>
+            )}
+          </Typography>
+          <UserHelpPopper
+            ariaLabel="Desktop application requirement information"
+            title="Desktop application requirement"
+          >
+            <Stack spacing={1} sx={{ maxWidth: 520 }}>
+              <Typography variant="body2">
+                You can make the <b>desktop application mandatory</b> for
+                students. This ensures the evaluation runs in a{' '}
+                <b>controlled environment</b>.
+              </Typography>
+              <Typography variant="body2">
+                By enforcing the desktop app, the{' '}
+                <b>browser context can be better controlled</b> to reduce misuse
+                of <b>external tools (e.g., AI assistants)</b>, limit{' '}
+                <b>screen overlays</b>, and apply <b>stricter policies</b>.
+              </Typography>
+              <Typography variant="body2">
+                This setting complements other{' '}
+                <b>security options (access restrictions, IP rules)</b> and is
+                recommended for{' '}
+                <b>high‑stakes evaluations such as TE or Final Exams</b>.
+              </Typography>
+              <Typography variant="body2">
+                The desktop application is available for <b>Windows</b>,{' '}
+                <b>macOS</b>, and <b>Linux</b> and can be downloaded{' '}
+                <a
+                  href="/downloads"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: 'underline' }}
+                >
+                  here
+                </a>
+                .
+              </Typography>
+            </Stack>
+          </UserHelpPopper>
+        </Stack>
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2">
             {handleAccessAfterGrading(preset)}
@@ -286,11 +342,11 @@ const PresetSummary = ({ preset }) => {
         <Stack direction="row" justifyContent="space-between">
           {preset.restrictAccess ? (
             <Typography variant="body2">
-              Access is restricted to the evaluation
+              Access <b>is</b> restricted to the evaluation
             </Typography>
           ) : (
             <Typography variant="body2">
-              Access is not restricted to the evaluation
+              Access <b>is not</b> restricted to the evaluation
             </Typography>
           )}
         </Stack>

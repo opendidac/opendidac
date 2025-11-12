@@ -94,6 +94,7 @@ const patch = async (req, res, prisma) => {
     accessMode,
     accessList,
     ipRestrictions,
+    desktopAppRequired,
   } = req.body
 
   let data = {}
@@ -237,6 +238,10 @@ const patch = async (req, res, prisma) => {
 
   if (accessList !== undefined) {
     data.accessList = accessList
+  }
+
+  if (desktopAppRequired !== undefined) {
+    data.desktopAppRequired = Boolean(desktopAppRequired)
   }
 
   let evaluationAfterUpdate = undefined

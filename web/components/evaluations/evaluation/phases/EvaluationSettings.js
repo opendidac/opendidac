@@ -119,8 +119,18 @@ const EvaluationSettings = ({ groupScope, evaluation, onSettingsChanged }) => {
 
       <SecuritySettings
         evaluation={evaluation}
-        onChange={({ accessMode, accessList, ipRestrictions }) => {
-          debounceSave({ accessMode, accessList, ipRestrictions })
+        onChange={({
+          accessMode,
+          accessList,
+          ipRestrictions,
+          desktopAppRequired,
+        }) => {
+          debounceSave({
+            accessMode,
+            accessList,
+            ipRestrictions,
+            desktopAppRequired,
+          })
         }}
       />
 

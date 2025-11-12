@@ -35,7 +35,12 @@ const EvaluationAttendance = ({
     <Stack flex={1} px={1}>
       <EvaluationTitleBar
         title="Attendance"
-        action={<JoinClipboard evaluationId={evaluationId} />}
+        action={
+          <JoinClipboard
+            evaluationId={evaluationId}
+            desktopAppRequired={evaluation.desktopAppRequired || false}
+          />
+        }
       />
       <Stack spacing={1} direction={'row'} width={'100%'}>
         <Stack flex={1}>
