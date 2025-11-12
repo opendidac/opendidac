@@ -138,12 +138,12 @@ export const EvaluationRestrictionGuard = ({
                     fontWeight="bold"
                     gutterBottom
                   >
-                    Step 2: Open using the special link
+                    Step 2: Open using the desktop app link
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     After installing,{' '}
-                    <b>use the special link into your browser</b> to open the
-                    evaluation in OpenDidac Desktop
+                    <b>use the desktop app link into your browser</b> to open
+                    the evaluation in OpenDidac Desktop
                   </Typography>
                   {currentEvaluationId && (
                     <JoinClipboard
