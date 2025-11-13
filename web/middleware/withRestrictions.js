@@ -127,11 +127,12 @@ export const withRestrictions = (handler) => {
       const rawUserAgent = req.headers['user-agent'] || ''
       const userAgent = rawUserAgent.toLowerCase()
       const desktopAppHeader = req.headers['x-opendidac-desktop'] || ''
-      
+
       // Check both user agent (case-insensitive) and custom header for robustness
       const hasUserAgent = userAgent.includes('opendidacdesktop')
-      const hasCustomHeader = desktopAppHeader === 'true' || desktopAppHeader === '1'
-      
+      const hasCustomHeader =
+        desktopAppHeader === 'true' || desktopAppHeader === '1'
+
       if (!hasUserAgent && !hasCustomHeader) {
         // Log access denial for production monitoring (this should not happen in normal flow)
         console.warn('[Desktop App Restriction] Access denied:', {
@@ -142,7 +143,7 @@ export const withRestrictions = (handler) => {
           userEmail: user?.email || 'anonymous',
           userRoles: user?.roles || [],
         })
-        
+
         return res.status(401).json({
           type: 'error',
           id: 'desktop-app-required',
