@@ -89,10 +89,25 @@ export const withRestrictions = (handler) => {
     const { evaluationId } = req.query
     const user = await getUser(req, res)
 
+    // If evaluationId is missing, pass through (let the handler deal with it)
+    if (!evaluationId) {
+      return handler(req, res)
+    }
+
     const evaluation = await prisma.evaluation.findUnique({
       where: { id: evaluationId },
+      // Explicitly select desktopAppRequired to ensure it's always included
+      select: {
+        id: true,
+        phase: true,
+        desktopAppRequired: true,
+        ipRestrictions: true,
+        accessMode: true,
+        accessList: true,
+      },
     })
 
+    // If evaluation not found, pass through (let the handler return 404)
     if (!evaluation) {
       return handler(req, res)
     }
@@ -106,15 +121,29 @@ export const withRestrictions = (handler) => {
       })
     }
 
-    // Skip IP check for non-student users
-    if (user && user.roles && !user.roles.includes(Role.STUDENT)) {
-      return handler(req, res)
-    }
-
-    // Check if desktop app is required
+    // Check if desktop app is required - this applies to ALL users (students and non-students)
+    // This check must happen before the non-student early return
     if (evaluation.desktopAppRequired) {
-      const userAgent = req.headers['user-agent'] || ''
-      if (!userAgent.includes('OpenDidacDesktop')) {
+      const rawUserAgent = req.headers['user-agent'] || ''
+      const userAgent = rawUserAgent.toLowerCase()
+      const desktopAppHeader = req.headers['x-opendidac-desktop'] || ''
+
+      // Check both user agent (case-insensitive) and custom header for robustness
+      const hasUserAgent = userAgent.includes('opendidacdesktop')
+      const hasCustomHeader =
+        desktopAppHeader === 'true' || desktopAppHeader === '1'
+
+      if (!hasUserAgent && !hasCustomHeader) {
+        // Log access denial for production monitoring (this should not happen in normal flow)
+        console.warn('[Desktop App Restriction] Access denied:', {
+          evaluationId: evaluation.id,
+          userAgent: rawUserAgent || 'missing',
+          customHeader: desktopAppHeader || 'missing',
+          ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+          userEmail: user?.email || 'anonymous',
+          userRoles: user?.roles || [],
+        })
+
         return res.status(401).json({
           type: 'error',
           id: 'desktop-app-required',
@@ -122,6 +151,11 @@ export const withRestrictions = (handler) => {
             'This evaluation requires the OpenDidac desktop application. Please use the desktop app to access this evaluation.',
         })
       }
+    }
+
+    // Skip IP check for non-student users (but desktop app check already happened above)
+    if (user && user.roles && !user.roles.includes(Role.STUDENT)) {
+      return handler(req, res)
     }
 
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress
