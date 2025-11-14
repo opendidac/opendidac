@@ -73,26 +73,10 @@ const extractClientIp = (req) => {
   return normalizeIp(socketIp) ?? socketIp
 }
 
-// Strip IPv6 zone, decode IPv4-mapped IPv6, and validate IP
+// Validate IPv4 addresses only (infrastructure is IPv4-only)
 const normalizeIp = (input) => {
   if (!input) return null
-
-  const noZone = input.includes('%') ? input.split('%')[0] : input
-
-  if (noZone.startsWith('::ffff:')) {
-    const v4 = noZone.slice(7)
-    return net.isIP(v4) === 4 ? v4 : null
-  }
-
-  return net.isIP(noZone) ? noZone : null
-}
-
-const isDesktopAppRequest = (req) => {
-  // Check for the custom header that the desktop app sends
-  const desktopHeader = req.headers['x-opendidac-desktop']
-  const opendidaInUserAgent =
-    req.headers['user-agent']?.includes('OpenDidacDesktop')
-  return desktopHeader === 'true' && opendidaInUserAgent
+  return net.isIP(input) === 4 ? input : null
 }
 
 export const isUserInAccessList = async (userEmail, evaluation, prisma) => {
@@ -155,7 +139,10 @@ export const withRestrictions = (handler, args = {}) => {
 
     // ---- RULE 2: Desktop App Restriction ---- (independent)
     if (evaluation.desktopAppRequired) {
-      const isDesktop = isDesktopAppRequest(req)
+      const desktopHeader = req.headers['x-opendidac-desktop']
+      const opendidacInUserAgent =
+        req.headers['user-agent']?.includes('OpenDidacDesktop')
+      const isDesktop = desktopHeader === 'true' && opendidacInUserAgent
 
       if (!isDesktop) {
         console.warn('[Desktop App Restriction] Access denied:', {
