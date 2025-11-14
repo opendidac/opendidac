@@ -87,10 +87,10 @@ const post = async (ctx, args) => {
 export default withGroupScope(
   withMethodHandler({
     GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+    PUT: withAuthorization(withPrisma(withQuestionUpdate(put)), {
       roles: [Role.PROFESSOR],
     }),
-    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), {
+    POST: withAuthorization(withPrisma(withQuestionUpdate(post)), {
       roles: [Role.PROFESSOR],
     }),
   }),

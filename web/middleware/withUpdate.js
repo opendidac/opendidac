@@ -27,49 +27,47 @@ function withEntityUpdate(updateFunction) {
         })
       }
 
-      // Wrap the original response.send function
-      const originalSend = res.send.bind(res)
+      // Execute the original handler
+      try {
+        await handler(ctx, args)
 
-      // Replace the res.send function with custom logic
-      res.send = async function (...sendArgs) {
-        // Call the original send function to send the response
-        originalSend(...sendArgs)
-
-        // Check if the response was successful
+        // Check if the response was successful and update the entity
+        // res.statusCode is set when res.status() is called
+        // Only update if status code is explicitly 200
         if (res.statusCode === 200) {
-          // Execute the update function passed as an argument
           try {
-            await updateFunction(req, prisma)
+            await updateFunction(ctx)
           } catch (error) {
             console.error('Error during update:', error)
-            // Handle error as needed
+            // Handle error as needed - don't fail the request
           }
         }
+      } catch (error) {
+        // If handler throws, re-throw it (don't update entity on error)
+        // This allows Next.js to handle the error properly
+        throw error
       }
-
-      // Execute the original handler
-      return handler(ctx, args)
     }
   }
 }
 
-export const withQuestionUpdate = withEntityUpdate(async (req, prisma) => {
+export const withQuestionUpdate = withEntityUpdate(async (ctx) => {
+  const { req, prisma } = ctx
   const { questionId } = req.query
+
+  if (!questionId) {
+    console.error('withQuestionUpdate: questionId not found in req.query')
+    return
+  }
+
   await prisma.question.update({
     where: { id: questionId },
     data: { updatedAt: new Date() },
   })
 })
 
-export const withCollectionUpdate = withEntityUpdate(async (req, prisma) => {
-  const { collectionId } = req.query
-  await prisma.collection.update({
-    where: { id: collectionId },
-    data: { updatedAt: new Date() },
-  })
-})
-
-export const withEvaluationUpdate = withEntityUpdate(async (req, prisma) => {
+export const withEvaluationUpdate = withEntityUpdate(async (ctx) => {
+  const { req, prisma } = ctx
   const { evaluationId } = req.query
   await prisma.evaluation.update({
     where: { id: evaluationId },
