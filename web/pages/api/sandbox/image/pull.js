@@ -22,7 +22,8 @@ import {
 } from '@/middleware/withAuthorization'
 import { pullImage } from '@/sandbox/utils'
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res } = ctx
   const { image } = req.body
   // Pull the latest docker image
   try {
@@ -41,5 +42,7 @@ const post = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  POST: withAuthorization(post, [Role.PROFESSOR, Role.STUDENT]),
+  POST: withAuthorization(post, {
+    roles: [Role.PROFESSOR, Role.STUDENT],
+  }),
 })

@@ -27,7 +27,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
 /*
  endpoint to run the sandbox for a database question with queries recovered from the database
  */
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
 
   const database = await prisma.database.findUnique({
@@ -187,7 +188,7 @@ const post = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-    Role.PROFESSOR,
-  ]),
+  POST: withAuthorization(withPrisma(withQuestionUpdate(post)), {
+    roles: [Role.PROFESSOR],
+  }),
 })

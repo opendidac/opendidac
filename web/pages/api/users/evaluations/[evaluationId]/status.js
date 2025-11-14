@@ -117,9 +117,17 @@ const get = async (ctx, args) => {
     )
   }
 
-  // Return the evaluation and user status
+  // Return only the evaluation fields needed by students (exclude sensitive admin fields)
   res.status(200).json({
-    evaluation,
+    evaluation: {
+      id: evaluation.id,
+      phase: evaluation.phase,
+      label: evaluation.label,
+      durationActive: evaluation.durationActive,
+      startAt: evaluation.startAt,
+      endAt: evaluation.endAt,
+      conditions: evaluation.conditions,
+    },
     userOnEvaluation: {
       status: userOnEvaluation.status,
     },
@@ -127,50 +135,50 @@ const get = async (ctx, args) => {
 }
 
 // student ends his evaluation
-const put = withEvaluationPhase(
-  withStudentStatus(async (ctx, args) => {
-    const { req, res, prisma } = ctx
-    const user = await getUser(req, res)
-    const studentEmail = user.email
-    const { evaluationId } = req.query
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
+  const user = await getUser(req, res)
+  const studentEmail = user.email
+  const { evaluationId } = req.query
 
-    await prisma.userOnEvaluation.update({
-      where: {
-        userEmail_evaluationId: {
-          userEmail: studentEmail,
-          evaluationId: evaluationId,
-        },
+  await prisma.userOnEvaluation.update({
+    where: {
+      userEmail_evaluationId: {
+        userEmail: studentEmail,
+        evaluationId: evaluationId,
       },
-      data: {
-        status: UserOnEvaluationStatus.FINISHED,
-        finishedAt: new Date(),
-      },
-    })
+    },
+    data: {
+      status: UserOnEvaluationStatus.FINISHED,
+      finishedAt: new Date(),
+    },
+  })
 
-    res.status(200).json({ message: 'Evaluation completed' })
-  }),
-)
+  res.status(200).json({ message: 'Evaluation completed' })
+}
 
 export default withMethodHandler({
-  GET: withEvaluation(
-    withRestrictions(
-      withAuthorization(withPrisma(get), {
-        roles: [Role.PROFESSOR, Role.STUDENT],
-      }),
+  GET: withPrisma(
+    withEvaluation(
+      withRestrictions(
+        withAuthorization(get, {
+          roles: [Role.PROFESSOR, Role.STUDENT],
+        }),
+      ),
     ),
   ),
-  PUT: withEvaluation(
-    withRestrictions(
-      withAuthorization(
-        withPrisma(
+  PUT: withPrisma(
+    withEvaluation(
+      withRestrictions(
+        withAuthorization(
           withEvaluationPhase(
             withStudentStatus(put, {
               statuses: [UserOnEvaluationStatus.IN_PROGRESS],
             }),
             { phases: [EvaluationPhase.IN_PROGRESS] },
           ),
+          { roles: [Role.PROFESSOR, Role.STUDENT] },
         ),
-        { roles: [Role.PROFESSOR, Role.STUDENT] },
       ),
     ),
   ),

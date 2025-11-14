@@ -24,7 +24,9 @@ import { Role } from '@prisma/client'
 // Test group scopes to exclude (exact matches)
 const EXCLUDED_GROUP_SCOPES = ['demo', 'test']
 
-const handler = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
+
   try {
     const { academicYear } = req.query
 
@@ -355,5 +357,5 @@ const handler = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(handler), [Role.SUPER_ADMIN]),
+  GET: withAuthorization(withPrisma(get), { roles: [Role.SUPER_ADMIN] }),
 })

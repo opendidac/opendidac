@@ -54,8 +54,13 @@ const get = async (ctx, args) => {
     }
     // the users is not in the evaluation, but its not to late to join
     // the response is still ok
+    // Return only the evaluation fields needed by students (exclude sensitive admin fields)
     res.status(200).json({
-      evaluation: evaluation,
+      evaluation: {
+        id: evaluation.id,
+        phase: evaluation.phase,
+        label: evaluation.label,
+      },
       userOnEvaluation: null,
     })
     return
@@ -72,11 +77,13 @@ const get = async (ctx, args) => {
 }
 
 export default withMethodHandler({
-  GET: withEvaluation(
-    withRestrictions(
-      withAuthorization(withPrisma(get), {
-        roles: [Role.PROFESSOR, Role.STUDENT],
-      }),
+  GET: withPrisma(
+    withEvaluation(
+      withRestrictions(
+        withAuthorization(get, {
+          roles: [Role.PROFESSOR, Role.STUDENT],
+        }),
+      ),
     ),
   ),
 })

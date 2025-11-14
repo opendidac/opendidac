@@ -22,6 +22,7 @@ import {
 import { withPrisma } from '@/middleware/withPrisma'
 import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 import { withPurgeGuard } from '@/middleware/withPurged'
+import { withEvaluation } from '@/middleware/withEvaluation'
 /*
   Professor can consult the users's answers to the questions of a evaluation
 */
@@ -59,7 +60,11 @@ const get = async (ctx, args) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPurgeGuard(withPrisma(get)), {
-    roles: [Role.PROFESSOR],
-  }),
+  GET: withPrisma(
+    withEvaluation(
+      withAuthorization(withPurgeGuard(get), {
+        roles: [Role.PROFESSOR],
+      }),
+    ),
+  ),
 })

@@ -92,7 +92,8 @@ const upload = multer({
   limits: { fileSize: MAX_FILE_SIZE },
 }).single('file')
 
-const post = async (req, res) => {
+const post = async (ctx, args) => {
+  const { req, res } = ctx
   upload(req, res, async function (err) {
     if (err) {
       return res.status(500).json({ message: 'Upload error: ' + err.message })
@@ -150,9 +151,7 @@ async function processImage(filePath) {
 }
 
 export default withMethodHandler({
-  POST: withGroupScope(
-    withAuthorization(post, { roles: [Role.PROFESSOR] }),
-  ),
+  POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
 })
 
 export const config = {

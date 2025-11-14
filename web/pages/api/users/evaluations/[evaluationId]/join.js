@@ -329,11 +329,13 @@ const createExactMatchTypeSpecificData = async (
 }
 
 export default withMethodHandler({
-  POST: withEvaluation(
-    withRestrictions(
-      withAuthorization(withPrisma(post), {
-        roles: [Role.PROFESSOR, Role.STUDENT],
-      }),
+  POST: withPrisma(
+    withEvaluation(
+      withRestrictions(
+        withAuthorization(post, {
+          roles: [Role.PROFESSOR, Role.STUDENT],
+        }),
+      ),
     ),
   ),
 })

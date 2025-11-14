@@ -81,7 +81,8 @@ const getStudentAnswer = async (prisma, studentEmail, questionId) => {
   })
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const user = await getUser(req, res)
 
   const { evaluationId, questionId } = req.query
@@ -307,5 +308,7 @@ const post = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR, Role.STUDENT]),
+  POST: withAuthorization(withPrisma(post), {
+    roles: [Role.PROFESSOR, Role.STUDENT],
+  }),
 })

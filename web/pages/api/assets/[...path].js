@@ -29,7 +29,8 @@ import { Role } from '@prisma/client'
 const stat = promisify(fs.stat)
 const readFile = promisify(fs.readFile)
 
-const get = async (req, res) => {
+const get = async (ctx, args) => {
+  const { req, res } = ctx
   const { path: filePathArray } = req.query
   const filePath = filePathArray.join('/')
 
@@ -57,5 +58,7 @@ const get = async (req, res) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(get, [Role.PROFESSOR, Role.SUPER_ADMIN, Role.STUDENT]),
+  GET: withAuthorization(get, {
+    roles: [Role.PROFESSOR, Role.SUPER_ADMIN, Role.STUDENT],
+  }),
 })

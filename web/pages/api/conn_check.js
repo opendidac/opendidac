@@ -16,7 +16,8 @@
 
 import { withMethodHandler } from '@/middleware/withAuthorization'
 
-const get = async (_, res) => {
+const get = async (ctx, args) => {
+  const { req, res } = ctx
   res.status(200).json({ message: 'Connection check successful' })
 }
 

@@ -25,7 +25,8 @@ import { withPrisma } from '@/middleware/withPrisma'
  *
  * Update the roles of the user
  */
-const patch = async (req, res, prisma) => {
+const patch = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { roles } = req.body
 
   const { userId } = req.query
@@ -63,5 +64,5 @@ const patch = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  PATCH: withAuthorization(withPrisma(patch), [Role.SUPER_ADMIN]),
+  PATCH: withAuthorization(withPrisma(patch), { roles: [Role.SUPER_ADMIN] }),
 })

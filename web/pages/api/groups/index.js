@@ -29,7 +29,8 @@ import { withPrisma } from '@/middleware/withPrisma'
  *
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // get all groups with their created by information and members
   const user = await getUser(req, res)
 
@@ -110,7 +111,8 @@ const get = async (req, res, prisma) => {
   }
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // create a new group
   const { label, scope, select } = req.body
 
@@ -166,6 +168,6 @@ const post = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.SUPER_ADMIN]),
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
+  GET: withAuthorization(withPrisma(get), { roles: [Role.SUPER_ADMIN] }),
+  POST: withAuthorization(withPrisma(post), { roles: [Role.PROFESSOR] }),
 })

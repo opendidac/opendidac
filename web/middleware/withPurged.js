@@ -16,7 +16,7 @@
 
 export const withPurgeGuard = (handler, args = {}) => {
   return async (ctx) => {
-    const { req, res, prisma } = ctx
+    const { req, res, prisma, evaluation } = ctx
     const { evaluationId } = req.query || {}
 
     if (!prisma) {
@@ -31,12 +31,24 @@ export const withPurgeGuard = (handler, args = {}) => {
       return handler(ctx, args)
     }
 
-    const evaluation = await prisma.evaluation.findUnique({
-      where: { id: evaluationId },
-      select: { id: true, purgedAt: true },
-    })
+    // Use evaluation from context if available (from withEvaluation middleware),
+    // otherwise fetch it (for backward compatibility)
+    const evalToCheck =
+      evaluation ||
+      (await prisma.evaluation.findUnique({
+        where: { id: evaluationId },
+        select: { id: true, purgedAt: true },
+      }))
 
-    if (evaluation?.purgedAt) {
+    if (!evalToCheck) {
+      return res.status(404).json({
+        type: 'error',
+        id: 'not-found',
+        message: 'Evaluation not found',
+      })
+    }
+
+    if (evalToCheck.purgedAt) {
       return res.status(410).json({
         type: 'info',
         id: 'evaluation-purged',

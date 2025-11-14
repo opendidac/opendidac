@@ -32,156 +32,159 @@ import { getUser } from '@/code/auth/auth'
  endpoint to run the code sandbox for a users (generally students) answers
  Only uses files stored in the database
  */
-const post = withEvaluationPhase(
-  [EvaluationPhase.IN_PROGRESS],
-  withStudentStatus(
-    [UserOnEvaluationStatus.IN_PROGRESS],
-    async (req, res, prisma) => {
-      const user = await getUser(req, res)
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
+  const user = await getUser(req, res)
 
-      const { evaluationId, questionId } = req.query
+  const { evaluationId, questionId } = req.query
 
-      const code = await prisma.code.findUnique({
-        where: {
-          questionId: questionId,
+  const code = await prisma.code.findUnique({
+    where: {
+      questionId: questionId,
+    },
+    include: {
+      sandbox: true,
+      codeWriting: {
+        select: {
+          testCases: {
+            orderBy: {
+              index: 'asc',
+            },
+          },
+          solutionFiles: true, // to get the hidden files
         },
-        include: {
-          sandbox: true,
-          codeWriting: {
-            select: {
-              testCases: {
-                orderBy: {
-                  index: 'asc',
-                },
-              },
-              solutionFiles: true, // to get the hidden files
+      },
+    },
+  })
+
+  if (!code) {
+    res.status(404).json({ message: 'Code not found' })
+    return
+  }
+
+  const studentAnswerCodeFiles = await prisma.studentAnswerCode.findUnique({
+    where: {
+      userEmail_questionId: {
+        userEmail: user.email,
+        questionId: questionId,
+      },
+    },
+    include: {
+      codeWriting: {
+        select: {
+          files: {
+            include: {
+              file: true,
             },
           },
         },
-      })
+      },
+    },
+  })
 
-      if (!code) {
-        res.status(404).json({ message: 'Code not found' })
-        return
-      }
+  if (!studentAnswerCodeFiles || !studentAnswerCodeFiles.codeWriting.files) {
+    res.status(404).json({ message: 'Student files not found' })
+    return
+  }
 
-      const studentAnswerCodeFiles = await prisma.studentAnswerCode.findUnique({
+  const image = code.sandbox.image
+  const beforeAll = code.sandbox.beforeAll
+  const files = studentAnswerCodeFiles.codeWriting.files.map(
+    (codeToFile) => codeToFile.file,
+  )
+  const tests = code.codeWriting.testCases
+
+  await runSandbox({
+    image: image,
+    beforeAll: beforeAll,
+    files: files,
+    tests: tests,
+  })
+    .then(async (response) => {
+      // update the status of the users answers
+      const studentAnswer = await prisma.StudentAnswerCodeWriting.update({
         where: {
           userEmail_questionId: {
             userEmail: user.email,
             questionId: questionId,
           },
         },
-        include: {
-          codeWriting: {
-            select: {
-              files: {
-                include: {
-                  file: true,
-                },
-              },
-            },
+        data: {
+          allTestCasesPassed: response.tests.every((test) => test.passed),
+          testCaseResults: {
+            deleteMany: {},
+            create: response.tests.map((test, index) => ({
+              index: index + 1,
+              exec: test.exec,
+              input: test.input,
+              output: test.output,
+              expectedOutput: test.expectedOutput,
+              passed: test.passed,
+            })),
           },
         },
       })
 
-      if (
-        !studentAnswerCodeFiles ||
-        !studentAnswerCodeFiles.codeWriting.files
-      ) {
-        res.status(404).json({ message: 'Student files not found' })
-        return
-      }
-
-      const image = code.sandbox.image
-      const beforeAll = code.sandbox.beforeAll
-      const files = studentAnswerCodeFiles.codeWriting.files.map(
-        (codeToFile) => codeToFile.file,
-      )
-      const tests = code.codeWriting.testCases
-
-      await runSandbox({
-        image: image,
-        beforeAll: beforeAll,
-        files: files,
-        tests: tests,
-      })
-        .then(async (response) => {
-          // update the status of the users answers
-          const studentAnswer = await prisma.StudentAnswerCodeWriting.update({
-            where: {
-              userEmail_questionId: {
-                userEmail: user.email,
-                questionId: questionId,
-              },
-            },
-            data: {
-              allTestCasesPassed: response.tests.every((test) => test.passed),
-              testCaseResults: {
-                deleteMany: {},
-                create: response.tests.map((test, index) => ({
-                  index: index + 1,
-                  exec: test.exec,
-                  input: test.input,
-                  output: test.output,
-                  expectedOutput: test.expectedOutput,
-                  passed: test.passed,
-                })),
-              },
-            },
-          })
-
-          const evaluationToQuestion =
-            await prisma.evaluationToQuestion.findUnique({
-              where: {
-                evaluationId_questionId: {
-                  evaluationId: evaluationId,
-                  questionId: questionId,
-                },
-              },
-              include: {
-                question: {
-                  include: {
-                    code: true,
-                  },
-                },
-              },
-            })
-
-          // code questions grading
-          await prisma.studentQuestionGrading.upsert({
-            where: {
-              userEmail_questionId: {
-                userEmail: user.email,
-                questionId: questionId,
-              },
-            },
-            update: grading(
-              evaluationToQuestion.question,
-              evaluationToQuestion.points,
-              studentAnswer,
-            ),
-            create: {
-              userEmail: user.email,
+      const evaluationToQuestion = await prisma.evaluationToQuestion.findUnique(
+        {
+          where: {
+            evaluationId_questionId: {
+              evaluationId: evaluationId,
               questionId: questionId,
-              ...grading(
-                evaluationToQuestion.question,
-                evaluationToQuestion.points,
-                studentAnswer,
-              ),
             },
-          })
+          },
+          include: {
+            question: {
+              include: {
+                code: true,
+              },
+            },
+          },
+        },
+      )
 
-          res.status(200).send(response)
-        })
-        .catch((error) => {
-          console.log(error)
-          res.status(500).json({ message: 'Internal server error' })
-        })
-    },
-  ),
-)
+      // code questions grading
+      await prisma.studentQuestionGrading.upsert({
+        where: {
+          userEmail_questionId: {
+            userEmail: user.email,
+            questionId: questionId,
+          },
+        },
+        update: grading(
+          evaluationToQuestion.question,
+          evaluationToQuestion.points,
+          studentAnswer,
+        ),
+        create: {
+          userEmail: user.email,
+          questionId: questionId,
+          ...grading(
+            evaluationToQuestion.question,
+            evaluationToQuestion.points,
+            studentAnswer,
+          ),
+        },
+      })
+
+      res.status(200).send(response)
+    })
+    .catch((error) => {
+      console.log(error)
+      res.status(500).json({ message: 'Internal server error' })
+    })
+}
 
 export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR, Role.STUDENT]),
+  POST: withAuthorization(
+    withPrisma(
+      withEvaluationPhase(
+        withStudentStatus(post, {
+          statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+        }),
+        { phases: [EvaluationPhase.IN_PROGRESS] },
+      ),
+    ),
+    { roles: [Role.PROFESSOR, Role.STUDENT] },
+  ),
 })

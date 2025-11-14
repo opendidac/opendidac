@@ -16,7 +16,8 @@
 
 import { withMethodHandler } from '@/middleware/withAuthorization'
 
-const get = async (_, res) => {
+const get = async (ctx, args) => {
+  const { req, res } = ctx
   const terms = process.env.TERMS_OF_SERVICE
   if (!terms) {
     return res.status(404).json({ error: 'Terms of service not configured' })

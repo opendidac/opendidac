@@ -27,7 +27,8 @@ import { withPrisma } from '@/middleware/withPrisma'
  * del: delete a group
  * put: update a group label
  */
-const del = async (req, res, prisma) => {
+const del = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // delete a group
   const { groupId } = req.query
 
@@ -57,7 +58,8 @@ const del = async (req, res, prisma) => {
   res.status(200).json({ message: 'Group deleted' })
 }
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // update a group
   const { groupId } = req.query
   const { label, scope } = req.body
@@ -110,6 +112,6 @@ const put = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  DELETE: withAuthorization(withPrisma(del), [Role.PROFESSOR]),
-  PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
+  DELETE: withAuthorization(withPrisma(del), { roles: [Role.PROFESSOR] }),
+  PUT: withAuthorization(withPrisma(put), { roles: [Role.PROFESSOR] }),
 })

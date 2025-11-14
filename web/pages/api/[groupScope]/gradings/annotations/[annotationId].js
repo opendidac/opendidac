@@ -17,6 +17,7 @@
 import { Role } from '@prisma/client'
 import {
   withAuthorization,
+  withGroupScope,
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
@@ -55,7 +56,8 @@ model Annotation {
 }
  */
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { annotation } = req.body
 
   const user = await getUser(req, res)
@@ -79,7 +81,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json(updatedAnnotation)
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { annotationId } = req.query
 
   await prisma.annotation.delete({
@@ -92,6 +95,10 @@ const del = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
-  DELETE: withAuthorization(withPrisma(del), [Role.PROFESSOR]),
+  PUT: withGroupScope(
+    withAuthorization(withPrisma(put), { roles: [Role.PROFESSOR] }),
+  ),
+  DELETE: withGroupScope(
+    withAuthorization(withPrisma(del), { roles: [Role.PROFESSOR] }),
+  ),
 })

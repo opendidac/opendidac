@@ -27,7 +27,8 @@ import { getUser } from '@/code/auth/auth'
  * Search for users
  * Used by SuperAdmin page and  AutoComplete Search Component when adding a professor to a group
  */
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { search, role, page = 1, pageSize = 10 } = req.query
   const pageNumber = parseInt(page)
   const itemsPerPage = parseInt(pageSize)
@@ -110,5 +111,7 @@ const get = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.SUPER_ADMIN]),
+  GET: withAuthorization(withPrisma(get), {
+    roles: [Role.PROFESSOR, Role.SUPER_ADMIN],
+  }),
 })

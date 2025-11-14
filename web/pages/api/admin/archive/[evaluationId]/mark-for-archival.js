@@ -20,26 +20,13 @@ import {
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
+import { withEvaluation } from '@/middleware/withEvaluation'
 import { getUser } from '@/code/auth/auth'
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma, evaluation } = ctx
   const { evaluationId } = req.query
   const { archivalDeadline, notifyOwner } = req.body
-
-  const evaluation = await prisma.evaluation.findUnique({
-    where: { id: evaluationId },
-    select: {
-      id: true,
-      archivalPhase: true,
-      archivedAt: true,
-      purgedAt: true,
-    },
-  })
-
-  if (!evaluation) {
-    res.status(404).json({ message: 'Evaluation not found' })
-    return
-  }
 
   if (evaluation.archivalPhase !== 'ACTIVE') {
     res
@@ -107,5 +94,11 @@ const post = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.SUPER_ADMIN, Role.ARCHIVIST]),
+  POST: withPrisma(
+    withEvaluation(
+      withAuthorization(post, {
+        roles: [Role.SUPER_ADMIN, Role.ARCHIVIST],
+      }),
+    ),
+  ),
 })

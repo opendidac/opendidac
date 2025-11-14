@@ -96,11 +96,13 @@ const get = async (ctx, args) => {
 }
 
 export default withMethodHandler({
-  GET: withEvaluation(
-    withRestrictions(
-      withAuthorization(withPurgeGuard(withPrisma(get)), {
-        roles: [Role.PROFESSOR, Role.STUDENT],
-      }),
+  GET: withPrisma(
+    withEvaluation(
+      withRestrictions(
+        withAuthorization(withPurgeGuard(get), {
+          roles: [Role.PROFESSOR, Role.STUDENT],
+        }),
+      ),
     ),
   ),
 })

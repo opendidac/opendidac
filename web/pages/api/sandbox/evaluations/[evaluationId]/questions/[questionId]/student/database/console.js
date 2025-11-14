@@ -27,7 +27,8 @@ import { getUser } from '@/code/auth/auth'
 /*
  endpoint to run the database console query sandbox for a users
  */
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const user = await getUser(req, res)
 
   const { evaluationId, questionId } = req.query
@@ -114,5 +115,7 @@ const post = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR, Role.STUDENT]),
+  POST: withAuthorization(withPrisma(post), {
+    roles: [Role.PROFESSOR, Role.STUDENT],
+  }),
 })

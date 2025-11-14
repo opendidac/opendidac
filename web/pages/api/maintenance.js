@@ -176,7 +176,8 @@ const cleanupUnusedUploads = async (prisma, domainName) => {
   }
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { action, options } = req.body
 
   try {
@@ -206,5 +207,5 @@ const post = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.SUPER_ADMIN]),
+  POST: withAuthorization(withPrisma(post), { roles: [Role.SUPER_ADMIN] }),
 })

@@ -17,6 +17,7 @@
 import { Role } from '@prisma/client'
 import {
   withAuthorization,
+  withGroupScope,
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
@@ -55,7 +56,8 @@ model Annotation {
 }
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { entityType, entityId } = req.query
 
   const annotation = await prisma.annotation.findUnique({
@@ -70,7 +72,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(annotation)
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { student, question, annotation, entityType, entity } = req.body
 
   const user = await getUser(req, res)
@@ -103,6 +106,10 @@ const post = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+  ),
+  POST: withGroupScope(
+    withAuthorization(withPrisma(post), { roles: [Role.PROFESSOR] }),
+  ),
 })

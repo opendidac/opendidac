@@ -29,7 +29,8 @@ import { withPrisma } from '@/middleware/withPrisma'
  * del: remove a member from a group
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // get all members of group
   const { groupId } = req.query
 
@@ -73,7 +74,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(members)
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // add member to group
   const { groupId } = req.query
   const { member } = req.body
@@ -125,7 +127,8 @@ const post = async (req, res, prisma) => {
   }
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // remove a member from a group
   const { groupId } = req.query
   const { userId: targetUserId } = req.body || {}
@@ -182,7 +185,7 @@ const del = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
-  DELETE: withAuthorization(withPrisma(del), [Role.PROFESSOR]),
+  GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+  POST: withAuthorization(withPrisma(post), { roles: [Role.PROFESSOR] }),
+  DELETE: withAuthorization(withPrisma(del), { roles: [Role.PROFESSOR] }),
 })

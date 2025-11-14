@@ -26,7 +26,8 @@ import { withPrisma } from '@/middleware/withPrisma'
  endpoint to run the sandbox for a question with solution or template files recovered from the database
  used to run the sandbox for professor files, also use by pull solution output
  */
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId, nature } = req.query
 
   if (!['solution', 'template'].includes(nature)) {
@@ -80,5 +81,5 @@ const post = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
+  POST: withAuthorization(withPrisma(post), { roles: [Role.PROFESSOR] }),
 })

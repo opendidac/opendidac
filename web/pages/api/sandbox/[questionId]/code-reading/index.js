@@ -29,7 +29,8 @@ const environments = languages.environments
  endpoint to run the sandbox for a code question of type reading to fill the expected output
  used to run the sandbox for admin, students cant run sandox for code reading
  */
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
 
   const code = await prisma.code.findUnique({
@@ -154,5 +155,5 @@ const post = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
+  POST: withAuthorization(withPrisma(post), { roles: [Role.PROFESSOR] }),
 })

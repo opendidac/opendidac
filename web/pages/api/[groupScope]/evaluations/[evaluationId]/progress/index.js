@@ -23,6 +23,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 import { withPurgeGuard } from '@/middleware/withPurged'
+import { withEvaluation } from '@/middleware/withEvaluation'
 
 const get = async (ctx, args) => {
   const { req, res, prisma } = ctx
@@ -115,9 +116,13 @@ const patch = async (ctx, args) => {
 
 export default withMethodHandler({
   GET: withGroupScope(
-    withAuthorization(withPurgeGuard(withPrisma(get)), {
-      roles: [Role.PROFESSOR],
-    }),
+    withPrisma(
+      withEvaluation(
+        withAuthorization(withPurgeGuard(get), {
+          roles: [Role.PROFESSOR],
+        }),
+      ),
+    ),
   ),
   PATCH: withGroupScope(
     withAuthorization(withPrisma(patch), { roles: [Role.PROFESSOR] }),

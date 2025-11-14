@@ -17,6 +17,7 @@
 import { Role } from '@prisma/client'
 import {
   withAuthorization,
+  withGroupScope,
   withMethodHandler,
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
@@ -26,7 +27,8 @@ import { withPrisma } from '@/middleware/withPrisma'
  * Used by the page Evaluation Grading
  */
 
-const patch = async (req, res, prisma) => {
+const patch = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const {
     grading: {
       questionId,
@@ -60,5 +62,7 @@ const patch = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  PATCH: withAuthorization(withPrisma(patch), [Role.PROFESSOR]),
+  PATCH: withGroupScope(
+    withAuthorization(withPrisma(patch), { roles: [Role.PROFESSOR] }),
+  ),
 })

@@ -27,7 +27,8 @@ import { withPrisma } from '@/middleware/withPrisma'
 
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { mode = 'todo' } = req.query
 
   // Build mode-specific where conditions
@@ -167,5 +168,7 @@ const get = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.SUPER_ADMIN, Role.ARCHIVIST]),
+  GET: withAuthorization(withPrisma(get), {
+    roles: [Role.SUPER_ADMIN, Role.ARCHIVIST],
+  }),
 })

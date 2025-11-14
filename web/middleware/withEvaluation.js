@@ -17,6 +17,15 @@
 /**
  * Middleware that fetches the evaluation and adds it to the context
  * Fetches all commonly needed first-level fields to avoid redundant queries
+ *
+ * @requires The endpoint must have [evaluationId] in its URL path
+ *           (e.g., /api/users/evaluations/[evaluationId]/status)
+ *           The evaluationId will be extracted from req.query.evaluationId
+ *
+ * @note If evaluationId is not present in req.query, the middleware
+ *       will pass through to the handler without adding evaluation to context
+ *
+ * @important If you add fields, make sure to control all student /api/users endpoints for overfetch to not send any sensitive data to the student.
  */
 export const withEvaluation = (handler, args = {}) => {
   return async (ctx) => {
@@ -51,6 +60,9 @@ export const withEvaluation = (handler, args = {}) => {
         conditions: true,
         consultationEnabled: true,
         showSolutionsWhenFinished: true,
+        purgedAt: true,
+        archivedAt: true,
+        archivalPhase: true,
       },
     })
 
