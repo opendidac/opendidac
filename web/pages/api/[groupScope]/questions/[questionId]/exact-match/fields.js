@@ -140,17 +140,23 @@ const get = async (ctx, args) => {
   res.status(200).json(exactMatch.fields)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withPrisma(withQuestionUpdate(put)), {
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+  ),
+  PUT: withGroupScope(
+    withAuthorization(withPrisma(withQuestionUpdate(put)), {
       roles: [Role.PROFESSOR],
     }),
-    POST: withAuthorization(withPrisma(withQuestionUpdate(post)), {
+  ),
+  POST: withGroupScope(
+    withAuthorization(withPrisma(withQuestionUpdate(post)), {
       roles: [Role.PROFESSOR],
     }),
-    DELETE: withAuthorization(withPrisma(withQuestionUpdate(del)), {
+  ),
+  DELETE: withGroupScope(
+    withAuthorization(withPrisma(withQuestionUpdate(del)), {
       roles: [Role.PROFESSOR],
     }),
-    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
-  }),
-)
+  ),
+})

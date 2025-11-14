@@ -50,8 +50,8 @@ const unarchive = async (ctx, args) => {
   res.status(200).json(restoredQuestion)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    POST: withAuthorization(withPrisma(unarchive), { roles: [Role.PROFESSOR] }),
-  }),
-)
+export default withMethodHandler({
+  POST: withGroupScope(
+    withAuthorization(withPrisma(unarchive), { roles: [Role.PROFESSOR] }),
+  ),
+})

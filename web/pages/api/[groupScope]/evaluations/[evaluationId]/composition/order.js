@@ -25,7 +25,8 @@ import { withEvaluationUpdate } from '@/middleware/withUpdate'
 
 /** Managing the order of the questions in an evaluation */
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // update the order of the questions in the evaluation
   const { evaluationId } = req.query
   const { questions } = req.body
@@ -50,10 +51,10 @@ const put = async (req, res, prisma) => {
   res.status(200).json({ message: 'OK' })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withEvaluationUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withMethodHandler({
+  PUT: withGroupScope(
+    withAuthorization(withPrisma(withEvaluationUpdate(put)), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

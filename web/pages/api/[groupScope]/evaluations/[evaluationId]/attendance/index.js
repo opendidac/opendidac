@@ -22,7 +22,8 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
 
   // Fetch registered students, their session details, and the evaluation phase
@@ -74,8 +75,8 @@ const get = async (req, res, prisma) => {
   })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-  }),
-)
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+  ),
+})

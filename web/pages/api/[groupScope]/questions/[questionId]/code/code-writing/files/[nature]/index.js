@@ -99,11 +99,13 @@ const post = async (ctx, args) => {
   res.status(200).json(codeToFile)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
-    POST: withAuthorization(withPrisma(withQuestionUpdate(post)), {
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+  ),
+  POST: withGroupScope(
+    withAuthorization(withPrisma(withQuestionUpdate(post)), {
       roles: [Role.PROFESSOR],
     }),
-  }),
-)
+  ),
+})

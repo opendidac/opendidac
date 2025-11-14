@@ -26,7 +26,8 @@ import {
 Get the list of students who have been denied access to the evaluation
 */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const evaluation = await prisma.evaluation.findUnique({
     where: {
@@ -47,8 +48,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(evaluation)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-  }),
-)
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+  ),
+})

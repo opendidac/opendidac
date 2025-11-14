@@ -131,13 +131,15 @@ const del = async (ctx, args) => {
   res.status(200).json({ message: 'Deleted' })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withPrisma(withQuestionUpdate(put)), {
+export default withMethodHandler({
+  PUT: withGroupScope(
+    withAuthorization(withPrisma(withQuestionUpdate(put)), {
       roles: [Role.PROFESSOR],
     }),
-    DELETE: withAuthorization(withPrisma(withQuestionUpdate(del)), {
+  ),
+  DELETE: withGroupScope(
+    withAuthorization(withPrisma(withQuestionUpdate(del)), {
       roles: [Role.PROFESSOR],
     }),
-  }),
-)
+  ),
+})

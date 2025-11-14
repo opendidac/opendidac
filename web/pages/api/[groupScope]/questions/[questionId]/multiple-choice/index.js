@@ -96,11 +96,13 @@ const put = async (ctx, args) => {
   res.status(200).json(updatedMultiChoice)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
-    PUT: withAuthorization(withPrisma(withQuestionUpdate(put)), {
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+  ),
+  PUT: withGroupScope(
+    withAuthorization(withPrisma(withQuestionUpdate(put)), {
       roles: [Role.PROFESSOR],
     }),
-  }),
-)
+  ),
+})

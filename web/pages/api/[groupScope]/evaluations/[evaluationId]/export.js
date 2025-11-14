@@ -166,7 +166,8 @@ Handlebars.registerHelper(
 Handlebars.registerHelper('exactMatchFieldAnswer', exactMatchFieldAnswer)
 Handlebars.registerHelper('isExactMatchFieldCorrect', isExactMatchFieldCorrect)
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { groupScope, evaluationId } = req.query
 
   const evaluation = await prisma.evaluation.findUnique({
@@ -287,8 +288,10 @@ const get = async (req, res, prisma) => {
   }
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.ARCHIVIST]),
-  }),
-)
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), {
+      roles: [Role.PROFESSOR, Role.ARCHIVIST],
+    }),
+  ),
+})

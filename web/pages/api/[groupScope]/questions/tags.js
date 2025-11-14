@@ -64,8 +64,8 @@ const get = async (ctx, args) => {
   res.status(200).json(result)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
-  }),
-)
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+  ),
+})

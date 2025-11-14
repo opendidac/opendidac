@@ -24,7 +24,8 @@ import {
 import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 import { withPurgeGuard } from '@/middleware/withPurged'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const evaluation = await prisma.evaluation.findUnique({
     where: {
@@ -57,8 +58,10 @@ const get = async (req, res, prisma) => {
   res.status(200).json(evaluation.evaluationToQuestions)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPurgeGuard(withPrisma(get)), [Role.PROFESSOR]),
-  }),
-)
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPurgeGuard(withPrisma(get)), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

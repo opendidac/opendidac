@@ -149,11 +149,11 @@ async function processImage(filePath) {
   return filePath
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    POST: withAuthorization(post, [Role.PROFESSOR]),
-  }),
-)
+export default withMethodHandler({
+  POST: withGroupScope(
+    withAuthorization(post, { roles: [Role.PROFESSOR] }),
+  ),
+})
 
 export const config = {
   api: {

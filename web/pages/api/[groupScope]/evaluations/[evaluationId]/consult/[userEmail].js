@@ -25,7 +25,8 @@ import { withPurgeGuard } from '@/middleware/withPurged'
 /*
   Professor can consult the users's answers to the questions of a evaluation
 */
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { evaluationId, userEmail } = req.query
 
   const evaluation = await prisma.evaluation.findUnique({
@@ -58,5 +59,7 @@ const get = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPurgeGuard(withPrisma(get)), [Role.PROFESSOR]),
+  GET: withAuthorization(withPurgeGuard(withPrisma(get)), {
+    roles: [Role.PROFESSOR],
+  }),
 })

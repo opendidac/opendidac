@@ -24,7 +24,8 @@ import {
 import { withPrisma } from '@/middleware/withPrisma'
 
 // update the status of a student in an evaluation
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { evaluationId, studentEmail } = req.query
 
   const { status } = req.body
@@ -75,8 +76,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json(updatedStudent)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
-  }),
-)
+export default withMethodHandler({
+  PUT: withGroupScope(
+    withAuthorization(withPrisma(put), { roles: [Role.PROFESSOR] }),
+  ),
+})

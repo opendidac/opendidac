@@ -61,10 +61,10 @@ const post = async (ctx, args) => {
   res.status(200).json(newOption)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    POST: withAuthorization(withPrisma(withQuestionUpdate(post)), {
+export default withMethodHandler({
+  POST: withGroupScope(
+    withAuthorization(withPrisma(withQuestionUpdate(post)), {
       roles: [Role.PROFESSOR],
     }),
-  }),
-)
+  ),
+})

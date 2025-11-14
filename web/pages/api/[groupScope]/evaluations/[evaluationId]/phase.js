@@ -82,7 +82,8 @@ const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
   })
 }
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const evaluation = await prisma.evaluation.findUnique({
     where: {
@@ -97,7 +98,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(evaluation)
 }
 
-const patch = async (req, res, prisma) => {
+const patch = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const { phase: nextPhase } = req.body
 
@@ -182,9 +184,13 @@ const patch = async (req, res, prisma) => {
   res.status(200).json(evaluation)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
-    PATCH: withAuthorization(withPrisma(patch), [Role.PROFESSOR]),
-  }),
-)
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), {
+      roles: [Role.PROFESSOR, Role.STUDENT],
+    }),
+  ),
+  PATCH: withGroupScope(
+    withAuthorization(withPrisma(patch), { roles: [Role.PROFESSOR] }),
+  ),
+})

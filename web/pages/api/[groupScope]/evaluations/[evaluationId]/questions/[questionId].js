@@ -22,7 +22,8 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { groupScope, evaluationId, questionId } = req.query
   const { addendum } = req.body
 
@@ -67,8 +68,8 @@ const put = async (req, res, prisma) => {
   }
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
-  }),
-)
+export default withMethodHandler({
+  PUT: withGroupScope(
+    withAuthorization(withPrisma(put), { roles: [Role.PROFESSOR] }),
+  ),
+})

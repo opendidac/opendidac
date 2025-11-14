@@ -114,8 +114,8 @@ const archive = async (ctx, args) => {
   res.status(200).json(archivedQuestion)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    POST: withAuthorization(withPrisma(archive), { roles: [Role.PROFESSOR] }),
-  }),
-)
+export default withMethodHandler({
+  POST: withGroupScope(
+    withAuthorization(withPrisma(archive), { roles: [Role.PROFESSOR] }),
+  ),
+})

@@ -41,10 +41,10 @@ const put = async (ctx, args) => {
   res.status(200).json({ message: 'Order changed successfully' })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withPrisma(withQuestionUpdate(put)), {
+export default withMethodHandler({
+  PUT: withGroupScope(
+    withAuthorization(withPrisma(withQuestionUpdate(put)), {
       roles: [Role.PROFESSOR],
     }),
-  }),
-)
+  ),
+})

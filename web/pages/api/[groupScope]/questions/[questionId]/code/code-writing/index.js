@@ -44,9 +44,11 @@ const put = async (ctx, args) => {
   res.status(200).json({ message: 'Code check enabled / disabled' })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withPrisma(put), { roles: [Role.PROFESSOR] }),
-    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
-  }),
-)
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+  ),
+  PUT: withGroupScope(
+    withAuthorization(withPrisma(put), { roles: [Role.PROFESSOR] }),
+  ),
+})

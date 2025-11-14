@@ -29,7 +29,8 @@ used by the evaluation pages grading, finished and analytics to fetch the questi
 and include all users answers and gradings
 
 */
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { groupScope, evaluationId, withGradings = 'false' } = req.query
 
   let questionIncludeOptions = {
@@ -67,8 +68,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(questions)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-  }),
-)
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+  ),
+})

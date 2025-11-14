@@ -32,7 +32,8 @@ Add particular student to the access list.
 In this scenario the student was denied access because he was not yet in the access list.
 */
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { groupScope, evaluationId } = req.query
   const { studentEmail } = req.body
 
@@ -107,8 +108,8 @@ const post = async (req, res, prisma) => {
   res.status(200).json({ message: 'Student added to the access list' })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
-  }),
-)
+export default withMethodHandler({
+  POST: withGroupScope(
+    withAuthorization(withPrisma(post), { roles: [Role.PROFESSOR] }),
+  ),
+})

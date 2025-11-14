@@ -87,14 +87,18 @@ const post = async (ctx, args) => {
   res.status(200).json(createdGradualCredit)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
-    PUT: withAuthorization(withPrisma(withQuestionUpdate(put)), {
+export default withMethodHandler({
+  GET: withGroupScope(
+    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+  ),
+  PUT: withGroupScope(
+    withAuthorization(withPrisma(withQuestionUpdate(put)), {
       roles: [Role.PROFESSOR],
     }),
-    POST: withAuthorization(withPrisma(withQuestionUpdate(post)), {
+  ),
+  POST: withGroupScope(
+    withAuthorization(withPrisma(withQuestionUpdate(post)), {
       roles: [Role.PROFESSOR],
     }),
-  }),
-)
+  ),
+})

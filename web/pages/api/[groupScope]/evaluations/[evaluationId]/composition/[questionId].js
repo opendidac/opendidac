@@ -23,7 +23,8 @@ import {
 import { withPrisma } from '@/middleware/withPrisma'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // update the evaluationToQuestion
   const { evaluationId, questionId } = req.query
   const body = req.body
@@ -47,7 +48,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json({ message: 'OK' })
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // delete a question from an evaluation
   const { evaluationId, questionId } = req.query
 
@@ -92,13 +94,15 @@ const del = async (req, res, prisma) => {
   res.status(200).json({ message: 'OK' })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withEvaluationUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withEvaluationUpdate(withPrisma(del)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withMethodHandler({
+  PUT: withGroupScope(
+    withAuthorization(withPrisma(withEvaluationUpdate(put)), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+  DELETE: withGroupScope(
+    withAuthorization(withPrisma(withEvaluationUpdate(del)), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

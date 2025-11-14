@@ -90,7 +90,20 @@ export function withGroupScope(handler, args = {}) {
       actualArgs = resOrArgs || {}
     }
 
-    const { req, res, prisma } = ctx
+    const { req, res } = ctx
+
+    if (!req || !res) {
+      // If res is available, use it; otherwise we can't send a response
+      if (res) {
+        return res.status(500).json({
+          type: 'error',
+          message: 'Request or response not available in context.',
+        })
+      }
+      // If res is not available, throw an error (shouldn't happen in normal flow)
+      throw new Error('Request or response not available in context.')
+    }
+
     const { groupScope } = req.query
 
     if (!groupScope) {
@@ -123,7 +136,8 @@ export function withGroupScope(handler, args = {}) {
         return res.status(400).json({ message: 'Entity id is required' })
       }
 
-      // Get prisma if not already in context (when used as outer wrapper)
+      // Get prisma if not already in context
+      const { prisma } = ctx
       const prismaClient = prisma || getPrisma()
 
       const entity = await prismaClient[entityName].findUnique({
@@ -154,23 +168,20 @@ export function withGroupScope(handler, args = {}) {
       }
     }
 
-    // If prisma is not in context yet, we're in old pattern mode
-    // Pass (req, res) to maintain compatibility
-    if (!prisma) {
-      return handler(req, res)
-    }
-
+    // Always pass (ctx, args) to the handler in the new pattern
+    // If we're in old pattern mode (prisma not in context), we still pass ctx
+    // but the handler will handle the old pattern if needed
     return handler(ctx, actualArgs)
   }
 }
 
 export function withAuthorization(handler, args = {}) {
   const { roles: allowedRoles = [] } = args
-  return async (ctx) => {
+  return async (ctx, handlerArgs = {}) => {
     const { req, res } = ctx
 
     if (!req || !res) {
-      return res.status(500).json({
+      return res?.status(500).json({
         type: 'error',
         message: 'Request or response not available in context.',
       })
@@ -196,7 +207,7 @@ export function withAuthorization(handler, args = {}) {
 
     // Add roles to context
     const ctxWithRoles = { ...ctx, roles: userRoles }
-    return handler(ctxWithRoles, args)
+    return handler(ctxWithRoles, handlerArgs)
   }
 }
 
