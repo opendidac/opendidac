@@ -31,22 +31,16 @@ export const withPurgeGuard = (handler, args = {}) => {
       return handler(ctx, args)
     }
 
-    // Use evaluation from context if available (from withEvaluation middleware),
-    // otherwise fetch it (for backward compatibility)
-    const evalToCheck =
-      evaluation ||
-      (await prisma.evaluation.findUnique({
-        where: { id: evaluationId },
-        select: { id: true, purgedAt: true },
-      }))
-
-    if (!evalToCheck) {
-      return res.status(404).json({
+    // Evaluation must be provided by withEvaluation middleware
+    if (!evaluation) {
+      return res.status(500).json({
         type: 'error',
-        id: 'not-found',
-        message: 'Evaluation not found',
+        message:
+          'Evaluation not available in context. Did you call withEvaluation middleware?',
       })
     }
+
+    const evalToCheck = evaluation
 
     if (evalToCheck.purgedAt) {
       return res.status(410).json({
