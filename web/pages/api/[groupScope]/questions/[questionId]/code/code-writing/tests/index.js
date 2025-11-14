@@ -29,7 +29,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * post: create a new test case for a code question
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // get the list of test cases for a code question
   const { questionId } = req.query
   const testCases = await prisma.testCase.findMany({
@@ -44,7 +45,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(testCases)
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // create a new test case for a code question
   const { questionId } = req.query
   const { exec, input, expectedOutput } = req.body
@@ -69,9 +71,9 @@ const post = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
+    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

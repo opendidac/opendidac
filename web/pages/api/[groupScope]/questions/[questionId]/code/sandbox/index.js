@@ -33,7 +33,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * post: create the sandbox for a code question
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // get the sandbox for a code question
   const { questionId } = req.query
   const sandbox = await prisma.sandBox.findUnique({
@@ -45,7 +46,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(sandbox)
 }
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // update a sandbox
   const { questionId } = req.query
 
@@ -64,7 +66,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json(sandbox)
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // create a new sandbox
   const { questionId } = req.query
 
@@ -83,12 +86,12 @@ const post = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
+    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
+    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

@@ -23,7 +23,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
 import { withPrisma } from '@/middleware/withPrisma'
 import { Role } from '@prisma/client'
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
   const { field } = req.body
 
@@ -50,7 +51,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json(updatedField)
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
   const { field } = req.body
 
@@ -70,7 +72,8 @@ const post = async (req, res, prisma) => {
   res.status(200).json(newField)
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
   const { fieldId } = req.body
 
@@ -116,7 +119,8 @@ const del = async (req, res, prisma) => {
   res.status(200).json({ message: 'Field deleted successfully' })
 }
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
 
   const exactMatch = await prisma.exactMatch.findUnique({
@@ -138,15 +142,15 @@ const get = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), [
-      Role.PROFESSOR,
-    ]),
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
+    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), {
+      roles: [Role.PROFESSOR],
+    }),
+    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), {
+      roles: [Role.PROFESSOR],
+    }),
+    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
   }),
 )

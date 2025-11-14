@@ -21,6 +21,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 import { withRestrictions } from '@/middleware/withRestrictions'
+import { withEvaluation } from '@/middleware/withEvaluation'
 import {
   withEvaluationPhase,
   withStudentStatus,
@@ -80,29 +81,11 @@ async function trackSessionChanges(
 }
 
 // The main endpoint for getting student status
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma, evaluation } = ctx
   const user = await getUser(req, res)
   const { email: studentEmail, id: userId } = user
   const { evaluationId } = req.query
-
-  // Fetch the evaluation details
-  const evaluation = await prisma.evaluation.findUnique({
-    where: {
-      id: evaluationId,
-    },
-    select: {
-      phase: true,
-      durationActive: true,
-      startAt: true,
-      endAt: true,
-      conditions: true,
-    },
-  })
-
-  if (!evaluation) {
-    res.status(404).json({ message: 'Evaluation not found' })
-    return
-  }
 
   // Fetch user's participation in the evaluation
   const userOnEvaluation = await prisma.userOnEvaluation.findUnique({
@@ -145,37 +128,50 @@ const get = async (req, res, prisma) => {
 
 // student ends his evaluation
 const put = withEvaluationPhase(
-  [EvaluationPhase.IN_PROGRESS],
-  withStudentStatus(
-    [UserOnEvaluationStatus.IN_PROGRESS],
-    async (req, res, prisma) => {
-      const user = await getUser(req, res)
-      const studentEmail = user.email
-      const { evaluationId } = req.query
+  withStudentStatus(async (ctx, args) => {
+    const { req, res, prisma } = ctx
+    const user = await getUser(req, res)
+    const studentEmail = user.email
+    const { evaluationId } = req.query
 
-      await prisma.userOnEvaluation.update({
-        where: {
-          userEmail_evaluationId: {
-            userEmail: studentEmail,
-            evaluationId: evaluationId,
-          },
+    await prisma.userOnEvaluation.update({
+      where: {
+        userEmail_evaluationId: {
+          userEmail: studentEmail,
+          evaluationId: evaluationId,
         },
-        data: {
-          status: UserOnEvaluationStatus.FINISHED,
-          finishedAt: new Date(),
-        },
-      })
+      },
+      data: {
+        status: UserOnEvaluationStatus.FINISHED,
+        finishedAt: new Date(),
+      },
+    })
 
-      res.status(200).json({ message: 'Evaluation completed' })
-    },
-  ),
+    res.status(200).json({ message: 'Evaluation completed' })
+  }),
 )
 
 export default withMethodHandler({
-  GET: withRestrictions(
-    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  GET: withEvaluation(
+    withRestrictions(
+      withAuthorization(withPrisma(get), {
+        roles: [Role.PROFESSOR, Role.STUDENT],
+      }),
+    ),
   ),
-  PUT: withRestrictions(
-    withAuthorization(withPrisma(put), [Role.PROFESSOR, Role.STUDENT]),
+  PUT: withEvaluation(
+    withRestrictions(
+      withAuthorization(
+        withPrisma(
+          withEvaluationPhase(
+            withStudentStatus(put, {
+              statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+            }),
+            { phases: [EvaluationPhase.IN_PROGRESS] },
+          ),
+        ),
+        { roles: [Role.PROFESSOR, Role.STUDENT] },
+      ),
+    ),
   ),
 })

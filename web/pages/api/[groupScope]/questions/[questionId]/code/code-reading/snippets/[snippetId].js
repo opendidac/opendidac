@@ -23,7 +23,8 @@ import {
 import { withPrisma } from '@/middleware/withPrisma'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // update a code snippet
 
   const { questionId, snippetId } = req.query
@@ -61,7 +62,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json(codeReadingSnippet)
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // delete a code snippet
 
   const { questionId, snippetId } = req.query
@@ -96,11 +98,11 @@ const del = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), [
-      Role.PROFESSOR,
-    ]),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
+    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

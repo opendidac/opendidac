@@ -30,7 +30,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  */
 
 // create a new option for the multichoice question
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
   const { option } = req.body
 
@@ -62,8 +63,8 @@ const post = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
+    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

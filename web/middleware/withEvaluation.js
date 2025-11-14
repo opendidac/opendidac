@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-export const withPurgeGuard = (handler, args = {}) => {
+/**
+ * Middleware that fetches the evaluation and adds it to the context
+ * Fetches all commonly needed first-level fields to avoid redundant queries
+ */
+export const withEvaluation = (handler, args = {}) => {
   return async (ctx) => {
     const { req, res, prisma } = ctx
-    const { evaluationId } = req.query || {}
+    const { evaluationId } = req.query
 
     if (!prisma) {
       return res.status(500).json({
@@ -33,17 +37,33 @@ export const withPurgeGuard = (handler, args = {}) => {
 
     const evaluation = await prisma.evaluation.findUnique({
       where: { id: evaluationId },
-      select: { id: true, purgedAt: true },
+      select: {
+        id: true,
+        phase: true,
+        label: true,
+        desktopAppRequired: true,
+        ipRestrictions: true,
+        accessMode: true,
+        accessList: true,
+        durationActive: true,
+        startAt: true,
+        endAt: true,
+        conditions: true,
+        consultationEnabled: true,
+        showSolutionsWhenFinished: true,
+      },
     })
 
-    if (evaluation?.purgedAt) {
-      return res.status(410).json({
-        type: 'info',
-        id: 'evaluation-purged',
-        message: 'Evaluation data has been purged.',
+    if (!evaluation) {
+      return res.status(404).json({
+        type: 'error',
+        id: 'not-found',
+        message: 'Evaluation not found',
       })
     }
 
-    return handler(ctx, args)
+    // Add evaluation to context
+    const ctxWithEvaluation = { ...ctx, evaluation }
+    return handler(ctxWithEvaluation, args)
   }
 }

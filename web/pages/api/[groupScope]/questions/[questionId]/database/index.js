@@ -32,7 +32,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * put: update the database part of a question
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // get the "database" part of the question
   const { questionId } = req.query
   const database = await prisma.database.findUnique({
@@ -44,7 +45,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(database)
 }
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // update the "database" part of the question
   const { questionId } = req.query
   const { image } = req.body
@@ -63,9 +65,9 @@ const put = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
+    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

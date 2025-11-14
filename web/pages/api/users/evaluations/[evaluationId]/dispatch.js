@@ -24,34 +24,18 @@ import {
 import { phaseGT } from '@/code/phase'
 import { getUser } from '@/code/auth/auth'
 import { withRestrictions } from '@/middleware/withRestrictions'
+import { withEvaluation } from '@/middleware/withEvaluation'
 
 /*
 fetch the informations necessary to decide where the users should be redirected
 based on the phase of the evaluation and the relation between the users and the evaluation
 Will respond with the Evaluation phase and the UserOnEvaluation object
 * */
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma, evaluation } = ctx
   const { evaluationId } = req.query
 
   const user = await getUser(req, res)
-
-  const evaluation = await prisma.evaluation.findUnique({
-    where: {
-      id: evaluationId,
-    },
-    select: {
-      phase: true,
-      label: true,
-      accessMode: true,
-      accessList: true,
-    },
-  })
-
-  if (!evaluation) {
-    // something fishy is going on
-    res.status(401).json({ type: 'error', message: 'Unauthorized' })
-    return
-  }
 
   const userOnEvaluation = await prisma.userOnEvaluation.findFirst({
     where: {
@@ -88,7 +72,11 @@ const get = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withRestrictions(
-    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  GET: withEvaluation(
+    withRestrictions(
+      withAuthorization(withPrisma(get), {
+        roles: [Role.PROFESSOR, Role.STUDENT],
+      }),
+    ),
   ),
 })

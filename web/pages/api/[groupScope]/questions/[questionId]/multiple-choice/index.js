@@ -30,7 +30,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  */
 
 // get the multichoice
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
 
   const multiChoice = await prisma.multipleChoice.findUnique({
@@ -55,7 +56,8 @@ const get = async (req, res, prisma) => {
 }
 
 // update the multichoice first level attributes
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
   const {
     activateStudentComment,
@@ -96,9 +98,9 @@ const put = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
+    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

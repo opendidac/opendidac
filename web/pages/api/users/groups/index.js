@@ -22,7 +22,8 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const user = await getUser(req, res)
   // get the list of groups that this users is a member of
   const groups = await prisma.userOnGroup.findMany({
@@ -43,5 +44,5 @@ const get = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
+  GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
 })

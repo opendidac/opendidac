@@ -74,8 +74,23 @@ const EntityNameQueryStringIdPair = Object.freeze({
     Important: Always use the singular form of the entity id variable name in the query string.
 */
 
-export function withGroupScope(handler) {
-  return async (req, res) => {
+export function withGroupScope(handler, args = {}) {
+  return async (ctxOrReq, resOrArgs) => {
+    // Handle both old pattern (req, res) and new pattern (ctx, args)
+    let ctx, actualArgs
+    if (resOrArgs && typeof resOrArgs.json === 'function') {
+      // Old pattern: (req, res) - called as outer wrapper
+      const req = ctxOrReq
+      const res = resOrArgs
+      ctx = { req, res }
+      actualArgs = {}
+    } else {
+      // New pattern: (ctx, args) - called in middleware chain
+      ctx = ctxOrReq
+      actualArgs = resOrArgs || {}
+    }
+
+    const { req, res, prisma } = ctx
     const { groupScope } = req.query
 
     if (!groupScope) {
@@ -102,15 +117,16 @@ export function withGroupScope(handler) {
 
       const [entityName, queryStringId] = entityPair
 
-      const prisma = getPrisma()
-
       const entityId = req.query[queryStringId]
 
       if (!entityId) {
         return res.status(400).json({ message: 'Entity id is required' })
       }
 
-      const entity = await prisma[entityName].findUnique({
+      // Get prisma if not already in context (when used as outer wrapper)
+      const prismaClient = prisma || getPrisma()
+
+      const entity = await prismaClient[entityName].findUnique({
         where: {
           id: entityId,
         },
@@ -138,12 +154,28 @@ export function withGroupScope(handler) {
       }
     }
 
-    return handler(req, res)
+    // If prisma is not in context yet, we're in old pattern mode
+    // Pass (req, res) to maintain compatibility
+    if (!prisma) {
+      return handler(req, res)
+    }
+
+    return handler(ctx, actualArgs)
   }
 }
 
-export function withAuthorization(handler, allowedRoles) {
-  return async (req, res) => {
+export function withAuthorization(handler, args = {}) {
+  const { roles: allowedRoles = [] } = args
+  return async (ctx) => {
+    const { req, res } = ctx
+
+    if (!req || !res) {
+      return res.status(500).json({
+        type: 'error',
+        message: 'Request or response not available in context.',
+      })
+    }
+
     const userRoles = await getRoles(req, res)
     if (!userRoles) {
       return res
@@ -162,17 +194,22 @@ export function withAuthorization(handler, allowedRoles) {
       })
     }
 
-    return handler(req, res)
+    // Add roles to context
+    const ctxWithRoles = { ...ctx, roles: userRoles }
+    return handler(ctxWithRoles, args)
   }
 }
 
 export function withMethodHandler(methodHandlers) {
+  const args = { methods: methodHandlers }
   return async (req, res) => {
     const handler = methodHandlers[req.method]
     if (!handler) {
       return res.status(405).json({ message: 'Method not allowed' })
     }
 
-    await handler(req, res)
+    // Convert (req, res) to context object for handlers
+    const ctx = { req, res }
+    await handler(ctx, args)
   }
 }

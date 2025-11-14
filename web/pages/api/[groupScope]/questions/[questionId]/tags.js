@@ -29,7 +29,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * put: update tags of a question
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
 
   // get all tags linked to this question
@@ -44,7 +45,8 @@ const get = async (req, res, prisma) => {
 
   res.status(200).json(tags)
 }
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { groupScope } = req.query
   const { tags } = req.body
   const { questionId } = req.query
@@ -114,9 +116,9 @@ const put = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
+    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

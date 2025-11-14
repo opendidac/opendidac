@@ -23,7 +23,8 @@ import {
 import { withPrisma } from '@/middleware/withPrisma'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // get the solution queries for a database question
 
   const { questionId } = req.query
@@ -54,7 +55,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(queries)
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // create a new empty solution query for a database question
   const { questionId } = req.query
 
@@ -94,9 +96,9 @@ const post = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
+    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

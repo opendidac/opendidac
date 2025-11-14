@@ -25,7 +25,8 @@ import { withPrisma } from '@/middleware/withPrisma'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 // Update a single option of a multiple choice question
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId, optionId } = req.query
   const { text, isCorrect } = req.body || {}
 
@@ -71,7 +72,8 @@ const put = async (req, res, prisma) => {
 }
 
 // Delete a single option of a multiple choice question
-const del = async (req, res, prisma) => {
+const del = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId, optionId } = req.query
 
   // Ensure the option exists and belongs to the question
@@ -123,11 +125,11 @@ const del = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), [
-      Role.PROFESSOR,
-    ]),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
+    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

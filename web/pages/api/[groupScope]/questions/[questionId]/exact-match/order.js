@@ -23,7 +23,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
 import { withPrisma } from '@/middleware/withPrisma'
 import { Role } from '@prisma/client'
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { fields } = req.body
 
   await prisma.$transaction(async (prisma) => {
@@ -42,8 +43,8 @@ const put = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

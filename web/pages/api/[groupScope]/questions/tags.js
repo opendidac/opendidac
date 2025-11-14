@@ -41,7 +41,8 @@ import { questionsFilterWhereClause } from '@/code/questionsFilter'
  *   - unused
  *
  */
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const where = questionsFilterWhereClause(req.query)
 
   // Group tags from filtered questions
@@ -65,6 +66,6 @@ const get = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
+    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
   }),
 )

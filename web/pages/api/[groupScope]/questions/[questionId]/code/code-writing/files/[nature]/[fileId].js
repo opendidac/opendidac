@@ -23,7 +23,8 @@ import {
 import { withPrisma } from '@/middleware/withPrisma'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // update a file for a code question
   // as the file is created for a code question we handle it through CodeToFile entity
 
@@ -77,7 +78,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json(file)
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // delete a file for a code question, cascade from codeToFile wont work here
   // as the file is created for a code question we handle it through CodeToFile entity
 
@@ -131,11 +133,11 @@ const del = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), [
-      Role.PROFESSOR,
-    ]),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
+    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

@@ -40,10 +40,9 @@ Each question has included the answer for that particular users only
 */
 
 const get = withEvaluationPhase(
-  [EvaluationPhase.IN_PROGRESS],
   withStudentStatus(
-    [UserOnEvaluationStatus.IN_PROGRESS],
-    async (req, res, prisma) => {
+    async (ctx, args) => {
+      const { req, res, prisma } = ctx
       const { evaluationId } = req.query
       const user = await getUser(req, res)
 
@@ -106,14 +105,17 @@ const get = withEvaluationPhase(
 
       res.status(200).json(userOnEvaluation.evaluation.evaluationToQuestions)
     },
+    { statuses: [UserOnEvaluationStatus.IN_PROGRESS] },
   ),
+  { phases: [EvaluationPhase.IN_PROGRESS] },
 )
 
 export default withMethodHandler({
-  GET: withRestrictions(
-    withAuthorization(withPurgeGuard(withPrisma(get)), [
-      Role.PROFESSOR,
-      Role.STUDENT,
-    ]),
+  GET: withEvaluation(
+    withRestrictions(
+      withAuthorization(withPurgeGuard(withPrisma(get)), {
+        roles: [Role.PROFESSOR, Role.STUDENT],
+      }),
+    ),
   ),
 })

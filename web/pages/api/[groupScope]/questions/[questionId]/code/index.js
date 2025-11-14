@@ -22,7 +22,8 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // get the code of the question
   const { questionId } = req.query
   const code = await prisma.code.findUnique({
@@ -36,6 +37,6 @@ const get = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
+    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
   }),
 )

@@ -22,7 +22,8 @@ import {
 import { withPrisma } from '@/middleware/withPrisma'
 import { getUser } from '@/code/auth/auth'
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // change the selected group of the users
   const { groupScope } = req.body
 
@@ -82,5 +83,5 @@ const put = async (req, res, prisma) => {
 }
 
 export default withMethodHandler({
-  PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
+  PUT: withAuthorization(withPrisma(put), { roles: [Role.PROFESSOR] }),
 })

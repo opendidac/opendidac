@@ -20,6 +20,7 @@ import {
   withAuthorization,
 } from '@/middleware/withAuthorization'
 import { withRestrictions } from '@/middleware/withRestrictions'
+import { withEvaluation } from '@/middleware/withEvaluation'
 import {
   Role,
   QuestionType,
@@ -31,21 +32,11 @@ import { questionSelectClause } from '@/code/questions'
 import { grading } from '@/code/grading/engine'
 import { getUser } from '@/code/auth/auth'
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma, evaluation } = ctx
   const { evaluationId } = req.query
   const user = await getUser(req, res)
   const studentEmail = user.email
-
-  const evaluation = await prisma.evaluation.findUnique({
-    where: {
-      id: evaluationId,
-    },
-  })
-
-  if (!evaluation) {
-    res.status(404).json({ message: 'Not found' })
-    return
-  }
 
   if (!isJoinable(evaluation.phase)) {
     // useRestrictions checks if the evaluation phase is after composition phase
@@ -338,7 +329,11 @@ const createExactMatchTypeSpecificData = async (
 }
 
 export default withMethodHandler({
-  POST: withRestrictions(
-    withAuthorization(withPrisma(post), [Role.PROFESSOR, Role.STUDENT]),
+  POST: withEvaluation(
+    withRestrictions(
+      withAuthorization(withPrisma(post), {
+        roles: [Role.PROFESSOR, Role.STUDENT],
+      }),
+    ),
   ),
 })

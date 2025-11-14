@@ -29,7 +29,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * del: delete a query for a database question
  */
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // update a query for a database question
 
   const { questionId, queryId } = req.query
@@ -93,7 +94,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json(query)
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // DELETE a query for a database question
 
   const { questionId, queryId } = req.query
@@ -157,11 +159,11 @@ const del = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), [
-      Role.PROFESSOR,
-    ]),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
+    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

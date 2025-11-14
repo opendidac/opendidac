@@ -22,7 +22,8 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 
-const unarchive = async (req, res, prisma) => {
+const unarchive = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
   const question = await prisma.question.findUnique({
     where: { id: questionId },
@@ -51,6 +52,6 @@ const unarchive = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    POST: withAuthorization(withPrisma(unarchive), [Role.PROFESSOR]),
+    POST: withAuthorization(withPrisma(unarchive), { roles: [Role.PROFESSOR] }),
   }),
 )

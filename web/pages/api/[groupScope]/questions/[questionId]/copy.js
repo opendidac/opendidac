@@ -23,7 +23,8 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 
-const post = async (req, res, prisma) => {
+const post = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { groupScope, questionId } = req.query
 
   // Step 1: Retrieve the question
@@ -56,6 +57,6 @@ const post = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
+    POST: withAuthorization(withPrisma(post), { roles: [Role.PROFESSOR] }),
   }),
 )

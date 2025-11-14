@@ -25,7 +25,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /** Managing the order of the options of a multichoice question */
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // update the order of the options in the multiple choice question
   const { options } = req.body
 
@@ -46,8 +47,8 @@ const put = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

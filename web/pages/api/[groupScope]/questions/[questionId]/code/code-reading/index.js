@@ -31,7 +31,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  *
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   //
   const { questionId } = req.query
   const codeReading = await prisma.codeReading.findUnique({
@@ -45,7 +46,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(codeReading)
 }
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // update a code reading
   const { questionId } = req.query
 
@@ -68,9 +70,9 @@ const put = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
+    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), {
+      roles: [Role.PROFESSOR],
+    }),
   }),
 )

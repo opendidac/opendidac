@@ -14,20 +14,26 @@
  * limitations under the License.
  */
 
-import { getPrisma } from './withPrisma'
-
 function withEntityUpdate(updateFunction) {
-  const prisma = getPrisma()
+  return function (handler, args = {}) {
+    return async (ctx) => {
+      const { req, res, prisma } = ctx
 
-  return function (handler) {
-    return async (req, res) => {
+      if (!prisma) {
+        return res.status(500).json({
+          type: 'error',
+          message:
+            'Prisma client not available. Did you call withPrisma middleware?',
+        })
+      }
+
       // Wrap the original response.send function
       const originalSend = res.send.bind(res)
 
       // Replace the res.send function with custom logic
-      res.send = async function (...args) {
+      res.send = async function (...sendArgs) {
         // Call the original send function to send the response
-        originalSend(...args)
+        originalSend(...sendArgs)
 
         // Check if the response was successful
         if (res.statusCode === 200) {
@@ -42,7 +48,7 @@ function withEntityUpdate(updateFunction) {
       }
 
       // Execute the original handler
-      await handler(req, res, prisma)
+      return handler(ctx, args)
     }
   }
 }

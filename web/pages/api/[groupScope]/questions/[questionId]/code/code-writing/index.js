@@ -22,7 +22,8 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
   const codeWriting = await prisma.codeWriting.findUnique({
     where: { questionId },
@@ -30,7 +31,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(codeWriting)
 }
 
-const put = async (req, res, prisma) => {
+const put = async (ctx, args) => {
+  const { req, res, prisma } = ctx
   // enable / disable code check for code writing
   const { questionId } = req.query
   const { codeCheckEnabled } = req.body
@@ -44,7 +46,7 @@ const put = async (req, res, prisma) => {
 
 export default withGroupScope(
   withMethodHandler({
-    PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
+    PUT: withAuthorization(withPrisma(put), { roles: [Role.PROFESSOR] }),
+    GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
   }),
 )
