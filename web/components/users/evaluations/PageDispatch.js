@@ -33,17 +33,7 @@ const PageDispatch = () => {
     `/api/users/evaluations/${evaluationId}/dispatch`,
     evaluationId ? fetcher : null,
     {
-      refreshInterval: (latestData, latestError) => {
-        // Stop refreshing if there's a non-retryable error (401, 403, 410, etc.)
-        if (
-          latestError?.status === 401 ||
-          latestError?.status === 403 ||
-          latestError?.status === 410
-        ) {
-          return 0
-        }
-        return 1000
-      },
+      refreshInterval: 1000,
     },
   )
 
