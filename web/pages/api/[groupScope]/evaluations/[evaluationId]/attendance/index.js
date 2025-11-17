@@ -17,10 +17,10 @@
 import { Role } from '@prisma/client'
 import { withPrisma } from '@/middleware/withPrisma'
 import {
-  withMethodHandler,
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 
 const get = async (ctx, args) => {
   const { req, res, prisma } = ctx

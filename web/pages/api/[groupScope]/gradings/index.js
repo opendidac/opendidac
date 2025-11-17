@@ -18,8 +18,8 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 
 /** Managing the grading of a qstudent answer

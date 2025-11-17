@@ -16,10 +16,8 @@
 
 import { Role } from '@prisma/client'
 import { getUser } from '@/code/auth/auth'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 
 /** Managing the members of a group

@@ -17,10 +17,8 @@
 import { Role, Prisma } from '@prisma/client'
 import { runSandboxDB } from '@/sandbox/runSandboxDB'
 import { runSQLFluffSandbox } from '@/sandbox/runSQLFluffSandbox'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 

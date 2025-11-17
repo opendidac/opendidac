@@ -20,10 +20,8 @@ import fs from 'fs'
 import path from 'path'
 import mime from 'mime'
 import { promisify } from 'util'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { Role } from '@prisma/client'
 
 const stat = promisify(fs.stat)

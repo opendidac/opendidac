@@ -19,8 +19,8 @@ import { Role, UserOnEvaluationStatus } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 
 // update the status of a student in an evaluation

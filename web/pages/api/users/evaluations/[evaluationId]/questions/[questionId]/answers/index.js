@@ -26,10 +26,8 @@ import {
 
 import { isInProgress } from './utils'
 import { grading } from '@/code/grading/engine'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 import {
   withEvaluationPhase,

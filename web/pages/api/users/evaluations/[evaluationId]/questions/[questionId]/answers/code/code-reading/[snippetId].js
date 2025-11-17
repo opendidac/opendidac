@@ -23,10 +23,8 @@ import {
 } from '@prisma/client'
 import { grading } from '@/code/grading/engine'
 import { withPrisma } from '@/middleware/withPrisma'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import {
   withEvaluationPhase,
   withStudentStatus,

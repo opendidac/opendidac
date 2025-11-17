@@ -17,10 +17,8 @@
 import { Role } from '@prisma/client'
 import { isInProgress } from '@/pages/api/users/evaluations/[evaluationId]/questions/[questionId]/answers/utils'
 import { runSandboxDB } from '@/sandbox/runSandboxDB'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 import { getUser } from '@/code/auth/auth'
 

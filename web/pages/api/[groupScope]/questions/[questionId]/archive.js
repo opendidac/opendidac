@@ -18,8 +18,8 @@ import { Role, QuestionStatus, EvaluationPhase } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 
 const archive = async (ctx, args) => {

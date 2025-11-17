@@ -16,10 +16,8 @@
 
 import fs from 'fs/promises'
 import path from 'path'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 import { runSandbox } from '@/sandbox/runSandboxTC'
 import { CodeQuestionType, Role } from '@prisma/client'

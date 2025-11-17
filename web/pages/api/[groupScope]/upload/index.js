@@ -25,8 +25,8 @@ import slugify from 'slugify'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { Role } from '@prisma/client'
 
 const MAX_IMAGE_WIDTH_PX = 1920

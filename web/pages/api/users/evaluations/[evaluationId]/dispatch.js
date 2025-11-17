@@ -16,15 +16,14 @@
 
 import { Role, EvaluationPhase } from '@prisma/client'
 import { withPrisma } from '@/middleware/withPrisma'
-import {
-  withMethodHandler,
-  withAuthorization,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 
 import { phaseGT } from '@/code/phase'
 import { getUser } from '@/code/auth/auth'
 import { withRestrictions } from '@/middleware/withRestrictions'
 import { withEvaluation } from '@/middleware/withEvaluation'
+import { withPurgeGuard } from '@/middleware/withPurged'
 
 /*
 fetch the informations necessary to decide where the users should be redirected
@@ -47,9 +46,11 @@ const get = async (ctx, args) => {
   if (!userOnEvaluation) {
     if (phaseGT(evaluation.phase, EvaluationPhase.IN_PROGRESS)) {
       // the users is not in the evaluation, and the evaluation after the in progress phase
-      res
-        .status(401)
-        .json({ message: "It is too late to apologize. It's too late." })
+      res.status(401).json({
+        type: 'error',
+        id: 'too-late-to-join',
+        message: "It is too late to apologize. It's too late.",
+      })
       return
     }
     // the users is not in the evaluation, but its not to late to join
@@ -79,10 +80,12 @@ const get = async (ctx, args) => {
 export default withMethodHandler({
   GET: withPrisma(
     withEvaluation(
-      withRestrictions(
-        withAuthorization(get, {
-          roles: [Role.PROFESSOR, Role.STUDENT],
-        }),
+      withPurgeGuard(
+        withRestrictions(
+          withAuthorization(get, {
+            roles: [Role.PROFESSOR, Role.STUDENT],
+          }),
+        ),
       ),
     ),
   ),

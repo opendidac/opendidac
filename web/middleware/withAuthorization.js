@@ -210,17 +210,3 @@ export function withAuthorization(handler, args = {}) {
     return handler(ctxWithRoles, handlerArgs)
   }
 }
-
-export function withMethodHandler(methodHandlers) {
-  const args = { methods: methodHandlers }
-  return async (req, res) => {
-    const handler = methodHandlers[req.method]
-    if (!handler) {
-      return res.status(405).json({ message: 'Method not allowed' })
-    }
-
-    // Convert (req, res) to context object for handlers
-    const ctx = { req, res }
-    await handler(ctx, args)
-  }
-}

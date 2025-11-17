@@ -19,8 +19,8 @@ import { withPrisma } from '@/middleware/withPrisma'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 
 import puppeteer from 'puppeteer'
 import Handlebars from 'handlebars'

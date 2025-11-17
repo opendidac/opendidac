@@ -22,10 +22,10 @@ import {
 } from '@prisma/client'
 import { withPrisma } from '@/middleware/withPrisma'
 import {
-  withMethodHandler,
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { copyQuestion, questionSelectClause } from '@/code/questions'
 
 // Compute duration delta in milliseconds from activation flag, hours and minutes

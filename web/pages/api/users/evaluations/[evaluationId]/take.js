@@ -18,10 +18,8 @@ import { EvaluationPhase, Role, UserOnEvaluationStatus } from '@prisma/client'
 
 import { getUser } from '@/code/auth/auth'
 import { isInProgress } from './questions/[questionId]/answers/utils'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 import {
   withEvaluationPhase,

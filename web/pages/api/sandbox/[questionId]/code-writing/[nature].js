@@ -16,10 +16,8 @@
 
 import { Role } from '@prisma/client'
 import { runSandbox } from '@/sandbox/runSandboxTC'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 
 /*

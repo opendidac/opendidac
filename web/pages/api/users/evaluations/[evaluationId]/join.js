@@ -15,10 +15,8 @@
  */
 
 import { withPrisma } from '@/middleware/withPrisma'
-import {
-  withMethodHandler,
-  withAuthorization,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withRestrictions } from '@/middleware/withRestrictions'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import {

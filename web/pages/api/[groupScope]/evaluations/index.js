@@ -25,8 +25,8 @@ import { withPrisma } from '@/middleware/withPrisma'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { getUser } from '@/code/auth/auth'
 
 const get = async (ctx, args) => {

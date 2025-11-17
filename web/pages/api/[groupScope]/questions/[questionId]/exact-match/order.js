@@ -17,8 +17,8 @@
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 import { withPrisma } from '@/middleware/withPrisma'
 import { Role } from '@prisma/client'

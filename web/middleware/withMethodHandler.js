@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+export function withMethodHandler(methodHandlers) {
+  const args = { methods: methodHandlers }
+  return async (req, res) => {
+    const handler = methodHandlers[req.method]
+    if (!handler) {
+      return res.status(405).json({ message: 'Method not allowed' })
+    }
 
-const get = async (ctx, args) => {
-  const { req, res } = ctx
-  const terms = process.env.TERMS_OF_SERVICE
-  if (!terms) {
-    return res.status(404).json({ error: 'Terms of service not configured' })
+    // Convert (req, res) to context object for handlers
+    const ctx = { req, res }
+    await handler(ctx, args)
   }
-  res.status(200).json({ terms })
 }
-
-export default withMethodHandler({
-  GET: get,
-})

@@ -16,10 +16,8 @@
 
 import { Role } from '@prisma/client'
 import { withPrisma } from '@/middleware/withPrisma'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withRestrictions } from '@/middleware/withRestrictions'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import { getUser } from '@/code/auth/auth'

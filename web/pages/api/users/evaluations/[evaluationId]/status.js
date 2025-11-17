@@ -15,10 +15,8 @@
  */
 
 import { getUser } from '@/code/auth/auth'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 import { withRestrictions } from '@/middleware/withRestrictions'
 import { withEvaluation } from '@/middleware/withEvaluation'

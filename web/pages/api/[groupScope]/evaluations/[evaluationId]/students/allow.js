@@ -21,10 +21,10 @@ import {
 } from '@prisma/client'
 import { withPrisma } from '@/middleware/withPrisma'
 import {
-  withMethodHandler,
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { phaseGT } from '@/code/phase'
 
 /* 

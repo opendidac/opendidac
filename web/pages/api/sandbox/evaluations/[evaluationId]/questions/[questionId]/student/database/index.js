@@ -20,10 +20,8 @@ import { isInProgress } from '@/pages/api/users/evaluations/[evaluationId]/quest
 import { runSandboxDB } from '@/sandbox/runSandboxDB'
 import { runTestsOnDatasets } from '@/code/database'
 import { runSQLFluffSandbox } from '@/sandbox/runSQLFluffSandbox'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 import { getUser } from '@/code/auth/auth'
 

@@ -17,10 +17,10 @@
 import { Role } from '@prisma/client'
 import { withPrisma } from '@/middleware/withPrisma'
 import {
-  withMethodHandler,
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 
 /* 
 Get the list of students who have been denied access to the evaluation

@@ -19,8 +19,8 @@ import { copyQuestion, questionSelectClause } from '@/code/questions'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 
 const post = async (ctx, args) => {
