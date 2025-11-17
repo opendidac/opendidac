@@ -25,7 +25,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /** Managing the order of the options of a multichoice question */
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   // update the order of the options in the multiple choice question
   const { options } = req.body

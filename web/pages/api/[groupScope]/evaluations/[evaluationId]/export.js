@@ -166,7 +166,7 @@ Handlebars.registerHelper(
 Handlebars.registerHelper('exactMatchFieldAnswer', exactMatchFieldAnswer)
 Handlebars.registerHelper('isExactMatchFieldCorrect', isExactMatchFieldCorrect)
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { groupScope, evaluationId } = req.query
 

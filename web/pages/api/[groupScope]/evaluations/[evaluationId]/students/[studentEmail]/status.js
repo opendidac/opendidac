@@ -24,7 +24,7 @@ import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 
 // update the status of a student in an evaluation
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   const { evaluationId, studentEmail } = req.query
 

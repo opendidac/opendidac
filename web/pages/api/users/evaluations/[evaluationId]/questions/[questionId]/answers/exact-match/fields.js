@@ -30,7 +30,7 @@ import {
 import { getUser } from '@/code/auth/auth'
 import { grading } from '@/code/grading/engine'
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   const user = await getUser(req, res)
   const userEmail = user.email

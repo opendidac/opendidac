@@ -23,7 +23,7 @@ import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   // get the solution queries for a database question
 
@@ -55,7 +55,7 @@ const get = async (ctx, args) => {
   res.status(200).json(queries)
 }
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   // create a new empty solution query for a database question
   const { questionId } = req.query

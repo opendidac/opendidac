@@ -79,7 +79,7 @@ const getStudentAnswer = async (prisma, studentEmail, questionId) => {
   })
 }
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const user = await getUser(req, res)
 

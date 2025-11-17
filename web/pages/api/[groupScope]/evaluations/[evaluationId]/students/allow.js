@@ -32,7 +32,7 @@ Add particular student to the access list.
 In this scenario the student was denied access because he was not yet in the access list.
 */
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const { groupScope, evaluationId } = req.query
   const { studentEmail } = req.body

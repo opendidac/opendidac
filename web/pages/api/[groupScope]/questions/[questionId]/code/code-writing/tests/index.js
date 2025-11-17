@@ -29,7 +29,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * post: create a new test case for a code question
  */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   // get the list of test cases for a code question
   const { questionId } = req.query
@@ -45,7 +45,7 @@ const get = async (ctx, args) => {
   res.status(200).json(testCases)
 }
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   // create a new test case for a code question
   const { questionId } = req.query

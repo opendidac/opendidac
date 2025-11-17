@@ -23,7 +23,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
 import { withPrisma } from '@/middleware/withPrisma'
 import { Role } from '@prisma/client'
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   const { fields } = req.body
 

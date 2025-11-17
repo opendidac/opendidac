@@ -26,7 +26,7 @@ import { withMethodHandler } from '@/middleware/withMethodHandler'
 Get the list of students who have been denied access to the evaluation
 */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const evaluation = await prisma.evaluation.findUnique({

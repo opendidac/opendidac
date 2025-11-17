@@ -23,7 +23,7 @@ import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   // update a code snippet
 
@@ -62,7 +62,7 @@ const put = async (ctx, args) => {
   res.status(200).json(codeReadingSnippet)
 }
 
-const del = async (ctx, args) => {
+const del = async (ctx) => {
   const { req, res, prisma } = ctx
   // delete a code snippet
 

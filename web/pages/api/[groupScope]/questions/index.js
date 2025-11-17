@@ -41,7 +41,7 @@ const environments = languages.environments
  *
  */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const where = questionsFilterWhereClause(req.query)
 
@@ -65,7 +65,7 @@ const get = async (ctx, args) => {
   res.status(200).json(questions)
 }
 
-export const post = async (ctx, args) => {
+export const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const { groupScope } = req.query
   const { type, options } = req.body

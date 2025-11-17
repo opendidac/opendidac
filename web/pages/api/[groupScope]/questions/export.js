@@ -23,7 +23,7 @@ import {
 import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const { groupScope } = req.query
   const { questionIds } = req.body

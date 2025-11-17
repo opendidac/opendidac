@@ -20,7 +20,7 @@ import { withAuthorization } from '@/middleware/withAuthorization'
 import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { pullImage } from '@/sandbox/utils'
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res } = ctx
   const { image } = req.body
   // Pull the latest docker image

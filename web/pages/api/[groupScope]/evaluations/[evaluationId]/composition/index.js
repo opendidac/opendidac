@@ -24,7 +24,7 @@ import { withPrisma } from '@/middleware/withPrisma'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
 import { questionSelectClause } from '@/code/questions'
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
 
@@ -68,7 +68,7 @@ const get = async (ctx, args) => {
   res.status(200).json(evaluation.evaluationToQuestions)
 }
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   // add a new question to a evaluation
   const { evaluationId } = req.query

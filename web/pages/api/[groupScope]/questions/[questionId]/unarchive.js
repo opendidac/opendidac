@@ -22,7 +22,7 @@ import {
 import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 
-const unarchive = async (ctx, args) => {
+const unarchive = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
   const question = await prisma.question.findUnique({

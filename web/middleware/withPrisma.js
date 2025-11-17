@@ -23,7 +23,7 @@ if (!global.xyz_prisma) {
 export function withPrisma(handler, args = {}) {
   return async (ctx) => {
     const ctxWithPrisma = { ...ctx, prisma: global.xyz_prisma }
-    return handler(ctxWithPrisma, args)
+    return handler(ctxWithPrisma)
   }
 }
 

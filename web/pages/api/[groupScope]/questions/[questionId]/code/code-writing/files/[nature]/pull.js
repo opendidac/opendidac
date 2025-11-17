@@ -30,7 +30,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * Pull deletes any existing template files and replaces them with the solution files
  */
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   // copy solution files to template files
 

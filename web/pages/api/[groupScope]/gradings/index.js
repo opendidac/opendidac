@@ -27,7 +27,7 @@ import { withPrisma } from '@/middleware/withPrisma'
  * Used by the page Evaluation Grading
  */
 
-const patch = async (ctx, args) => {
+const patch = async (ctx) => {
   const { req, res, prisma } = ctx
   const {
     grading: {

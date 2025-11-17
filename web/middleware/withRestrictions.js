@@ -117,7 +117,7 @@ export const withRestrictions = (handler, args = {}) => {
     }
 
     if (!evaluationId) {
-      return handler(ctx, args)
+      return handler(ctx)
     }
 
     if (!evaluation) {
@@ -194,6 +194,6 @@ export const withRestrictions = (handler, args = {}) => {
     }
 
     // ---- PASS THROUGH WHEN ALL RULES OK ----
-    return handler(ctx, args)
+    return handler(ctx)
   }
 }

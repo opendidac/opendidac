@@ -40,7 +40,7 @@ Each question has included the answer for that particular users only
 
 const get = withEvaluationPhase(
   withStudentStatus(
-    async (ctx, args) => {
+    async (ctx) => {
       const { req, res, prisma } = ctx
       const { evaluationId } = req.query
       const user = await getUser(req, res)

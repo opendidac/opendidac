@@ -15,7 +15,6 @@
  */
 
 export function withMethodHandler(methodHandlers) {
-  const args = { methods: methodHandlers }
   return async (req, res) => {
     const handler = methodHandlers[req.method]
     if (!handler) {
@@ -24,6 +23,6 @@ export function withMethodHandler(methodHandlers) {
 
     // Convert (req, res) to context object for handlers
     const ctx = { req, res }
-    await handler(ctx, args)
+    await handler(ctx)
   }
 }

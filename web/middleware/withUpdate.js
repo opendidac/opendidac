@@ -29,7 +29,7 @@ function withEntityUpdate(updateFunction) {
 
       // Execute the original handler
       try {
-        await handler(ctx, args)
+        await handler(ctx)
 
         // Check if the response was successful and update the entity
         // res.statusCode is set when res.status() is called

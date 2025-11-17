@@ -25,7 +25,7 @@ import { withPrisma } from '@/middleware/withPrisma'
  * del: delete a group
  * put: update a group label
  */
-const del = async (ctx, args) => {
+const del = async (ctx) => {
   const { req, res, prisma } = ctx
   // delete a group
   const { groupId } = req.query
@@ -56,7 +56,7 @@ const del = async (ctx, args) => {
   res.status(200).json({ message: 'Group deleted' })
 }
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   // update a group
   const { groupId } = req.query

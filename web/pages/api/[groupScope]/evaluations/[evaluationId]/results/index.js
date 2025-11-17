@@ -25,7 +25,7 @@ import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 import { withPurgeGuard } from '@/middleware/withPurged'
 import { withEvaluation } from '@/middleware/withEvaluation'
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const evaluation = await prisma.evaluation.findUnique({

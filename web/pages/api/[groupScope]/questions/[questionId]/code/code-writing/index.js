@@ -22,7 +22,7 @@ import {
 import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
   const codeWriting = await prisma.codeWriting.findUnique({
@@ -31,7 +31,7 @@ const get = async (ctx, args) => {
   res.status(200).json(codeWriting)
 }
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   // enable / disable code check for code writing
   const { questionId } = req.query

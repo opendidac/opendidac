@@ -56,7 +56,7 @@ model Annotation {
 }
  */
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   const { annotation } = req.body
 
@@ -81,7 +81,7 @@ const put = async (ctx, args) => {
   res.status(200).json(updatedAnnotation)
 }
 
-const del = async (ctx, args) => {
+const del = async (ctx) => {
   const { req, res, prisma } = ctx
   const { annotationId } = req.query
 

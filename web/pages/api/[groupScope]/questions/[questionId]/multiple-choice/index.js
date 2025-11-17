@@ -30,7 +30,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  */
 
 // get the multichoice
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
 
@@ -56,7 +56,7 @@ const get = async (ctx, args) => {
 }
 
 // update the multichoice first level attributes
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
   const {

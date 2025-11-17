@@ -30,7 +30,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * post: create a new file for a code question
  */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   // get the [nature] files for a code question
 
@@ -54,7 +54,7 @@ const get = async (ctx, args) => {
   res.status(200).json(codeToFiles)
 }
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   // create a new file for a code question
   // as the file is created for a code question we handle it through CodeToFile entity

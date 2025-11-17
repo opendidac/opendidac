@@ -16,7 +16,7 @@
 
 import { withMethodHandler } from '@/middleware/withMethodHandler'
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res } = ctx
   const terms = process.env.TERMS_OF_SERVICE
   if (!terms) {

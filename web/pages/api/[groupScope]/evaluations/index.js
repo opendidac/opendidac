@@ -29,7 +29,7 @@ import {
 import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { getUser } from '@/code/auth/auth'
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   // shallow session to question get -> we just need to count the number of questions
   const { groupScope } = req.query
@@ -79,7 +79,7 @@ const get = async (ctx, args) => {
 /*
  ** Creating a new evaluation
  * */
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const { groupScope } = req.query
 

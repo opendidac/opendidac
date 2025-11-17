@@ -22,7 +22,7 @@ import {
 import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   const { groupScope, evaluationId, questionId } = req.query
   const { addendum } = req.body

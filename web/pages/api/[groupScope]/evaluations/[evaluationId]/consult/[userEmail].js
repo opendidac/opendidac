@@ -24,7 +24,7 @@ import { withEvaluation } from '@/middleware/withEvaluation'
 /*
   Professor can consult the users's answers to the questions of a evaluation
 */
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { evaluationId, userEmail } = req.query
 

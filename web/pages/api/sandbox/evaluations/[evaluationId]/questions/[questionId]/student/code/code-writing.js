@@ -30,7 +30,7 @@ import { getUser } from '@/code/auth/auth'
  endpoint to run the code sandbox for a users (generally students) answers
  Only uses files stored in the database
  */
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const user = await getUser(req, res)
 

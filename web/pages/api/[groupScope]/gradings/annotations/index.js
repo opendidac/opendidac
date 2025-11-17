@@ -56,7 +56,7 @@ model Annotation {
 }
  */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { entityType, entityId } = req.query
 
@@ -72,7 +72,7 @@ const get = async (ctx, args) => {
   res.status(200).json(annotation)
 }
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const { student, question, annotation, entityType, entity } = req.body
 

@@ -32,7 +32,7 @@ import { withPrisma } from '@/middleware/withPrisma'
  *  database and code question have separate endpoints
  */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   // get a question by id
   const { groupScope, questionId } = req.query
@@ -53,7 +53,7 @@ const get = async (ctx, args) => {
   res.status(200).json(question)
 }
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   const { groupScope } = req.query
   const { question } = req.body
@@ -110,7 +110,7 @@ const put = async (ctx, args) => {
   res.status(200).json(updatedQuestion)
 }
 
-const del = async (ctx, args) => {
+const del = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
   const question = await prisma.question.findUnique({

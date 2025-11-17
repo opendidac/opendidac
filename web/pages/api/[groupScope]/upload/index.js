@@ -92,7 +92,7 @@ const upload = multer({
   limits: { fileSize: MAX_FILE_SIZE },
 }).single('file')
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res } = ctx
   upload(req, res, async function (err) {
     if (err) {

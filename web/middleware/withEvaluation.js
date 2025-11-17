@@ -41,7 +41,7 @@ export const withEvaluation = (handler, args = {}) => {
     }
 
     if (!evaluationId) {
-      return handler(ctx, args)
+      return handler(ctx)
     }
 
     const evaluation = await prisma.evaluation.findUnique({
@@ -76,6 +76,6 @@ export const withEvaluation = (handler, args = {}) => {
 
     // Add evaluation to context
     const ctxWithEvaluation = { ...ctx, evaluation }
-    return handler(ctxWithEvaluation, args)
+    return handler(ctxWithEvaluation)
   }
 }

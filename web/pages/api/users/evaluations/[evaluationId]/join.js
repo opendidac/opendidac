@@ -30,7 +30,7 @@ import { questionSelectClause } from '@/code/questions'
 import { grading } from '@/code/grading/engine'
 import { getUser } from '@/code/auth/auth'
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma, evaluation } = ctx
   const { evaluationId } = req.query
   const user = await getUser(req, res)

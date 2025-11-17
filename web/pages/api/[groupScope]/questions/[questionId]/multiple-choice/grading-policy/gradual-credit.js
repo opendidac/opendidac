@@ -30,7 +30,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  */
 
 // get the multichoice
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
 
@@ -45,7 +45,7 @@ const get = async (ctx, args) => {
 }
 
 // update the gradual credit policy
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
   const { negativeMarking, threshold } = req.body
@@ -64,7 +64,7 @@ const put = async (ctx, args) => {
 }
 
 // create the gradual credit policy
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
   const { negativeMarking, threshold } = req.body

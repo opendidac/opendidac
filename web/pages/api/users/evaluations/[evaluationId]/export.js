@@ -172,7 +172,7 @@ Handlebars.registerHelper(
 
 Handlebars.registerHelper('exactMatchFieldAnswer', exactMatchFieldAnswer)
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma, evaluation } = ctx
   const { evaluationId } = req.query
 

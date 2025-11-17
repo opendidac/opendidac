@@ -44,7 +44,7 @@ const isCodeReadingQuestionWithStudentOutputTest = (question) =>
   question.code.codeType === CodeQuestionType.codeReading &&
   question.code.codeReading.studentOutputTest
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const user = await getUser(req, res)
   const studentEmail = user.email
@@ -258,7 +258,7 @@ const get = async (ctx, args) => {
  ONLY : [true false, essay, web]
  The complexe question types have their own endpoints
 */
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   // update users answers
   const user = await getUser(req, res)

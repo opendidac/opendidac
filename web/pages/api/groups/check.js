@@ -26,7 +26,7 @@ import { withPrisma } from '@/middleware/withPrisma'
  *
  */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { label, scope, groupId } = req.query
 

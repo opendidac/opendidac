@@ -23,7 +23,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
 import { withPrisma } from '@/middleware/withPrisma'
 import { Role } from '@prisma/client'
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
   const { field } = req.body
@@ -51,7 +51,7 @@ const put = async (ctx, args) => {
   res.status(200).json(updatedField)
 }
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
   const { field } = req.body
@@ -72,7 +72,7 @@ const post = async (ctx, args) => {
   res.status(200).json(newField)
 }
 
-const del = async (ctx, args) => {
+const del = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
   const { fieldId } = req.body
@@ -119,7 +119,7 @@ const del = async (ctx, args) => {
   res.status(200).json({ message: 'Field deleted successfully' })
 }
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
 

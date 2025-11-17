@@ -33,7 +33,7 @@ import { getUser } from '@/code/auth/auth'
   Student updated his answer to a code wiritng file during an evaluation
 
 */
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   const user = await getUser(req, res)
   const studentEmail = user.email

@@ -28,7 +28,7 @@ export const withPurgeGuard = (handler, args = {}) => {
     }
 
     if (!evaluationId) {
-      return handler(ctx, args)
+      return handler(ctx)
     }
 
     // Evaluation must be provided by withEvaluation middleware
@@ -50,6 +50,6 @@ export const withPurgeGuard = (handler, args = {}) => {
       })
     }
 
-    return handler(ctx, args)
+    return handler(ctx)
   }
 }

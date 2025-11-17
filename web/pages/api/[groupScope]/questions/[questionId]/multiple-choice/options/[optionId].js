@@ -25,7 +25,7 @@ import { withPrisma } from '@/middleware/withPrisma'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 // Update a single option of a multiple choice question
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId, optionId } = req.query
   const { text, isCorrect } = req.body || {}
@@ -72,7 +72,7 @@ const put = async (ctx, args) => {
 }
 
 // Delete a single option of a multiple choice question
-const del = async (ctx, args) => {
+const del = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId, optionId } = req.query
 

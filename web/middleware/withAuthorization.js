@@ -168,16 +168,14 @@ export function withGroupScope(handler, args = {}) {
       }
     }
 
-    // Always pass (ctx, args) to the handler in the new pattern
-    // If we're in old pattern mode (prisma not in context), we still pass ctx
-    // but the handler will handle the old pattern if needed
-    return handler(ctx, actualArgs)
+    // Always pass ctx to the handler
+    return handler(ctx)
   }
 }
 
 export function withAuthorization(handler, args = {}) {
   const { roles: allowedRoles = [] } = args
-  return async (ctx, handlerArgs = {}) => {
+  return async (ctx) => {
     const { req, res } = ctx
 
     if (!req || !res) {
@@ -207,6 +205,6 @@ export function withAuthorization(handler, args = {}) {
 
     // Add roles to context
     const ctxWithRoles = { ...ctx, roles: userRoles }
-    return handler(ctxWithRoles, handlerArgs)
+    return handler(ctxWithRoles)
   }
 }

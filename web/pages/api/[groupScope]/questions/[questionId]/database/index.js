@@ -32,7 +32,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * put: update the database part of a question
  */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   // get the "database" part of the question
   const { questionId } = req.query
@@ -45,7 +45,7 @@ const get = async (ctx, args) => {
   res.status(200).json(database)
 }
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   // update the "database" part of the question
   const { questionId } = req.query

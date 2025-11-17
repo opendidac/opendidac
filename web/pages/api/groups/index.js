@@ -27,7 +27,7 @@ import { withPrisma } from '@/middleware/withPrisma'
  *
  */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   // get all groups with their created by information and members
   const user = await getUser(req, res)
@@ -109,7 +109,7 @@ const get = async (ctx, args) => {
   }
 }
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   // create a new group
   const { label, scope, select } = req.body

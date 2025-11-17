@@ -54,7 +54,7 @@ export function withStudentStatus(handler, args = {}) {
     }
 
     // Continue with the original handler
-    await handler(ctx, args)
+    await handler(ctx)
   }
 }
 
@@ -86,6 +86,6 @@ export function withEvaluationPhase(handler, args = {}) {
     }
 
     // Continue with the original handler if the phase is allowed
-    await handler(ctx, args)
+    await handler(ctx)
   }
 }

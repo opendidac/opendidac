@@ -29,7 +29,7 @@ used by the evaluation pages grading, finished and analytics to fetch the questi
 and include all users answers and gradings
 
 */
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { groupScope, evaluationId, withGradings = 'false' } = req.query
 

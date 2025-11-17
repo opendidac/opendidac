@@ -82,7 +82,7 @@ const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
   })
 }
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const evaluation = await prisma.evaluation.findUnique({
@@ -98,7 +98,7 @@ const get = async (ctx, args) => {
   res.status(200).json(evaluation)
 }
 
-const patch = async (ctx, args) => {
+const patch = async (ctx) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const { phase: nextPhase } = req.body

@@ -26,7 +26,7 @@ import { questionSelectClause, IncludeStrategy } from '@/code/questions'
 import { isFinished } from './questions/[questionId]/answers/utils'
 import { withPurgeGuard } from '@/middleware/withPurged'
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma, evaluation } = ctx
   const { evaluationId } = req.query
   const { email } = await getUser(req, res)

@@ -22,7 +22,7 @@ import { Role } from '@prisma/client'
 // Test group scopes to exclude (exact matches)
 const EXCLUDED_GROUP_SCOPES = ['demo', 'test']
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
 
   try {

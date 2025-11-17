@@ -22,7 +22,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withMethodHandler } from '@/middleware/withMethodHandler'
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
 

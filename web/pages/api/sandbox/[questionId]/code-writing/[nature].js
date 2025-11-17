@@ -24,7 +24,7 @@ import { withPrisma } from '@/middleware/withPrisma'
  endpoint to run the sandbox for a question with solution or template files recovered from the database
  used to run the sandbox for professor files, also use by pull solution output
  */
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId, nature } = req.query
 

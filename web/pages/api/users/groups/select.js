@@ -20,7 +20,7 @@ import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 import { getUser } from '@/code/auth/auth'
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   // change the selected group of the users
   const { groupScope } = req.body

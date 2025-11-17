@@ -41,7 +41,7 @@ import { questionsFilterWhereClause } from '@/code/questionsFilter'
  *   - unused
  *
  */
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const where = questionsFilterWhereClause(req.query)
 

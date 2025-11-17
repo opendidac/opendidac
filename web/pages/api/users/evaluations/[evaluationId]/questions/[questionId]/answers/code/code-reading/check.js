@@ -32,7 +32,7 @@ import { getUser } from '@/code/auth/auth'
   Student checked his answer to a code reading snippet during an evaluation
 
 */
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const user = await getUser(req, res)
   const studentEmail = user.email

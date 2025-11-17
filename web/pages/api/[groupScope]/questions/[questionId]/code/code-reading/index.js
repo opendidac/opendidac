@@ -31,7 +31,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  *
  */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   //
   const { questionId } = req.query
@@ -46,7 +46,7 @@ const get = async (ctx, args) => {
   res.status(200).json(codeReading)
 }
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   // update a code reading
   const { questionId } = req.query

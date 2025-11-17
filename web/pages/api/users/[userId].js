@@ -23,7 +23,7 @@ import { withPrisma } from '@/middleware/withPrisma'
  *
  * Update the roles of the user
  */
-const patch = async (ctx, args) => {
+const patch = async (ctx) => {
   const { req, res, prisma } = ctx
   const { roles } = req.body
 

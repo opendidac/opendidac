@@ -25,7 +25,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
 /*
  endpoint to run the sandbox for a database question with queries recovered from the database
  */
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
 

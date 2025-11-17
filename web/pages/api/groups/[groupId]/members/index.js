@@ -27,7 +27,7 @@ import { withPrisma } from '@/middleware/withPrisma'
  * del: remove a member from a group
  */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   // get all members of group
   const { groupId } = req.query
@@ -72,7 +72,7 @@ const get = async (ctx, args) => {
   res.status(200).json(members)
 }
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   // add member to group
   const { groupId } = req.query
@@ -125,7 +125,7 @@ const post = async (ctx, args) => {
   }
 }
 
-const del = async (ctx, args) => {
+const del = async (ctx) => {
   const { req, res, prisma } = ctx
   // remove a member from a group
   const { groupId } = req.query

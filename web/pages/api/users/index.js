@@ -25,7 +25,7 @@ import { getUser } from '@/code/auth/auth'
  * Search for users
  * Used by SuperAdmin page and  AutoComplete Search Component when adding a professor to a group
  */
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { search, role, page = 1, pageSize = 10 } = req.query
   const pageNumber = parseInt(page)

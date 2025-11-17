@@ -27,7 +27,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withMethodHandler } from '@/middleware/withMethodHandler'
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
 
@@ -58,7 +58,7 @@ const get = async (ctx, args) => {
   res.status(200).json(evaluation)
 }
 
-const patch = async (ctx, args) => {
+const patch = async (ctx) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
 
@@ -274,7 +274,7 @@ const patch = async (ctx, args) => {
   res.status(200).json(evaluationAfterUpdate)
 }
 
-const del = async (ctx, args) => {
+const del = async (ctx) => {
   const { req, res, prisma } = ctx
   const { groupScope, evaluationId } = req.query
 

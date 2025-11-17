@@ -22,7 +22,7 @@ import { withEvaluation } from '@/middleware/withEvaluation'
 import { getUser } from '@/code/auth/auth'
 import { purgeEvaluationData } from '@/code/evaluation/purge'
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma, evaluation } = ctx
   const { evaluationId } = req.query
 

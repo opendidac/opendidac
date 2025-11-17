@@ -33,7 +33,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * post: create the sandbox for a code question
  */
 
-const get = async (ctx, args) => {
+const get = async (ctx) => {
   const { req, res, prisma } = ctx
   // get the sandbox for a code question
   const { questionId } = req.query
@@ -46,7 +46,7 @@ const get = async (ctx, args) => {
   res.status(200).json(sandbox)
 }
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   // update a sandbox
   const { questionId } = req.query
@@ -66,7 +66,7 @@ const put = async (ctx, args) => {
   res.status(200).json(sandbox)
 }
 
-const post = async (ctx, args) => {
+const post = async (ctx) => {
   const { req, res, prisma } = ctx
   // create a new sandbox
   const { questionId } = req.query

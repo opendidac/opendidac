@@ -30,7 +30,7 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * del: delete a test case
  */
 
-const put = async (ctx, args) => {
+const put = async (ctx) => {
   const { req, res, prisma } = ctx
   // update a test case
   const { questionId, index } = req.query
@@ -51,7 +51,7 @@ const put = async (ctx, args) => {
   res.status(200).json(testCase)
 }
 
-const del = async (ctx, args) => {
+const del = async (ctx) => {
   const { req, res, prisma } = ctx
   const { questionId, index } = req.query
 
