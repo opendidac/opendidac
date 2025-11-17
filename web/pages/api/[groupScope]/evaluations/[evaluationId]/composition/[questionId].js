@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Role } from '@prisma/client'
+import { Role, EvaluationPhase } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
@@ -22,12 +22,23 @@ import {
 import { withMethodHandler } from '@/middleware/withMethodHandler'
 import { withPrisma } from '@/middleware/withPrisma'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
+import { withEvaluation } from '@/middleware/withEvaluation'
 
 const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+  const { req, res, prisma, evaluation } = ctx
   // update the evaluationToQuestion
   const { evaluationId, questionId } = req.query
   const body = req.body
+
+  // Check if evaluation is still in COMPOSITION phase
+  // Once it moves to REGISTRATION, questions are frozen (copied)
+  if (evaluation.phase !== EvaluationPhase.COMPOSITION) {
+    res.status(403).json({
+      message:
+        'Cannot update composition: evaluation has moved beyond composition phase',
+    })
+    return
+  }
 
   const allowedFields = ['points', 'title', 'gradingPoints']
 
@@ -49,9 +60,18 @@ const put = async (ctx) => {
 }
 
 const del = async (ctx) => {
-  const { req, res, prisma } = ctx
+  const { req, res, prisma, evaluation } = ctx
   // delete a question from an evaluation
   const { evaluationId, questionId } = req.query
+
+  // Check if evaluation is still in COMPOSITION phase
+  if (evaluation.phase !== EvaluationPhase.COMPOSITION) {
+    res.status(403).json({
+      message:
+        'Cannot modify composition: evaluation has moved beyond composition phase',
+    })
+    return
+  }
 
   // get the order of this question in the evaluation
   const order = await prisma.evaluationToQuestion.findFirst({
@@ -96,12 +116,12 @@ const del = async (ctx) => {
 
 export default withMethodHandler({
   PUT: withGroupScope(
-    withAuthorization(withPrisma(withEvaluationUpdate(put)), {
+    withAuthorization(withPrisma(withEvaluation(withEvaluationUpdate(put))), {
       roles: [Role.PROFESSOR],
     }),
   ),
   DELETE: withGroupScope(
-    withAuthorization(withPrisma(withEvaluationUpdate(del)), {
+    withAuthorization(withPrisma(withEvaluation(withEvaluationUpdate(del))), {
       roles: [Role.PROFESSOR],
     }),
   ),

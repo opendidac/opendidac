@@ -71,24 +71,17 @@ const migrateCodeQuestionsExpectedOutput = async (prisma) => {
         continue
       }
 
-      try {
-        await prisma.testCase.update({
-          where: {
-            index_questionId: {
-              index: testCase.index,
-              questionId: codeWriting.questionId,
-            },
+      await prisma.testCase.update({
+        where: {
+          index_questionId: {
+            index: testCase.index,
+            questionId: codeWriting.questionId,
           },
-          data: {
-            expectedOutput: testResult.output, // Update the expected output with the sandbox output
-          },
-        })
-      } catch (error) {
-        console.error(
-          `Error updating test case with input '${testResult.input}' for questionId ${codeWriting.questionId}:`,
-          error,
-        )
-      }
+        },
+        data: {
+          expectedOutput: testResult.output, // Update the expected output with the sandbox output
+        },
+      })
     }
   }
 
@@ -104,10 +97,12 @@ const extractUrlsFromMarkdown = (markdown) => {
   const urls = []
   let match
   while ((match = regexp.exec(markdown)) !== null) {
-    const url = match[0].match(
+    const urlMatch = match[0].match(
       /\((http:\/\/localhost:3000\/api\/assets\/[^\)]+)\)/,
-    )[1]
-    urls.push(url)
+    )
+    if (urlMatch && urlMatch[1]) {
+      urls.push(urlMatch[1])
+    }
   }
   return urls
 }
@@ -178,29 +173,25 @@ const post = async (ctx) => {
   const { req, res, prisma } = ctx
   const { action, options } = req.body
 
-  try {
-    switch (action) {
-      case 'run_all_sandboxes_and_update_expected_output':
-        const done = await migrateCodeQuestionsExpectedOutput(prisma)
-        res.status(200).json({ done })
-        break
-      case 'cleanup_unused_uploads':
-        const { all, deleted, referenced } = await cleanupUnusedUploads(
-          prisma,
-          options.domaine,
-        )
-        res.status(200).json({
-          message: 'Cleanup successful',
-          all,
-          deleted,
-          referenced,
-        })
-        break
-      default:
-        res.status(400).json({ error: 'Invalid action specified' })
-    }
-  } catch (error) {
-    res.status(500).json({ error: error.message })
+  switch (action) {
+    case 'run_all_sandboxes_and_update_expected_output':
+      const done = await migrateCodeQuestionsExpectedOutput(prisma)
+      res.status(200).json({ done })
+      break
+    case 'cleanup_unused_uploads':
+      const { all, deleted, referenced } = await cleanupUnusedUploads(
+        prisma,
+        options.domaine,
+      )
+      res.status(200).json({
+        message: 'Cleanup successful',
+        all,
+        deleted,
+        referenced,
+      })
+      break
+    default:
+      res.status(400).json({ error: 'Invalid action specified' })
   }
 }
 
