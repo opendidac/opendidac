@@ -108,7 +108,5 @@ const post = async (ctx) => {
 }
 
 export default withApiContext({
-  POST: withGroupScope(
-    withAuthorization(post, { roles: [Role.PROFESSOR] }),
-  ),
+  POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
 })

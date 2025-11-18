@@ -179,13 +179,7 @@ const del = async (ctx) => {
 }
 
 export default withApiContext({
-  GET: withGroupScope(
-    withAuthorization(get, { roles: [Role.PROFESSOR] }),
-  ),
-  PUT: withGroupScope(
-    withAuthorization(put, { roles: [Role.PROFESSOR] }),
-  ),
-  DELETE: withGroupScope(
-    withAuthorization(del, { roles: [Role.PROFESSOR] }),
-  ),
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  PUT: withGroupScope(withAuthorization(put, { roles: [Role.PROFESSOR] })),
+  DELETE: withGroupScope(withAuthorization(del, { roles: [Role.PROFESSOR] })),
 })

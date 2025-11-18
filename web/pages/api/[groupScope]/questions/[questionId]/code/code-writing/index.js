@@ -44,10 +44,6 @@ const put = async (ctx) => {
 }
 
 export default withApiContext({
-  GET: withGroupScope(
-    withAuthorization(get, { roles: [Role.PROFESSOR] }),
-  ),
-  PUT: withGroupScope(
-    withAuthorization(put, { roles: [Role.PROFESSOR] }),
-  ),
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  PUT: withGroupScope(withAuthorization(put, { roles: [Role.PROFESSOR] })),
 })

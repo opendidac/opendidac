@@ -233,10 +233,6 @@ const defaultCodeBasedOnLanguageAndType = (
 }
 
 export default withApiContext({
-  GET: withGroupScope(
-    withAuthorization(get, { roles: [Role.PROFESSOR] }),
-  ),
-  POST: withGroupScope(
-    withAuthorization(post, { roles: [Role.PROFESSOR] }),
-  ),
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
 })

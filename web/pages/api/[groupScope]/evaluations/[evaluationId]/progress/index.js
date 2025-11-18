@@ -121,7 +121,5 @@ export default withApiContext({
       }),
     ),
   ),
-  PATCH: withGroupScope(
-    withAuthorization(patch, { roles: [Role.PROFESSOR] }),
-  ),
+  PATCH: withGroupScope(withAuthorization(patch, { roles: [Role.PROFESSOR] })),
 })

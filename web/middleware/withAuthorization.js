@@ -15,7 +15,6 @@
  */
 
 import { getRoles, getUser } from '../code/auth/auth'
-import { getPrisma } from './withPrisma'
 
 /*
     Function to check if a users is member of the group
@@ -115,19 +114,17 @@ export function withGroupScope(handler, args = {}) {
         return res.status(400).json({ message: 'Entity id is required' })
       }
 
-      // Get prisma from context or create a new instance
+      // Get prisma from context
       const { prisma } = ctx
-      const prismaClient = prisma || getPrisma()
 
-      if (!prismaClient) {
+      if (!prisma) {
         return res.status(500).json({
           type: 'error',
-          message:
-            'Prisma client not available. Did you call withPrisma middleware?',
+          message: 'Prisma client not available in context.',
         })
       }
 
-      const entity = await prismaClient[entityName].findUnique({
+      const entity = await prisma[entityName].findUnique({
         where: {
           id: entityId,
         },

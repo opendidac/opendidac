@@ -22,7 +22,7 @@ const PRISMA_GLOBAL_KEY = 'opendidac_prisma_client'
 /**
  * Backend hook to get the Prisma client instance.
  * Enforces a single Prisma session across the application.
- * 
+ *
  * @returns {PrismaClient} The singleton Prisma client instance
  */
 const usePrisma = () => {
@@ -30,10 +30,9 @@ const usePrisma = () => {
   if (!global[PRISMA_GLOBAL_KEY]) {
     global[PRISMA_GLOBAL_KEY] = new PrismaClient()
   }
-  
+
   return global[PRISMA_GLOBAL_KEY]
 }
 
 // Export as getPrismaClient to avoid React hook linting rules
 export { usePrisma as getPrismaClient }
-
