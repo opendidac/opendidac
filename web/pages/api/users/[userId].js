@@ -16,8 +16,7 @@
 
 import { Role } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
 /**
  *
@@ -61,6 +60,6 @@ const patch = async (ctx) => {
   res.status(200).json(updatedUser)
 }
 
-export default withMethodHandler({
-  PATCH: withAuthorization(withPrisma(patch), { roles: [Role.SUPER_ADMIN] }),
+export default withApiContext({
+  PATCH: withAuthorization(patch, { roles: [Role.SUPER_ADMIN] }),
 })

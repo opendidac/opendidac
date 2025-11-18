@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 
 const get = async (ctx) => {
   const { req, res } = ctx
   res.status(200).json({ message: 'Connection check successful' })
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: get,
 })

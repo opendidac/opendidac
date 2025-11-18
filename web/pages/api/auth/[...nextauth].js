@@ -17,10 +17,10 @@
 import NextAuth from 'next-auth'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { Role } from '@prisma/client'
-import { getPrisma } from '@/middleware/withPrisma'
+import { getPrismaClient } from '@/code/hooks/usePrisma'
 import { getSSEClients, invalidateSSEClients } from '@/code/auth/sseClients'
 
-const prisma = getPrisma()
+const prisma = getPrismaClient()
 const prismaAdapter = PrismaAdapter(prisma)
 
 const MyAdapter = {

@@ -20,12 +20,11 @@ import {
   QuestionUsageStatus,
   Role,
 } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import { copyQuestion, questionSelectClause } from '@/code/questions'
 
 // Compute duration delta in milliseconds from activation flag, hours and minutes
@@ -184,13 +183,13 @@ const patch = async (ctx) => {
   res.status(200).json(evaluation)
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: withGroupScope(
-    withAuthorization(withPrisma(get), {
+    withAuthorization(get, {
       roles: [Role.PROFESSOR, Role.STUDENT],
     }),
   ),
   PATCH: withGroupScope(
-    withAuthorization(withPrisma(patch), { roles: [Role.PROFESSOR] }),
+    withAuthorization(patch, { roles: [Role.PROFESSOR] }),
   ),
 })

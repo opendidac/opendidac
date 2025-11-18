@@ -16,8 +16,7 @@
 
 import { getUser } from '@/code/auth/auth'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withRestrictions } from '@/middleware/withRestrictions'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import {
@@ -155,28 +154,24 @@ const put = async (ctx) => {
   res.status(200).json({ message: 'Evaluation completed' })
 }
 
-export default withMethodHandler({
-  GET: withPrisma(
-    withEvaluation(
-      withRestrictions(
-        withAuthorization(get, {
-          roles: [Role.PROFESSOR, Role.STUDENT],
-        }),
-      ),
+export default withApiContext({
+  GET: withEvaluation(
+    withRestrictions(
+      withAuthorization(get, {
+        roles: [Role.PROFESSOR, Role.STUDENT],
+      }),
     ),
   ),
-  PUT: withPrisma(
-    withEvaluation(
-      withRestrictions(
-        withAuthorization(
-          withEvaluationPhase(
-            withStudentStatus(put, {
-              statuses: [UserOnEvaluationStatus.IN_PROGRESS],
-            }),
-            { phases: [EvaluationPhase.IN_PROGRESS] },
-          ),
-          { roles: [Role.PROFESSOR, Role.STUDENT] },
+  PUT: withEvaluation(
+    withRestrictions(
+      withAuthorization(
+        withEvaluationPhase(
+          withStudentStatus(put, {
+            statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+          }),
+          { phases: [EvaluationPhase.IN_PROGRESS] },
         ),
+        { roles: [Role.PROFESSOR, Role.STUDENT] },
       ),
     ),
   ),

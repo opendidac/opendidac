@@ -17,7 +17,7 @@
 import { Role } from '@prisma/client'
 
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import { pullImage } from '@/sandbox/utils'
 
 const post = async (ctx) => {
@@ -39,7 +39,7 @@ const post = async (ctx) => {
   }
 }
 
-export default withMethodHandler({
+export default withApiContext({
   POST: withAuthorization(post, {
     roles: [Role.PROFESSOR, Role.STUDENT],
   }),

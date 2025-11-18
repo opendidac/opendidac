@@ -16,8 +16,7 @@
 
 import { Role } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { getUser } from '@/code/auth/auth'
 
 const put = async (ctx) => {
@@ -80,6 +79,6 @@ const put = async (ctx) => {
   res.status(200).json({ message: 'ok' })
 }
 
-export default withMethodHandler({
-  PUT: withAuthorization(withPrisma(put), { roles: [Role.PROFESSOR] }),
+export default withApiContext({
+  PUT: withAuthorization(put, { roles: [Role.PROFESSOR] }),
 })

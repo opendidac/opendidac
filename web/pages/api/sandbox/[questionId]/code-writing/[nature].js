@@ -17,8 +17,7 @@
 import { Role } from '@prisma/client'
 import { runSandbox } from '@/sandbox/runSandboxTC'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
 /*
  endpoint to run the sandbox for a question with solution or template files recovered from the database
@@ -78,6 +77,6 @@ const post = async (ctx) => {
   res.status(200).send(result)
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), { roles: [Role.PROFESSOR] }),
+export default withApiContext({
+  POST: withAuthorization(post, { roles: [Role.PROFESSOR] }),
 })

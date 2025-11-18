@@ -21,8 +21,7 @@ import { runSandboxDB } from '@/sandbox/runSandboxDB'
 import { runTestsOnDatasets } from '@/code/database'
 import { runSQLFluffSandbox } from '@/sandbox/runSQLFluffSandbox'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { getUser } from '@/code/auth/auth'
 
 /*
@@ -305,8 +304,8 @@ const post = async (ctx) => {
   res.status(200).json(studentAnswerDatabaseToQuery)
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), {
+export default withApiContext({
+  POST: withAuthorization(post, {
     roles: [Role.PROFESSOR, Role.STUDENT],
   }),
 })

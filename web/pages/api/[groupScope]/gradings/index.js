@@ -19,8 +19,7 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
 /** Managing the grading of a qstudent answer
  *
@@ -61,8 +60,8 @@ const patch = async (ctx) => {
   res.status(200).json(updatedGrading)
 }
 
-export default withMethodHandler({
+export default withApiContext({
   PATCH: withGroupScope(
-    withAuthorization(withPrisma(patch), { roles: [Role.PROFESSOR] }),
+    withAuthorization(patch, { roles: [Role.PROFESSOR] }),
   ),
 })

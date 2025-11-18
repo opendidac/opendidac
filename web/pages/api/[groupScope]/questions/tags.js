@@ -19,8 +19,7 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { questionsFilterWhereClause } from '@/code/questionsFilter'
 
 /**
@@ -64,8 +63,8 @@ const get = async (ctx) => {
   res.status(200).json(result)
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: withGroupScope(
-    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+    withAuthorization(get, { roles: [Role.PROFESSOR] }),
   ),
 })

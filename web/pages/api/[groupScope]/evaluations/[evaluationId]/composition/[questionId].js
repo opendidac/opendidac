@@ -19,8 +19,7 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
 import { withEvaluation } from '@/middleware/withEvaluation'
 
@@ -114,14 +113,14 @@ const del = async (ctx) => {
   res.status(200).json({ message: 'OK' })
 }
 
-export default withMethodHandler({
+export default withApiContext({
   PUT: withGroupScope(
-    withAuthorization(withPrisma(withEvaluation(withEvaluationUpdate(put))), {
+    withAuthorization(withEvaluation(withEvaluationUpdate(put)), {
       roles: [Role.PROFESSOR],
     }),
   ),
   DELETE: withGroupScope(
-    withAuthorization(withPrisma(withEvaluation(withEvaluationUpdate(del))), {
+    withAuthorization(withEvaluation(withEvaluationUpdate(del)), {
       roles: [Role.PROFESSOR],
     }),
   ),

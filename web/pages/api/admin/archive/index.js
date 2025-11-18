@@ -16,8 +16,7 @@
 
 import { Role, EvaluationPhase, ArchivalPhase } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
 /** Administrating evaluation data in regards to the archive
  *
@@ -165,8 +164,8 @@ const get = async (ctx) => {
   res.status(200).json(evaluations)
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), {
+export default withApiContext({
+  GET: withAuthorization(get, {
     roles: [Role.SUPER_ADMIN, Role.ARCHIVIST],
   }),
 })

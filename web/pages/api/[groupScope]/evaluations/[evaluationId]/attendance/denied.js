@@ -15,12 +15,11 @@
  */
 
 import { Role } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 
 /* 
 Get the list of students who have been denied access to the evaluation
@@ -48,8 +47,8 @@ const get = async (ctx) => {
   res.status(200).json(evaluation)
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: withGroupScope(
-    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+    withAuthorization(get, { roles: [Role.PROFESSOR] }),
   ),
 })

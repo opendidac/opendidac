@@ -15,12 +15,11 @@
  */
 
 import { Role } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 
 import puppeteer from 'puppeteer'
 import Handlebars from 'handlebars'
@@ -288,9 +287,9 @@ const get = async (ctx) => {
   }
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: withGroupScope(
-    withAuthorization(withPrisma(get), {
+    withAuthorization(get, {
       roles: [Role.PROFESSOR, Role.ARCHIVIST],
     }),
   ),

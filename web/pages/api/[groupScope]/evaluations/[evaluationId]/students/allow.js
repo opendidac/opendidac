@@ -19,12 +19,11 @@ import {
   Role,
   UserOnEvaluationAccessMode,
 } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import { phaseGT } from '@/code/phase'
 
 /* 
@@ -108,8 +107,8 @@ const post = async (ctx) => {
   res.status(200).json({ message: 'Student added to the access list' })
 }
 
-export default withMethodHandler({
+export default withApiContext({
   POST: withGroupScope(
-    withAuthorization(withPrisma(post), { roles: [Role.PROFESSOR] }),
+    withAuthorization(post, { roles: [Role.PROFESSOR] }),
   ),
 })

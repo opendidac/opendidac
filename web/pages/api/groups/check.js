@@ -16,8 +16,7 @@
 
 import { Role } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 /**
  * Check the group existence
  * Used by the group creation form to check if a group with the given label already exists
@@ -53,6 +52,6 @@ const get = async (ctx) => {
   }
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+export default withApiContext({
+  GET: withAuthorization(get, { roles: [Role.PROFESSOR] }),
 })

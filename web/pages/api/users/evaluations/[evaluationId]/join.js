@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import { withPrisma } from '@/middleware/withPrisma'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withRestrictions } from '@/middleware/withRestrictions'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import {
@@ -326,14 +325,12 @@ const createExactMatchTypeSpecificData = async (
   })
 }
 
-export default withMethodHandler({
-  POST: withPrisma(
-    withEvaluation(
-      withRestrictions(
-        withAuthorization(post, {
-          roles: [Role.PROFESSOR, Role.STUDENT],
-        }),
-      ),
+export default withApiContext({
+  POST: withEvaluation(
+    withRestrictions(
+      withAuthorization(post, {
+        roles: [Role.PROFESSOR, Role.STUDENT],
+      }),
     ),
   ),
 })

@@ -16,8 +16,7 @@
 
 import { Role } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import { getUser } from '@/code/auth/auth'
 
@@ -61,12 +60,10 @@ const post = async (ctx) => {
   res.status(200).json(archivedEvaluation)
 }
 
-export default withMethodHandler({
-  POST: withPrisma(
-    withEvaluation(
-      withAuthorization(post, {
-        roles: [Role.SUPER_ADMIN, Role.ARCHIVIST],
-      }),
-    ),
+export default withApiContext({
+  POST: withEvaluation(
+    withAuthorization(post, {
+      roles: [Role.SUPER_ADMIN, Role.ARCHIVIST],
+    }),
   ),
 })

@@ -17,8 +17,7 @@
 import { Role } from '@prisma/client'
 import { getUser } from '@/code/auth/auth'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 /**
  * Managing group
  *
@@ -109,7 +108,7 @@ const put = async (ctx) => {
   res.status(200).json(updatedGroup)
 }
 
-export default withMethodHandler({
-  DELETE: withAuthorization(withPrisma(del), { roles: [Role.PROFESSOR] }),
-  PUT: withAuthorization(withPrisma(put), { roles: [Role.PROFESSOR] }),
+export default withApiContext({
+  DELETE: withAuthorization(del, { roles: [Role.PROFESSOR] }),
+  PUT: withAuthorization(put, { roles: [Role.PROFESSOR] }),
 })

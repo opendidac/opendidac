@@ -17,8 +17,7 @@
 import { QuestionStatus, QuestionSource, Role } from '@prisma/client'
 import { getUser } from '@/code/auth/auth'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 /**
  * Managing groups
  *
@@ -165,7 +164,7 @@ const post = async (ctx) => {
   }
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), { roles: [Role.SUPER_ADMIN] }),
-  POST: withAuthorization(withPrisma(post), { roles: [Role.PROFESSOR] }),
+export default withApiContext({
+  GET: withAuthorization(get, { roles: [Role.SUPER_ADMIN] }),
+  POST: withAuthorization(post, { roles: [Role.PROFESSOR] }),
 })

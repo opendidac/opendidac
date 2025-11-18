@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 
 const get = async (ctx) => {
   const { req, res } = ctx
@@ -25,6 +25,6 @@ const get = async (ctx) => {
   res.status(200).json({ terms })
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: get,
 })

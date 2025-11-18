@@ -17,8 +17,7 @@
 import { Role } from '@prisma/client'
 import { runSandbox } from '@/sandbox/runSandboxTC'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import languages from '@/code/languages.json'
 
 const environments = languages.environments
@@ -152,6 +151,6 @@ const post = async (ctx) => {
   res.status(200).send(results)
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), { roles: [Role.PROFESSOR] }),
+export default withApiContext({
+  POST: withAuthorization(post, { roles: [Role.PROFESSOR] }),
 })

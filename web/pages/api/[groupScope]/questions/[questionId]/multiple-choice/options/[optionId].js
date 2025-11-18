@@ -20,8 +20,7 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 // Update a single option of a multiple choice question
@@ -123,14 +122,14 @@ const del = async (ctx) => {
   res.status(200).json({ message: 'Option deleted and reordered' })
 }
 
-export default withMethodHandler({
+export default withApiContext({
   PUT: withGroupScope(
-    withAuthorization(withPrisma(withQuestionUpdate(put)), {
+    withAuthorization(withQuestionUpdate(put), {
       roles: [Role.PROFESSOR],
     }),
   ),
   DELETE: withGroupScope(
-    withAuthorization(withPrisma(withQuestionUpdate(del)), {
+    withAuthorization(withQuestionUpdate(del), {
       roles: [Role.PROFESSOR],
     }),
   ),

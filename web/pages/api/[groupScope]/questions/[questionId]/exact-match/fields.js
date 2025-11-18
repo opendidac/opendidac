@@ -18,9 +18,8 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
-import { withPrisma } from '@/middleware/withPrisma'
 import { Role } from '@prisma/client'
 
 const put = async (ctx) => {
@@ -140,22 +139,22 @@ const get = async (ctx) => {
   res.status(200).json(exactMatch.fields)
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: withGroupScope(
-    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+    withAuthorization(get, { roles: [Role.PROFESSOR] }),
   ),
   PUT: withGroupScope(
-    withAuthorization(withPrisma(withQuestionUpdate(put)), {
+    withAuthorization(withQuestionUpdate(put), {
       roles: [Role.PROFESSOR],
     }),
   ),
   POST: withGroupScope(
-    withAuthorization(withPrisma(withQuestionUpdate(post)), {
+    withAuthorization(withQuestionUpdate(post), {
       roles: [Role.PROFESSOR],
     }),
   ),
   DELETE: withGroupScope(
-    withAuthorization(withPrisma(withQuestionUpdate(del)), {
+    withAuthorization(withQuestionUpdate(del), {
       roles: [Role.PROFESSOR],
     }),
   ),

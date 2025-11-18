@@ -19,8 +19,7 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
 import { questionSelectClause } from '@/code/questions'
 
@@ -140,12 +139,12 @@ const post = async (ctx) => {
   res.status(200).json(evaluationToQuestions)
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: withGroupScope(
-    withAuthorization(withPrisma(get), { roles: [Role.PROFESSOR] }),
+    withAuthorization(get, { roles: [Role.PROFESSOR] }),
   ),
   POST: withGroupScope(
-    withAuthorization(withPrisma(withEvaluationUpdate(post)), {
+    withAuthorization(withEvaluationUpdate(post), {
       roles: [Role.PROFESSOR],
     }),
   ),

@@ -26,7 +26,7 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import { Role } from '@prisma/client'
 
 const MAX_IMAGE_WIDTH_PX = 1920
@@ -150,7 +150,7 @@ async function processImage(filePath) {
   return filePath
 }
 
-export default withMethodHandler({
+export default withApiContext({
   POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
 })
 

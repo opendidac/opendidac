@@ -15,9 +15,8 @@
  */
 
 import { Role } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withRestrictions } from '@/middleware/withRestrictions'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import { getUser } from '@/code/auth/auth'
@@ -294,14 +293,12 @@ const get = async (ctx) => {
   }
 }
 
-export default withMethodHandler({
-  GET: withPrisma(
-    withEvaluation(
-      withRestrictions(
-        withAuthorization(get, {
-          roles: [Role.STUDENT, Role.PROFESSOR],
-        }),
-      ),
+export default withApiContext({
+  GET: withEvaluation(
+    withRestrictions(
+      withAuthorization(get, {
+        roles: [Role.STUDENT, Role.PROFESSOR],
+      }),
     ),
   ),
 })

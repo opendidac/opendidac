@@ -27,8 +27,7 @@ import {
 import { isInProgress } from './utils'
 import { grading } from '@/code/grading/engine'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import {
   withEvaluationPhase,
   withStudentStatus,
@@ -406,26 +405,22 @@ const prepareAnswer = (prisma, questionToEvaluation, answer) => {
   }
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: withAuthorization(
-    withPrisma(
-      withEvaluationPhase(
-        withStudentStatus(get, {
-          statuses: [UserOnEvaluationStatus.IN_PROGRESS],
-        }),
-        { phases: [EvaluationPhase.IN_PROGRESS] },
-      ),
+    withEvaluationPhase(
+      withStudentStatus(get, {
+        statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+      }),
+      { phases: [EvaluationPhase.IN_PROGRESS] },
     ),
     { roles: [Role.STUDENT, Role.PROFESSOR] },
   ),
   PUT: withAuthorization(
-    withPrisma(
-      withEvaluationPhase(
-        withStudentStatus(put, {
-          statuses: [UserOnEvaluationStatus.IN_PROGRESS],
-        }),
-        { phases: [EvaluationPhase.IN_PROGRESS] },
-      ),
+    withEvaluationPhase(
+      withStudentStatus(put, {
+        statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+      }),
+      { phases: [EvaluationPhase.IN_PROGRESS] },
     ),
     { roles: [Role.STUDENT, Role.PROFESSOR] },
   ),

@@ -22,9 +22,8 @@ import {
   UserOnEvaluationStatus,
 } from '@prisma/client'
 import { grading } from '@/code/grading/engine'
-import { withPrisma } from '@/middleware/withPrisma'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import {
   withEvaluationPhase,
   withStudentStatus,
@@ -206,15 +205,13 @@ const put = async (ctx) => {
   res.status(200).json(updatedAnswer)
 }
 
-export default withMethodHandler({
+export default withApiContext({
   PUT: withAuthorization(
-    withPrisma(
-      withEvaluationPhase(
-        withStudentStatus(put, {
-          statuses: [UserOnEvaluationStatus.IN_PROGRESS],
-        }),
-        { phases: [EvaluationPhase.IN_PROGRESS] },
-      ),
+    withEvaluationPhase(
+      withStudentStatus(put, {
+        statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+      }),
+      { phases: [EvaluationPhase.IN_PROGRESS] },
     ),
     { roles: [Role.PROFESSOR, Role.STUDENT] },
   ),

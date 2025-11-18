@@ -18,9 +18,8 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
-import { withPrisma } from '@/middleware/withPrisma'
 import { Role } from '@prisma/client'
 
 const put = async (ctx) => {
@@ -41,9 +40,9 @@ const put = async (ctx) => {
   res.status(200).json({ message: 'Order changed successfully' })
 }
 
-export default withMethodHandler({
+export default withApiContext({
   PUT: withGroupScope(
-    withAuthorization(withPrisma(withQuestionUpdate(put)), {
+    withAuthorization(withQuestionUpdate(put), {
       roles: [Role.PROFESSOR],
     }),
   ),

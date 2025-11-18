@@ -20,8 +20,7 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /**
@@ -61,9 +60,9 @@ const post = async (ctx) => {
   res.status(200).json(newOption)
 }
 
-export default withMethodHandler({
+export default withApiContext({
   POST: withGroupScope(
-    withAuthorization(withPrisma(withQuestionUpdate(post)), {
+    withAuthorization(withQuestionUpdate(post), {
       roles: [Role.PROFESSOR],
     }),
   ),

@@ -15,12 +15,11 @@
  */
 
 import { Role } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 import { withPurgeGuard } from '@/middleware/withPurged'
 import { withEvaluation } from '@/middleware/withEvaluation'
@@ -59,14 +58,12 @@ const get = async (ctx) => {
   res.status(200).json(evaluation.evaluationToQuestions)
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: withGroupScope(
-    withPrisma(
-      withEvaluation(
-        withAuthorization(withPurgeGuard(get), {
-          roles: [Role.PROFESSOR],
-        }),
-      ),
+    withEvaluation(
+      withAuthorization(withPurgeGuard(get), {
+        roles: [Role.PROFESSOR],
+      }),
     ),
   ),
 })

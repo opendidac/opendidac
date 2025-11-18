@@ -20,9 +20,8 @@ import {
   StudentAnswerCodeReadingOutputStatus,
   UserOnEvaluationStatus,
 } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import {
   withEvaluationPhase,
   withStudentStatus,
@@ -167,15 +166,13 @@ const post = async (ctx) => {
   res.status(200).json(studentOutputs)
 }
 
-export default withMethodHandler({
+export default withApiContext({
   POST: withAuthorization(
-    withPrisma(
-      withEvaluationPhase(
-        withStudentStatus(post, {
-          statuses: [UserOnEvaluationStatus.IN_PROGRESS],
-        }),
-        { phases: [EvaluationPhase.IN_PROGRESS] },
-      ),
+    withEvaluationPhase(
+      withStudentStatus(post, {
+        statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+      }),
+      { phases: [EvaluationPhase.IN_PROGRESS] },
     ),
     { roles: [Role.PROFESSOR, Role.STUDENT] },
   ),

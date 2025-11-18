@@ -19,8 +19,7 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { getUser } from '@/code/auth/auth'
 
 /** Create the annotation for a student answer
@@ -94,11 +93,11 @@ const del = async (ctx) => {
   res.status(200).json({ success: true })
 }
 
-export default withMethodHandler({
+export default withApiContext({
   PUT: withGroupScope(
-    withAuthorization(withPrisma(put), { roles: [Role.PROFESSOR] }),
+    withAuthorization(put, { roles: [Role.PROFESSOR] }),
   ),
   DELETE: withGroupScope(
-    withAuthorization(withPrisma(del), { roles: [Role.PROFESSOR] }),
+    withAuthorization(del, { roles: [Role.PROFESSOR] }),
   ),
 })

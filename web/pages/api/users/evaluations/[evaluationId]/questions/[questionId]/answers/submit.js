@@ -22,8 +22,7 @@ import {
 } from '@prisma/client'
 
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import {
   withEvaluationPhase,
   withStudentStatus,
@@ -81,26 +80,22 @@ const del = async (ctx) => {
   res.status(200).json({ message: 'Answer status updated' })
 }
 
-export default withMethodHandler({
+export default withApiContext({
   PUT: withAuthorization(
-    withPrisma(
-      withEvaluationPhase(
-        withStudentStatus(put, {
-          statuses: [UserOnEvaluationStatus.IN_PROGRESS],
-        }),
-        { phases: [EvaluationPhase.IN_PROGRESS] },
-      ),
+    withEvaluationPhase(
+      withStudentStatus(put, {
+        statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+      }),
+      { phases: [EvaluationPhase.IN_PROGRESS] },
     ),
     { roles: [Role.STUDENT, Role.PROFESSOR] },
   ),
   DELETE: withAuthorization(
-    withPrisma(
-      withEvaluationPhase(
-        withStudentStatus(del, {
-          statuses: [UserOnEvaluationStatus.IN_PROGRESS],
-        }),
-        { phases: [EvaluationPhase.IN_PROGRESS] },
-      ),
+    withEvaluationPhase(
+      withStudentStatus(del, {
+        statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+      }),
+      { phases: [EvaluationPhase.IN_PROGRESS] },
     ),
     { roles: [Role.STUDENT, Role.PROFESSOR] },
   ),

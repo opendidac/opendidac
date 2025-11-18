@@ -19,8 +19,7 @@ import { EvaluationPhase, Role, UserOnEvaluationStatus } from '@prisma/client'
 import { getUser } from '@/code/auth/auth'
 import { isInProgress } from './questions/[questionId]/answers/utils'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import {
   withEvaluationPhase,
   withStudentStatus,
@@ -109,14 +108,12 @@ const get = withEvaluationPhase(
   { phases: [EvaluationPhase.IN_PROGRESS] },
 )
 
-export default withMethodHandler({
-  GET: withPrisma(
-    withEvaluation(
-      withRestrictions(
-        withAuthorization(withPurgeGuard(get), {
-          roles: [Role.PROFESSOR, Role.STUDENT],
-        }),
-      ),
+export default withApiContext({
+  GET: withEvaluation(
+    withRestrictions(
+      withAuthorization(withPurgeGuard(get), {
+        roles: [Role.PROFESSOR, Role.STUDENT],
+      }),
     ),
   ),
 })

@@ -21,7 +21,7 @@ import path from 'path'
 import mime from 'mime'
 import { promisify } from 'util'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
+import { withApiContext } from '@/middleware/withApiContext'
 import { Role } from '@prisma/client'
 
 const stat = promisify(fs.stat)
@@ -55,7 +55,7 @@ const get = async (ctx) => {
   }
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: withAuthorization(get, {
     roles: [Role.PROFESSOR, Role.SUPER_ADMIN, Role.STUDENT],
   }),

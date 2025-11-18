@@ -17,8 +17,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { runSandbox } from '@/sandbox/runSandboxTC'
 import { CodeQuestionType, Role } from '@prisma/client'
 
@@ -195,6 +194,6 @@ const post = async (ctx) => {
   }
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), { roles: [Role.SUPER_ADMIN] }),
+export default withApiContext({
+  POST: withAuthorization(post, { roles: [Role.SUPER_ADMIN] }),
 })

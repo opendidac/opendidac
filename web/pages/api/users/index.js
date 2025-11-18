@@ -16,8 +16,7 @@
 
 import { Role } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { getUser } from '@/code/auth/auth'
 
 /**
@@ -108,8 +107,8 @@ const get = async (ctx) => {
   })
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), {
+export default withApiContext({
+  GET: withAuthorization(get, {
     roles: [Role.PROFESSOR, Role.SUPER_ADMIN],
   }),
 })

@@ -19,8 +19,7 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
 const unarchive = async (ctx) => {
   const { req, res, prisma } = ctx
@@ -50,8 +49,8 @@ const unarchive = async (ctx) => {
   res.status(200).json(restoredQuestion)
 }
 
-export default withMethodHandler({
+export default withApiContext({
   POST: withGroupScope(
-    withAuthorization(withPrisma(unarchive), { roles: [Role.PROFESSOR] }),
+    withAuthorization(unarchive, { roles: [Role.PROFESSOR] }),
   ),
 })

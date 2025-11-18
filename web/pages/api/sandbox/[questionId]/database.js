@@ -18,8 +18,7 @@ import { Role, Prisma } from '@prisma/client'
 import { runSandboxDB } from '@/sandbox/runSandboxDB'
 import { runSQLFluffSandbox } from '@/sandbox/runSQLFluffSandbox'
 import { withAuthorization } from '@/middleware/withAuthorization'
-import { withMethodHandler } from '@/middleware/withMethodHandler'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /*
@@ -185,8 +184,8 @@ const post = async (ctx) => {
   res.status(200).json(solutionQueries)
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(withPrisma(withQuestionUpdate(post)), {
+export default withApiContext({
+  POST: withAuthorization(withQuestionUpdate(post), {
     roles: [Role.PROFESSOR],
   }),
 })
