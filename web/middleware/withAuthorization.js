@@ -75,33 +75,14 @@ const EntityNameQueryStringIdPair = Object.freeze({
 */
 
 export function withGroupScope(handler, args = {}) {
-  return async (ctxOrReq, resOrArgs) => {
-    // Handle both old pattern (req, res) and new pattern (ctx, args)
-    let ctx, actualArgs
-    if (resOrArgs && typeof resOrArgs.json === 'function') {
-      // Old pattern: (req, res) - called as outer wrapper
-      const req = ctxOrReq
-      const res = resOrArgs
-      ctx = { req, res }
-      actualArgs = {}
-    } else {
-      // New pattern: (ctx, args) - called in middleware chain
-      ctx = ctxOrReq
-      actualArgs = resOrArgs || {}
-    }
-
+  return async (ctx) => {
     const { req, res } = ctx
 
     if (!req || !res) {
-      // If res is available, use it; otherwise we can't send a response
-      if (res) {
-        return res.status(500).json({
-          type: 'error',
-          message: 'Request or response not available in context.',
-        })
-      }
-      // If res is not available, throw an error (shouldn't happen in normal flow)
-      throw new Error('Request or response not available in context.')
+      return res?.status(500).json({
+        type: 'error',
+        message: 'Request or response not available in context.',
+      })
     }
 
     const { groupScope } = req.query
@@ -127,18 +108,24 @@ export function withGroupScope(handler, args = {}) {
 
     if (entityPair) {
       // A group owned entity or any of its related entities are concerned
-
       const [entityName, queryStringId] = entityPair
-
       const entityId = req.query[queryStringId]
 
       if (!entityId) {
         return res.status(400).json({ message: 'Entity id is required' })
       }
 
-      // Get prisma if not already in context
+      // Get prisma from context or create a new instance
       const { prisma } = ctx
       const prismaClient = prisma || getPrisma()
+
+      if (!prismaClient) {
+        return res.status(500).json({
+          type: 'error',
+          message:
+            'Prisma client not available. Did you call withPrisma middleware?',
+        })
+      }
 
       const entity = await prismaClient[entityName].findUnique({
         where: {
@@ -168,7 +155,6 @@ export function withGroupScope(handler, args = {}) {
       }
     }
 
-    // Always pass ctx to the handler
     return handler(ctx)
   }
 }

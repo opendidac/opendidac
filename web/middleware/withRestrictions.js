@@ -102,6 +102,30 @@ export const isUserInAccessList = async (userEmail, evaluation, prisma) => {
   return true
 }
 
+/**
+ * Middleware that enforces evaluation access restrictions (IP, desktop app, access list, phase).
+ *
+ * IMPORTANT: This middleware is ONLY used in student-facing endpoints under /api/users.
+ * It applies restrictions to ALL users accessing these endpoints, regardless of their role
+ * (students, professors, student assistants). This ensures:
+ *
+ * 1. Consistency: All users accessing student endpoints are subject to the same restrictions
+ * 2. Verification: Professors can verify that IP restrictions and other mechanisms work correctly
+ *    when accessing student endpoints (e.g., for testing or monitoring)
+ * 3. Security: Student assistants are also restricted, preventing unauthorized access
+ *
+ * Restrictions enforced:
+ * - Evaluation phase must be after COMPOSITION phase
+ * - Desktop app requirement (if enabled)
+ * - IP address restrictions (if configured)
+ * - Access list validation (if LINK_AND_ACCESS_LIST mode is enabled)
+ *
+ * @requires withPrisma middleware must be called before this middleware
+ * @requires withEvaluation middleware must be called before this middleware
+ * @param {Function} handler - The route handler to wrap
+ * @param {Object} args - Optional configuration arguments
+ * @returns {Function} Wrapped handler with restrictions applied
+ */
 export const withRestrictions = (handler, args = {}) => {
   return async (ctx) => {
     const { req, res, prisma, evaluation } = ctx
