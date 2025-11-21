@@ -27,8 +27,50 @@
  *
  * @important If you add fields, make sure to control all student /api/users endpoints for overfetch to not send any sensitive data to the student.
  */
-export const withEvaluation = (handler, args = {}) => {
-  return async (ctx) => {
+
+import type { Prisma } from '@prisma/client'
+import type { ApiContext, ApiContextWithEvaluation } from '@/types/api/context'
+
+/**
+ * Public contract for what ctx.evaluation contains.
+ * Shared select for withEvaluation middleware.
+ *
+ * IMPORTANT:
+ * - Keep this minimal to avoid overfetching.
+ * - Any new field must be audited in all /api/users (student) endpoints.
+ */
+export const evaluationContextSelect = {
+  id: true,
+  phase: true,
+  label: true,
+  desktopAppRequired: true,
+  ipRestrictions: true,
+  accessMode: true,
+  accessList: true,
+  durationActive: true,
+  startAt: true,
+  endAt: true,
+  conditions: true,
+  consultationEnabled: true,
+  showSolutionsWhenFinished: true,
+  purgedAt: true,
+  archivedAt: true,
+  archivalPhase: true,
+} as const
+
+/**
+ * Derived TS type: the exact structure returned by the select above.
+ */
+export type EvaluationInContext = Prisma.EvaluationGetPayload<{
+  select: typeof evaluationContextSelect
+}>
+
+/**
+ * Middleware: fetches evaluation, injects it into ctx.
+ */
+export const withEvaluation =
+  (handler: (ctx: ApiContextWithEvaluation | ApiContext) => Promise<any>) =>
+  async (ctx: ApiContext): Promise<any> => {
     const { req, res, prisma } = ctx
     const { evaluationId } = req.query
 
@@ -41,29 +83,13 @@ export const withEvaluation = (handler, args = {}) => {
     }
 
     if (!evaluationId) {
+      // No evaluation in URL → just continue
       return handler(ctx)
     }
 
     const evaluation = await prisma.evaluation.findUnique({
-      where: { id: evaluationId },
-      select: {
-        id: true,
-        phase: true,
-        label: true,
-        desktopAppRequired: true,
-        ipRestrictions: true,
-        accessMode: true,
-        accessList: true,
-        durationActive: true,
-        startAt: true,
-        endAt: true,
-        conditions: true,
-        consultationEnabled: true,
-        showSolutionsWhenFinished: true,
-        purgedAt: true,
-        archivedAt: true,
-        archivalPhase: true,
-      },
+      where: { id: evaluationId as string },
+      select: evaluationContextSelect,
     })
 
     if (!evaluation) {
@@ -74,8 +100,11 @@ export const withEvaluation = (handler, args = {}) => {
       })
     }
 
-    // Add evaluation to context
-    const ctxWithEvaluation = { ...ctx, evaluation }
+    // Inject evaluation into context
+    const ctxWithEvaluation: ApiContextWithEvaluation = {
+      ...ctx,
+      evaluation,
+    }
+
     return handler(ctxWithEvaluation)
   }
-}

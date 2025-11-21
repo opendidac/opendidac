@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import { withApiContext } from '@/middleware/withApiContext'
-
-const get = async (ctx) => {
-  const { req, res } = ctx
-  const terms = process.env.TERMS_OF_SERVICE
-  if (!terms) {
-    return res.status(404).json({ error: 'Terms of service not configured' })
-  }
-  res.status(200).json({ terms })
-}
-
-export default withApiContext({
-  GET: get,
-})
+export type {
+  ApiRequest,
+  ApiResponse,
+  ApiContext,
+  ApiContextWithRoles,
+  ApiContextWithEvaluation,
+  ApiContextWithUserAndRoles,
+  ApiContextWithUserAndEvaluation,
+  ApiContextWithRolesAndEvaluation,
+  ApiContextWithUserRolesAndEvaluation,
+  ExtendedApiContext,
+  EvaluationInContext,
+  SessionUser,
+} from './context'

@@ -16,33 +16,6 @@
 
 import { getRoles, getUser } from '../code/auth/auth'
 
-/*
-    Function to check if a users is member of the group
-    for group scoped endpoints
-*/
-
-export function withGroupScopeOldToRemove(handler) {
-  return async (req, res) => {
-    const { groupScope } = req.query
-
-    if (!groupScope) {
-      return res.status(400).json({ message: 'Group scope is required' })
-    }
-
-    const user = await getUser(req, res)
-
-    const isMember = user?.groups?.some((g) => g === groupScope)
-
-    if (!isMember) {
-      return res
-        .status(401)
-        .json({ message: 'You are not authorized to access this group' })
-    }
-
-    return handler(req, res)
-  }
-}
-
 /**
 Group owned entities are entities that are owned by a group. 
 
@@ -75,7 +48,7 @@ const EntityNameQueryStringIdPair = Object.freeze({
 
 export function withGroupScope(handler, args = {}) {
   return async (ctx) => {
-    const { req, res } = ctx
+    const { req, res, req_raw, res_raw } = ctx
 
     if (!req || !res) {
       return res?.status(500).json({
@@ -90,7 +63,7 @@ export function withGroupScope(handler, args = {}) {
       return res.status(400).json({ message: 'Group scope is required' })
     }
 
-    const user = await getUser(req, res)
+    const user = await getUser(req_raw || req, res_raw || res)
 
     const isMember = user?.groups?.some((g) => g === groupScope)
 
@@ -159,7 +132,7 @@ export function withGroupScope(handler, args = {}) {
 export function withAuthorization(handler, args = {}) {
   const { roles: allowedRoles = [] } = args
   return async (ctx) => {
-    const { req, res } = ctx
+    const { req, res, req_raw, res_raw } = ctx
 
     if (!req || !res) {
       return res?.status(500).json({
@@ -168,7 +141,7 @@ export function withAuthorization(handler, args = {}) {
       })
     }
 
-    const userRoles = await getRoles(req, res)
+    const userRoles = await getRoles(req_raw || req, res_raw || res)
     if (!userRoles) {
       return res
         .status(401)

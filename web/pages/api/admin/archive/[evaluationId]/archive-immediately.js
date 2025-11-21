@@ -18,10 +18,13 @@ import { Role, ArchivalPhase } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import { withEvaluation } from '@/middleware/withEvaluation'
-import { getUser } from '@/code/auth/auth'
 
 const post = async (ctx) => {
-  const { req, res, prisma, evaluation } = ctx
+  const { req, res, prisma, evaluation, user } = ctx
+  if (!user) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
   const { evaluationId } = req.query
 
   if (evaluation.archivalPhase === 'ARCHIVED') {
@@ -33,13 +36,6 @@ const post = async (ctx) => {
     res
       .status(400)
       .json({ message: 'Cannot archive - evaluation data has been purged' })
-    return
-  }
-
-  // Get the user performing the action
-  const user = await getUser(req, res)
-  if (!user) {
-    res.status(401).json({ message: 'Unauthorized' })
     return
   }
 

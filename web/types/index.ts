@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import { getPrismaClient } from '@/code/hooks/usePrisma'
+/**
+ * Main types export
+ *
+ * Import API types: import type { ApiContext } from '@/types/api'
+ * Or from main index: import type { ApiContext } from '@/types'
+ *
+ * Frontend types will be added later: import type { ... } from '@/types/frontend'
+ */
 
-export function withApiContext(methodHandlers) {
-  return async (req, res) => {
-    const handler = methodHandlers[req.method]
-    if (!handler) {
-      return res.status(405).json({ message: 'Method not allowed' })
-    }
+// API types
+export * from './api'
 
-    // initialise the context, entry point for all API endpoints
-    const ctx = { req, res, prisma: getPrismaClient() }
-    await handler(ctx)
-  }
-}
+// Frontend types will be exported here when added
+// export * from './frontend'
