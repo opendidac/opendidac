@@ -16,11 +16,8 @@
 
 import { QuestionStatus, QuestionSource, Role } from '@prisma/client'
 import { getUser } from '@/code/auth/auth'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 /**
  * Managing groups
  *
@@ -29,7 +26,8 @@ import { withPrisma } from '@/middleware/withPrisma'
  *
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   // get all groups with their created by information and members
   const user = await getUser(req, res)
 
@@ -110,7 +108,8 @@ const get = async (req, res, prisma) => {
   }
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx) => {
+  const { req, res, prisma } = ctx
   // create a new group
   const { label, scope, select } = req.body
 
@@ -165,7 +164,7 @@ const post = async (req, res, prisma) => {
   }
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.SUPER_ADMIN]),
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
+export default withApiContext({
+  GET: withAuthorization(get, { roles: [Role.SUPER_ADMIN] }),
+  POST: withAuthorization(post, { roles: [Role.PROFESSOR] }),
 })

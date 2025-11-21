@@ -20,14 +20,14 @@ import {
   QuestionSource,
   EvaluationPhase,
 } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
 
   const evaluation = await prisma.evaluation.findUnique({
@@ -57,7 +57,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(evaluation)
 }
 
-const patch = async (req, res, prisma) => {
+const patch = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
 
   const currentEvaluation = await prisma.evaluation.findUnique({
@@ -272,7 +273,8 @@ const patch = async (req, res, prisma) => {
   res.status(200).json(evaluationAfterUpdate)
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { groupScope, evaluationId } = req.query
 
   /*
@@ -312,10 +314,8 @@ const del = async (req, res, prisma) => {
   res.status(200).json({ message: 'evaluation deleted' })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    PATCH: withAuthorization(withPrisma(patch), [Role.PROFESSOR]),
-    DELETE: withAuthorization(withPrisma(del), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  PATCH: withGroupScope(withAuthorization(patch, { roles: [Role.PROFESSOR] })),
+  DELETE: withGroupScope(withAuthorization(del, { roles: [Role.PROFESSOR] })),
+})

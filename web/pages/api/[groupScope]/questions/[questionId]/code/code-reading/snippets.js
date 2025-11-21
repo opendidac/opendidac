@@ -19,9 +19,8 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /**
@@ -30,7 +29,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * post: create a new snippet for a code question
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   // get the [nature] files for a code question
 
   const { questionId } = req.query
@@ -45,7 +45,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(snippets)
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx) => {
+  const { req, res, prisma } = ctx
   // create a new snippet for a code question
 
   const { questionId } = req.query
@@ -62,11 +63,11 @@ const post = async (req, res, prisma) => {
   res.status(200).json(codeReadingSnippet)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  POST: withGroupScope(
+    withAuthorization(withQuestionUpdate(post), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

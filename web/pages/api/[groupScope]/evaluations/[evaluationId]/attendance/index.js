@@ -15,14 +15,14 @@
  */
 
 import { Role } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import {
-  withMethodHandler,
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
 
   // Fetch registered students, their session details, and the evaluation phase
@@ -74,8 +74,6 @@ const get = async (req, res, prisma) => {
   })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+})

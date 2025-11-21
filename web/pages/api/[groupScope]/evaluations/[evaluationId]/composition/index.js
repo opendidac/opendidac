@@ -18,13 +18,13 @@ import { QuestionStatus, Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
 import { questionSelectClause } from '@/code/questions'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
 
   let questionIncludeOptions = {
@@ -67,7 +67,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(evaluation.evaluationToQuestions)
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx) => {
+  const { req, res, prisma } = ctx
   // add a new question to a evaluation
   const { evaluationId } = req.query
   const { questionIds } = req.body
@@ -138,11 +139,11 @@ const post = async (req, res, prisma) => {
   res.status(200).json(evaluationToQuestions)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    POST: withAuthorization(withEvaluationUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  POST: withGroupScope(
+    withAuthorization(withEvaluationUpdate(post), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

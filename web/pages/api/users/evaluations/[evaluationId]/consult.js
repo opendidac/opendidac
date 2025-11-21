@@ -15,35 +15,23 @@
  */
 
 import { Role } from '@prisma/client'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withRestrictions } from '@/middleware/withRestrictions'
+import { withEvaluation } from '@/middleware/withEvaluation'
 
 import { getUser } from '@/code/auth/auth'
 import { questionSelectClause, IncludeStrategy } from '@/code/questions'
 import { isFinished } from './questions/[questionId]/answers/utils'
 import { withPurgeGuard } from '@/middleware/withPurged'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma, evaluation } = ctx
   const { evaluationId } = req.query
   const { email } = await getUser(req, res)
 
   if (!(await isFinished(evaluationId, prisma))) {
     res.status(400).json({ message: 'Exam session is not finished' })
-    return
-  }
-
-  const evaluation = await prisma.evaluation.findUnique({
-    where: {
-      id: evaluationId,
-    },
-  })
-
-  if (!evaluation) {
-    res.status(404).json({ message: 'Evaluation not found' })
     return
   }
 
@@ -104,11 +92,12 @@ const get = async (req, res, prisma) => {
   res.status(200).json(userOnEvaluation.evaluation)
 }
 
-export default withMethodHandler({
-  GET: withRestrictions(
-    withAuthorization(withPurgeGuard(withPrisma(get)), [
-      Role.PROFESSOR,
-      Role.STUDENT,
-    ]),
+export default withApiContext({
+  GET: withEvaluation(
+    withRestrictions(
+      withAuthorization(withPurgeGuard(get), {
+        roles: [Role.PROFESSOR, Role.STUDENT],
+      }),
+    ),
   ),
 })

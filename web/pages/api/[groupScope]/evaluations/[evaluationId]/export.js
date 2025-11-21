@@ -15,12 +15,11 @@
  */
 
 import { Role } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 
 import puppeteer from 'puppeteer'
 import Handlebars from 'handlebars'
@@ -166,7 +165,8 @@ Handlebars.registerHelper(
 Handlebars.registerHelper('exactMatchFieldAnswer', exactMatchFieldAnswer)
 Handlebars.registerHelper('isExactMatchFieldCorrect', isExactMatchFieldCorrect)
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { groupScope, evaluationId } = req.query
 
   const evaluation = await prisma.evaluation.findUnique({
@@ -287,8 +287,10 @@ const get = async (req, res, prisma) => {
   }
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.ARCHIVIST]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(
+    withAuthorization(get, {
+      roles: [Role.PROFESSOR, Role.ARCHIVIST],
+    }),
+  ),
+})

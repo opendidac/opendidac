@@ -21,15 +21,15 @@ import {
   QuestionSource,
   QuestionStatus,
 } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import { getUser } from '@/code/auth/auth'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   // shallow session to question get -> we just need to count the number of questions
   const { groupScope } = req.query
 
@@ -78,7 +78,8 @@ const get = async (req, res, prisma) => {
 /*
  ** Creating a new evaluation
  * */
-const post = async (req, res, prisma) => {
+const post = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { groupScope } = req.query
 
   const {
@@ -226,9 +227,7 @@ const post = async (req, res, prisma) => {
   }
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
+})

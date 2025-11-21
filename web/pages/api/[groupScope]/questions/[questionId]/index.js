@@ -19,9 +19,8 @@ import { questionSelectClause, questionTypeSpecific } from '@/code/questions'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
 /**
  * Managing a question
@@ -32,7 +31,8 @@ import { withPrisma } from '@/middleware/withPrisma'
  *  database and code question have separate endpoints
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   // get a question by id
   const { groupScope, questionId } = req.query
 
@@ -52,7 +52,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(question)
 }
 
-const put = async (req, res, prisma) => {
+const put = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { groupScope } = req.query
   const { question } = req.body
 
@@ -108,7 +109,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json(updatedQuestion)
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
   const question = await prisma.question.findUnique({
     where: { id: questionId },
@@ -176,10 +178,8 @@ const del = async (req, res, prisma) => {
   res.status(200).json(deletedQuestion)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
-    DELETE: withAuthorization(withPrisma(del), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  PUT: withGroupScope(withAuthorization(put, { roles: [Role.PROFESSOR] })),
+  DELETE: withGroupScope(withAuthorization(del, { roles: [Role.PROFESSOR] })),
+})

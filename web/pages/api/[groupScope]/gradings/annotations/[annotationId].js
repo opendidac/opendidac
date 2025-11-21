@@ -17,9 +17,9 @@
 import { Role } from '@prisma/client'
 import {
   withAuthorization,
-  withMethodHandler,
+  withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { getUser } from '@/code/auth/auth'
 
 /** Create the annotation for a student answer
@@ -55,7 +55,8 @@ model Annotation {
 }
  */
 
-const put = async (req, res, prisma) => {
+const put = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { annotation } = req.body
 
   const user = await getUser(req, res)
@@ -79,7 +80,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json(updatedAnnotation)
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { annotationId } = req.query
 
   await prisma.annotation.delete({
@@ -91,7 +93,7 @@ const del = async (req, res, prisma) => {
   res.status(200).json({ success: true })
 }
 
-export default withMethodHandler({
-  PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
-  DELETE: withAuthorization(withPrisma(del), [Role.PROFESSOR]),
+export default withApiContext({
+  PUT: withGroupScope(withAuthorization(put, { roles: [Role.PROFESSOR] })),
+  DELETE: withGroupScope(withAuthorization(del, { roles: [Role.PROFESSOR] })),
 })

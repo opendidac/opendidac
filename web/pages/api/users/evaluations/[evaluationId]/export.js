@@ -15,12 +15,10 @@
  */
 
 import { Role } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withRestrictions } from '@/middleware/withRestrictions'
+import { withEvaluation } from '@/middleware/withEvaluation'
 import { getUser } from '@/code/auth/auth'
 
 import puppeteer from 'puppeteer'
@@ -173,25 +171,13 @@ Handlebars.registerHelper(
 
 Handlebars.registerHelper('exactMatchFieldAnswer', exactMatchFieldAnswer)
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma, evaluation } = ctx
   const { evaluationId } = req.query
 
   // Get current user - middleware already handles authentication
   const user = await getUser(req, res)
   const currentUserEmail = user.email
-
-  const evaluation = await prisma.evaluation.findUnique({
-    where: { id: evaluationId },
-    include: {
-      evaluationToQuestions: true,
-      group: true,
-    },
-  })
-
-  if (!evaluation) {
-    res.status(404).json({ message: 'evaluation not found' })
-    return
-  }
 
   // Verify user is enrolled in the evaluation and get all data in one query
   const userOnEvaluation = await prisma.userOnEvaluation.findUnique({
@@ -258,11 +244,26 @@ const get = async (req, res, prisma) => {
     }),
   }
 
+  // Get evaluation with group for template context
+  const evaluationWithGroup = await prisma.evaluation.findUnique({
+    where: { id: evaluationId },
+    select: {
+      id: true,
+      label: true,
+      conditions: true,
+      group: {
+        select: {
+          label: true,
+        },
+      },
+    },
+  })
+
   // Template context for student export
   const context = {
-    includeConditionsPage: !!evaluation.conditions,
-    evaluation,
-    conditions: evaluation.conditions,
+    includeConditionsPage: !!evaluationWithGroup?.conditions,
+    evaluation: evaluationWithGroup,
+    conditions: evaluationWithGroup?.conditions,
     studentWithQuestionsAndAnswers,
     muiTheme,
   }
@@ -279,9 +280,9 @@ const get = async (req, res, prisma) => {
   try {
     const pdfBuffer = await generatePDF(
       combinedHtmlContent,
-      `${evaluation.group.label} - ${userOnEvaluation.user.name || userOnEvaluation.user.email}`,
+      `${evaluationWithGroup?.group?.label || 'Evaluation'} - ${userOnEvaluation.user.name || userOnEvaluation.user.email}`,
     )
-    const fileName = `evaluation_${evaluation.id}_${currentUserEmail.replace('@', '_at_')}.pdf`
+    const fileName = `evaluation_${evaluationWithGroup?.id || evaluationId}_${currentUserEmail.replace('@', '_at_')}.pdf`
     res.status(200)
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
@@ -292,8 +293,12 @@ const get = async (req, res, prisma) => {
   }
 }
 
-export default withMethodHandler({
-  GET: withRestrictions(
-    withAuthorization(withPrisma(get), [Role.STUDENT, Role.PROFESSOR]),
+export default withApiContext({
+  GET: withEvaluation(
+    withRestrictions(
+      withAuthorization(get, {
+        roles: [Role.STUDENT, Role.PROFESSOR],
+      }),
+    ),
   ),
 })

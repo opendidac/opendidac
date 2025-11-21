@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import { withMethodHandler } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 
-const get = async (_, res) => {
+const get = async (ctx) => {
+  const { req, res } = ctx
   const terms = process.env.TERMS_OF_SERVICE
   if (!terms) {
     return res.status(404).json({ error: 'Terms of service not configured' })
@@ -24,6 +25,6 @@ const get = async (_, res) => {
   res.status(200).json({ terms })
 }
 
-export default withMethodHandler({
+export default withApiContext({
   GET: get,
 })

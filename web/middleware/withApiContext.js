@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-import { PrismaClient } from '@prisma/client'
+import { getPrismaClient } from '@/code/hooks/usePrisma'
 
-if (!global.xyz_prisma) {
-  global.xyz_prisma = new PrismaClient()
-}
-
-export function withPrisma(handler) {
+export function withApiContext(methodHandlers) {
   return async (req, res) => {
-    return handler(req, res, global.xyz_prisma)
-  }
-}
+    const handler = methodHandlers[req.method]
+    if (!handler) {
+      return res.status(405).json({ message: 'Method not allowed' })
+    }
 
-export function getPrisma() {
-  return global.xyz_prisma
+    // initialise the context, entry point for all API endpoints
+    const ctx = { req, res, prisma: getPrismaClient() }
+    await handler(ctx)
+  }
 }
