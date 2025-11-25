@@ -20,6 +20,8 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
+import type { IApiContext } from '@/types/api'
+import { asPrismaSelect } from '@/types/api/prisma'
 import {
   codeInitialUpdateQuery,
   questionSelectClause,
@@ -40,7 +42,17 @@ const environments = languages.environments
  *
  */
 
-const get = async (ctx) => {
+interface PostQuestionBody {
+  type: string
+  options?: {
+    language?: string
+    codeQuestionType?: CodeQuestionType
+    codeWritingTemplate?: string
+    tags?: string[]
+  }
+}
+
+const get = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   const where = questionsFilterWhereClause(req.query)
 
@@ -49,11 +61,11 @@ const get = async (ctx) => {
     select: {
       lastUsed: true,
       usageStatus: true,
-      ...questionSelectClause({
+      ...asPrismaSelect(questionSelectClause({
         includeTypeSpecific: true,
         includeOfficialAnswers: true,
         includeProfessorOnlyInfo: true,
-      }),
+      })),
       evaluation: true,
     },
     orderBy: {
@@ -61,22 +73,26 @@ const get = async (ctx) => {
     },
   })
 
-  res.status(200).json(questions)
+  res.ok(questions)
 }
 
-export const post = async (ctx) => {
+export const post = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   const { groupScope } = req.query
-  const { type, options } = req.body
-  const questionType = QuestionType[type]
+  const body = req.body as PostQuestionBody
+  const { type, options } = body
+
+  if (!type) {
+    return res.badRequest('Invalid question type')
+  }
+
+  const questionType = QuestionType[type as keyof typeof QuestionType]
 
   if (!questionType) {
-    res.status(400).json({ message: 'Invalid question type' })
-    return
+    return res.badRequest('Invalid question type')
   }
-  if (!groupScope) {
-    res.status(400).json({ message: 'Missing groupScope' })
-    return
+  if (!groupScope || typeof groupScope !== 'string') {
+    return res.badRequest('Missing groupScope')
   }
 
   const fullSelect = questionSelectClause({
@@ -156,7 +172,7 @@ export const post = async (ctx) => {
 
       // 3) Tags initialization (if any)
       if (
-        options.tags &&
+        options?.tags &&
         Array.isArray(options.tags) &&
         options.tags.length > 0
       ) {
@@ -176,24 +192,32 @@ export const post = async (ctx) => {
       // 4) Single, final fetch with full INCLUDE
       return tx.question.findUnique({
         where: { id: created.id },
-        select: fullSelect,
+        select: fullSelect as any,
       })
     })
 
-    res.status(200).json(createdQuestion)
+    res.ok(createdQuestion)
   } catch (err) {
     console.error('POST /question error:', err)
-    res.status(500).json({ message: 'Failed to create question' })
+    res.error('Failed to create question')
   }
 }
 
 const defaultCodeBasedOnLanguageAndType = (
-  language,
-  codeQuestionType,
-  options,
+  language: string | undefined,
+  codeQuestionType: CodeQuestionType | undefined,
+  options: PostQuestionBody['options'],
 ) => {
+  if (!language) {
+    throw new Error('Language is required')
+  }
+
   const index = environments.findIndex((env) => env.language === language)
   const environment = environments[index]
+
+  if (!environment) {
+    throw new Error(`Environment not found for language: ${language}`)
+  }
 
   const data = {
     language: environment.language,
@@ -205,15 +229,21 @@ const defaultCodeBasedOnLanguageAndType = (
 
   if (codeQuestionType === CodeQuestionType.codeWriting) {
     const codeWriting = environment.codeWriting.find(
-      (cw) => cw.value === options.codeWritingTemplate,
+      (cw) => cw.value === options?.codeWritingTemplate,
     )?.setup
 
-    if (codeWriting.beforeAll) {
-      data.sandbox.beforeAll = codeWriting.beforeAll
+    if (!codeWriting) {
+      throw new Error(
+        `Code writing template not found: ${options?.codeWritingTemplate}`,
+      )
     }
 
-    if (codeWriting.image) {
-      data.sandbox.image = codeWriting.image
+    if ('beforeAll' in codeWriting && codeWriting.beforeAll) {
+      data.sandbox.beforeAll = codeWriting.beforeAll as string
+    }
+
+    if ('image' in codeWriting && codeWriting.image) {
+      data.sandbox.image = codeWriting.image as string
     }
 
     return {
@@ -230,9 +260,12 @@ const defaultCodeBasedOnLanguageAndType = (
       snippets: environment.codeReading.snippets,
     }
   }
+
+  return data
 }
 
 export default withApiContext({
   GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
   POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
 })
+

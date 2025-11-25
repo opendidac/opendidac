@@ -15,51 +15,64 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
+import type { Session } from 'next-auth'
 import type {
-  ApiContext,
-  ApiRequest,
-  ApiResponse,
-  SessionUser,
+  IApiContext,
+  IApiRequest,
+  IApiResponse,
+  ISessionUser,
 } from '@/types/api'
+import { SessionUser } from '@/types/api/context'
 import { getPrismaClient } from '@/code/hooks/usePrisma'
 import { getUser } from '@/code/auth/auth'
 
 /* --------------------------------------------------------------------------
- * Migration Notes
+ * API Context Middleware
  * --------------------------------------------------------------------------
- * This file introduces portable req/res abstractions while keeping raw
- * Next.js objects in ctx.req_raw / ctx.res_raw for old handlers.
- *
- * New handlers:
- *   - use ctx.req, ctx.res, ctx.ok(), ctx.badRequest()
- *
- * Old handlers:
- *   - continue using ctx.req_raw, ctx.res_raw (Next.js-specific)
- *
- * After migration (1 week):
- *   - remove req_raw / res_raw completely
- *   - keep ctx.req / ctx.res as the stable API
+ * Creates framework-agnostic request/response adapters and normalized user.
+ * All endpoints use the portable req/res API.
  * -------------------------------------------------------------------------- */
 
 /**
- * Convert Next.js response → framework-agnostic ApiResponse.
+ * Convert Next.js response → framework-agnostic IApiResponse.
+ * Uses single-method approach (no chaining) for framework compatibility.
  */
-function nextResponseAdapter(res: NextApiResponse): ApiResponse {
+function nextResponseAdapter(res: NextApiResponse): IApiResponse {
   return {
-    status(code: number) {
-      res.status(code)
-      return this
+    response(status: number, body: unknown) {
+      res.status(status).json(body)
     },
-    json(body: unknown) {
-      res.json(body)
+
+    ok(body: unknown) {
+      res.status(200).json(body)
+    },
+
+    badRequest(message: string) {
+      res.status(400).json({ message })
+    },
+
+    unauthorized(message?: string) {
+      res.status(401).json({ message: message || 'Unauthorized' })
+    },
+
+    forbidden(message?: string) {
+      res.status(403).json({ message: message || 'Forbidden' })
+    },
+
+    notFound(message?: string) {
+      res.status(404).json({ message: message || 'Not Found' })
+    },
+
+    error(message?: string) {
+      res.status(500).json({ message: message || 'Internal Server Error' })
     },
   }
 }
 
 /**
- * Convert Next.js request → framework-agnostic ApiRequest.
+ * Convert Next.js request → framework-agnostic IApiRequest.
  */
-function nextRequestAdapter(req: NextApiRequest): ApiRequest {
+function nextRequestAdapter(req: NextApiRequest): IApiRequest {
   return {
     query: req.query,
     body: req.body,
@@ -69,65 +82,46 @@ function nextRequestAdapter(req: NextApiRequest): ApiRequest {
 }
 
 /**
+ * Convert raw NextAuth session.user → normalized backend SessionUser.
+ */
+function nextUserAdapter(raw: Session['user']): ISessionUser {
+  return new SessionUser(
+    raw.id ?? '',
+    raw.email ?? '',
+    raw.name ?? null,
+    raw.image ?? null,
+    raw.roles ?? [],
+    raw.groups ?? [],
+    raw.selected_group ?? null
+  )
+}
+
+/**
  * Unified entry point for all API routes.
  * Builds:
- *   - portable ctx.req / ctx.res
- *   - raw ctx.req_raw / ctx.res_raw (deprecated)
- *   - user from session (null if not authenticated)
- *   - helper methods: ok(), json(), badRequest()
+ *   - portable ctx.req / ctx.res (framework-agnostic)
+ *   - normalized user from session
+ *   - prisma client
+ *
+ * Usage: ctx.req.query, ctx.req.body, ctx.res.ok(), ctx.res.badRequest(), etc.
  */
 export function withApiContext(handlers: Record<string, Function>) {
-  return async (req: NextApiRequest, res: NextApiResponse) => {
-    const handler = handlers[req.method || '']
+  return async (nextReq: NextApiRequest, nextRes: NextApiResponse) => {
+    const handler = handlers[nextReq.method || '']
     if (!handler) {
-      return res.status(405).json({ message: 'Method not allowed' })
+      return nextRes.status(405).json({ message: 'Method not allowed' })
     }
 
-    const prisma = getPrismaClient()
-
-    // Fetch user from session (null if not authenticated)
-    const rawSessionUser = await getUser(req, res)
-    let user: SessionUser | null = null
-
-    if (rawSessionUser) {
-      const sessionUser = rawSessionUser as SessionUser
-
-      // Normalize session user (ensure required fields have defaults)
-      user = {
-        id: sessionUser.id,
-        email: sessionUser.email || '',
-        name: sessionUser.name,
-        image: sessionUser.image,
-        roles: sessionUser.roles || [],
-        groups: sessionUser.groups,
-        selected_group: sessionUser.selected_group,
-      }
+    const rawUser = await getUser(nextReq, nextRes)
+    if (!rawUser) {
+      return nextRes.status(401).json({ message: 'Unauthorized' })
     }
 
-    const ctx: ApiContext = {
-      // NEW portable API (final API surface)
-      req_new: nextRequestAdapter(req),
-      res_new: nextResponseAdapter(res),
-
-      // OLD Next.js objects (temporary, removed after migration)
-      // req, res methods should not be accessed directly, a set of methods should be declared
-      req: req,
-      res: res,
-
-      prisma,
-      user,
-
-      json(status, body) {
-        this.res_new.status(status).json(body)
-      },
-
-      ok(body) {
-        this.res_new.status(200).json(body)
-      },
-
-      badRequest(message) {
-        this.res_new.status(400).json({ message })
-      },
+    const ctx: IApiContext = {
+      req: nextRequestAdapter(nextReq),
+      res: nextResponseAdapter(nextRes),
+      user: nextUserAdapter(rawUser),
+      prisma: getPrismaClient(),
     }
 
     return handler(ctx)

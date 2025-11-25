@@ -60,7 +60,7 @@ const get = async (ctx) => {
     count: g._count.label,
   }))
 
-  res.status(200).json(result)
+  res.ok(result)
 }
 
 export default withApiContext({

@@ -17,14 +17,11 @@
 import { Role } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import { getUser } from '@/code/auth/auth'
 
 const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+  const { req, res, prisma, user } = ctx
   // change the selected group of the users
   const { groupScope } = req.body
-
-  const user = await getUser(req, res)
 
   const allUserGroups = await prisma.userOnGroup.findMany({
     where: {
@@ -40,7 +37,7 @@ const put = async (ctx) => {
   )
 
   if (!userInGroup) {
-    res.status(400).json({ message: 'You are not a member of this group' })
+    res.badRequest('You are not a member of this group')
     return
   }
 
@@ -76,7 +73,7 @@ const put = async (ctx) => {
     },
   })
 
-  res.status(200).json({ message: 'ok' })
+  res.ok({ message: 'ok' })
 }
 
 export default withApiContext({

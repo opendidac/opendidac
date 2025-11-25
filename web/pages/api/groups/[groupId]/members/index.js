@@ -27,15 +27,17 @@ import { withApiContext } from '@/middleware/withApiContext'
  */
 
 const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+  const { req, res, prisma, user } = ctx
   // get all members of group
   const { groupId } = req.query
 
-  // check if the users is a member of the group they are trying to get members of
-  const user = await getUser(req, res)
+   console.log(user)
+
+  // check if the group exists
+  // check if the user is authenticated
 
   if (!user) {
-    res.status(401).json({ message: 'Unauthorized' })
+    res.unauthorized()
     return
   }
 
@@ -51,7 +53,7 @@ const get = async (ctx) => {
   })
 
   if (!userIsMemberOfGroup) {
-    res.status(401).json({ message: 'Unauthorized' })
+    res.unauthorized()
     return
   }
 
@@ -68,7 +70,7 @@ const get = async (ctx) => {
     },
   })
 
-  res.status(200).json(members)
+  res.ok(members)
 }
 
 const post = async (ctx) => {

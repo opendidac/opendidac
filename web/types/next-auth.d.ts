@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/pages/api/auth/[...nextauth]'
+import { Role } from '@prisma/client'
 
-const getSession = async (req, res) => {
-  const session = await getServerSession(req, res, authOptions)
-  return session
+declare module 'next-auth' {
+  interface User {
+    id: string
+    roles: Role[]
+    groups?: string[]
+    selected_group?: string | null
+  }
+
+  interface Session {
+    user: User
+  }
 }
-
-const getRoles = async (req, res) => {
-  const session = await getSession(req, res)
-  return session && session.user && session.user.roles
-}
-
-const getUser = async (req, res) => {
-  const session = await getSession(req, res)
-  return session && session.user
-}
-
-export { getSession, getRoles, getUser }

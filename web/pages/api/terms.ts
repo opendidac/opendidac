@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import type { ApiContext } from '@/types/api'
+import type { IApiContext } from '@/types/api'
 import { withApiContext } from '@/middleware/withApiContext'
 
-const get = async (ctx: ApiContext) => {
+const get = async (ctx: IApiContext) => {
   const terms = process.env.TERMS_OF_SERVICE
-  if (!terms) return ctx.badRequest('Terms not configured')
+  if (!terms) return ctx.res.badRequest('Terms not configured')
 
-  return ctx.ok({ terms })
+  return ctx.res.ok({ terms })
 }
 
 export default withApiContext({

@@ -15,16 +15,31 @@
  */
 
 export type {
-  ApiRequest,
-  ApiResponse,
-  ApiContext,
-  ApiContextWithRoles,
-  ApiContextWithEvaluation,
-  ApiContextWithUserAndRoles,
-  ApiContextWithUserAndEvaluation,
-  ApiContextWithRolesAndEvaluation,
-  ApiContextWithUserRolesAndEvaluation,
-  ExtendedApiContext,
-  EvaluationInContext,
-  SessionUser,
+  IApiRequest,
+  IApiResponse,
+  IApiContext,
+  IApiContextWithRoles,
+  IApiContextWithEvaluation,
+  IEvaluationInContext,
+  ISessionUser,
 } from './context'
+
+export { SessionUser } from './context'
+
+// Type aliases for backward compatibility (deprecated, use I-prefixed versions)
+import type {
+  IApiRequest,
+  IApiResponse,
+  IApiContext,
+  IApiContextWithRoles,
+  IApiContextWithEvaluation,
+  IEvaluationInContext,
+} from './context'
+
+export type ApiRequest = IApiRequest
+export type ApiResponse = IApiResponse
+export type ApiContext = IApiContext
+export type ApiContextWithRoles = IApiContextWithRoles
+export type ApiContextWithEvaluation = IApiContextWithEvaluation
+export type EvaluationInContext = IEvaluationInContext
+// Note: SessionUser is exported as a class, not a type alias

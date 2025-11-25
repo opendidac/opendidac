@@ -29,7 +29,7 @@
  */
 
 import type { Prisma } from '@prisma/client'
-import type { ApiContext, ApiContextWithEvaluation } from '@/types/api/context'
+import type { IApiContext, IApiContextWithEvaluation } from '@/types/api/context'
 
 /**
  * Public contract for what ctx.evaluation contains.
@@ -60,26 +60,28 @@ export const evaluationContextSelect = {
 
 /**
  * Derived TS type: the exact structure returned by the select above.
+ * @deprecated Use IEvaluationInContext from '@/types/api/context' instead
  */
 export type EvaluationInContext = Prisma.EvaluationGetPayload<{
   select: typeof evaluationContextSelect
 }>
 
+// Re-export the interface version for consistency
+export type { IEvaluationInContext } from '@/types/api/context'
+
 /**
  * Middleware: fetches evaluation, injects it into ctx.
  */
 export const withEvaluation =
-  (handler: (ctx: ApiContextWithEvaluation | ApiContext) => Promise<any>) =>
-  async (ctx: ApiContext): Promise<any> => {
-    const { req, res, prisma } = ctx
-    const { evaluationId } = req.query
+  (handler: (ctx: IApiContextWithEvaluation | IApiContext) => Promise<any>) =>
+  async (ctx: IApiContext): Promise<any> => {
+    const { prisma } = ctx
+    const { evaluationId } = ctx.req.query
 
     if (!prisma) {
-      return res.status(500).json({
-        type: 'error',
-        message:
-          'Prisma client not available. Did you call withPrisma middleware?',
-      })
+      return ctx.res.error(
+        'Prisma client not available. Did you call withPrisma middleware?',
+      )
     }
 
     if (!evaluationId) {
@@ -93,15 +95,11 @@ export const withEvaluation =
     })
 
     if (!evaluation) {
-      return res.status(404).json({
-        type: 'error',
-        id: 'not-found',
-        message: 'Evaluation not found',
-      })
+      return ctx.res.notFound('Evaluation not found')
     }
 
     // Inject evaluation into context
-    const ctxWithEvaluation: ApiContextWithEvaluation = {
+    const ctxWithEvaluation: IApiContextWithEvaluation = {
       ...ctx,
       evaluation,
     }

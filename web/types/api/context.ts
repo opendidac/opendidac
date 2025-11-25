@@ -14,18 +14,54 @@
  * limitations under the License.
  */
 
+import type { PrismaClient, Role, Prisma } from '@prisma/client'
+import { evaluationContextSelect } from '@/middleware/withEvaluation'
+
 /* --------------------------------------------------------------------------
  * FRAMEWORK-AGNOSTIC RESPONSE
  * -------------------------------------------------------------------------- */
-export interface ApiResponse {
-  status(code: number): this
-  json(body: unknown): void
+export interface IApiResponse {
+  /**
+   * Send a JSON response with a specific status code.
+   * Single method approach (no chaining) for framework compatibility.
+   */
+  response(status: number, body: unknown): void
+
+  /**
+   * Shortcut for 200 OK response.
+   */
+  ok(body: unknown): void
+
+  /**
+   * Shortcut for 400 Bad Request response.
+   */
+  badRequest(message: string): void
+
+  /**
+   * Shortcut for 401 Unauthorized response.
+   */
+  unauthorized(message?: string): void
+
+  /**
+   * Shortcut for 403 Forbidden response.
+   */
+  forbidden(message?: string): void
+
+  /**
+   * Shortcut for 404 Not Found response.
+   */
+  notFound(message?: string): void
+
+  /**
+   * Shortcut for 500 Internal Server Error response.
+   */
+  error(message?: string): void
 }
 
 /* --------------------------------------------------------------------------
  * FRAMEWORK-AGNOSTIC REQUEST
  * -------------------------------------------------------------------------- */
-export interface ApiRequest {
+export interface IApiRequest {
   query: Record<string, unknown>
   body?: unknown
   headers: Record<string, string | string[] | undefined>
@@ -35,30 +71,19 @@ export interface ApiRequest {
 /* --------------------------------------------------------------------------
  * BASE API CONTEXT (portable)
  * -------------------------------------------------------------------------- */
-export interface ApiContext {
-  /** NEW portable request */
-  req_new: ApiRequest
+export interface IApiContext {
+  /** Portable request (framework-agnostic) */
+  req: IApiRequest
 
-  /** NEW portable response */
-  res_new: ApiResponse
-
-  /** OLD raw Next.js objects (temporary during migration) */
-  req?: any
-  res?: any
-  __legacy?: boolean
+  /** Portable response (framework-agnostic) */
+  res: IApiResponse
 
   prisma: PrismaClient
 
-  /** Authenticated user (null if not authenticated) */
-  user: SessionUser | null
-
-  json(status: number, body: unknown): void
-  ok(body: unknown): void
-  badRequest(message: string): void
+  /** Authenticated user */
+  user: ISessionUser
 }
 
-import type { PrismaClient, Role, Prisma } from '@prisma/client'
-import { evaluationContextSelect } from '@/middleware/withEvaluation'
 
 /* --------------------------------------------------------------------------
  * SESSION USER (from NextAuth session callback)
@@ -66,62 +91,53 @@ import { evaluationContextSelect } from '@/middleware/withEvaluation'
 /**
  * Type describing the raw user object coming from NextAuth session callback.
  * This is NOT stored in DB, this is the user injected into session.user.
- * Used directly in ApiContext after normalization (email defaults to '' if missing).
+ * Used directly in IApiContext after normalization (email defaults to '' if missing).
  */
-export interface SessionUser {
+export interface ISessionUser {
   id: string
   email: string // Normalized: defaults to '' if missing from session
   name?: string | null
   image?: string | null
-  roles: Role[] // Normalized: defaults to [] if missing
   groups?: string[]
   selected_group?: string | null
+  roles: Role[]
+}
+
+/**
+ * Implementation of ISessionUser.
+ * Can be immutable since a new instance is created for each request
+ * ie: switching groups will be effective for next api calls
+ */
+export class SessionUser implements ISessionUser {
+  constructor(
+    public readonly id: string,
+    public readonly email: string,
+    public readonly name: string | null,
+    public readonly image: string | null,
+    public readonly roles: Role[],
+    public readonly groups: string[] | undefined,
+    public readonly selected_group: string | null,
+  ) {}
 }
 
 /* --------------------------------------------------------------------------
  * evaluation in context (generated from select)
+ * This select is a public contract as the evaluation object is provided to handleers and middlewares
+ * We wont do the same for all selects
  * -------------------------------------------------------------------------- */
 type RawEvaluationInContext = Prisma.EvaluationGetPayload<{
   select: typeof evaluationContextSelect
 }>
 
-export interface EvaluationInContext extends RawEvaluationInContext {}
+export interface IEvaluationInContext extends RawEvaluationInContext {}
 
 /* --------------------------------------------------------------------------
  * Extended context shapes for middleware chaining
  * -------------------------------------------------------------------------- */
-export interface ApiContextWithRoles extends ApiContext {
+export interface IApiContextWithRoles extends IApiContext {
   roles: Role[]
 }
 
-export interface ApiContextWithEvaluation extends ApiContext {
-  evaluation: EvaluationInContext
+export interface IApiContextWithEvaluation extends IApiContext {
+  evaluation: IEvaluationInContext
 }
-
-export interface ApiContextWithUserAndRoles extends ApiContextWithRoles {
-  user: SessionUser // Non-null user
-}
-
-export interface ApiContextWithUserAndEvaluation
-  extends ApiContextWithEvaluation {
-  user: SessionUser // Non-null user
-}
-
-export interface ApiContextWithRolesAndEvaluation
-  extends ApiContextWithRoles,
-    ApiContextWithEvaluation {}
-
-export interface ApiContextWithUserRolesAndEvaluation
-  extends ApiContextWithRoles,
-    ApiContextWithEvaluation {
-  user: SessionUser // Non-null user
-}
-
-export type ExtendedApiContext =
-  | ApiContext
-  | ApiContextWithRoles
-  | ApiContextWithEvaluation
-  | ApiContextWithUserAndRoles
-  | ApiContextWithUserAndEvaluation
-  | ApiContextWithRolesAndEvaluation
-  | ApiContextWithUserRolesAndEvaluation
