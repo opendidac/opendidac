@@ -22,10 +22,7 @@ import type { Session } from 'next-auth'
  * Temporary adapter to fetch the NextAuth session.
  * Will be deleted once withApiContext becomes the single auth source.
  */
-export async function getSession(
-  req: any,
-  res: any
-): Promise<Session | null> {
+export async function getSession(req: any, res: any): Promise<Session | null> {
   return await getServerSession(req, res, authOptions as any)
 }
 
@@ -35,8 +32,8 @@ export async function getSession(
  */
 export async function getUser(
   req: any,
-  res: any
-): Promise<Session["user"] | null> {
+  res: any,
+): Promise<Session['user'] | null> {
   const session = await getSession(req, res)
   return session?.user ?? null
 }
@@ -47,8 +44,8 @@ export async function getUser(
  */
 export async function getRoles(
   req: any,
-  res: any
-): Promise<Session["user"]["roles"] | undefined> {
+  res: any,
+): Promise<Session['user']['roles'] | undefined> {
   const session = await getSession(req, res)
   return session?.user?.roles
 }

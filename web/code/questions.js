@@ -21,14 +21,33 @@ import {
   CodeQuestionType,
   QuestionUsageStatus,
 } from '@prisma/client'
+import { buildQuestionSelect } from './question/select/buildQuestionSelect'
+import { IncludeStrategy } from './question/select/utils/types'
 
-export const IncludeStrategy = {
-  ALL: 'all',
-  USER_SPECIFIC: 'user_specific',
-}
+// Re-export IncludeStrategy for backward compatibility
+export { IncludeStrategy }
+
+// Export use-case-specific functions
+export {
+  selectForProfessorEditing,
+  selectForProfessorListing,
+  selectForProfessorProgressTracking,
+  selectForProfessorResults,
+  selectForProfessorEvaluationQuestions,
+  selectForProfessorAddingToEvaluation,
+  selectForProfessorEvaluationQuestionsWithGradings,
+  selectForProfessorCopying,
+  selectForEvaluationPhaseCopy,
+  selectForStudentJoining,
+  selectForStudentExport,
+  selectForStudentConsultation,
+  selectForProfessorExport,
+  selectForProfessorConsultingStudent,
+  selectForQuestionExport,
+} from './question/select/useCases'
 
 /*
-CAUTION: questionIncludeClause is a heavily used function
+CAUTION: questionSelectClause is a heavily used function
 any change to it should be carefully considered
 Make sure to test all the use cases
 */
@@ -41,282 +60,15 @@ const defaultQuestionSelectClause = {
   includeTags: true,
 }
 
+/**
+ * Builds a Prisma select clause for questions based on provided options
+ * Now uses the composable builder architecture for maintainability
+ */
 export const questionSelectClause = (questionSelectOptions) => {
-  // include/select question related entities based on the specified context
+  // Merge with defaults and build the select clause
   const options = { ...defaultQuestionSelectClause, ...questionSelectOptions }
 
-  const {
-    includeProfessorOnlyInfo,
-    includeTypeSpecific,
-    includeOfficialAnswers,
-    includeUserAnswers,
-    includeGradings,
-    includeTags,
-    clauseType,
-  } = options
-
-  // Base fields only when SELECT-ing at the root
-  const baseQuestionFields = {
-    id: true,
-    type: true,
-    status: true,
-    content: true,
-    createdAt: true,
-    updatedAt: true,
-    ...(includeProfessorOnlyInfo ? { title: true, scratchpad: true } : {}),
-  }
-
-  const typeSpecific = includeTypeSpecific
-    ? {
-        code: {
-          select: {
-            language: true,
-            sandbox: true,
-            codeType: true,
-            codeWriting: {
-              select: {
-                codeCheckEnabled: true,
-                ...(includeOfficialAnswers
-                  ? {
-                      solutionFiles: {
-                        include: { file: true },
-                        orderBy: { order: 'asc' },
-                      },
-                    }
-                  : {}),
-                templateFiles: {
-                  ...(!includeOfficialAnswers
-                    ? {
-                        where: {
-                          studentPermission: { not: StudentPermission.HIDDEN },
-                        },
-                      }
-                    : {}),
-                  include: { file: true },
-                  orderBy: { order: 'asc' },
-                },
-                testCases: { orderBy: { index: 'asc' } },
-              },
-            },
-            codeReading: {
-              select: {
-                ...(includeOfficialAnswers
-                  ? {
-                      studentOutputTest: true,
-                      contextExec: true,
-                      contextPath: true,
-                      context: true,
-                    }
-                  : {}),
-                snippets: {
-                  select: {
-                    id: true,
-                    order: true,
-                    snippet: true,
-                    ...(includeOfficialAnswers ? { output: true } : {}),
-                  },
-                  orderBy: { order: 'asc' },
-                },
-              },
-            },
-          },
-        },
-        multipleChoice: {
-          select: {
-            ...(includeOfficialAnswers ? { gradingPolicy: true } : {}),
-            activateStudentComment: true,
-            studentCommentLabel: true,
-            activateSelectionLimit: true,
-            selectionLimit: true,
-            options: {
-              select: {
-                id: true,
-                order: true,
-                text: true,
-                ...(includeOfficialAnswers ? { isCorrect: true } : {}),
-              },
-              orderBy: [{ order: 'asc' }, { id: 'asc' }],
-            },
-          },
-        },
-        trueFalse: {
-          select: {
-            questionId: true,
-            ...(includeOfficialAnswers ? { isTrue: true } : {}),
-          },
-        },
-        essay: {
-          select: {
-            questionId: true,
-            template: true,
-            ...(includeOfficialAnswers ? { solution: true } : {}),
-          },
-        },
-        web: {
-          select: {
-            questionId: true,
-            templateHtml: true,
-            templateCss: true,
-            templateJs: true,
-            ...(includeOfficialAnswers
-              ? { solutionHtml: true, solutionCss: true, solutionJs: true }
-              : {}),
-          },
-        },
-        exactMatch: {
-          select: {
-            questionId: true,
-            fields: {
-              select: {
-                id: true,
-                order: true,
-                statement: true,
-                ...(includeOfficialAnswers ? { matchRegex: true } : {}),
-              },
-              orderBy: [{ order: 'asc' }, { id: 'asc' }],
-            },
-          },
-        },
-        database: {
-          select: {
-            image: true,
-            ...(includeOfficialAnswers
-              ? {
-                  solutionQueries: {
-                    select: {
-                      query: {
-                        select: {
-                          id: true,
-                          order: true,
-                          title: true,
-                          description: true,
-                          content: true,
-                          template: true,
-                          lintActive: true,
-                          lintRules: true,
-                          studentPermission: true,
-                          testQuery: true,
-                          queryOutputTests: { select: { test: true } },
-                        },
-                      },
-                      output: true,
-                    },
-                    orderBy: { query: { order: 'asc' } },
-                  },
-                }
-              : {}),
-          },
-        },
-      }
-    : {}
-
-  // === Build relation part once (works for both SELECT and INCLUDE roots) ===
-  let relations = { ...typeSpecific }
-
-  if (includeTags) {
-    relations.questionToTag = { include: { tag: true } }
-  }
-
-  if (includeUserAnswers) {
-    const saWhere =
-      includeUserAnswers.strategy === IncludeStrategy.USER_SPECIFIC
-        ? { userEmail: includeUserAnswers.userEmail }
-        : undefined
-
-    relations.studentAnswer = {
-      where: saWhere,
-      select: {
-        status: true,
-        user: true,
-        code: {
-          select: {
-            codeWriting: {
-              select: {
-                files: {
-                  where: {
-                    studentPermission: { not: StudentPermission.HIDDEN },
-                  },
-                  include: {
-                    file: {
-                      select: {
-                        updatedAt: true,
-                        path: true,
-                        content: true,
-                        ...(includeGradings
-                          ? { id: true, annotation: true }
-                          : {}),
-                      },
-                    },
-                  },
-                  orderBy: { order: 'asc' },
-                },
-                testCaseResults: true,
-                allTestCasesPassed: true,
-              },
-            },
-            codeReading: {
-              select: {
-                outputs: {
-                  select: {
-                    output: true,
-                    status: true,
-                    codeReadingSnippet: {
-                      select: { id: true, snippet: true, order: true },
-                    },
-                  },
-                  orderBy: { codeReadingSnippet: { order: 'asc' } },
-                },
-              },
-            },
-          },
-        },
-        database: {
-          select: {
-            queries: {
-              include: { query: true, studentOutput: true },
-              orderBy: { query: { order: 'asc' } },
-            },
-          },
-        },
-        multipleChoice: {
-          select: {
-            comment: true,
-            options: {
-              select: { id: true, order: true, text: true },
-              orderBy: [{ order: 'asc' }, { id: 'asc' }],
-            },
-          },
-        },
-        essay: { select: { content: true } },
-        exactMatch: {
-          select: {
-            fields: {
-              select: {
-                fieldId: true,
-                ...(includeOfficialAnswers
-                  ? { exactMatchField: { select: { matchRegex: true } } }
-                  : {}),
-                value: true,
-              },
-            },
-          },
-        },
-        trueFalse: true,
-        web: true,
-      },
-    }
-
-    if (includeGradings) {
-      relations.studentAnswer.select.studentGrading = {
-        include: { signedBy: true },
-      }
-    }
-  }
-
-  return {
-    ...baseQuestionFields, // root scalars only valid in SELECT
-    ...relations, // relations (can have nested select/include)
-  }
+  return buildQuestionSelect(options)
 }
 
 /*

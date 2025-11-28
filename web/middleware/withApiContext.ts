@@ -92,7 +92,7 @@ function nextUserAdapter(raw: Session['user']): ISessionUser {
     raw.image ?? null,
     raw.roles ?? [],
     raw.groups ?? [],
-    raw.selected_group ?? null
+    raw.selected_group ?? null,
   )
 }
 

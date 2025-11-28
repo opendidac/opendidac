@@ -29,7 +29,10 @@
  */
 
 import type { Prisma } from '@prisma/client'
-import type { IApiContext, IApiContextWithEvaluation } from '@/types/api/context'
+import type {
+  IApiContext,
+  IApiContextWithEvaluation,
+} from '@/types/api/context'
 
 /**
  * Public contract for what ctx.evaluation contains.

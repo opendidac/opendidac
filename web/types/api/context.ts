@@ -84,7 +84,6 @@ export interface IApiContext {
   user: ISessionUser
 }
 
-
 /* --------------------------------------------------------------------------
  * SESSION USER (from NextAuth session callback)
  * -------------------------------------------------------------------------- */

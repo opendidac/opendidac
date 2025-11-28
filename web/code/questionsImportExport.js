@@ -19,7 +19,7 @@ import {
   StudentPermission,
   CodeQuestionType,
 } from '@prisma/client'
-import { questionSelectClause } from './questions'
+import { selectForQuestionExport } from './questions'
 
 // #### Question import / export ####
 
@@ -54,14 +54,7 @@ const stripEmpty = (x) => {
  */
 export const buildExportPrismaQuery = (questionId) => ({
   where: { id: questionId },
-  select: questionSelectClause({
-    includeProfessorOnlyInfo: true,
-    includeTypeSpecific: true,
-    includeOfficialAnswers: true,
-    includeUserAnswers: undefined,
-    includeGradings: false,
-    includeTags: false,
-  }),
+  select: selectForQuestionExport(),
 })
 
 /**

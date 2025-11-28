@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 /**
  * Identity helper to preserve the full inferred TypeScript type of a dynamic
  * Prisma `select` object without erasing types via `as any` or pretending it
@@ -35,4 +34,4 @@
  *
  * It is the safest way to pass complex, dynamic `select` objects into Prisma.
  */
-export const asPrismaSelect = <T extends object>(select: T): T => select;
+export const asPrismaSelect = <T extends object>(select: T): T => select

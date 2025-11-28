@@ -15,10 +15,7 @@
  */
 
 import type { Role } from '@prisma/client'
-import type {
-  IApiContext,
-  IApiContextWithRoles,
-} from '@/types/api'
+import type { IApiContext, IApiContextWithRoles } from '@/types/api'
 
 /**
  * Group owned entities are entities that are owned by a group.
@@ -99,7 +96,7 @@ export function withGroupScope<T extends IApiContext>(
       }
 
       // Map entity name to Prisma model name (lowercase)
-      const modelName = (entityName.toLowerCase() as EntityModelName) as
+      const modelName = entityName.toLowerCase() as EntityModelName as
         | 'question'
         | 'collection'
         | 'evaluation'
@@ -179,4 +176,3 @@ export function withAuthorization<T extends IApiContext>(
     return handler(ctxWithRoles)
   }
 }
-
