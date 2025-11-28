@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { selectForProfessorEditing } from './useCases'
+import { selectForProfessorEditing } from '.'
 
 const selectClause = selectForProfessorEditing()
 

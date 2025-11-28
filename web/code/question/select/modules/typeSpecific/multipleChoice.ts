@@ -19,6 +19,7 @@ import { Prisma } from '@prisma/client'
 /**
  * Sensitive MCQ data: isCorrect
  * We remove it from OptionSelect to prevent accidental leakage.
+ * Student should not fetch that field in this context
  */
 type OptionSelectWithoutCorrect = Omit<Prisma.OptionSelect, 'isCorrect'>
 

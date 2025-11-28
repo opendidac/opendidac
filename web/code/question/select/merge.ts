@@ -15,22 +15,18 @@
  */
 
 /**
- * Deep merge for any Prisma select object.
+ * Deep merge for Prisma select trees.
+ * No JS builtin or library can safely merge Prisma selects:
+ * - Object.assign is shallow and overwrites nested selects
+ * - lodash/merge corrupts Prisma arrays (orderBy, include) 
+ * - structuredClone/JSON serialization break non-JSON Prisma nodes
  *
- * NOTE:
- * -----
- * Prisma select trees contain mixed value types:
- * - booleans
- * - nested objects
- * - nested { select: {...} } / { include: {...} }
- * - undefined branches
- * - various Prisma-generated "FindManyArgs" shapes
- *
- * These structures are NOT representable as a single strict TS type.
- * Therefore the merge internals must use `any` to avoid rejecting valid
- * Prisma select nodes. The public API remains strongly typed through the
- * generic <T extends Record<string, unknown>> constraint.
+ * This merge preserves Prisma semantics:
+ * - deep-merge plain objects
+ * - replace arrays and scalars entirely
+ * - allow arbitrary nested { select: {...} } shapes
  */
+
 export const mergeSelects = <T extends Record<string, any>>(
   ...parts: T[]
 ): T => {

@@ -44,7 +44,7 @@ export {
   selectForProfessorExport,
   selectForProfessorConsultingStudent,
   selectForQuestionExport,
-} from './question/select/useCases'
+} from './question/select'
 
 /*
 CAUTION: questionSelectClause is a heavily used function

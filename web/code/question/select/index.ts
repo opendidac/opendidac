@@ -65,7 +65,6 @@ export const selectForProfessorListing = (): Prisma.QuestionSelect => {
  * Includes: type-specific, official answers, ALL user answers, gradings, professor-only info
  */
 export const selectForProfessorProgressTracking = (): Prisma.QuestionSelect => {
-  const userAnswers = { strategy: IncludeStrategy.ALL }
   return mergeSelects(
     buildBase({ includeProfessorOnlyInfo: true }),
     buildQuestionTags(),
@@ -82,7 +81,6 @@ export const selectForProfessorProgressTracking = (): Prisma.QuestionSelect => {
  * Includes: type-specific, official answers, ALL user answers, gradings, professor-only info
  */
 export const selectForProfessorResults = (): Prisma.QuestionSelect => {
-  const userAnswers = { strategy: IncludeStrategy.ALL }
   return mergeSelects(
     buildBase({ includeProfessorOnlyInfo: true }),
     buildQuestionTags(),

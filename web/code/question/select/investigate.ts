@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { selectForProfessorEvaluationQuestionsWithGradings } from './useCases'
+import { selectForProfessorEvaluationQuestionsWithGradings } from '.'
 
 const selectClause = selectForProfessorEvaluationQuestionsWithGradings()
 
