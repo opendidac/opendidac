@@ -632,7 +632,7 @@ const CompositionItem = ({
         ) : (
           <Stack width={showCoef ? 100 : 60}>
             <Tooltip
-              title="This evaluation has been purged; grading points cannot be changed"
+              title="This evaluation has been purged; grading points cannot be changed."
               disableHoverListener={!isPurged}
               disableTouchListener={!isPurged}
               disableFocusListener={!isPurged}
@@ -660,7 +660,7 @@ const CompositionItem = ({
               disableFocusListener={inComposition}
               enterDelay={500}
               title={
-                'Coefficient and number of points cannot change after composition phase.'
+                'Points visible to students cannot be changed after composition phase. Only grading points can be adjusted, which will automatically update the coefficient.'
               }
               key={'points-tooltip'}
             >
