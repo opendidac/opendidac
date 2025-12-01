@@ -22,6 +22,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withPrisma } from '@/middleware/withPrisma'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
+import { withPurgeGuard } from '@/middleware/withPurged'
 
 const put = async (req, res, prisma) => {
   // update the evaluationToQuestion
@@ -93,12 +94,14 @@ const del = async (req, res, prisma) => {
 }
 
 export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withEvaluationUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withEvaluationUpdate(withPrisma(del)), [
-      Role.PROFESSOR,
-    ]),
-  }),
+  withPurgeGuard(
+    withMethodHandler({
+      PUT: withAuthorization(withEvaluationUpdate(withPrisma(put)), [
+        Role.PROFESSOR,
+      ]),
+      DELETE: withAuthorization(withEvaluationUpdate(withPrisma(del)), [
+        Role.PROFESSOR,
+      ]),
+    }),
+  ),
 )
