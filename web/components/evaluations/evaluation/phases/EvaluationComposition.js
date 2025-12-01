@@ -60,6 +60,7 @@ const EvaluationComposition = ({
   onCompositionChanged,
 }) => {
   const evaluationId = evaluation.id
+  const isPurged = Boolean(evaluation.purgedAt)
 
   const readOnly = phaseGreaterThan(
     evaluation.phase,
@@ -111,6 +112,7 @@ const EvaluationComposition = ({
           evaluationId={evaluationId}
           composition={composition}
           readOnly={readOnly}
+          isPurged={isPurged}
           onCompositionChanged={onCompositionChanged}
         />
       </ScrollContainer>
@@ -134,6 +136,7 @@ const CompositionGrid = ({
   evaluationId,
   composition,
   readOnly,
+  isPurged = false,
   onCompositionChanged,
 }) => {
   const [questions, setQuestions] = useCtrlState(
@@ -306,6 +309,7 @@ const CompositionGrid = ({
             onChangeCompositionItem={onChangeCompositionItem}
             onDeleteCompositionItem={onDeleteCompositionItem}
             onCompositionChanged={onCompositionChanged}
+            isPurged={isPurged}
           />
         ))}
       </ReorderableList>
@@ -323,6 +327,7 @@ const CompositionItem = ({
   onChangeCompositionItem,
   onDeleteCompositionItem,
   onCompositionChanged,
+  isPurged = false,
 }) => {
   const router = useRouter()
   const {
@@ -443,6 +448,10 @@ const CompositionItem = ({
 
   const onGradingPointsChanged = useCallback(
     (newGradingPoints) => {
+      if (isPurged) {
+        // Do not allow changing grading points for purged evaluations
+        return
+      }
       const roundedGradingPoints = Math.round(newGradingPoints * 100) / 100
       setGradingPts(roundedGradingPoints)
       const allowedAfterComposition = !(
@@ -471,6 +480,7 @@ const CompositionItem = ({
       debounceSaveGradingPts,
       coef,
       onPointsChanged,
+      isPurged,
     ],
   )
 
@@ -621,13 +631,28 @@ const CompositionItem = ({
           </Typography>
         ) : (
           <Stack width={showCoef ? 100 : 60}>
-            <DecimalInput
-              value={gradingPts}
-              variant="standard"
-              rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
-              min={!inComposition && points !== 0 ? 0.01 : 0}
-              onChange={onGradingPointsChanged}
-            />
+            {isPurged ? (
+              <Tooltip title="This evaluation has been purged; grading points cannot be changed">
+                <span>
+                  <DecimalInput
+                    value={gradingPts}
+                    variant="standard"
+                    rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
+                    min={!inComposition && points !== 0 ? 0.01 : 0}
+                    onChange={onGradingPointsChanged}
+                    disabled={true}
+                  />
+                </span>
+              </Tooltip>
+            ) : (
+              <DecimalInput
+                value={gradingPts}
+                variant="standard"
+                rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
+                min={!inComposition && points !== 0 ? 0.01 : 0}
+                onChange={onGradingPointsChanged}
+              />
+            )}
           </Stack>
         )}
 
