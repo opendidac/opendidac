@@ -631,28 +631,23 @@ const CompositionItem = ({
           </Typography>
         ) : (
           <Stack width={showCoef ? 100 : 60}>
-            {isPurged ? (
-              <Tooltip title="This evaluation has been purged; grading points cannot be changed">
-                <span>
-                  <DecimalInput
-                    value={gradingPts}
-                    variant="standard"
-                    rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
-                    min={!inComposition && points !== 0 ? 0.01 : 0}
-                    onChange={onGradingPointsChanged}
-                    disabled={true}
-                  />
-                </span>
-              </Tooltip>
-            ) : (
-              <DecimalInput
-                value={gradingPts}
-                variant="standard"
-                rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
-                min={!inComposition && points !== 0 ? 0.01 : 0}
-                onChange={onGradingPointsChanged}
-              />
-            )}
+            <Tooltip
+              title="This evaluation has been purged; grading points cannot be changed"
+              disableHoverListener={!isPurged}
+              disableTouchListener={!isPurged}
+              disableFocusListener={!isPurged}
+            >
+              <span>
+                <DecimalInput
+                  value={gradingPts}
+                  variant="standard"
+                  rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
+                  min={!inComposition && points !== 0 ? 0.01 : 0}
+                  onChange={onGradingPointsChanged}
+                  disabled={isPurged}
+                />
+              </span>
+            </Tooltip>
           </Stack>
         )}
 
