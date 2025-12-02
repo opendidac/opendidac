@@ -37,7 +37,7 @@ const get = async (ctx) => {
   // check if the user is authenticated
 
   if (!user) {
-    res.unauthorized()
+    res.status(401).json({ message: 'Unauthorized' })
     return
   }
 
@@ -53,7 +53,7 @@ const get = async (ctx) => {
   })
 
   if (!userIsMemberOfGroup) {
-    res.unauthorized()
+    res.status(401).json({ message: 'Unauthorized' })
     return
   }
 
@@ -70,7 +70,7 @@ const get = async (ctx) => {
     },
   })
 
-  res.ok(members)
+  res.status(200).json(members)
 }
 
 const post = async (ctx) => {

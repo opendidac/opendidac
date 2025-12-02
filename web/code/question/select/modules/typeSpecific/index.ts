@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-import { buildMultipleChoice } from './multipleChoice'
-import { mergeSelects } from '@/code/question/select/merge'
 import { Prisma } from '@prisma/client'
+import { buildMultipleChoice } from './multipleChoice'
+import { buildTrueFalse } from './trueFalse'
+import { buildEssay } from './essay'
+import { buildWeb } from './web'
+import { buildExactMatch } from './exactMatch'
+import { buildCode } from './code'
+import { buildDatabase } from './database'
+import { mergeSelects } from '@/code/question/select/merge'
 
 /**
  * Builds all type-specific select clauses
@@ -24,7 +30,13 @@ import { Prisma } from '@prisma/client'
  * Calling this function means we want type-specific data included
  */
 export const buildTypeSpecific = (): Prisma.QuestionSelect => {
-  return {
-    ...mergeSelects(buildMultipleChoice()),
-  }
+  return mergeSelects(
+    buildMultipleChoice(),
+    buildTrueFalse(),
+    buildEssay(),
+    buildWeb(),
+    buildExactMatch(),
+    buildCode(),
+    buildDatabase(),
+  )
 }

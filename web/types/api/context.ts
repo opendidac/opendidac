@@ -14,74 +14,25 @@
  * limitations under the License.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
+import type { Session } from 'next-auth'
 import type { PrismaClient, Role, Prisma } from '@prisma/client'
 import { evaluationContextSelect } from '@/middleware/withEvaluation'
 
 /* --------------------------------------------------------------------------
- * FRAMEWORK-AGNOSTIC RESPONSE
- * -------------------------------------------------------------------------- */
-export interface IApiResponse {
-  /**
-   * Send a JSON response with a specific status code.
-   * Single method approach (no chaining) for framework compatibility.
-   */
-  response(status: number, body: unknown): void
-
-  /**
-   * Shortcut for 200 OK response.
-   */
-  ok(body: unknown): void
-
-  /**
-   * Shortcut for 400 Bad Request response.
-   */
-  badRequest(message: string): void
-
-  /**
-   * Shortcut for 401 Unauthorized response.
-   */
-  unauthorized(message?: string): void
-
-  /**
-   * Shortcut for 403 Forbidden response.
-   */
-  forbidden(message?: string): void
-
-  /**
-   * Shortcut for 404 Not Found response.
-   */
-  notFound(message?: string): void
-
-  /**
-   * Shortcut for 500 Internal Server Error response.
-   */
-  error(message?: string): void
-}
-
-/* --------------------------------------------------------------------------
- * FRAMEWORK-AGNOSTIC REQUEST
- * -------------------------------------------------------------------------- */
-export interface IApiRequest {
-  query: Record<string, unknown>
-  body?: unknown
-  headers: Record<string, string | string[] | undefined>
-  method?: string
-}
-
-/* --------------------------------------------------------------------------
- * BASE API CONTEXT (portable)
+ * BASE API CONTEXT
  * -------------------------------------------------------------------------- */
 export interface IApiContext {
-  /** Portable request (framework-agnostic) */
-  req: IApiRequest
+  /** Next.js request object */
+  req: NextApiRequest
 
-  /** Portable response (framework-agnostic) */
-  res: IApiResponse
+  /** Next.js response object */
+  res: NextApiResponse
 
   prisma: PrismaClient
 
-  /** Authenticated user */
-  user: ISessionUser
+  /** Authenticated user from NextAuth session */
+  user: Session['user']
 }
 
 /* --------------------------------------------------------------------------

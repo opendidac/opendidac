@@ -15,7 +15,7 @@
  */
 
 import { Role, QuestionStatus } from '@prisma/client'
-import { questionSelectClause, questionTypeSpecific } from '@/code/questions'
+import { selectForProfessorEditing } from '@/code/question/select'
 import {
   withAuthorization,
   withGroupScope,
@@ -43,11 +43,7 @@ const get = async (ctx) => {
         scope: groupScope,
       },
     },
-    select: questionSelectClause({
-      includeTypeSpecific: true,
-      includeOfficialAnswers: true,
-      includeProfessorOnlyInfo: true,
-    }),
+    select: selectForProfessorEditing()
   })
   res.status(200).json(question)
 }

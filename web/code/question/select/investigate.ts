@@ -12,10 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * Loadash issue: 
+ * 
+ * - lodash/merge merges objects inside arrays element-wise, corrupting Prisma orderBy arrays that need separate objects
+ * 
  */
 
-import { selectForProfessorEvaluationQuestionsWithGradings } from '.'
+import _ from 'lodash'
+import { selectForProfessorEditing } from '.'
 
-const selectClause = selectForProfessorEvaluationQuestionsWithGradings()
+const selectClause = selectForProfessorEditing()
 
 console.log(JSON.stringify(selectClause, null, 2))

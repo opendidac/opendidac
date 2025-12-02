@@ -23,7 +23,7 @@ import { Prisma } from '@prisma/client'
 export const buildQuestionTags = (): Prisma.QuestionSelect => {
   return {
     questionToTag: {
-      select: {
+      include: {
         tag: true,
       },
     },

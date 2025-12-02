@@ -15,8 +15,6 @@
  */
 
 export type {
-  IApiRequest,
-  IApiResponse,
   IApiContext,
   IApiContextWithRoles,
   IApiContextWithEvaluation,
@@ -28,16 +26,12 @@ export { SessionUser } from './context'
 
 // Type aliases for backward compatibility (deprecated, use I-prefixed versions)
 import type {
-  IApiRequest,
-  IApiResponse,
   IApiContext,
   IApiContextWithRoles,
   IApiContextWithEvaluation,
   IEvaluationInContext,
 } from './context'
 
-export type ApiRequest = IApiRequest
-export type ApiResponse = IApiResponse
 export type ApiContext = IApiContext
 export type ApiContextWithRoles = IApiContextWithRoles
 export type ApiContextWithEvaluation = IApiContextWithEvaluation

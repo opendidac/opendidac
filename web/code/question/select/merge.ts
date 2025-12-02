@@ -18,7 +18,7 @@
  * Deep merge for Prisma select trees.
  * No JS builtin or library can safely merge Prisma selects:
  * - Object.assign is shallow and overwrites nested selects
- * - lodash/merge corrupts Prisma arrays (orderBy, include) 
+ * - lodash/merge merges objects inside arrays element-wise, corrupting Prisma orderBy arrays that need separate objects
  * - structuredClone/JSON serialization break non-JSON Prisma nodes
  *
  * This merge preserves Prisma semantics:
@@ -26,6 +26,13 @@
  * - replace arrays and scalars entirely
  * - allow arbitrary nested { select: {...} } shapes
  */
+
+/**
+  // Lodash merge (WRONG for Prisma)
+  const lodashResult = _.merge({}, select1, select2);
+
+  console.log(JSON.stringify(lodashResult, null, 2)) 
+*/
 
 export const mergeSelects = <T extends Record<string, any>>(
   ...parts: T[]

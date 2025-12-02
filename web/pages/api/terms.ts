@@ -18,10 +18,11 @@ import type { IApiContext } from '@/types/api'
 import { withApiContext } from '@/middleware/withApiContext'
 
 const get = async (ctx: IApiContext) => {
+  const { res } = ctx
   const terms = process.env.TERMS_OF_SERVICE
-  if (!terms) return ctx.res.badRequest('Terms not configured')
+  if (!terms) return res.status(400).json({ message: 'Terms not configured' })
 
-  return ctx.res.ok({ terms })
+  return res.status(200).json({ terms })
 }
 
 export default withApiContext({

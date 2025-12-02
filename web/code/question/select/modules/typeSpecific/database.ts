@@ -14,19 +14,26 @@
  * limitations under the License.
  */
 
-import type { PartialPrismaSelect } from '../../utils/types'
+import { Prisma } from '@prisma/client'
 
 /**
- * Builds database type-specific select clause
+ * Builds select clause for Database relation
  * Note: Official answers (solutionQueries) are handled by officialAnswers builder
- * Calling this function means we want type-specific data included
  */
-export const buildDatabase = ({}: {} = {}): PartialPrismaSelect => {
+const buildDatabaseSelect = (): Prisma.DatabaseSelect => {
+  return {
+    image: true,
+  }
+}
+
+/**
+ * Builds database type-specific select clause for Question
+ * Note: Official answers (solutionQueries) are handled by officialAnswers builder
+ */
+export const buildDatabase = (): Prisma.QuestionSelect => {
   return {
     database: {
-      select: {
-        image: true,
-      },
+      select: buildDatabaseSelect(),
     },
   }
 }

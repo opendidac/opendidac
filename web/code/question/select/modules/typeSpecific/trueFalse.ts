@@ -14,19 +14,26 @@
  * limitations under the License.
  */
 
-import type { PartialPrismaSelect } from '../../utils/types'
+import { Prisma } from '@prisma/client'
 
 /**
- * Builds true/false type-specific select clause
+ * Builds select clause for TrueFalse relation
  * Note: Official answers (isTrue) are handled by officialAnswers builder
- * Calling this function means we want type-specific data included
  */
-export const buildTrueFalse = ({}: {} = {}): PartialPrismaSelect => {
+const buildTrueFalseSelect = (): Prisma.TrueFalseSelect => {
+  return {
+    questionId: true,
+  }
+}
+
+/**
+ * Builds true/false type-specific select clause for Question
+ * Note: Official answers (isTrue) are handled by officialAnswers builder
+ */
+export const buildTrueFalse = (): Prisma.QuestionSelect => {
   return {
     trueFalse: {
-      select: {
-        questionId: true,
-      },
+      select: buildTrueFalseSelect(),
     },
   }
 }

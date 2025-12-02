@@ -14,22 +14,29 @@
  * limitations under the License.
  */
 
-import type { PartialPrismaSelect } from '../../utils/types'
+import { Prisma } from '@prisma/client'
 
 /**
- * Builds web type-specific select clause
+ * Builds select clause for Web relation
  * Note: Official answers (solutionHtml, solutionCss, solutionJs) are handled by officialAnswers builder
- * Calling this function means we want type-specific data included
  */
-export const buildWeb = ({}: {} = {}): PartialPrismaSelect => {
+const buildWebSelect = (): Prisma.WebSelect => {
+  return {
+    questionId: true,
+    templateHtml: true,
+    templateCss: true,
+    templateJs: true,
+  }
+}
+
+/**
+ * Builds web type-specific select clause for Question
+ * Note: Official answers (solutionHtml, solutionCss, solutionJs) are handled by officialAnswers builder
+ */
+export const buildWeb = (): Prisma.QuestionSelect => {
   return {
     web: {
-      select: {
-        questionId: true,
-        templateHtml: true,
-        templateCss: true,
-        templateJs: true,
-      },
+      select: buildWebSelect(),
     },
   }
 }

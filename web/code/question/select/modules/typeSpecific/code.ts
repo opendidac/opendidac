@@ -14,57 +14,78 @@
  * limitations under the License.
  */
 
-import { StudentPermission } from '@prisma/client'
-import type { PartialPrismaSelect } from '../../utils/types'
+import { Prisma, StudentPermission } from '@prisma/client'
 
 /**
- * Builds code type-specific select clause
- * Note: Official answers (solutionFiles, output, etc.) are handled by officialAnswers builder
- * TemplateFiles filtering is conditional: when officialAnswers are NOT included, filter HIDDEN files
- * Calling this function means we want type-specific data included
- * @param includeOfficialAnswers - Pass true if official answers will also be included (affects templateFiles filtering)
+ * Builds select clause for CodeReadingSnippet relation
+ * Note: Official answers (output) are handled by officialAnswers builder
  */
-export const buildCode = ({
-  includeOfficialAnswers,
-}: {
-  includeOfficialAnswers?: boolean
-} = {}): PartialPrismaSelect => {
+const buildCodeReadingSnippetsSelect = (): Prisma.CodeReadingSnippetSelect => {
+  return {
+    id: true,
+    order: true,
+    snippet: true,
+  }
+}
+
+/**
+ * Builds select clause for CodeReading relation
+ * Note: Official answers (output, context fields) are handled by officialAnswers builder
+ */
+const buildCodeReadingSelect = (): Prisma.CodeReadingSelect => {
+  return {
+    snippets: {
+      select: buildCodeReadingSnippetsSelect(),
+      orderBy: { order: 'asc' },
+    },
+  }
+}
+
+/**
+ * Builds select clause for CodeWriting relation
+ * Note: Official answers (solutionFiles) are handled by officialAnswers builder
+ * TemplateFiles filtering: Always filters HIDDEN files for security (students shouldn't see hidden files)
+ */
+const buildCodeWritingSelect = (): Prisma.CodeWritingSelect => {
+  return {
+    codeCheckEnabled: true,
+    templateFiles: {
+      where: {
+        studentPermission: { not: StudentPermission.HIDDEN },
+      },
+      include: { file: true },
+      orderBy: { order: 'asc' },
+    },
+    testCases: { orderBy: { index: 'asc' } },
+  }
+}
+
+/**
+ * Builds select clause for Code relation
+ * Note: Official answers (solutionFiles, output, context fields) are handled by officialAnswers builder
+ */
+const buildCodeSelect = (): Prisma.CodeSelect => {
+  return {
+    language: true,
+    sandbox: true,
+    codeType: true,
+    codeWriting: {
+      select: buildCodeWritingSelect(),
+    },
+    codeReading: {
+      select: buildCodeReadingSelect(),
+    },
+  }
+}
+
+/**
+ * Builds code type-specific select clause for Question
+ * Note: Official answers (solutionFiles, output, context fields) are handled by officialAnswers builder
+ */
+export const buildCode = (): Prisma.QuestionSelect => {
   return {
     code: {
-      select: {
-        language: true,
-        sandbox: true,
-        codeType: true,
-        codeWriting: {
-          select: {
-            codeCheckEnabled: true,
-            templateFiles: {
-              ...(!includeOfficialAnswers
-                ? {
-                    where: {
-                      studentPermission: { not: StudentPermission.HIDDEN },
-                    },
-                  }
-                : {}),
-              include: { file: true },
-              orderBy: { order: 'asc' },
-            },
-            testCases: { orderBy: { index: 'asc' } },
-          },
-        },
-        codeReading: {
-          select: {
-            snippets: {
-              select: {
-                id: true,
-                order: true,
-                snippet: true,
-              },
-              orderBy: { order: 'asc' },
-            },
-          },
-        },
-      },
+      select: buildCodeSelect(),
     },
   }
 }

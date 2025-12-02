@@ -39,7 +39,7 @@ const get = async (ctx) => {
     },
   })
 
-  res.ok(groups)
+  res.status(200).json(groups)
 }
 
 export default withApiContext({

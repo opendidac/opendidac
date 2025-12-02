@@ -14,27 +14,42 @@
  * limitations under the License.
  */
 
-import type { PartialPrismaSelect } from '../../utils/types'
+import { Prisma } from '@prisma/client'
 
 /**
- * Builds exact match type-specific select clause
+ * Builds select clause for ExactMatchField relation
  * Note: Official answers (matchRegex) are handled by officialAnswers builder
- * Calling this function means we want type-specific data included
  */
-export const buildExactMatch = ({}: {} = {}): PartialPrismaSelect => {
+const buildExactMatchFieldsSelect = (): Prisma.ExactMatchFieldSelect => {
+  return {
+    id: true,
+    order: true,
+    statement: true,
+  }
+}
+
+/**
+ * Builds select clause for ExactMatch relation
+ * Note: Official answers (matchRegex) are handled by officialAnswers builder
+ */
+const buildExactMatchSelect = (): Prisma.ExactMatchSelect => {
+  return {
+    questionId: true,
+    fields: {
+      select: buildExactMatchFieldsSelect(),
+      orderBy: [{ order: 'asc' }, { id: 'asc' }],
+    },
+  }
+}
+
+/**
+ * Builds exact match type-specific select clause for Question
+ * Note: Official answers (matchRegex) are handled by officialAnswers builder
+ */
+export const buildExactMatch = (): Prisma.QuestionSelect => {
   return {
     exactMatch: {
-      select: {
-        questionId: true,
-        fields: {
-          select: {
-            id: true,
-            order: true,
-            statement: true,
-          },
-          orderBy: [{ order: 'asc' }, { id: 'asc' }],
-        },
-      },
+      select: buildExactMatchSelect(),
     },
   }
 }

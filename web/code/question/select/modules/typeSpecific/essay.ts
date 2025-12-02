@@ -14,20 +14,27 @@
  * limitations under the License.
  */
 
-import type { PartialPrismaSelect } from '../../utils/types'
+import { Prisma } from '@prisma/client'
 
 /**
- * Builds essay type-specific select clause
+ * Builds select clause for Essay relation
  * Note: Official answers (solution) are handled by officialAnswers builder
- * Calling this function means we want type-specific data included
  */
-export const buildEssay = ({}: {} = {}): PartialPrismaSelect => {
+const buildEssaySelect = (): Prisma.EssaySelect => {
+  return {
+    questionId: true,
+    template: true,
+  }
+}
+
+/**
+ * Builds essay type-specific select clause for Question
+ * Note: Official answers (solution) are handled by officialAnswers builder
+ */
+export const buildEssay = (): Prisma.QuestionSelect => {
   return {
     essay: {
-      select: {
-        questionId: true,
-        template: true,
-      },
+      select: buildEssaySelect(),
     },
   }
 }

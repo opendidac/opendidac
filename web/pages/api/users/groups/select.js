@@ -37,7 +37,7 @@ const put = async (ctx) => {
   )
 
   if (!userInGroup) {
-    res.badRequest('You are not a member of this group')
+    res.status(400).json({ message: 'You are not a member of this group' })
     return
   }
 
@@ -73,7 +73,7 @@ const put = async (ctx) => {
     },
   })
 
-  res.ok({ message: 'ok' })
+  res.status(200).json({ message: 'ok' })
 }
 
 export default withApiContext({

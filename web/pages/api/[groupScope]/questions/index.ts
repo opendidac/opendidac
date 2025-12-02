@@ -21,7 +21,6 @@ import {
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/types/api'
-import { asPrismaSelect } from '@/types/api/prisma'
 import {
   codeInitialUpdateQuery,
   questionSelectClause,
@@ -30,6 +29,7 @@ import {
 import { questionsFilterWhereClause } from '@/code/questionsFilter'
 import languages from '@/code/languages.json'
 import databaseTemplate from '@/code/database.json'
+import { selectForProfessorListing } from '@/code/question/select'
 
 const environments = languages.environments
 
@@ -61,19 +61,16 @@ const get = async (ctx: IApiContext) => {
     select: {
       lastUsed: true,
       usageStatus: true,
-      ...asPrismaSelect(questionSelectClause({
-        includeTypeSpecific: true,
-        includeOfficialAnswers: true,
-        includeProfessorOnlyInfo: true,
-      })),
       evaluation: true,
+      ...selectForProfessorListing(),
+      
     },
     orderBy: {
       createdAt: 'desc',
     },
   })
 
-  res.ok(questions)
+  res.status(200).json(questions)
 }
 
 export const post = async (ctx: IApiContext) => {
@@ -83,16 +80,16 @@ export const post = async (ctx: IApiContext) => {
   const { type, options } = body
 
   if (!type) {
-    return res.badRequest('Invalid question type')
+    return res.status(400).json({ message: 'Invalid question type' })
   }
 
   const questionType = QuestionType[type as keyof typeof QuestionType]
 
   if (!questionType) {
-    return res.badRequest('Invalid question type')
+    return res.status(400).json({ message: 'Invalid question type' })
   }
   if (!groupScope || typeof groupScope !== 'string') {
-    return res.badRequest('Missing groupScope')
+    return res.status(400).json({ message: 'Missing groupScope' })
   }
 
   const fullSelect = questionSelectClause({
@@ -196,10 +193,10 @@ export const post = async (ctx: IApiContext) => {
       })
     })
 
-    res.ok(createdQuestion)
+    res.status(200).json(createdQuestion)
   } catch (err) {
     console.error('POST /question error:', err)
-    res.error('Failed to create question')
+    res.status(500).json({ message: 'Failed to create question' })
   }
 }
 

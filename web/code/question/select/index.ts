@@ -53,9 +53,8 @@ export const selectForProfessorEditing = (): Prisma.QuestionSelect => {
 export const selectForProfessorListing = (): Prisma.QuestionSelect => {
   return mergeSelects(
     buildBase({ includeProfessorOnlyInfo: true }),
+    buildTypeSpecific(),
     buildQuestionTags(),
-    //buildTypeSpecific(),
-    //buildOfficialAnswers(),
   )
 }
 
