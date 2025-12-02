@@ -1,6 +1,13 @@
 {
   "extends": ["next/core-web-vitals", "prettier"],
   "plugins": ["header", "unused-imports"],
+  "ignorePatterns": [
+    "next-env.d.ts",
+    ".next/**",
+    "out/**",
+    "build/**",
+    "node_modules/**"
+  ],
   "rules": {
     "header/header": [2, "license.js"],
     "unused-imports/no-unused-imports": "error"

@@ -55,10 +55,10 @@
 
           {{#if this.studentAnswer.code}}
             {{#if this.question.code.codeType}}
-              {{#if (eq this.question.code.codeType 'codeWriting')}}
+              {{#if (equals this.question.code.codeType 'codeWriting')}}
                 {{> studentAnswerCodeWriting this}}
               {{/if}}
-              {{#if (eq this.question.code.codeType 'codeReading')}}
+              {{#if (equals this.question.code.codeType 'codeReading')}}
                 {{> studentAnswerCodeReading this}}
               {{/if}}
             {{/if}}

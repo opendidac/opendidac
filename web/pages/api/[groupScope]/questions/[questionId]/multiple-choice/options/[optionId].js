@@ -19,13 +19,13 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 // Update a single option of a multiple choice question
-const put = async (req, res, prisma) => {
+const put = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { questionId, optionId } = req.query
   const { text, isCorrect } = req.body || {}
 
@@ -71,7 +71,8 @@ const put = async (req, res, prisma) => {
 }
 
 // Delete a single option of a multiple choice question
-const del = async (req, res, prisma) => {
+const del = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { questionId, optionId } = req.query
 
   // Ensure the option exists and belongs to the question
@@ -121,13 +122,15 @@ const del = async (req, res, prisma) => {
   res.status(200).json({ message: 'Option deleted and reordered' })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  PUT: withGroupScope(
+    withAuthorization(withQuestionUpdate(put), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+  DELETE: withGroupScope(
+    withAuthorization(withQuestionUpdate(del), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

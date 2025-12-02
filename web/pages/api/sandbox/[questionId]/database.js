@@ -17,17 +17,15 @@
 import { Role, Prisma } from '@prisma/client'
 import { runSandboxDB } from '@/sandbox/runSandboxDB'
 import { runSQLFluffSandbox } from '@/sandbox/runSQLFluffSandbox'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /*
  endpoint to run the sandbox for a database question with queries recovered from the database
  */
-const post = async (req, res, prisma) => {
+const post = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
 
   const database = await prisma.database.findUnique({
@@ -186,8 +184,8 @@ const post = async (req, res, prisma) => {
   res.status(200).json(solutionQueries)
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-    Role.PROFESSOR,
-  ]),
+export default withApiContext({
+  POST: withAuthorization(withQuestionUpdate(post), {
+    roles: [Role.PROFESSOR],
+  }),
 })

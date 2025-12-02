@@ -26,11 +26,8 @@ import {
 
 import { isInProgress } from './utils'
 import { grading } from '@/code/grading/engine'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import {
   withEvaluationPhase,
   withStudentStatus,
@@ -46,341 +43,329 @@ const isCodeReadingQuestionWithStudentOutputTest = (question) =>
   question.code.codeType === CodeQuestionType.codeReading &&
   question.code.codeReading.studentOutputTest
 
-const get = withEvaluationPhase(
-  [EvaluationPhase.IN_PROGRESS],
-  withStudentStatus(
-    [UserOnEvaluationStatus.IN_PROGRESS],
-    async (req, res, prisma) => {
-      const user = await getUser(req, res)
-      const studentEmail = user.email
-      const { questionId } = req.query
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
+  const user = await getUser(req, res)
+  const studentEmail = user.email
+  const { questionId } = req.query
 
-      // IMPORTANT! Do not provide any official answers to the student
-      const question = await prisma.question.findUnique({
-        where: {
-          id: questionId,
-        },
+  // IMPORTANT! Do not provide any official answers to the student
+  const question = await prisma.question.findUnique({
+    where: {
+      id: questionId,
+    },
+    select: {
+      id: true,
+      type: true,
+      multipleChoice: {
         select: {
-          id: true,
-          type: true,
-          multipleChoice: {
+          activateStudentComment: true,
+          studentCommentLabel: true,
+          activateSelectionLimit: true,
+          selectionLimit: true,
+          options: {
             select: {
-              activateStudentComment: true,
-              studentCommentLabel: true,
-              activateSelectionLimit: true,
-              selectionLimit: true,
-              options: {
+              id: true,
+              order: true,
+              text: true,
+            },
+          },
+        },
+      },
+      database: {
+        select: {
+          solutionQueries: {
+            where: {
+              query: {
+                testQuery: true,
+              },
+            },
+            select: {
+              query: {
                 select: {
-                  id: true,
                   order: true,
-                  text: true,
                 },
               },
+              output: true,
             },
           },
-          database: {
+        },
+      },
+      code: {
+        select: {
+          codeType: true,
+          language: true,
+          codeReading: {
             select: {
-              solutionQueries: {
+              studentOutputTest: true,
+            },
+          },
+          codeWriting: {
+            select: {
+              codeCheckEnabled: true,
+            },
+          },
+        },
+      },
+      exactMatch: {
+        select: {
+          fields: {
+            select: {
+              id: true,
+              statement: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (!question) {
+    res.status(404).json({ message: 'Question not found' })
+    return
+  }
+
+  const studentAnswer = await prisma.studentAnswer.findUnique({
+    where: {
+      userEmail_questionId: {
+        userEmail: studentEmail,
+        questionId: questionId,
+      },
+    },
+    include: {
+      code: {
+        select: {
+          codeType: true,
+          codeWriting: {
+            select: {
+              files: {
                 where: {
-                  query: {
-                    testQuery: true,
+                  studentPermission: {
+                    not: StudentPermission.HIDDEN,
                   },
                 },
                 select: {
-                  query: {
-                    select: {
-                      order: true,
-                    },
-                  },
+                  studentPermission: true,
+                  order: true,
+                  file: true,
+                },
+                orderBy: { order: 'asc' },
+              },
+            },
+          },
+          codeReading: {
+            select: {
+              outputs: {
+                select: {
                   output: true,
-                },
-              },
-            },
-          },
-          code: {
-            select: {
-              codeType: true,
-              language: true,
-              codeReading: {
-                select: {
-                  studentOutputTest: true,
-                },
-              },
-              codeWriting: {
-                select: {
-                  codeCheckEnabled: true,
-                },
-              },
-            },
-          },
-          exactMatch: {
-            select: {
-              fields: {
-                select: {
-                  id: true,
-                  statement: true,
-                },
-              },
-            },
-          },
-        },
-      })
-
-      if (!question) {
-        res.status(404).json({ message: 'Question not found' })
-        return
-      }
-
-      const studentAnswer = await prisma.studentAnswer.findUnique({
-        where: {
-          userEmail_questionId: {
-            userEmail: studentEmail,
-            questionId: questionId,
-          },
-        },
-        include: {
-          code: {
-            select: {
-              codeType: true,
-              codeWriting: {
-                select: {
-                  files: {
-                    where: {
-                      studentPermission: {
-                        not: StudentPermission.HIDDEN,
-                      },
-                    },
+                  ...(isCodeReadingQuestionWithStudentOutputTest(question)
+                    ? {
+                        status: true,
+                      }
+                    : {}),
+                  codeReadingSnippet: {
                     select: {
-                      studentPermission: true,
+                      id: true,
+                      snippet: true,
                       order: true,
-                      file: true,
-                    },
-                    orderBy: { order: 'asc' },
-                  },
-                },
-              },
-              codeReading: {
-                select: {
-                  outputs: {
-                    select: {
-                      output: true,
-                      ...(isCodeReadingQuestionWithStudentOutputTest(question)
-                        ? {
-                            status: true,
-                          }
-                        : {}),
-                      codeReadingSnippet: {
-                        select: {
-                          id: true,
-                          snippet: true,
-                          order: true,
-                        },
-                      },
-                    },
-                    orderBy: {
-                      codeReadingSnippet: {
-                        order: 'asc',
-                      },
                     },
                   },
-                },
-              },
-            },
-          },
-          database: {
-            select: {
-              queries: {
-                include: {
-                  query: {
-                    include: {
-                      queryOutputTests: true,
-                    },
-                  },
-                  studentOutput: true,
                 },
                 orderBy: {
-                  query: { order: 'asc' },
+                  codeReadingSnippet: {
+                    order: 'asc',
+                  },
                 },
               },
             },
           },
-          multipleChoice: {
-            select: {
-              comment: true,
-              options: {
-                select: {
-                  id: true,
-                  text: true,
-                },
-              },
-            },
-          },
-          exactMatch: {
-            select: {
-              fields: {
-                select: {
-                  fieldId: true,
-                  value: true,
-                },
-              },
-            },
-          },
-          trueFalse: true,
-          essay: true,
-          web: true,
         },
-      })
-
-      if (!studentAnswer) {
-        res.status(404).json({ message: 'Student answers not found' })
-        return
-      }
-
-      if (studentAnswer.database) {
-        // remove hidden queries content
-        studentAnswer.database.queries = studentAnswer.database?.queries.map(
-          (saTq) => ({
-            ...saTq,
-            query: {
-              ...saTq.query,
-              content:
-                saTq.query.studentPermission === StudentPermission.HIDDEN
-                  ? null
-                  : saTq.query.content,
+      },
+      database: {
+        select: {
+          queries: {
+            include: {
+              query: {
+                include: {
+                  queryOutputTests: true,
+                },
+              },
+              studentOutput: true,
             },
-          }),
-        )
-      }
-
-      res.status(200).json({
-        question,
-        studentAnswer,
-      })
+            orderBy: {
+              query: { order: 'asc' },
+            },
+          },
+        },
+      },
+      multipleChoice: {
+        select: {
+          comment: true,
+          options: {
+            select: {
+              id: true,
+              text: true,
+            },
+          },
+        },
+      },
+      exactMatch: {
+        select: {
+          fields: {
+            select: {
+              fieldId: true,
+              value: true,
+            },
+          },
+        },
+      },
+      trueFalse: true,
+      essay: true,
+      web: true,
     },
-  ),
-)
+  })
+
+  if (!studentAnswer) {
+    res.status(404).json({ message: 'Student answers not found' })
+    return
+  }
+
+  if (studentAnswer.database) {
+    // remove hidden queries content
+    studentAnswer.database.queries = studentAnswer.database?.queries.map(
+      (saTq) => ({
+        ...saTq,
+        query: {
+          ...saTq.query,
+          content:
+            saTq.query.studentPermission === StudentPermission.HIDDEN
+              ? null
+              : saTq.query.content,
+        },
+      }),
+    )
+  }
+
+  res.status(200).json({
+    question,
+    studentAnswer,
+  })
+}
 
 /*
  endpoint to handle users answers related to all single level question types (without complex nesting)
  ONLY : [true false, essay, web]
  The complexe question types have their own endpoints
 */
-const put = withEvaluationPhase(
-  [EvaluationPhase.IN_PROGRESS],
-  withStudentStatus(
-    [UserOnEvaluationStatus.IN_PROGRESS],
-    async (req, res, prisma) => {
-      // update users answers
-      const user = await getUser(req, res)
-      const studentEmail = user.email
-      const { evaluationId, questionId } = req.query
+const put = async (ctx) => {
+  const { req, res, prisma } = ctx
+  // update users answers
+  const user = await getUser(req, res)
+  const studentEmail = user.email
+  const { evaluationId, questionId } = req.query
 
-      const { answer } = req.body
-      const questionToEvaluation = await prisma.evaluationToQuestion.findUnique(
-        {
-          where: {
-            evaluationId_questionId: {
-              evaluationId: evaluationId,
-              questionId: questionId,
-            },
-          },
-          include: {
-            question: {
-              select: {
-                type: true,
-                trueFalse: true,
-                essay: true,
-                web: true,
-              },
-            },
-          },
-        },
-      )
-
-      if (!(await isInProgress(evaluationId, prisma))) {
-        res.status(400).json({ message: 'Evaluation is not in progress' })
-        return
-      }
-
-      let status =
-        answer === undefined
-          ? StudentAnswerStatus.MISSING
-          : StudentAnswerStatus.IN_PROGRESS
-
-      const transaction = [] // to do in single transaction, queries are done in order
-
-      // update the status of the users answers
-      transaction.push(
-        prisma.studentAnswer.update({
-          where: {
-            userEmail_questionId: {
-              userEmail: studentEmail,
-              questionId: questionId,
-            },
-          },
-          data: {
-            status,
-          },
-        }),
-      )
-
-      // update the typeSpecific users answers
-
-      const {
-        answer: data,
-        grading,
-        model,
-      } = prepareAnswer(prisma, questionToEvaluation, answer)
-
-      transaction.push(
-        model.update({
-          where: {
-            userEmail_questionId: {
-              userEmail: studentEmail,
-              questionId: questionId,
-            },
-          },
-          data: data,
-        }),
-      )
-
-      // update the grading
-      transaction.push(
-        prisma.studentQuestionGrading.upsert({
-          where: {
-            userEmail_questionId: {
-              userEmail: studentEmail,
-              questionId: questionId,
-            },
-          },
-          create: {
-            userEmail: studentEmail,
-            questionId: questionId,
-            ...grading,
-          },
-          update: grading,
-        }),
-      )
-
-      await prisma.$transaction(transaction)
-
-      const updatedStudentAnswer = await prisma.studentAnswer.findUnique({
-        where: {
-          userEmail_questionId: {
-            userEmail: studentEmail,
-            questionId: questionId,
-          },
-        },
-        select: {
-          status: true,
-          [questionToEvaluation.question.type]: true,
-        },
-      })
-
-      res.status(200).json(updatedStudentAnswer)
+  const { answer } = req.body
+  const questionToEvaluation = await prisma.evaluationToQuestion.findUnique({
+    where: {
+      evaluationId_questionId: {
+        evaluationId: evaluationId,
+        questionId: questionId,
+      },
     },
-  ),
-)
+    include: {
+      question: {
+        select: {
+          type: true,
+          trueFalse: true,
+          essay: true,
+          web: true,
+        },
+      },
+    },
+  })
+
+  if (!(await isInProgress(evaluationId, prisma))) {
+    res.status(400).json({ message: 'Evaluation is not in progress' })
+    return
+  }
+
+  let status =
+    answer === undefined
+      ? StudentAnswerStatus.MISSING
+      : StudentAnswerStatus.IN_PROGRESS
+
+  const transaction = [] // to do in single transaction, queries are done in order
+
+  // update the status of the users answers
+  transaction.push(
+    prisma.studentAnswer.update({
+      where: {
+        userEmail_questionId: {
+          userEmail: studentEmail,
+          questionId: questionId,
+        },
+      },
+      data: {
+        status,
+      },
+    }),
+  )
+
+  // update the typeSpecific users answers
+
+  const {
+    answer: data,
+    grading,
+    model,
+  } = prepareAnswer(prisma, questionToEvaluation, answer)
+
+  transaction.push(
+    model.update({
+      where: {
+        userEmail_questionId: {
+          userEmail: studentEmail,
+          questionId: questionId,
+        },
+      },
+      data: data,
+    }),
+  )
+
+  // update the grading
+  transaction.push(
+    prisma.studentQuestionGrading.upsert({
+      where: {
+        userEmail_questionId: {
+          userEmail: studentEmail,
+          questionId: questionId,
+        },
+      },
+      create: {
+        userEmail: studentEmail,
+        questionId: questionId,
+        ...grading,
+      },
+      update: grading,
+    }),
+  )
+
+  await prisma.$transaction(transaction)
+
+  const updatedStudentAnswer = await prisma.studentAnswer.findUnique({
+    where: {
+      userEmail_questionId: {
+        userEmail: studentEmail,
+        questionId: questionId,
+      },
+    },
+    select: {
+      status: true,
+      [questionToEvaluation.question.type]: true,
+    },
+  })
+
+  res.status(200).json(updatedStudentAnswer)
+}
 
 /*
     prepare the answers and grading for the users answers and select the correct model to update
@@ -420,7 +405,23 @@ const prepareAnswer = (prisma, questionToEvaluation, answer) => {
   }
 }
 
-export default withMethodHandler({
-  PUT: withAuthorization(withPrisma(put), [Role.STUDENT, Role.PROFESSOR]),
-  GET: withAuthorization(withPrisma(get), [Role.STUDENT, Role.PROFESSOR]),
+export default withApiContext({
+  GET: withAuthorization(
+    withEvaluationPhase(
+      withStudentStatus(get, {
+        statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+      }),
+      { phases: [EvaluationPhase.IN_PROGRESS] },
+    ),
+    { roles: [Role.STUDENT, Role.PROFESSOR] },
+  ),
+  PUT: withAuthorization(
+    withEvaluationPhase(
+      withStudentStatus(put, {
+        statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+      }),
+      { phases: [EvaluationPhase.IN_PROGRESS] },
+    ),
+    { roles: [Role.STUDENT, Role.PROFESSOR] },
+  ),
 })

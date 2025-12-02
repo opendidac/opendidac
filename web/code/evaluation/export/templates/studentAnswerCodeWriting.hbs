@@ -3,7 +3,7 @@
     <span>Only editable files are shown</span>
     {{#each studentAnswer.code.codeWriting.files}}
       <div style="display: flex; flex-direction: column; gap: 10px;">
-      {{#if (eq this.studentPermission 'UPDATE')}}
+      {{#if (equals this.studentPermission 'UPDATE')}}
         <div>{{this.file.path}}</div>
         <div>
           {{> codeBloc this.file.content}}

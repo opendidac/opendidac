@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import { Role } from '@prisma/client'
 
-const handler = async (req, res, prisma) => {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
 
   try {
     // Get min and max dates from StudentAnswer to determine the actual data range
@@ -76,6 +71,6 @@ const handler = async (req, res, prisma) => {
   }
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(withPrisma(handler), [Role.SUPER_ADMIN]),
+export default withApiContext({
+  GET: withAuthorization(get, { roles: [Role.SUPER_ADMIN] }),
 })

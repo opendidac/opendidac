@@ -45,6 +45,10 @@ export const questionSelectClause = (questionSelectOptions) => {
   // include/select question related entities based on the specified context
   const options = { ...defaultQuestionSelectClause, ...questionSelectOptions }
 
+  throw new Error(
+    'Deprecated function questionSelectClause. Use selectForProfessorListing instead.',
+  )
+
   const {
     includeProfessorOnlyInfo,
     includeTypeSpecific,
