@@ -13,8 +13,8 @@
 
       <div style="display: flex; justify-content: space-between; align-items: flex-start">
         <label style="width: 150px;">Status:</label>
-        <span style="flex:1;" class="{{#if (eq this.status 'MATCH')}}success{{else}}error{{/if}}">
-          {{#if (eq this.status 'NEUTRAL')}}
+        <span style="flex:1;" class="{{#if (equals this.status 'MATCH')}}success{{else}}error{{/if}}">
+          {{#if (equals this.status 'NEUTRAL')}}
             MISSING
           {{else}}
             {{this.status}}

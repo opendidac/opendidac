@@ -19,16 +19,44 @@ import {
   QuestionSource,
   QuestionUsageStatus,
   Role,
+  Prisma,
+  PrismaClient,
 } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import { copyQuestion, questionSelectClause } from '@/code/questions'
+import type { IApiContext } from '@/types/api'
+import { copyQuestion } from '@/code/questions'
+import {
+  mergeSelects,
+  selectBase,
+  selectQuestionTags,
+  selectTypeSpecific,
+  selectOfficialAnswers,
+} from '@/code/question/select'
+
+/**
+ * Select clause for copying questions during evaluation phase transition.
+ * Includes: type-specific data, official answers, professor-only info, tags
+ * Note: Used when copying questions for evaluation (needs all data to create copies)
+ */
+const selectForQuestionCopy = (): Prisma.QuestionSelect => {
+  return mergeSelects(
+    selectBase({ includeProfessorOnlyInfo: true }),
+    selectTypeSpecific(),
+    selectOfficialAnswers(),
+    selectQuestionTags(),
+  )
+}
 
 // Compute duration delta in milliseconds from activation flag, hours and minutes
-function computeDurationDeltaMs(durationActive, durationHours, durationMins) {
+function computeDurationDeltaMs(
+  durationActive: boolean | null,
+  durationHours: number | null,
+  durationMins: number | null,
+): number {
   if (!durationActive) return 0
   const hoursNum = Number(durationHours || 0)
   const minsNum = Number(durationMins || 0)
@@ -36,7 +64,10 @@ function computeDurationDeltaMs(durationActive, durationHours, durationMins) {
   return totalMs > 0 ? totalMs : 0
 }
 
-const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
+const copyQuestionsForEvaluation = async (
+  prisma: PrismaClient,
+  evaluationId: string,
+) => {
   const evaluationToQuestions = await prisma.evaluationToQuestion.findMany({
     where: {
       evaluationId: evaluationId,
@@ -44,30 +75,25 @@ const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
     include: {
       question: {
         select: {
-          ...questionSelectClause({
-            includeProfessorOnlyInfo: true,
-            includeTypeSpecific: true,
-            includeOfficialAnswers: true,
-            includeTags: true,
-          }),
+          ...selectForQuestionCopy(),
           groupId: true,
         },
       },
     },
   })
 
-  await prisma.$transaction(async (prisma) => {
-    await prisma.evaluationToQuestion.deleteMany({
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    await tx.evaluationToQuestion.deleteMany({
       where: { evaluationId: evaluationId },
     })
 
     for (const eToQ of evaluationToQuestions) {
       const newQuestion = await copyQuestion(
-        prisma,
+        tx,
         eToQ.question,
         QuestionSource.EVAL,
       )
-      await prisma.evaluationToQuestion.create({
+      await tx.evaluationToQuestion.create({
         data: {
           points: eToQ.points,
           gradingPoints: eToQ.gradingPoints,
@@ -81,9 +107,17 @@ const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
   })
 }
 
-const get = async (ctx) => {
+type PatchBody = Pick<Prisma.EvaluationUpdateInput, 'phase'>
+
+const get = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
+
+  if (!evaluationId || typeof evaluationId !== 'string') {
+    res.status(400).json({ message: 'Invalid evaluationId' })
+    return
+  }
+
   const evaluation = await prisma.evaluation.findUnique({
     where: {
       id: evaluationId,
@@ -94,13 +128,25 @@ const get = async (ctx) => {
       endAt: true,
     },
   })
+
+  if (!evaluation) {
+    res.status(404).json({ message: 'Evaluation not found' })
+    return
+  }
+
   res.status(200).json(evaluation)
 }
 
-const patch = async (ctx) => {
+const patch = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
-  const { phase: nextPhase } = req.body
+  const body = req.body as PatchBody
+  const { phase: nextPhase } = body
+
+  if (!evaluationId || typeof evaluationId !== 'string') {
+    res.status(400).json({ message: 'Invalid evaluationId' })
+    return
+  }
 
   if (!nextPhase) {
     res.status(400).json({ message: 'phase is required' })
@@ -123,7 +169,7 @@ const patch = async (ctx) => {
     return
   }
 
-  const data = { phase: nextPhase }
+  const data: Partial<Prisma.EvaluationUpdateInput> = { phase: nextPhase }
 
   if (nextPhase === EvaluationPhase.REGISTRATION) {
     await copyQuestionsForEvaluation(prisma, evaluationId)
@@ -133,29 +179,38 @@ const patch = async (ctx) => {
     data.startAt = new Date()
 
     // Update usage status for source questions of EVAL questions in this evaluation
-    await prisma.question.updateMany({
-      where: {
-        id: {
-          in: await prisma.evaluationToQuestion
-            .findMany({
-              where: {
-                evaluationId: evaluationId,
-                question: {
-                  source: QuestionSource.EVAL,
-                  sourceQuestionId: { not: null },
-                },
-              },
-              select: {
-                question: { select: { sourceQuestionId: true } },
-              },
-            })
-            .then((results) =>
-              results.map((r) => r.question.sourceQuestionId).filter(Boolean),
-            ),
+    const sourceQuestionIds = await prisma.evaluationToQuestion
+      .findMany({
+        where: {
+          evaluationId: evaluationId,
+          question: {
+            source: QuestionSource.EVAL,
+            sourceQuestionId: { not: null },
+          },
         },
-      },
-      data: { usageStatus: QuestionUsageStatus.USED, lastUsed: new Date() },
-    })
+        select: {
+          question: { select: { sourceQuestionId: true } },
+        },
+      })
+      .then((results) =>
+        results
+          .map((r) => r.question.sourceQuestionId)
+          .filter((id): id is string => Boolean(id)),
+      )
+
+    if (sourceQuestionIds.length > 0) {
+      await prisma.question.updateMany({
+        where: {
+          id: {
+            in: sourceQuestionIds,
+          },
+        },
+        data: {
+          usageStatus: QuestionUsageStatus.USED,
+          lastUsed: new Date(),
+        },
+      })
+    }
 
     // optimistic endAt if duration active (read from DB only)
     const finalDurationActive = currentEvaluation.durationActive === true
@@ -163,7 +218,7 @@ const patch = async (ctx) => {
     const mins = Number(currentEvaluation.durationMins ?? 0)
     const deltaMs = computeDurationDeltaMs(finalDurationActive, hours, mins)
     if (deltaMs > 0) {
-      const start = data.startAt
+      const start = data.startAt as Date
       data.endAt = new Date(start.getTime() + deltaMs)
     }
   }

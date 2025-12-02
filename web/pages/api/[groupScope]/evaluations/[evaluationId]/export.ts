@@ -41,7 +41,7 @@ import { selectForProfessorExport } from '@/code/evaluation/export/engine/select
 import mainTemplate from '@/code/evaluation/export/templates/main.hbs'
 import muiTheme from '@/code/evaluation/muiTheme.json'
 
-const OUTPUT_FORMAT: 'html' | 'pdf' = 'pdf'
+const OUTPUT_FORMAT = 'pdf' as 'html' | 'pdf'
 
 // ----------------------------------------------------------
 
@@ -100,19 +100,21 @@ const get = async (ctx: IApiContext) => {
   }> = []
 
   if (includeStudentSubmissions) {
-    studentsWithQuestionsAndAnswers = evaluation.students.map((studentObj) => {
-      const student = studentObj.user
+    studentsWithQuestionsAndAnswers = evaluation.students
+      .filter((studentObj) => studentObj.user.email !== null)
+      .map((studentObj) => {
+        const student = studentObj.user
 
-      const qList = questions.map((etq) =>
-        mapStudentSubmission<QuestionPayloadProfessor>(
-          etq,
-          student,
-          student.email,
-        ),
-      )
+        const qList = questions.map((etq) =>
+          mapStudentSubmission<QuestionPayloadProfessor>(
+            etq,
+            student,
+            student.email!, // Safe because we filtered out null emails
+          ),
+        )
 
-      return { student, questions: qList }
-    })
+        return { student, questions: qList }
+      })
   }
 
   // Template context

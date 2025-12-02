@@ -27,6 +27,17 @@ export function loadHandlebars() {
     Handlebars.registerPartial(name, tpl),
   )
 
+  // Register aliases for partials (templates use different names than exports)
+  if (templates.partials.student) {
+    Handlebars.registerPartial('studentInfo', templates.partials.student)
+  }
+  if (templates.partials.studentAnswerExactMatchNeutral) {
+    Handlebars.registerPartial(
+      'studentAnswerExactMatch',
+      templates.partials.studentAnswerExactMatchNeutral,
+    )
+  }
+
   Object.entries(helpers).forEach(([name, fn]) =>
     Handlebars.registerHelper(name, fn),
   )

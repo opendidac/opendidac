@@ -20,7 +20,7 @@ import studentMain from './studentMain.hbs'
 
 import studentCover from './studentCover.hbs'
 
-import student from './student.hbs'
+import studentInfo from './student.hbs'
 
 import questionHeader from './question.hbs'
 
@@ -60,7 +60,7 @@ export const partials = {
   styles,
   studentMain,
   studentCover,
-  student,
+  studentInfo,
   questionHeader,
   codeBloc,
   studentAnswerHeader,

@@ -38,7 +38,7 @@ import { selectForStudentExport } from '@/code/evaluation/export/engine/select'
 import studentMainTemplate from '@/code/evaluation/export/templates/studentMain.hbs'
 import muiTheme from '@/code/evaluation/muiTheme.json'
 
-const OUTPUT_FORMAT: 'html' | 'pdf' = 'pdf'
+const OUTPUT_FORMAT = 'pdf' as 'html' | 'pdf'
 
 type StudentWithQuestionsAndAnswers = {
   student: UserPayload

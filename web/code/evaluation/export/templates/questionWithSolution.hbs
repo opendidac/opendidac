@@ -6,7 +6,7 @@
   </div>
 
   {{#if this.question.code}}
-    {{#if (eq this.question.code.codeType 'codeWriting')}}
+    {{#if (equals this.question.code.codeType 'codeWriting')}}
       <div style="margin-bottom: 20px;">
         <h5>Solution Files</h5>
         {{#each this.question.code.codeWriting.solutionFiles}}
@@ -34,7 +34,7 @@
       {{/if}}
     {{/if}}
     
-    {{#if (eq this.question.code.codeType 'codeReading')}}
+    {{#if (equals this.question.code.codeType 'codeReading')}}
       <div style="margin-bottom: 20px;">
         <h5>Code Snippets with Expected Output</h5>
         {{#each this.question.code.codeReading.snippets}}
