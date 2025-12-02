@@ -14,13 +14,34 @@
  * limitations under the License.
  */
 
-import { Role, QuestionStatus } from '@prisma/client'
-import { selectForProfessorEditing } from '@/code/question/select'
+import { Role, QuestionStatus, Prisma } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
+import type { IApiContext } from '@/types/api'
+import {
+  mergeSelects,
+  selectBase,
+  selectQuestionTags,
+  selectTypeSpecific,
+  selectOfficialAnswers,
+} from '@/code/question/select'
+import { questionTypeSpecific } from '@/code/questions'
+
+/**
+ * Select clause for professor editing a question
+ * Includes: type-specific data, official answers, professor-only info
+ */
+const selectForProfessorEditing = (): Prisma.QuestionSelect => {
+  return mergeSelects(
+    selectBase({ includeProfessorOnlyInfo: true }),
+    selectTypeSpecific(),
+    selectOfficialAnswers(),
+    selectQuestionTags(),
+  )
+}
 
 /**
  * Managing a question
@@ -31,10 +52,20 @@ import { withApiContext } from '@/middleware/withApiContext'
  *  database and code question have separate endpoints
  */
 
-const get = async (ctx) => {
+const get = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   // get a question by id
   const { groupScope, questionId } = req.query
+
+  if (!questionId || typeof questionId !== 'string') {
+    res.status(400).json({ message: 'Invalid questionId' })
+    return
+  }
+
+  if (!groupScope || typeof groupScope !== 'string') {
+    res.status(400).json({ message: 'Invalid groupScope' })
+    return
+  }
 
   const question = await prisma.question.findFirst({
     where: {
@@ -43,21 +74,50 @@ const get = async (ctx) => {
         scope: groupScope,
       },
     },
-    select: selectForProfessorEditing()
+    select: selectForProfessorEditing(),
   })
+
+  if (!question) {
+    res.status(404).json({ message: 'Question not found' })
+    return
+  }
+
   res.status(200).json(question)
 }
 
-const put = async (ctx) => {
+interface PutQuestionBody {
+  question: {
+    id: string
+    title: string
+    content: string
+    status: QuestionStatus
+    scratchpad: string
+    type: string
+    [key: string]: any
+  }
+}
+
+const put = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   const { groupScope } = req.query
-  const { question } = req.body
+  const body = req.body as PutQuestionBody
+  const { question } = body
+
+  if (!groupScope || typeof groupScope !== 'string') {
+    res.status(400).json({ message: 'Invalid groupScope' })
+    return
+  }
 
   // Step 1: Retrieve the question
   const questionToBeUpdated = await prisma.question.findUnique({
     where: { id: question.id },
     include: { group: true },
   })
+
+  if (!questionToBeUpdated) {
+    res.status(404).json({ message: 'Question not found' })
+    return
+  }
 
   // Step 2: Check if the user is authorized to update the question
   if (questionToBeUpdated.group.scope !== groupScope) {
@@ -105,9 +165,15 @@ const put = async (ctx) => {
   res.status(200).json(updatedQuestion)
 }
 
-const del = async (ctx) => {
+const del = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   const { questionId } = req.query
+
+  if (!questionId || typeof questionId !== 'string') {
+    res.status(400).json({ message: 'Invalid questionId' })
+    return
+  }
+
   const question = await prisma.question.findUnique({
     where: { id: questionId },
     include: {

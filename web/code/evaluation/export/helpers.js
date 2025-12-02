@@ -118,3 +118,8 @@ export const isExactMatchFieldCorrect = (fieldId, question, answers) => {
   const fieldRegex = regexpFromPattern(expectedField.matchRegex)
   return fieldRegex.test(fieldAnswer.value)
 }
+
+export const isOptionSelected = (optionId, selectedOptions) => {
+  if (!selectedOptions || !Array.isArray(selectedOptions)) return false
+  return selectedOptions.some((opt) => opt.id === optionId)
+}

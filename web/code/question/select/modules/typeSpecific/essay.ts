@@ -17,10 +17,10 @@
 import { Prisma } from '@prisma/client'
 
 /**
- * Builds select clause for Essay relation
- * Note: Official answers (solution) are handled by officialAnswers builder
+ * Selects Essay relation
+ * Note: Official answers (solution) are handled by officialAnswers select
  */
-const buildEssaySelect = (): Prisma.EssaySelect => {
+const selectEssaySelect = (): Prisma.EssaySelect => {
   return {
     questionId: true,
     template: true,
@@ -28,13 +28,13 @@ const buildEssaySelect = (): Prisma.EssaySelect => {
 }
 
 /**
- * Builds essay type-specific select clause for Question
- * Note: Official answers (solution) are handled by officialAnswers builder
+ * Selects essay type-specific relation for Question
+ * Note: Official answers (solution) are handled by officialAnswers select
  */
-export const buildEssay = (): Prisma.QuestionSelect => {
+export const selectEssay = (): Prisma.QuestionSelect => {
   return {
     essay: {
-      select: buildEssaySelect(),
+      select: selectEssaySelect(),
     },
   }
 }

@@ -14,23 +14,45 @@
  * limitations under the License.
  */
 
-import { QuestionStatus, Role } from '@prisma/client'
+import { QuestionStatus, Role, Prisma } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
+import type { IApiContext } from '@/types/api'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
-import { questionSelectClause } from '@/code/questions'
+import {
+  mergeSelects,
+  selectBase,
+  selectQuestionTags,
+  selectTypeSpecific,
+} from '@/code/question/select'
 
-const get = async (ctx) => {
+/**
+ * Select clause for professor listing questions
+ * Includes: type-specific data, tags, professor-only info
+ * Note: Does NOT include official answers (not needed for listing)
+ */
+const selectForProfessorListing = (): Prisma.QuestionSelect => {
+  return mergeSelects(
+    selectBase({ includeProfessorOnlyInfo: true }),
+    selectTypeSpecific(),
+    selectQuestionTags(),
+  )
+}
+
+interface PostBody {
+  questionIds: string[]
+}
+
+const get = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
 
-  let questionIncludeOptions = {
-    includeTypeSpecific: true,
-    includeOfficialAnswers: true,
-    includeProfessorOnlyInfo: true,
+  if (!evaluationId || typeof evaluationId !== 'string') {
+    res.status(400).json({ message: 'Invalid evaluationId' })
+    return
   }
 
   const evaluation = await prisma.evaluation.findUnique({
@@ -42,7 +64,7 @@ const get = async (ctx) => {
         include: {
           question: {
             select: {
-              ...questionSelectClause(questionIncludeOptions),
+              ...selectForProfessorListing(),
               sourceQuestion: {
                 // Only Active
                 where: {
@@ -67,11 +89,22 @@ const get = async (ctx) => {
   res.status(200).json(evaluation.evaluationToQuestions)
 }
 
-const post = async (ctx) => {
+const post = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   // add a new question to a evaluation
   const { evaluationId } = req.query
-  const { questionIds } = req.body
+  const body = req.body as PostBody
+  const { questionIds } = body
+
+  if (!evaluationId || typeof evaluationId !== 'string') {
+    res.status(400).json({ message: 'Invalid evaluationId' })
+    return
+  }
+
+  if (!Array.isArray(questionIds) || questionIds.length === 0) {
+    res.status(400).json({ message: 'questionIds must be a non-empty array' })
+    return
+  }
 
   // get the latest order of the questions in the collection
   let order = await prisma.evaluationToQuestion.count({
@@ -80,10 +113,10 @@ const post = async (ctx) => {
     },
   })
 
-  await prisma.$transaction(async (prisma) => {
+  await prisma.$transaction(async (tx) => {
     for (const questionId of questionIds) {
       // In case this question was already used in another collection, fine the last points assigned to it
-      const latestPoints = await prisma.evaluationToQuestion.findFirst({
+      const latestPoints = await tx.evaluationToQuestion.findFirst({
         where: {
           questionId: questionId,
         },
@@ -95,7 +128,7 @@ const post = async (ctx) => {
       const points = latestPoints ? latestPoints.points : undefined
 
       // Get the question title to initialize the custom title
-      const question = await prisma.question.findUnique({
+      const question = await tx.question.findUnique({
         where: { id: questionId },
         select: { title: true },
       })
@@ -104,7 +137,7 @@ const post = async (ctx) => {
         throw new Error(`Question with id ${questionId} not found`)
       }
 
-      await prisma.evaluationToQuestion.create({
+      await tx.evaluationToQuestion.create({
         data: {
           evaluationId: evaluationId,
           questionId: questionId,
@@ -125,11 +158,7 @@ const post = async (ctx) => {
     },
     include: {
       question: {
-        select: questionSelectClause({
-          includeTypeSpecific: true,
-          includeOfficialAnswers: false,
-          includeProfessorOnlyInfo: true,
-        }),
+        select: selectForProfessorListing(),
       },
     },
   })

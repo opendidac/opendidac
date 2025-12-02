@@ -25,33 +25,174 @@ type OptionSelectCorrectOnly = Pick<Prisma.OptionSelect, 'isCorrect'>
 /**
  * Helper to expose sensitive option fields.
  */
-const buildMultipleChoiceOptionsSelect = (): OptionSelectCorrectOnly => {
+const selectMultipleChoiceOptionsSelect = (): OptionSelectCorrectOnly => {
   return {
     isCorrect: true,
   }
 }
 
 /**
- * Builds the official answers *inside the multipleChoice relation only*.
+ * Selects the official answers *inside the multipleChoice relation only*.
  * This returns a valid Prisma.MultipleChoiceSelect.
  */
-export const buildOfficialAnswersMultipleChoice =
+export const selectOfficialAnswersMultipleChoice =
   (): Prisma.MultipleChoiceSelect => {
     return {
       options: {
-        select: buildMultipleChoiceOptionsSelect(),
+        select: selectMultipleChoiceOptionsSelect(),
       },
     }
   }
 
 /**
- * Builds official answers for MultipleChoice at the Question level.
+ * Selects the official answers *inside the trueFalse relation only*.
+ * This returns a valid Prisma.TrueFalseSelect.
+ */
+export const selectOfficialAnswersTrueFalse = (): Prisma.TrueFalseSelect => {
+  return {
+    isTrue: true,
+  }
+}
+
+/**
+ * Selects the official answers *inside the essay relation only*.
+ * This returns a valid Prisma.EssaySelect.
+ */
+export const selectOfficialAnswersEssay = (): Prisma.EssaySelect => {
+  return {
+    solution: true,
+  }
+}
+
+/**
+ * Selects the official answers *inside the web relation only*.
+ * This returns a valid Prisma.WebSelect.
+ */
+export const selectOfficialAnswersWeb = (): Prisma.WebSelect => {
+  return {
+    solutionHtml: true,
+    solutionCss: true,
+    solutionJs: true,
+  }
+}
+
+/**
+ * Selects the official answers *inside the exactMatchField relation only*.
+ * This returns a valid Prisma.ExactMatchFieldSelect.
+ */
+const selectExactMatchFieldOfficialAnswers =
+  (): Prisma.ExactMatchFieldSelect => {
+    return {
+      matchRegex: true,
+    }
+  }
+
+/**
+ * Selects the official answers *inside the exactMatch relation only*.
+ * This returns a valid Prisma.ExactMatchSelect.
+ */
+export const selectOfficialAnswersExactMatch = (): Prisma.ExactMatchSelect => {
+  return {
+    fields: {
+      select: selectExactMatchFieldOfficialAnswers(),
+      orderBy: [{ order: 'asc' }, { id: 'asc' }],
+    },
+  }
+}
+
+/**
+ * Selects the official answers *inside the codeWriting relation only*.
+ * This returns a valid Prisma.CodeWritingSelect.
+ */
+export const selectOfficialAnswersCodeWriting =
+  (): Prisma.CodeWritingSelect => {
+    return {
+      solutionFiles: {
+        include: { file: true },
+        orderBy: { order: 'asc' },
+      },
+    }
+  }
+
+/**
+ * Selects the official answers *inside the codeReading relation only*.
+ * This returns a valid Prisma.CodeReadingSelect.
+ */
+export const selectOfficialAnswersCodeReading =
+  (): Prisma.CodeReadingSelect => {
+    return {
+      studentOutputTest: true,
+      contextExec: true,
+      contextPath: true,
+      context: true,
+      snippets: {
+        select: {
+          output: true,
+        },
+        orderBy: { order: 'asc' },
+      },
+    }
+  }
+
+/**
+ * Selects the official answers *inside the code relation only*.
+ * This returns a valid Prisma.CodeSelect.
+ */
+export const selectOfficialAnswersCode = (): Prisma.CodeSelect => {
+  return {
+    codeWriting: {
+      select: selectOfficialAnswersCodeWriting(),
+    },
+    codeReading: {
+      select: selectOfficialAnswersCodeReading(),
+    },
+  }
+}
+
+/**
+ * Selects the official answers *inside the database relation only*.
+ * This returns a valid Prisma.DatabaseSelect.
+ */
+export const selectOfficialAnswersDatabase = (): Prisma.DatabaseSelect => {
+  return {
+    solutionQueries: {
+      include: {
+        query: true,
+        output: true,
+      },
+      orderBy: {
+        query: { order: 'asc' },
+      },
+    },
+  }
+}
+
+/**
+ * Selects official answers for all question types at the Question level.
  * This returns a valid Prisma.QuestionSelect.
  */
-export const buildOfficialAnswers = (): Prisma.QuestionSelect => {
+export const selectOfficialAnswers = (): Prisma.QuestionSelect => {
   return {
     multipleChoice: {
-      select: buildOfficialAnswersMultipleChoice(),
+      select: selectOfficialAnswersMultipleChoice(),
+    },
+    trueFalse: {
+      select: selectOfficialAnswersTrueFalse(),
+    },
+    essay: {
+      select: selectOfficialAnswersEssay(),
+    },
+    web: {
+      select: selectOfficialAnswersWeb(),
+    },
+    exactMatch: {
+      select: selectOfficialAnswersExactMatch(),
+    },
+    code: {
+      select: selectOfficialAnswersCode(),
+    },
+    database: {
+      select: selectOfficialAnswersDatabase(),
     },
   }
 }

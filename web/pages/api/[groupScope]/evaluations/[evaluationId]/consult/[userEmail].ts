@@ -14,18 +14,56 @@
  * limitations under the License.
  */
 
-import { Role } from '@prisma/client'
+import { Role, Prisma } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import { IncludeStrategy, questionSelectClause } from '@/code/questions'
+import type { IApiContext } from '@/types/api'
 import { withPurgeGuard } from '@/middleware/withPurged'
 import { withEvaluation } from '@/middleware/withEvaluation'
+import {
+  mergeSelects,
+  selectBase,
+  selectQuestionTags,
+  selectTypeSpecific,
+  selectOfficialAnswers,
+  selectStudentAnswersForUser,
+  selectStudentGradings,
+} from '@/code/question/select'
+
+/**
+ * Select clause for professor consulting a specific user's answers
+ * Includes: type-specific data, official answers, professor-only info,
+ *           specific user's answers, and gradings.
+ */
+const selectForProfessorConsultation = (
+  userEmail: string,
+): Prisma.QuestionSelect => {
+  return mergeSelects(
+    selectBase({ includeProfessorOnlyInfo: true }),
+    selectTypeSpecific(),
+    selectOfficialAnswers(),
+    selectStudentAnswersForUser(userEmail),
+    selectStudentGradings(),
+    selectQuestionTags(),
+  )
+}
+
 /*
-  Professor can consult the users's answers to the questions of a evaluation
+  Professor can consult the user's answers to the questions of an evaluation
 */
-const get = async (ctx) => {
+const get = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   const { evaluationId, userEmail } = req.query
+
+  if (!evaluationId || typeof evaluationId !== 'string') {
+    res.status(400).json({ message: 'Invalid evaluationId' })
+    return
+  }
+
+  if (!userEmail || typeof userEmail !== 'string') {
+    res.status(400).json({ message: 'Invalid userEmail' })
+    return
+  }
 
   const evaluation = await prisma.evaluation.findUnique({
     where: {
@@ -35,16 +73,7 @@ const get = async (ctx) => {
       evaluationToQuestions: {
         include: {
           question: {
-            select: questionSelectClause({
-              includeTypeSpecific: true,
-              includeOfficialAnswers: true,
-              includeUserAnswers: {
-                strategy: IncludeStrategy.USER_SPECIFIC,
-                userEmail: userEmail,
-              },
-              includeGradings: true,
-              includeProfessorOnlyInfo: true,
-            }),
+            select: selectForProfessorConsultation(userEmail),
           },
         },
         orderBy: {
@@ -53,6 +82,12 @@ const get = async (ctx) => {
       },
     },
   })
+
+  if (!evaluation) {
+    res.status(404).json({ message: 'Evaluation not found' })
+    return
+  }
+
   res.status(200).json(evaluation)
 }
 

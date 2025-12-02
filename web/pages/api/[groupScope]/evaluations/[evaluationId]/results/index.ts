@@ -14,19 +14,49 @@
  * limitations under the License.
  */
 
-import { Role } from '@prisma/client'
+import { Role, Prisma } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import { IncludeStrategy, questionSelectClause } from '@/code/questions'
+import type { IApiContext } from '@/types/api'
 import { withPurgeGuard } from '@/middleware/withPurged'
 import { withEvaluation } from '@/middleware/withEvaluation'
+import {
+  mergeSelects,
+  selectBase,
+  selectQuestionTags,
+  selectTypeSpecific,
+  selectOfficialAnswers,
+  selectAllStudentAnswers,
+  selectStudentGradings,
+} from '@/code/question/select'
 
-const get = async (ctx) => {
+/**
+ * Select clause for evaluation results.
+ * Includes: type-specific data, official answers, ALL student answers, gradings, professor-only info
+ */
+const selectForEvaluationResults = (): Prisma.QuestionSelect => {
+  return mergeSelects(
+    selectBase({ includeProfessorOnlyInfo: true }),
+    selectTypeSpecific(),
+    selectOfficialAnswers(),
+    selectQuestionTags(),
+    selectAllStudentAnswers(),
+    selectStudentGradings(),
+  )
+}
+
+const get = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   const { evaluationId } = req.query
+
+  if (!evaluationId || typeof evaluationId !== 'string') {
+    res.status(400).json({ message: 'Invalid evaluationId' })
+    return
+  }
+
   const evaluation = await prisma.evaluation.findUnique({
     where: {
       id: evaluationId,
@@ -35,15 +65,7 @@ const get = async (ctx) => {
       evaluationToQuestions: {
         select: {
           question: {
-            select: questionSelectClause({
-              includeTypeSpecific: true,
-              includeOfficialAnswers: true,
-              includeUserAnswers: {
-                strategy: IncludeStrategy.ALL,
-              },
-              includeGradings: true,
-              includeProfessorOnlyInfo: true,
-            }),
+            select: selectForEvaluationResults(),
           },
           order: true,
           points: true,
@@ -55,6 +77,12 @@ const get = async (ctx) => {
       },
     },
   })
+
+  if (!evaluation) {
+    res.status(404).json({ message: 'Evaluation not found' })
+    return
+  }
+
   res.status(200).json(evaluation.evaluationToQuestions)
 }
 

@@ -17,10 +17,10 @@
 import { Prisma } from '@prisma/client'
 
 /**
- * Builds tag selection
+ * Selects tag relation
  * Calling this function means we want tags included
  */
-export const buildQuestionTags = (): Prisma.QuestionSelect => {
+export const selectQuestionTags = (): Prisma.QuestionSelect => {
   return {
     questionToTag: {
       include: {

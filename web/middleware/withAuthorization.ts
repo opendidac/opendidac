@@ -56,13 +56,15 @@ export function withGroupScope<T extends IApiContext>(
     const { req, res } = ctx
 
     if (!req || !res) {
-      return res?.error('Request or response not available in context.')
+      return res
+        .status(500)
+        .json({ message: 'Request or response not available in context.' })
     }
 
     const { groupScope } = req.query
 
     if (!groupScope) {
-      return res.badRequest('Group scope is required')
+      return res.status(400).json({ message: 'Group scope is required' })
     }
 
     // Use context user which has groups information
@@ -71,7 +73,9 @@ export function withGroupScope<T extends IApiContext>(
     const isMember = user.groups?.some((g: string) => g === groupScope)
 
     if (!isMember) {
-      return res.unauthorized('You are not authorized to access this group')
+      return res
+        .status(401)
+        .json({ message: 'You are not authorized to access this group' })
     }
 
     // Identify the entity name and ID from the query string
@@ -85,14 +89,16 @@ export function withGroupScope<T extends IApiContext>(
       const entityId = req.query[queryStringId]
 
       if (!entityId) {
-        return res.badRequest('Entity id is required')
+        return res.status(400).json({ message: 'Entity id is required' })
       }
 
       // Get prisma from context
       const { prisma } = ctx
 
       if (!prisma) {
-        return res.error('Prisma client not available in context.')
+        return res
+          .status(500)
+          .json({ message: 'Prisma client not available in context.' })
       }
 
       // Map entity name to Prisma model name (lowercase)
@@ -112,17 +118,21 @@ export function withGroupScope<T extends IApiContext>(
       })
 
       if (!entity) {
-        return res.notFound('Entity not found')
+        return res.status(404).json({ message: 'Entity not found' })
       }
 
       // Check if the entity group corresponds to the current group
       if (groupScope !== entity.group.scope) {
-        return res.unauthorized('Entity does not belong to the group')
+        return res
+          .status(401)
+          .json({ message: 'Entity does not belong to the group' })
       }
 
       // Check if the user is member of the group that owns the entity
       if (!user || !user.groups?.includes(entity.group.scope)) {
-        return res.unauthorized('You are not authorized to access this entity')
+        return res
+          .status(401)
+          .json({ message: 'You are not authorized to access this entity' })
       }
     }
 
@@ -154,7 +164,9 @@ export function withAuthorization<T extends IApiContext>(
     const userRoles = user.roles
 
     if (!userRoles || userRoles.length === 0) {
-      return res.unauthorized('You must have a role to access this page')
+      return res
+        .status(401)
+        .json({ message: 'You must have a role to access this page' })
     }
 
     const isAuthorized = userRoles.some((userRole: Role) =>
@@ -162,9 +174,9 @@ export function withAuthorization<T extends IApiContext>(
     )
 
     if (!isAuthorized) {
-      return res.unauthorized(
-        `You must have one of the following roles: ${allowedRoles.join(', ')}`,
-      )
+      return res.status(401).json({
+        message: `You must have one of the following roles: ${allowedRoles.join(', ')}`,
+      })
     }
 
     // Add roles to context

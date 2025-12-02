@@ -17,10 +17,10 @@
 import { Prisma } from '@prisma/client'
 
 /**
- * Builds select clause for Web relation
- * Note: Official answers (solutionHtml, solutionCss, solutionJs) are handled by officialAnswers builder
+ * Selects Web relation
+ * Note: Official answers (solutionHtml, solutionCss, solutionJs) are handled by officialAnswers select
  */
-const buildWebSelect = (): Prisma.WebSelect => {
+const selectWebSelect = (): Prisma.WebSelect => {
   return {
     questionId: true,
     templateHtml: true,
@@ -30,13 +30,13 @@ const buildWebSelect = (): Prisma.WebSelect => {
 }
 
 /**
- * Builds web type-specific select clause for Question
- * Note: Official answers (solutionHtml, solutionCss, solutionJs) are handled by officialAnswers builder
+ * Selects web type-specific relation for Question
+ * Note: Official answers (solutionHtml, solutionCss, solutionJs) are handled by officialAnswers select
  */
-export const buildWeb = (): Prisma.QuestionSelect => {
+export const selectWeb = (): Prisma.QuestionSelect => {
   return {
     web: {
-      select: buildWebSelect(),
+      select: selectWebSelect(),
     },
   }
 }

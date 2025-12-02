@@ -17,23 +17,23 @@
 import { Prisma } from '@prisma/client'
 
 /**
- * Builds select clause for Database relation
- * Note: Official answers (solutionQueries) are handled by officialAnswers builder
+ * Selects Database relation
+ * Note: Official answers (solutionQueries) are handled by officialAnswers select
  */
-const buildDatabaseSelect = (): Prisma.DatabaseSelect => {
+const selectDatabaseSelect = (): Prisma.DatabaseSelect => {
   return {
     image: true,
   }
 }
 
 /**
- * Builds database type-specific select clause for Question
- * Note: Official answers (solutionQueries) are handled by officialAnswers builder
+ * Selects database type-specific relation for Question
+ * Note: Official answers (solutionQueries) are handled by officialAnswers select
  */
-export const buildDatabase = (): Prisma.QuestionSelect => {
+export const selectDatabase = (): Prisma.QuestionSelect => {
   return {
     database: {
-      select: buildDatabaseSelect(),
+      select: selectDatabaseSelect(),
     },
   }
 }

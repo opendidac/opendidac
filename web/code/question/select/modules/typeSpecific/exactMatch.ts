@@ -17,10 +17,10 @@
 import { Prisma } from '@prisma/client'
 
 /**
- * Builds select clause for ExactMatchField relation
- * Note: Official answers (matchRegex) are handled by officialAnswers builder
+ * Selects ExactMatchField relation
+ * Note: Official answers (matchRegex) are handled by officialAnswers select
  */
-const buildExactMatchFieldsSelect = (): Prisma.ExactMatchFieldSelect => {
+const selectExactMatchFieldsSelect = (): Prisma.ExactMatchFieldSelect => {
   return {
     id: true,
     order: true,
@@ -29,27 +29,27 @@ const buildExactMatchFieldsSelect = (): Prisma.ExactMatchFieldSelect => {
 }
 
 /**
- * Builds select clause for ExactMatch relation
- * Note: Official answers (matchRegex) are handled by officialAnswers builder
+ * Selects ExactMatch relation
+ * Note: Official answers (matchRegex) are handled by officialAnswers select
  */
-const buildExactMatchSelect = (): Prisma.ExactMatchSelect => {
+const selectExactMatchSelect = (): Prisma.ExactMatchSelect => {
   return {
     questionId: true,
     fields: {
-      select: buildExactMatchFieldsSelect(),
+      select: selectExactMatchFieldsSelect(),
       orderBy: [{ order: 'asc' }, { id: 'asc' }],
     },
   }
 }
 
 /**
- * Builds exact match type-specific select clause for Question
- * Note: Official answers (matchRegex) are handled by officialAnswers builder
+ * Selects exact match type-specific relation for Question
+ * Note: Official answers (matchRegex) are handled by officialAnswers select
  */
-export const buildExactMatch = (): Prisma.QuestionSelect => {
+export const selectExactMatch = (): Prisma.QuestionSelect => {
   return {
     exactMatch: {
-      select: buildExactMatchSelect(),
+      select: selectExactMatchSelect(),
     },
   }
 }

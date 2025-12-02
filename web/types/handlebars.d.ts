@@ -14,25 +14,12 @@
  * limitations under the License.
  */
 
-import { Prisma } from '@prisma/client'
-
 /**
- * Selects base scalar fields for the question select clause
- * Always includes: id, type, status, content, createdAt, updatedAt
- * Conditionally includes: title, scratchpad (when includeProfessorOnlyInfo is true)
+ * Declare module for Handlebars templates.
+ * @param template - The template string.
+ * @returns The template string.
  */
-export const selectBase = ({
-  includeProfessorOnlyInfo,
-}: {
-  includeProfessorOnlyInfo?: boolean
-}): Prisma.QuestionSelect => {
-  return {
-    id: true,
-    type: true,
-    status: true,
-    content: true,
-    createdAt: true,
-    updatedAt: true,
-    ...(includeProfessorOnlyInfo ? { title: true, scratchpad: true } : {}),
-  }
+declare module '*.hbs' {
+  const template: string
+  export default template
 }

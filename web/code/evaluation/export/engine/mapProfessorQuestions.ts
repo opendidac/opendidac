@@ -14,25 +14,12 @@
  * limitations under the License.
  */
 
-import { Prisma } from '@prisma/client'
+import { QuestionWithMeta } from './types'
 
-/**
- * Selects base scalar fields for the question select clause
- * Always includes: id, type, status, content, createdAt, updatedAt
- * Conditionally includes: title, scratchpad (when includeProfessorOnlyInfo is true)
- */
-export const selectBase = ({
-  includeProfessorOnlyInfo,
-}: {
-  includeProfessorOnlyInfo?: boolean
-}): Prisma.QuestionSelect => {
+export function mapProfessorQuestion<Q>(etq: any): QuestionWithMeta<Q> {
   return {
-    id: true,
-    type: true,
-    status: true,
-    content: true,
-    createdAt: true,
-    updatedAt: true,
-    ...(includeProfessorOnlyInfo ? { title: true, scratchpad: true } : {}),
+    question: { ...etq.question, title: etq.title },
+    order: etq.order + 1,
+    points: etq.points,
   }
 }

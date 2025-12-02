@@ -18,27 +18,30 @@ import { Prisma } from '@prisma/client'
 
 /**
  * Internal helper for grading selection inside StudentAnswer.
- * Not exported. Not reused outside this module (for now).
+ * Exported for reuse in studentAnswers module.
  */
-const buildStudentGradingSelect = (): Prisma.StudentQuestionGradingSelect => {
-  return {
-    status: true,
-    pointsObtained: true,
-    comment: true,
-    signedBy: true, // professor user object
+export const selectStudentGradingSelect =
+  (): Prisma.StudentQuestionGradingSelect => {
+    return {
+      status: true,
+      pointsObtained: true,
+      comment: true,
+      signedBy: true, // professor user object
+      questionId: true, // for grading frontend to know which question is being graded
+      userEmail: true, // for grading frontend to know which user is being graded
+    }
   }
-}
 
 /**
- * Builds grading selection for professor grading view.
+ * Selects grading information for professor grading view.
  * Returns the grading info on each studentAnswer.
  */
-export const buildStudentGradings = (): Prisma.QuestionSelect => {
+export const selectStudentGradings = (): Prisma.QuestionSelect => {
   return {
     studentAnswer: {
       select: {
         studentGrading: {
-          select: buildStudentGradingSelect(),
+          select: selectStudentGradingSelect(),
         },
       },
     },

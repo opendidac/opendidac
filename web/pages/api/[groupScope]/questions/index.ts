@@ -14,22 +14,50 @@
  * limitations under the License.
  */
 
-import { Role, QuestionType, CodeQuestionType } from '@prisma/client'
+import { Role, QuestionType, CodeQuestionType, Prisma } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/types/api'
-import {
-  codeInitialUpdateQuery,
-  questionSelectClause,
-  questionTypeSpecific,
-} from '@/code/questions'
+import { codeInitialUpdateQuery, questionTypeSpecific } from '@/code/questions'
 import { questionsFilterWhereClause } from '@/code/questionsFilter'
 import languages from '@/code/languages.json'
 import databaseTemplate from '@/code/database.json'
-import { selectForProfessorListing } from '@/code/question/select'
+import {
+  mergeSelects,
+  selectBase,
+  selectQuestionTags,
+  selectTypeSpecific,
+  selectOfficialAnswers,
+} from '@/code/question/select'
+
+/**
+ * Select clause for professor listing questions
+ * Includes: type-specific data, tags, professor-only info
+ * Note: Does NOT include official answers (not needed for listing)
+ */
+const selectForProfessorListing = (): Prisma.QuestionSelect => {
+  return mergeSelects(
+    selectBase({ includeProfessorOnlyInfo: true }),
+    selectTypeSpecific(),
+    selectQuestionTags(),
+  )
+}
+
+/**
+ * Select clause for professor editing/creating questions
+ * Includes: type-specific data, official answers, tags, professor-only info
+ */
+const selectForProfessorEditing = (): Prisma.QuestionSelect => {
+  return mergeSelects(
+    selectBase({ includeProfessorOnlyInfo: true }),
+    selectTypeSpecific(),
+    selectOfficialAnswers(),
+    selectQuestionTags(),
+  )
+}
 
 const environments = languages.environments
 
@@ -63,7 +91,6 @@ const get = async (ctx: IApiContext) => {
       usageStatus: true,
       evaluation: true,
       ...selectForProfessorListing(),
-      
     },
     orderBy: {
       createdAt: 'desc',
@@ -92,11 +119,7 @@ export const post = async (ctx: IApiContext) => {
     return res.status(400).json({ message: 'Missing groupScope' })
   }
 
-  const fullSelect = questionSelectClause({
-    includeTypeSpecific: true,
-    includeOfficialAnswers: true,
-    includeProfessorOnlyInfo: true,
-  })
+  const fullSelect = selectForProfessorEditing()
 
   try {
     const createdQuestion = await prisma.$transaction(async (tx) => {
@@ -189,7 +212,7 @@ export const post = async (ctx: IApiContext) => {
       // 4) Single, final fetch with full INCLUDE
       return tx.question.findUnique({
         where: { id: created.id },
-        select: fullSelect as any,
+        select: fullSelect as Prisma.QuestionSelect,
       })
     })
 
@@ -265,4 +288,3 @@ export default withApiContext({
   GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
   POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
 })
-

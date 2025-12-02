@@ -31,7 +31,7 @@ const get = async (ctx) => {
   // get all members of group
   const { groupId } = req.query
 
-   console.log(user)
+  console.log(user)
 
   // check if the group exists
   // check if the user is authenticated

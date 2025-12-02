@@ -17,23 +17,23 @@
 import { Prisma } from '@prisma/client'
 
 /**
- * Builds select clause for TrueFalse relation
- * Note: Official answers (isTrue) are handled by officialAnswers builder
+ * Selects TrueFalse relation
+ * Note: Official answers (isTrue) are handled by officialAnswers select
  */
-const buildTrueFalseSelect = (): Prisma.TrueFalseSelect => {
+const selectTrueFalseSelect = (): Prisma.TrueFalseSelect => {
   return {
     questionId: true,
   }
 }
 
 /**
- * Builds true/false type-specific select clause for Question
- * Note: Official answers (isTrue) are handled by officialAnswers builder
+ * Selects true/false type-specific relation for Question
+ * Note: Official answers (isTrue) are handled by officialAnswers select
  */
-export const buildTrueFalse = (): Prisma.QuestionSelect => {
+export const selectTrueFalse = (): Prisma.QuestionSelect => {
   return {
     trueFalse: {
-      select: buildTrueFalseSelect(),
+      select: selectTrueFalseSelect(),
     },
   }
 }

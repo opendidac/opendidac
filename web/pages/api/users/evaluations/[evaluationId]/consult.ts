@@ -14,21 +14,76 @@
  * limitations under the License.
  */
 
-import { Role } from '@prisma/client'
+import { Role, Prisma } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
+import type { IApiContext, IApiContextWithEvaluation } from '@/types/api'
 import { withRestrictions } from '@/middleware/withRestrictions'
 import { withEvaluation } from '@/middleware/withEvaluation'
-
-import { getUser } from '@/code/auth/auth'
-import { questionSelectClause, IncludeStrategy } from '@/code/questions'
-import { isFinished } from './questions/[questionId]/answers/utils'
 import { withPurgeGuard } from '@/middleware/withPurged'
 
-const get = async (ctx) => {
-  const { req, res, prisma, evaluation } = ctx
+import { getUser } from '@/code/auth/auth'
+import {
+  mergeSelects,
+  selectBase,
+  selectQuestionTags,
+  selectTypeSpecific,
+  selectOfficialAnswers,
+  selectStudentAnswersForUser,
+  selectStudentGradings,
+} from '@/code/question/select'
+import { isFinished } from './questions/[questionId]/answers/utils'
+
+/**
+ * Select clause for student consulting their own answers after evaluation is finished.
+ * Includes: type-specific data, student's own answers, gradings
+ * Conditionally includes: official answers (if showSolutionsWhenFinished is true)
+ * Note: Does NOT include professor-only info (title, scratchpad)
+ */
+const selectForStudentConsultation = (
+  userEmail: string,
+  includeOfficialAnswers: boolean,
+): Prisma.QuestionSelect => {
+  const base = mergeSelects(
+    selectBase({ includeProfessorOnlyInfo: false }),
+    selectTypeSpecific(),
+    selectStudentAnswersForUser(userEmail),
+    selectStudentGradings(),
+    selectQuestionTags(),
+  )
+
+  if (includeOfficialAnswers) {
+    return mergeSelects(base, selectOfficialAnswers())
+  }
+
+  return base
+}
+
+const get = async (ctx: IApiContextWithEvaluation | IApiContext) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
-  const { email } = await getUser(req, res)
+
+  if (!evaluationId || typeof evaluationId !== 'string') {
+    res.status(400).json({ message: 'Invalid evaluationId' })
+    return
+  }
+
+  // evaluation is guaranteed to be present when evaluationId is in the URL
+  if (!('evaluation' in ctx)) {
+    res.status(500).json({ message: 'Evaluation not found in context' })
+    return
+  }
+
+  const { evaluation } = ctx
+
+  const user = await getUser(req, res)
+
+  if (!user || !user.email) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+
+  const email = user.email
 
   if (!(await isFinished(evaluationId, prisma))) {
     res.status(400).json({ message: 'Exam session is not finished' })
@@ -42,16 +97,6 @@ const get = async (ctx) => {
     })
     return
   }
-
-  let questionClause = questionSelectClause({
-    includeTypeSpecific: true,
-    includeOfficialAnswers: evaluation.showSolutionsWhenFinished,
-    includeUserAnswers: {
-      strategy: IncludeStrategy.USER_SPECIFIC,
-      userEmail: email,
-    },
-    includeGradings: true,
-  })
 
   const userOnEvaluation = await prisma.userOnEvaluation.findUnique({
     where: {
@@ -71,7 +116,10 @@ const get = async (ctx) => {
               addendum: true,
               title: true,
               question: {
-                select: questionClause,
+                select: selectForStudentConsultation(
+                  email,
+                  evaluation.showSolutionsWhenFinished,
+                ),
               },
             },
             orderBy: {
@@ -89,6 +137,7 @@ const get = async (ctx) => {
     })
     return
   }
+
   res.status(200).json(userOnEvaluation.evaluation)
 }
 
@@ -98,6 +147,6 @@ export default withApiContext({
       withAuthorization(withPurgeGuard(get), {
         roles: [Role.PROFESSOR, Role.STUDENT],
       }),
-    ),
+    ) as any,
   ),
 })

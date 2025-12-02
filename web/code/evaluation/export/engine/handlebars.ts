@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-import { Prisma } from '@prisma/client'
-
 /**
- * Selects base scalar fields for the question select clause
- * Always includes: id, type, status, content, createdAt, updatedAt
- * Conditionally includes: title, scratchpad (when includeProfessorOnlyInfo is true)
+ * Load Handlebars templates and helpers.
+ * @returns The Handlebars instance.
  */
-export const selectBase = ({
-  includeProfessorOnlyInfo,
-}: {
-  includeProfessorOnlyInfo?: boolean
-}): Prisma.QuestionSelect => {
-  return {
-    id: true,
-    type: true,
-    status: true,
-    content: true,
-    createdAt: true,
-    updatedAt: true,
-    ...(includeProfessorOnlyInfo ? { title: true, scratchpad: true } : {}),
-  }
+import Handlebars from 'handlebars'
+import * as templates from '@/code/evaluation/export/templates' // central export file
+import * as helpers from '@/code/evaluation/export/helpers'
+
+export function loadHandlebars() {
+  Object.entries(templates.partials).forEach(([name, tpl]) =>
+    Handlebars.registerPartial(name, tpl),
+  )
+
+  Object.entries(helpers).forEach(([name, fn]) =>
+    Handlebars.registerHelper(name, fn),
+  )
+
+  return Handlebars
 }

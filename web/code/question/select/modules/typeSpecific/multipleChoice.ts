@@ -24,10 +24,10 @@ import { Prisma } from '@prisma/client'
 type OptionSelectWithoutCorrect = Omit<Prisma.OptionSelect, 'isCorrect'>
 
 /**
- * Builds select clause for MultipleChoice options relation
+ * Selects MultipleChoice options relation
  * SAFE: Cannot include isCorrect
  */
-const buildMultipleChoiceOptionsSelect = (): OptionSelectWithoutCorrect => {
+const selectMultipleChoiceOptionsSelect = (): OptionSelectWithoutCorrect => {
   return {
     id: true,
     order: true,
@@ -36,10 +36,10 @@ const buildMultipleChoiceOptionsSelect = (): OptionSelectWithoutCorrect => {
 }
 
 /**
- * Builds select clause for MultipleChoice relation
- * SAFE: no isCorrect here (handled by officialAnswers builder)
+ * Selects MultipleChoice relation
+ * SAFE: no isCorrect here (handled by officialAnswers select)
  */
-const buildMultipleChoiceTypeSpecific = (): Prisma.MultipleChoiceSelect => {
+const selectMultipleChoiceTypeSpecific = (): Prisma.MultipleChoiceSelect => {
   return {
     gradingPolicy: true, // allowed (not sensitive)
     activateStudentComment: true,
@@ -47,20 +47,20 @@ const buildMultipleChoiceTypeSpecific = (): Prisma.MultipleChoiceSelect => {
     activateSelectionLimit: true,
     selectionLimit: true,
     options: {
-      select: buildMultipleChoiceOptionsSelect(),
+      select: selectMultipleChoiceOptionsSelect(),
       orderBy: [{ order: 'asc' }, { id: 'asc' }],
     },
   }
 }
 
 /**
- * Builds multiple choice type-specific select clause for Question
+ * Selects multiple choice type-specific relation for Question
  * SAFE: no solution data
  */
-export const buildMultipleChoice = (): Prisma.QuestionSelect => {
+export const selectMultipleChoice = (): Prisma.QuestionSelect => {
   return {
     multipleChoice: {
-      select: buildMultipleChoiceTypeSpecific(),
+      select: selectMultipleChoiceTypeSpecific(),
     },
   }
 }

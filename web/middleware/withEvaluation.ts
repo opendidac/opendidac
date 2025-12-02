@@ -82,9 +82,10 @@ export const withEvaluation =
     const { evaluationId } = ctx.req.query
 
     if (!prisma) {
-      return ctx.res.error(
-        'Prisma client not available. Did you call withPrisma middleware?',
-      )
+      return ctx.res.status(500).json({
+        message:
+          'Prisma client not available. Did you call withPrisma middleware?',
+      })
     }
 
     if (!evaluationId) {
@@ -98,7 +99,7 @@ export const withEvaluation =
     })
 
     if (!evaluation) {
-      return ctx.res.notFound('Evaluation not found')
+      return ctx.res.status(404).json({ message: 'Evaluation not found' })
     }
 
     // Inject evaluation into context

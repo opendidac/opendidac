@@ -15,28 +15,28 @@
  */
 
 import { Prisma } from '@prisma/client'
-import { buildMultipleChoice } from './multipleChoice'
-import { buildTrueFalse } from './trueFalse'
-import { buildEssay } from './essay'
-import { buildWeb } from './web'
-import { buildExactMatch } from './exactMatch'
-import { buildCode } from './code'
-import { buildDatabase } from './database'
+import { selectMultipleChoice } from './multipleChoice'
+import { selectTrueFalse } from './trueFalse'
+import { selectEssay } from './essay'
+import { selectWeb } from './web'
+import { selectExactMatch } from './exactMatch'
+import { selectCode } from './code'
+import { selectDatabase } from './database'
 import { mergeSelects } from '@/code/question/select/merge'
 
 /**
- * Builds all type-specific select clauses
+ * Selects all type-specific relations
  * Merges all question type selects together
  * Calling this function means we want type-specific data included
  */
-export const buildTypeSpecific = (): Prisma.QuestionSelect => {
+export const selectTypeSpecific = (): Prisma.QuestionSelect => {
   return mergeSelects(
-    buildMultipleChoice(),
-    buildTrueFalse(),
-    buildEssay(),
-    buildWeb(),
-    buildExactMatch(),
-    buildCode(),
-    buildDatabase(),
+    selectMultipleChoice(),
+    selectTrueFalse(),
+    selectEssay(),
+    selectWeb(),
+    selectExactMatch(),
+    selectCode(),
+    selectDatabase(),
   )
 }

@@ -17,10 +17,10 @@
 import { Prisma, StudentPermission } from '@prisma/client'
 
 /**
- * Builds select clause for CodeReadingSnippet relation
- * Note: Official answers (output) are handled by officialAnswers builder
+ * Selects CodeReadingSnippet relation
+ * Note: Official answers (output) are handled by officialAnswers select
  */
-const buildCodeReadingSnippetsSelect = (): Prisma.CodeReadingSnippetSelect => {
+const selectCodeReadingSnippetsSelect = (): Prisma.CodeReadingSnippetSelect => {
   return {
     id: true,
     order: true,
@@ -29,24 +29,24 @@ const buildCodeReadingSnippetsSelect = (): Prisma.CodeReadingSnippetSelect => {
 }
 
 /**
- * Builds select clause for CodeReading relation
- * Note: Official answers (output, context fields) are handled by officialAnswers builder
+ * Selects CodeReading relation
+ * Note: Official answers (output, context fields) are handled by officialAnswers select
  */
-const buildCodeReadingSelect = (): Prisma.CodeReadingSelect => {
+const selectCodeReadingSelect = (): Prisma.CodeReadingSelect => {
   return {
     snippets: {
-      select: buildCodeReadingSnippetsSelect(),
+      select: selectCodeReadingSnippetsSelect(),
       orderBy: { order: 'asc' },
     },
   }
 }
 
 /**
- * Builds select clause for CodeWriting relation
- * Note: Official answers (solutionFiles) are handled by officialAnswers builder
+ * Selects CodeWriting relation
+ * Note: Official answers (solutionFiles) are handled by officialAnswers select
  * TemplateFiles filtering: Always filters HIDDEN files for security (students shouldn't see hidden files)
  */
-const buildCodeWritingSelect = (): Prisma.CodeWritingSelect => {
+const selectCodeWritingSelect = (): Prisma.CodeWritingSelect => {
   return {
     codeCheckEnabled: true,
     templateFiles: {
@@ -61,31 +61,31 @@ const buildCodeWritingSelect = (): Prisma.CodeWritingSelect => {
 }
 
 /**
- * Builds select clause for Code relation
- * Note: Official answers (solutionFiles, output, context fields) are handled by officialAnswers builder
+ * Selects Code relation
+ * Note: Official answers (solutionFiles, output, context fields) are handled by officialAnswers select
  */
-const buildCodeSelect = (): Prisma.CodeSelect => {
+const selectCodeSelect = (): Prisma.CodeSelect => {
   return {
     language: true,
     sandbox: true,
     codeType: true,
     codeWriting: {
-      select: buildCodeWritingSelect(),
+      select: selectCodeWritingSelect(),
     },
     codeReading: {
-      select: buildCodeReadingSelect(),
+      select: selectCodeReadingSelect(),
     },
   }
 }
 
 /**
- * Builds code type-specific select clause for Question
- * Note: Official answers (solutionFiles, output, context fields) are handled by officialAnswers builder
+ * Selects code type-specific relation for Question
+ * Note: Official answers (solutionFiles, output, context fields) are handled by officialAnswers select
  */
-export const buildCode = (): Prisma.QuestionSelect => {
+export const selectCode = (): Prisma.QuestionSelect => {
   return {
     code: {
-      select: buildCodeSelect(),
+      select: selectCodeSelect(),
     },
   }
 }

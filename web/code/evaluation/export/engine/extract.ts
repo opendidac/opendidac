@@ -14,25 +14,19 @@
  * limitations under the License.
  */
 
-import { Prisma } from '@prisma/client'
+import type { StudentAnswerPayload } from './types'
 
 /**
- * Selects base scalar fields for the question select clause
- * Always includes: id, type, status, content, createdAt, updatedAt
- * Conditionally includes: title, scratchpad (when includeProfessorOnlyInfo is true)
+ * Safely extract the student answer from an array of StudentAnswer objects.
+ * Ensures correct typing and handles missing/null arrays.
  */
-export const selectBase = ({
-  includeProfessorOnlyInfo,
-}: {
-  includeProfessorOnlyInfo?: boolean
-}): Prisma.QuestionSelect => {
-  return {
-    id: true,
-    type: true,
-    status: true,
-    content: true,
-    createdAt: true,
-    updatedAt: true,
-    ...(includeProfessorOnlyInfo ? { title: true, scratchpad: true } : {}),
-  }
+export function extractStudentAnswer(
+  answers: unknown,
+  email: string,
+): StudentAnswerPayload | null {
+  if (!Array.isArray(answers)) return null
+
+  const match = answers.find((sa: any) => sa?.user?.email === email)
+
+  return match ? (match as StudentAnswerPayload) : null
 }

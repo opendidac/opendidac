@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-import { Prisma } from '@prisma/client'
+import { StudentSubmission, UserPayload } from './types'
+import { extractStudentAnswer } from './extract'
 
-/**
- * Selects base scalar fields for the question select clause
- * Always includes: id, type, status, content, createdAt, updatedAt
- * Conditionally includes: title, scratchpad (when includeProfessorOnlyInfo is true)
- */
-export const selectBase = ({
-  includeProfessorOnlyInfo,
-}: {
-  includeProfessorOnlyInfo?: boolean
-}): Prisma.QuestionSelect => {
+export function mapStudentSubmission<Q>(
+  etq: any,
+  student: UserPayload,
+  email: string,
+): StudentSubmission<Q> {
+  const studentAnswer = extractStudentAnswer(etq.question.studentAnswer, email)
+
   return {
-    id: true,
-    type: true,
-    status: true,
-    content: true,
-    createdAt: true,
-    updatedAt: true,
-    ...(includeProfessorOnlyInfo ? { title: true, scratchpad: true } : {}),
+    student,
+    question: { ...etq.question, title: etq.title },
+    order: etq.order + 1,
+    points: etq.points,
+    studentAnswer,
+    studentGrading: studentAnswer?.studentGrading ?? null,
   }
 }

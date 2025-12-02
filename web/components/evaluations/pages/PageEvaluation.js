@@ -17,6 +17,7 @@
 import { useRouter } from 'next/router'
 import useSWR from 'swr'
 import { getPhaseDetails, phaseGreaterThan } from '../evaluation/phases'
+import { phaseGT } from '@/code/phase'
 import { fetcher } from '@/code/utils'
 import Authorization from '@/components/security/Authorization'
 import Loading from '@/components/feedback/Loading'
@@ -85,7 +86,12 @@ const EvaluationPage = () => {
     mutate: mutateComposition,
   } = useSWR(
     `/api/${groupScope}/evaluations/${evaluationId}/composition`,
-    groupScope && evaluationId ? fetcher : null,
+    groupScope &&
+      evaluationId &&
+      evaluation &&
+      !phaseGT(EvaluationPhase.COMPOSITION, evaluation.phase)
+      ? fetcher
+      : null,
   )
 
   const {
@@ -94,7 +100,12 @@ const EvaluationPage = () => {
     mutate: mutateAttendance,
   } = useSWR(
     `/api/${groupScope}/evaluations/${evaluationId}/attendance`,
-    groupScope && evaluationId ? fetcher : null,
+    groupScope &&
+      evaluationId &&
+      evaluation &&
+      !phaseGT(EvaluationPhase.REGISTRATION, evaluation.phase)
+      ? fetcher
+      : null,
     { refreshInterval: STUDENTS_ATTENDANCE_PULL_INTERVAL },
   )
 
@@ -104,7 +115,12 @@ const EvaluationPage = () => {
     mutate: mutateProgress,
   } = useSWR(
     `/api/${groupScope}/evaluations/${evaluationId}/progress`,
-    groupScope && evaluationId ? fetcher : null,
+    groupScope &&
+      evaluationId &&
+      evaluation &&
+      !phaseGT(EvaluationPhase.IN_PROGRESS, evaluation.phase)
+      ? fetcher
+      : null,
     { refreshInterval: STUDENTS_PROGRESS_PULL_INTERVAL },
   )
 
@@ -114,7 +130,12 @@ const EvaluationPage = () => {
     mutate: mutateResults,
   } = useSWR(
     `/api/${groupScope}/evaluations/${evaluationId}/results`,
-    groupScope && evaluationId ? fetcher : null,
+    groupScope &&
+      evaluationId &&
+      evaluation &&
+      !phaseGT(EvaluationPhase.GRADING, evaluation.phase)
+      ? fetcher
+      : null,
   )
 
   const isMenuDisabled = (key) => {
