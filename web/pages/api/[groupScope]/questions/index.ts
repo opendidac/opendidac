@@ -52,6 +52,23 @@ type ProfessorListingSelectPayload = Prisma.QuestionGetPayload<{
 }>
 
 
+/**
+ * 
+ * export function useProfessorQuestions() {
+  const { data, error, isLoading } = useSWR<ProfessorListingSelectPayload[]>(
+    "/api/professor/questions",
+    fetcher
+  );
+
+  return {
+    questions: data,
+    isLoading,
+    error,
+  };
+}
+ */
+
+
 const SELECT_FOR_PROFESSOR_EDITING = {
   ...SELECT_BASE_WITH_PROFESSOR_INFO,
   ...SELECT_TYPE_SPECIFIC,
@@ -92,7 +109,7 @@ const get = async (ctx: IApiContext) => {
     },
   })
 
-  res.status(200).json(questions)
+  res.status(200).json(questions as ProfessorListingSelectPayload[])
 }
 
 export const post = async (ctx: IApiContext) => {
