@@ -3,15 +3,6 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 import { Role, Prisma } from '@prisma/client'
@@ -23,41 +14,55 @@ import { withEvaluation } from '@/middleware/withEvaluation'
 import { withPurgeGuard } from '@/middleware/withPurged'
 
 import { getUser } from '@/code/auth/auth'
+
 import {
   SELECT_BASE,
   SELECT_QUESTION_TAGS,
   SELECT_TYPE_SPECIFIC,
   SELECT_OFFICIAL_ANSWERS,
 } from '@/code/question/select'
-import { selectStudentAnswersForUserWithGrading } from '@/code/question/select/modules/studentAnswers'
+
+import {
+  SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
+} from '@/code/question/select/modules/studentAnswers'
+
 import { isFinished } from './questions/[questionId]/answers/utils'
+/**
+ * Pure literal used for student consultation BEFORE applying per-user filters.
+ * Perfect deep inference. No parameters.
+ */
+export const SELECT_FOR_STUDENT_CONSULTATION = {
+  ...SELECT_BASE,
+  ...SELECT_TYPE_SPECIFIC,
+  ...SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
+  ...SELECT_QUESTION_TAGS,
+} as const satisfies Prisma.QuestionSelect;
 
 /**
- * Select clause for student consulting their own answers after evaluation is finished.
- * Includes: type-specific data, student's own answers, gradings
- * Conditionally includes: official answers (if showSolutionsWhenFinished is true)
- * Note: Does NOT include professor-only info (title, scratchpad)
+ * Builds final select for student consultation.
+ * - Starts from PURE literal
+ * - Adds dynamic per-user filter inline
+ * - Optionally adds official answers
  */
-const selectForStudentConsultation = (
+const buildSelectForStudentConsultation = (
   userEmail: string,
-  includeOfficialAnswers: boolean,
+  includeOfficial: boolean,
 ): Prisma.QuestionSelect => {
-  const base = {
-    ...SELECT_BASE,
-    ...SELECT_TYPE_SPECIFIC,
-    ...selectStudentAnswersForUserWithGrading(userEmail),
-    ...SELECT_QUESTION_TAGS,
-  } as const satisfies Prisma.QuestionSelect
+  // Add dynamic filter directly here
+  const withFilter: Prisma.QuestionSelect = {
+    ...SELECT_FOR_STUDENT_CONSULTATION,
+    studentAnswer: {
+      ...SELECT_FOR_STUDENT_CONSULTATION.studentAnswer,
+      where: { userEmail },
+    },
+  };
 
-  if (includeOfficialAnswers) {
-    return {
-      ...base,
-      ...SELECT_OFFICIAL_ANSWERS,
-    } as const satisfies Prisma.QuestionSelect
-  }
+  return {
+    ...withFilter,
+    ...(includeOfficial ? SELECT_OFFICIAL_ANSWERS : {}),
+  } as const satisfies Prisma.QuestionSelect;
+};
 
-  return base
-}
 
 const get = async (ctx: IApiContextWithEvaluation | IApiContext) => {
   const { req, res, prisma } = ctx
@@ -68,7 +73,6 @@ const get = async (ctx: IApiContextWithEvaluation | IApiContext) => {
     return
   }
 
-  // evaluation is guaranteed to be present when evaluationId is in the URL
   if (!('evaluation' in ctx)) {
     res.status(500).json({ message: 'Evaluation not found in context' })
     return
@@ -77,8 +81,7 @@ const get = async (ctx: IApiContextWithEvaluation | IApiContext) => {
   const { evaluation } = ctx
 
   const user = await getUser(req, res)
-
-  if (!user || !user.email) {
+  if (!user?.email) {
     res.status(401).json({ message: 'Unauthorized' })
     return
   }
@@ -90,7 +93,6 @@ const get = async (ctx: IApiContextWithEvaluation | IApiContext) => {
     return
   }
 
-  // If consultation is disabled, prevent access
   if (!evaluation.consultationEnabled) {
     res.status(403).json({
       message: 'Consultation is disabled for this evaluation.',
@@ -102,7 +104,7 @@ const get = async (ctx: IApiContextWithEvaluation | IApiContext) => {
     where: {
       userEmail_evaluationId: {
         userEmail: email,
-        evaluationId: evaluationId,
+        evaluationId,
       },
     },
     include: {
@@ -116,15 +118,13 @@ const get = async (ctx: IApiContextWithEvaluation | IApiContext) => {
               addendum: true,
               title: true,
               question: {
-                select: selectForStudentConsultation(
+                select: buildSelectForStudentConsultation(
                   email,
-                  evaluation.showSolutionsWhenFinished,
+                  evaluation.showSolutionsWhenFinished
                 ),
               },
             },
-            orderBy: {
-              order: 'asc',
-            },
+            orderBy: { order: 'asc' },
           },
         },
       },
