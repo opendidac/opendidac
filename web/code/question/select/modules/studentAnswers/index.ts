@@ -27,7 +27,7 @@ import { SELECT_STUDENT_GRADING } from '../gradings'
 /**
  * Selects all student answer types.
  * Returns the complete studentAnswer select including all answer types.
- *
+ * 
  * Using const literal with `satisfies` preserves literal types for type inference.
  */
 const SELECT_STUDENT_ANSWER = {
@@ -79,7 +79,7 @@ const SELECT_STUDENT_ANSWER = {
 /**
  * Selects student answer with grading information.
  * Combines SELECT_STUDENT_ANSWER with studentGrading select.
- *
+ * 
  * Using const literal with `satisfies` preserves literal types for type inference.
  */
 const SELECT_STUDENT_ANSWER_WITH_GRADING = {
@@ -92,7 +92,7 @@ const SELECT_STUDENT_ANSWER_WITH_GRADING = {
 /**
  * Selects all student answers for the professor grading UI.
  * Includes all answer types: MultipleChoice, TrueFalse, Essay, Code, Web, Database, ExactMatch.
- *
+ * 
  * Using const literal with `satisfies` preserves literal types for type inference.
  */
 const SELECT_ALL_STUDENT_ANSWERS = {
@@ -104,7 +104,7 @@ const SELECT_ALL_STUDENT_ANSWERS = {
 /**
  * Selects all student answers with grading information.
  * Includes all answer types with their gradings: MultipleChoice, TrueFalse, Essay, Code, Web, Database, ExactMatch.
- *
+ * 
  * Using const literal with `satisfies` preserves literal types for type inference.
  */
 const SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING = {
@@ -113,52 +113,32 @@ const SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING = {
   },
 } as const satisfies Prisma.QuestionSelect
 
-/**
- * Runtime function that returns all student answers select.
- * For backward compatibility and runtime use.
- */
-export const selectAllStudentAnswers = (): Prisma.QuestionSelect =>
-  SELECT_ALL_STUDENT_ANSWERS
 
 /**
- * Selects student answers for a specific student (filtered by userEmail).
- * Includes all answer types: MultipleChoice, TrueFalse, Essay, Code, Web, Database, ExactMatch.
- *
- * Note: This function takes a parameter (userEmail), so it cannot be a pure const literal.
- * However, it uses the base SELECT_STUDENT_ANSWER const for the select structure.
+ * Selects student answers for a specific user.
+ * Uses a deep-typed literal and injects a dynamic filter.
  */
 export const selectStudentAnswersForUser = (
   userEmail: string,
-): Prisma.QuestionSelect => {
-  return {
-    studentAnswer: {
-      where: {
-        userEmail: userEmail,
-      },
-      select: SELECT_STUDENT_ANSWER,
-    },
-  }
-}
+): Prisma.QuestionSelect => ({
+  studentAnswer: {
+    ...SELECT_ALL_STUDENT_ANSWERS.studentAnswer,
+    where: { userEmail },
+  },
+});
 
 /**
- * Selects student answers for a specific student with grading information.
- * Includes all answer types with their gradings: MultipleChoice, TrueFalse, Essay, Code, Web, Database, ExactMatch.
- *
- * Note: This function takes a parameter (userEmail), so it cannot be a pure const literal.
- * However, it uses SELECT_STUDENT_ANSWER_WITH_GRADING const for the select structure.
+ * Selects student answers with grading for a specific user.
+ * Uses a deep-typed literal and injects a dynamic filter.
  */
 export const selectStudentAnswersForUserWithGrading = (
   userEmail: string,
-): Prisma.QuestionSelect => {
-  return {
-    studentAnswer: {
-      where: {
-        userEmail: userEmail,
-      },
-      select: SELECT_STUDENT_ANSWER_WITH_GRADING,
-    },
-  }
-}
+): Prisma.QuestionSelect => ({
+  studentAnswer: {
+    ...SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING.studentAnswer,
+    where: { userEmail },
+  },
+});
 
 /**
  * Selects all student answer types.

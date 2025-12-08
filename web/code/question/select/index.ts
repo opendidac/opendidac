@@ -43,7 +43,6 @@ export { selectQuestionTags } from './modules/tags'
 export { selectTypeSpecific } from './modules/typeSpecific'
 export { selectOfficialAnswers } from './modules/officialAnswers'
 export {
-  selectAllStudentAnswers,
   selectStudentAnswersForUser,
   selectStudentAnswersForUserWithGrading,
 } from './modules/studentAnswers'
