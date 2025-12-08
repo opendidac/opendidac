@@ -47,7 +47,7 @@ const SELECT_FOR_PROFESSOR_LISTING = {
   ...SELECT_QUESTION_TAGS,
 } as const satisfies Prisma.QuestionSelect
 
-type ProfessorListingSelect = Prisma.QuestionGetPayload<{
+type ProfessorListingSelectPayload = Prisma.QuestionGetPayload<{
   select: typeof SELECT_FOR_PROFESSOR_LISTING
 }>
 
