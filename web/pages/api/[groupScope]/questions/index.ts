@@ -39,16 +39,19 @@ import {
  * Note: Does NOT include official answers (not needed for listing).
  */
 const SELECT_FOR_PROFESSOR_LISTING = {
+  lastUsed: true,
+  usageStatus: true,
+  evaluation: true,
   ...SELECT_BASE_WITH_PROFESSOR_INFO,
   ...SELECT_TYPE_SPECIFIC,
   ...SELECT_QUESTION_TAGS,
 } as const satisfies Prisma.QuestionSelect
 
-/**
- * Select clause for professor editing/creating questions.
- * Composed directly from module selects without exposing schema structure.
- * Includes: base fields (with professor info), type-specific data, official answers, tags.
- */
+type ProfessorListingSelect = Prisma.QuestionGetPayload<{
+  select: typeof SELECT_FOR_PROFESSOR_LISTING
+}>
+
+
 const SELECT_FOR_PROFESSOR_EDITING = {
   ...SELECT_BASE_WITH_PROFESSOR_INFO,
   ...SELECT_TYPE_SPECIFIC,
@@ -83,12 +86,7 @@ const get = async (ctx: IApiContext) => {
 
   const questions = await prisma.question.findMany({
     ...where,
-    select: {
-      lastUsed: true,
-      usageStatus: true,
-      evaluation: true,
-      ...SELECT_FOR_PROFESSOR_LISTING,
-    },
+    select: SELECT_FOR_PROFESSOR_LISTING,
     orderBy: {
       createdAt: 'desc',
     },
