@@ -22,13 +22,11 @@ import {
 import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/types/api'
 import {
-  mergeSelects,
-  selectBase,
-  selectTypeSpecific,
-  selectOfficialAnswers,
-  selectAllStudentAnswers,
-  selectStudentGradings,
+  SELECT_BASE_WITH_PROFESSOR_INFO,
+  SELECT_TYPE_SPECIFIC,
+  SELECT_OFFICIAL_ANSWERS,
 } from '@/code/question/select'
+import { SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING } from '@/code/question/select/modules/studentAnswers'
 
 /**
  * Select clause for evaluation questions with optional gradings.
@@ -39,18 +37,17 @@ import {
 const selectForEvaluationQuestions = (
   withGradings: boolean,
 ): Prisma.QuestionSelect => {
-  const base = mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectTypeSpecific(),
-    selectOfficialAnswers(),
-  )
+  const base = {
+    ...SELECT_BASE_WITH_PROFESSOR_INFO,
+    ...SELECT_TYPE_SPECIFIC,
+    ...SELECT_OFFICIAL_ANSWERS,
+  } as const satisfies Prisma.QuestionSelect
 
   if (withGradings) {
-    return mergeSelects(
-      base,
-      selectAllStudentAnswers(),
-      selectStudentGradings(),
-    )
+    return {
+      ...base,
+      ...SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
+    } as const satisfies Prisma.QuestionSelect
   }
 
   return base

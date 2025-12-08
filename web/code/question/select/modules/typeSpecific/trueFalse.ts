@@ -19,21 +19,41 @@ import { Prisma } from '@prisma/client'
 /**
  * Selects TrueFalse relation
  * Note: Official answers (isTrue) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
  */
-const selectTrueFalseSelect = (): Prisma.TrueFalseSelect => {
-  return {
-    questionId: true,
-  }
-}
+const SELECT_TRUE_FALSE = {
+  questionId: true,
+} as const satisfies Prisma.TrueFalseSelect
 
 /**
  * Selects true/false type-specific relation for Question
  * Note: Official answers (isTrue) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference,
+ * allowing reuse for selects, type safety, and payload validation.
  */
-export const selectTrueFalse = (): Prisma.QuestionSelect => {
-  return {
-    trueFalse: {
-      select: selectTrueFalseSelect(),
-    },
-  }
-}
+const SELECT_TRUE_FALSE_QUESTION = {
+  trueFalse: {
+    select: SELECT_TRUE_FALSE,
+  },
+} as const satisfies Prisma.QuestionSelect
+
+/**
+ * Runtime function that returns the true/false select.
+ * For backward compatibility and runtime use.
+ */
+export const selectTrueFalse = (): Prisma.QuestionSelect =>
+  SELECT_TRUE_FALSE_QUESTION
+
+/**
+ * Selects TrueFalse relation.
+ * Exported for composition in official answers selects.
+ */
+export { SELECT_TRUE_FALSE }
+
+/**
+ * Selects true/false type-specific relation for Question.
+ * Exported for composition in type-specific index.
+ */
+export { SELECT_TRUE_FALSE_QUESTION }

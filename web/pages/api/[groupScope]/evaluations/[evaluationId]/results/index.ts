@@ -24,13 +24,11 @@ import type { IApiContext } from '@/types/api'
 import { withPurgeGuard } from '@/middleware/withPurged'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import {
-  mergeSelects,
-  selectBase,
-  selectQuestionTags,
-  selectTypeSpecific,
-  selectOfficialAnswers,
-  selectAllStudentAnswers,
-  selectStudentGradings,
+  SELECT_BASE_WITH_PROFESSOR_INFO,
+  SELECT_QUESTION_TAGS,
+  SELECT_TYPE_SPECIFIC,
+  SELECT_OFFICIAL_ANSWERS,
+  SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
 } from '@/code/question/select'
 
 /**
@@ -38,14 +36,13 @@ import {
  * Includes: type-specific data, official answers, ALL student answers, gradings, professor-only info
  */
 const selectForEvaluationResults = (): Prisma.QuestionSelect => {
-  return mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectTypeSpecific(),
-    selectOfficialAnswers(),
-    selectQuestionTags(),
-    selectAllStudentAnswers(),
-    selectStudentGradings(),
-  )
+  return {
+    ...SELECT_BASE_WITH_PROFESSOR_INFO,
+    ...SELECT_QUESTION_TAGS,
+    ...SELECT_TYPE_SPECIFIC,
+    ...SELECT_OFFICIAL_ANSWERS,
+    ...SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
+  } as const satisfies Prisma.QuestionSelect
 }
 
 const get = async (ctx: IApiContext) => {

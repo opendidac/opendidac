@@ -19,22 +19,41 @@ import { Prisma } from '@prisma/client'
 /**
  * Selects Essay relation
  * Note: Official answers (solution) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
  */
-const selectEssaySelect = (): Prisma.EssaySelect => {
-  return {
-    questionId: true,
-    template: true,
-  }
-}
+const SELECT_ESSAY = {
+  questionId: true,
+  template: true,
+} as const satisfies Prisma.EssaySelect
 
 /**
  * Selects essay type-specific relation for Question
  * Note: Official answers (solution) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference,
+ * allowing reuse for selects, type safety, and payload validation.
  */
-export const selectEssay = (): Prisma.QuestionSelect => {
-  return {
-    essay: {
-      select: selectEssaySelect(),
-    },
-  }
-}
+const SELECT_ESSAY_QUESTION = {
+  essay: {
+    select: SELECT_ESSAY,
+  },
+} as const satisfies Prisma.QuestionSelect
+
+/**
+ * Runtime function that returns the essay select.
+ * For backward compatibility and runtime use.
+ */
+export const selectEssay = (): Prisma.QuestionSelect => SELECT_ESSAY_QUESTION
+
+/**
+ * Selects Essay relation.
+ * Exported for composition in official answers selects.
+ */
+export { SELECT_ESSAY }
+
+/**
+ * Selects essay type-specific relation for Question.
+ * Exported for composition in type-specific index.
+ */
+export { SELECT_ESSAY_QUESTION }

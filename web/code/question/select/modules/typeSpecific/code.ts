@@ -17,75 +17,128 @@
 import { Prisma, StudentPermission } from '@prisma/client'
 
 /**
- * Selects CodeReadingSnippet relation
- * Note: Official answers (output) are handled by officialAnswers select
- */
-const selectCodeReadingSnippetsSelect = (): Prisma.CodeReadingSnippetSelect => {
-  return {
-    id: true,
-    order: true,
-    snippet: true,
-  }
-}
-
-/**
  * Selects CodeReading relation
  * Note: Official answers (output, context fields) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
  */
-const selectCodeReadingSelect = (): Prisma.CodeReadingSelect => {
-  return {
-    snippets: {
-      select: selectCodeReadingSnippetsSelect(),
-      orderBy: { order: 'asc' },
+const SELECT_CODE_READING = {
+  snippets: {
+    select: {
+      id: true,
+      order: true,
+      snippet: true,
+      // no output — added only by official answers
     },
-  }
-}
+    orderBy: { order: 'asc' },
+  },
+} as const satisfies Prisma.CodeReadingSelect
 
 /**
  * Selects CodeWriting relation
  * Note: Official answers (solutionFiles) are handled by officialAnswers select
  * TemplateFiles filtering: Always filters HIDDEN files for security (students shouldn't see hidden files)
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
  */
-const selectCodeWritingSelect = (): Prisma.CodeWritingSelect => {
-  return {
-    codeCheckEnabled: true,
-    templateFiles: {
-      where: {
-        studentPermission: { not: StudentPermission.HIDDEN },
-      },
-      include: { file: true },
-      orderBy: { order: 'asc' },
+const SELECT_CODE_WRITING = {
+  codeCheckEnabled: true,
+
+  templateFiles: {
+    where: {
+      studentPermission: { not: StudentPermission.HIDDEN },
     },
-    testCases: { orderBy: { index: 'asc' } },
-  }
-}
+    select: {
+      order: true,
+      studentPermission: true,
+      file: {
+        select: {
+          path: true,
+          content: true,
+          createdAt: true,
+        },
+      },
+    },
+    orderBy: { order: 'asc' },
+  },
+
+  testCases: {
+    select: {
+      index: true,
+      exec: true,
+      input: true,
+      expectedOutput: true,
+    },
+    orderBy: { index: 'asc' },
+  },
+
+  // solutionFiles excluded (official answers only)
+} as const satisfies Prisma.CodeWritingSelect
 
 /**
  * Selects Code relation
  * Note: Official answers (solutionFiles, output, context fields) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
  */
-const selectCodeSelect = (): Prisma.CodeSelect => {
-  return {
-    language: true,
-    sandbox: true,
-    codeType: true,
-    codeWriting: {
-      select: selectCodeWritingSelect(),
+const SELECT_CODE = {
+  language: true,
+  codeType: true,
+
+  sandbox: {
+    select: {
+      image: true,
+      beforeAll: true,
     },
-    codeReading: {
-      select: selectCodeReadingSelect(),
-    },
-  }
-}
+  },
+
+  codeWriting: {
+    select: SELECT_CODE_WRITING,
+  },
+
+  codeReading: {
+    select: SELECT_CODE_READING,
+  },
+} as const satisfies Prisma.CodeSelect
 
 /**
  * Selects code type-specific relation for Question
  * Note: Official answers (solutionFiles, output, context fields) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference,
+ * allowing reuse for selects, type safety, and payload validation.
  */
-export const selectCode = (): Prisma.QuestionSelect => {
-  return {
-    code: {
-      select: selectCodeSelect(),
-    },
-  }
-}
+const SELECT_CODE_QUESTION = {
+  code: {
+    select: SELECT_CODE,
+  },
+} as const satisfies Prisma.QuestionSelect
+
+/**
+ * Runtime function that returns the code select.
+ */
+export const selectCode = (): Prisma.QuestionSelect => SELECT_CODE_QUESTION
+
+/**
+ * Selects CodeReading relation.
+ * Exported for composition in official answers selects.
+ */
+export { SELECT_CODE_READING }
+
+/**
+ * Selects CodeWriting relation.
+ * Exported for composition in official answers selects.
+ */
+export { SELECT_CODE_WRITING }
+
+/**
+ * Selects Code relation.
+ * Exported for composition in official answers selects.
+ */
+export { SELECT_CODE }
+
+/**
+ * Selects code type-specific relation for Question.
+ * Exported for composition in type-specific index.
+ */
+export { SELECT_CODE_QUESTION }

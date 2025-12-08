@@ -17,22 +17,49 @@
 import { Prisma } from '@prisma/client'
 
 /**
- * Selects base scalar fields for the question select clause
- * Always includes: id, type, status, content, createdAt, updatedAt
- * Conditionally includes: title, scratchpad (when includeProfessorOnlyInfo is true)
+ * Selects base scalar fields for the question select clause.
+ * Base version without professor-only info (title, scratchpad).
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
+ */
+const SELECT_BASE = {
+  id: true,
+  type: true,
+  status: true,
+  content: true,
+  createdAt: true,
+  updatedAt: true,
+  groupId: true,
+} as const satisfies Prisma.QuestionSelect
+
+/**
+ * Runtime function that returns the base select.
+ * For backward compatibility and runtime use.
  */
 export const selectBase = ({
   includeProfessorOnlyInfo,
 }: {
   includeProfessorOnlyInfo?: boolean
 }): Prisma.QuestionSelect => {
-  return {
-    id: true,
-    type: true,
-    status: true,
-    content: true,
-    createdAt: true,
-    updatedAt: true,
-    ...(includeProfessorOnlyInfo ? { title: true, scratchpad: true } : {}),
-  }
+  return includeProfessorOnlyInfo
+    ? SELECT_BASE_WITH_PROFESSOR_INFO
+    : SELECT_BASE
 }
+
+/**
+ * Selects base scalar fields including professor-only info (title, scratchpad).
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
+ */
+export const SELECT_BASE_WITH_PROFESSOR_INFO = {
+  ...SELECT_BASE,
+  title: true,
+  scratchpad: true,
+} as const satisfies Prisma.QuestionSelect
+
+/**
+ * Selects base scalar fields for the question select clause.
+ * Base version without professor-only info (title, scratchpad).
+ * Exported for use in API endpoints that don't need professor-only info.
+ */
+export { SELECT_BASE }

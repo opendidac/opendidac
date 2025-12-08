@@ -24,28 +24,25 @@ import type { IApiContext } from '@/types/api'
 import { withPurgeGuard } from '@/middleware/withPurged'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import {
-  mergeSelects,
-  selectBase,
-  selectQuestionTags,
-  selectTypeSpecific,
-  selectAllStudentAnswers,
-  selectStudentGradings,
+  SELECT_BASE_WITH_PROFESSOR_INFO,
+  SELECT_QUESTION_TAGS,
+  SELECT_TYPE_SPECIFIC,
 } from '@/code/question/select'
+import { SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING } from '@/code/question/select/modules/studentAnswers'
 
 /**
- * Select clause for professor tracking progress during evaluation
- * Includes: type-specific, ALL user answers, gradings, professor-only info
- * Note: Does NOT include official answers (not necessary for tracking progress)
+ * Select clause for professor tracking progress during evaluation.
+ * Composed directly from module selects without exposing schema structure.
+ * Includes: base fields (with professor info), tags, type-specific data,
+ * ALL user answers with gradings.
+ * Note: Does NOT include official answers (not necessary for tracking progress).
  */
-const selectForProfessorProgressTracking = (): Prisma.QuestionSelect => {
-  return mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectQuestionTags(),
-    selectTypeSpecific(),
-    selectAllStudentAnswers(),
-    selectStudentGradings(),
-  )
-}
+const SELECT_FOR_PROFESSOR_PROGRESS_TRACKING = {
+  ...SELECT_BASE_WITH_PROFESSOR_INFO,
+  ...SELECT_QUESTION_TAGS,
+  ...SELECT_TYPE_SPECIFIC,
+  ...SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
+} as const satisfies Prisma.QuestionSelect
 
 interface PatchBody {
   action: 'reduce' | 'extend'
@@ -69,7 +66,7 @@ const get = async (ctx: IApiContext) => {
       evaluationToQuestions: {
         select: {
           question: {
-            select: selectForProfessorProgressTracking(),
+            select: SELECT_FOR_PROFESSOR_PROGRESS_TRACKING,
           },
           order: true,
           points: true,

@@ -22,26 +22,24 @@ import {
 import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/types/api'
 import {
-  mergeSelects,
-  selectBase,
-  selectQuestionTags,
-  selectTypeSpecific,
-  selectOfficialAnswers,
+  SELECT_BASE_WITH_PROFESSOR_INFO,
+  SELECT_TYPE_SPECIFIC,
+  SELECT_OFFICIAL_ANSWERS,
+  SELECT_QUESTION_TAGS,
 } from '@/code/question/select'
 import { questionTypeSpecific } from '@/code/questions'
 
 /**
- * Select clause for professor editing a question
- * Includes: type-specific data, official answers, professor-only info
+ * Select clause for professor editing a question.
+ * Composed directly from module selects without exposing schema structure.
+ * Includes: base fields (with professor info), type-specific data, official answers, tags.
  */
-const selectForProfessorEditing = (): Prisma.QuestionSelect => {
-  return mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectTypeSpecific(),
-    selectOfficialAnswers(),
-    selectQuestionTags(),
-  )
-}
+const SELECT_FOR_PROFESSOR_EDITING = {
+  ...SELECT_BASE_WITH_PROFESSOR_INFO,
+  ...SELECT_TYPE_SPECIFIC,
+  ...SELECT_OFFICIAL_ANSWERS,
+  ...SELECT_QUESTION_TAGS,
+} as const satisfies Prisma.QuestionSelect
 
 /**
  * Managing a question
@@ -74,7 +72,7 @@ const get = async (ctx: IApiContext) => {
         scope: groupScope,
       },
     },
-    select: selectForProfessorEditing(),
+    select: SELECT_FOR_PROFESSOR_EDITING,
   })
 
   if (!question) {

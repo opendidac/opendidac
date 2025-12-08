@@ -15,28 +15,43 @@
  */
 
 import { Prisma } from '@prisma/client'
-import { selectMultipleChoice } from './multipleChoice'
-import { selectTrueFalse } from './trueFalse'
-import { selectEssay } from './essay'
-import { selectWeb } from './web'
-import { selectExactMatch } from './exactMatch'
-import { selectCode } from './code'
-import { selectDatabase } from './database'
-import { mergeSelects } from '@/code/question/select/merge'
+import { SELECT_MULTIPLE_CHOICE_QUESTION } from './multipleChoice'
+import { SELECT_TRUE_FALSE_QUESTION } from './trueFalse'
+import { SELECT_ESSAY_QUESTION } from './essay'
+import { SELECT_WEB_QUESTION } from './web'
+import { SELECT_EXACT_MATCH_QUESTION } from './exactMatch'
+import { SELECT_CODE_QUESTION } from './code'
+import { SELECT_DATABASE_QUESTION } from './database'
 
 /**
- * Selects all type-specific relations
- * Merges all question type selects together
- * Calling this function means we want type-specific data included
+ * Selects all type-specific relations.
+ * Merges all question type selects together using object spread.
+ *
+ * Since each question type has a different key (multipleChoice, trueFalse, etc.),
+ * object spread preserves literal types perfectly without needing mergeSelects.
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference,
+ * allowing reuse for selects, type safety, and payload validation.
  */
-export const selectTypeSpecific = (): Prisma.QuestionSelect => {
-  return mergeSelects(
-    selectMultipleChoice(),
-    selectTrueFalse(),
-    selectEssay(),
-    selectWeb(),
-    selectExactMatch(),
-    selectCode(),
-    selectDatabase(),
-  )
-}
+const SELECT_TYPE_SPECIFIC = {
+  ...SELECT_MULTIPLE_CHOICE_QUESTION,
+  ...SELECT_TRUE_FALSE_QUESTION,
+  ...SELECT_ESSAY_QUESTION,
+  ...SELECT_WEB_QUESTION,
+  ...SELECT_EXACT_MATCH_QUESTION,
+  ...SELECT_CODE_QUESTION,
+  ...SELECT_DATABASE_QUESTION,
+} as const satisfies Prisma.QuestionSelect
+
+/**
+ * Runtime function that returns the type-specific select.
+ * For backward compatibility and runtime use.
+ */
+export const selectTypeSpecific = (): Prisma.QuestionSelect =>
+  SELECT_TYPE_SPECIFIC
+
+/**
+ * Selects all type-specific relations.
+ * Exported for use in API endpoints and question copying.
+ */
+export { SELECT_TYPE_SPECIFIC }

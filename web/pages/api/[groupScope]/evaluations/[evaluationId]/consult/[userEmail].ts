@@ -21,14 +21,12 @@ import type { IApiContext } from '@/types/api'
 import { withPurgeGuard } from '@/middleware/withPurged'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import {
-  mergeSelects,
-  selectBase,
-  selectQuestionTags,
-  selectTypeSpecific,
-  selectOfficialAnswers,
-  selectStudentAnswersForUser,
-  selectStudentGradings,
+  SELECT_BASE_WITH_PROFESSOR_INFO,
+  SELECT_QUESTION_TAGS,
+  SELECT_TYPE_SPECIFIC,
+  SELECT_OFFICIAL_ANSWERS,
 } from '@/code/question/select'
+import { selectStudentAnswersForUserWithGrading } from '@/code/question/select/modules/studentAnswers'
 
 /**
  * Select clause for professor consulting a specific user's answers
@@ -38,14 +36,13 @@ import {
 const selectForProfessorConsultation = (
   userEmail: string,
 ): Prisma.QuestionSelect => {
-  return mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectTypeSpecific(),
-    selectOfficialAnswers(),
-    selectStudentAnswersForUser(userEmail),
-    selectStudentGradings(),
-    selectQuestionTags(),
-  )
+  return {
+    ...SELECT_BASE_WITH_PROFESSOR_INFO,
+    ...SELECT_TYPE_SPECIFIC,
+    ...SELECT_OFFICIAL_ANSWERS,
+    ...selectStudentAnswersForUserWithGrading(userEmail),
+    ...SELECT_QUESTION_TAGS,
+  } as const satisfies Prisma.QuestionSelect
 }
 
 /*

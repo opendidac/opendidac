@@ -26,38 +26,35 @@ import { questionsFilterWhereClause } from '@/code/questionsFilter'
 import languages from '@/code/languages.json'
 import databaseTemplate from '@/code/database.json'
 import {
-  mergeSelects,
-  selectBase,
-  selectQuestionTags,
-  selectTypeSpecific,
-  selectOfficialAnswers,
+  SELECT_BASE_WITH_PROFESSOR_INFO,
+  SELECT_TYPE_SPECIFIC,
+  SELECT_OFFICIAL_ANSWERS,
+  SELECT_QUESTION_TAGS,
 } from '@/code/question/select'
 
 /**
- * Select clause for professor listing questions
- * Includes: type-specific data, tags, professor-only info
- * Note: Does NOT include official answers (not needed for listing)
+ * Select clause for professor listing questions.
+ * Composed directly from module selects without exposing schema structure.
+ * Includes: base fields (with professor info), type-specific data, tags.
+ * Note: Does NOT include official answers (not needed for listing).
  */
-const selectForProfessorListing = (): Prisma.QuestionSelect => {
-  return mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectTypeSpecific(),
-    selectQuestionTags(),
-  )
-}
+const SELECT_FOR_PROFESSOR_LISTING = {
+  ...SELECT_BASE_WITH_PROFESSOR_INFO,
+  ...SELECT_TYPE_SPECIFIC,
+  ...SELECT_QUESTION_TAGS,
+} as const satisfies Prisma.QuestionSelect
 
 /**
- * Select clause for professor editing/creating questions
- * Includes: type-specific data, official answers, tags, professor-only info
+ * Select clause for professor editing/creating questions.
+ * Composed directly from module selects without exposing schema structure.
+ * Includes: base fields (with professor info), type-specific data, official answers, tags.
  */
-const selectForProfessorEditing = (): Prisma.QuestionSelect => {
-  return mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectTypeSpecific(),
-    selectOfficialAnswers(),
-    selectQuestionTags(),
-  )
-}
+const SELECT_FOR_PROFESSOR_EDITING = {
+  ...SELECT_BASE_WITH_PROFESSOR_INFO,
+  ...SELECT_TYPE_SPECIFIC,
+  ...SELECT_OFFICIAL_ANSWERS,
+  ...SELECT_QUESTION_TAGS,
+} as const satisfies Prisma.QuestionSelect
 
 const environments = languages.environments
 
@@ -90,7 +87,7 @@ const get = async (ctx: IApiContext) => {
       lastUsed: true,
       usageStatus: true,
       evaluation: true,
-      ...selectForProfessorListing(),
+      ...SELECT_FOR_PROFESSOR_LISTING,
     },
     orderBy: {
       createdAt: 'desc',
@@ -119,7 +116,7 @@ export const post = async (ctx: IApiContext) => {
     return res.status(400).json({ message: 'Missing groupScope' })
   }
 
-  const fullSelect = selectForProfessorEditing()
+  const fullSelect = SELECT_FOR_PROFESSOR_EDITING
 
   try {
     const createdQuestion = await prisma.$transaction(async (tx) => {

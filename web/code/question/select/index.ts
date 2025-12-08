@@ -14,7 +14,30 @@
  * limitations under the License.
  */
 
+// Export mergeSelects for cases where dynamic merging is still needed
 export { mergeSelects } from './merge'
+
+// Export const literals from modules
+export { SELECT_BASE_WITH_PROFESSOR_INFO, SELECT_BASE } from './modules/base'
+export { SELECT_QUESTION_TAGS } from './modules/tags'
+export { SELECT_TYPE_SPECIFIC } from './modules/typeSpecific'
+export {
+  SELECT_OFFICIAL_ANSWERS,
+  SELECT_CODE_MERGED_QUESTION,
+  SELECT_MULTIPLE_CHOICE_MERGED_QUESTION,
+  SELECT_TRUE_FALSE_MERGED_QUESTION,
+  SELECT_ESSAY_MERGED_QUESTION,
+  SELECT_WEB_MERGED_QUESTION,
+  SELECT_EXACT_MATCH_MERGED_QUESTION,
+  SELECT_DATABASE_MERGED_QUESTION,
+} from './modules/officialAnswers'
+export {
+  SELECT_ALL_STUDENT_ANSWERS,
+  SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
+} from './modules/studentAnswers'
+export { SELECT_STUDENT_GRADINGS } from './modules/gradings'
+
+// Export functions for backward compatibility (deprecated - use const literals instead)
 export { selectBase } from './modules/base'
 export { selectQuestionTags } from './modules/tags'
 export { selectTypeSpecific } from './modules/typeSpecific'
@@ -22,5 +45,12 @@ export { selectOfficialAnswers } from './modules/officialAnswers'
 export {
   selectAllStudentAnswers,
   selectStudentAnswersForUser,
+  selectStudentAnswersForUserWithGrading,
 } from './modules/studentAnswers'
 export { selectStudentGradings } from './modules/gradings'
+
+// Expose the select for question copy from the copy base
+export {
+  selectForQuestionCopy,
+  SELECT_FOR_QUESTION_COPY,
+} from '@/code/question/copy/base'

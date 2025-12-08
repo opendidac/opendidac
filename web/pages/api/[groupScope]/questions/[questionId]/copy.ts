@@ -14,35 +14,17 @@
  * limitations under the License.
  */
 
+import util from 'util'
 import { Role, QuestionSource, Prisma, PrismaClient } from '@prisma/client'
-import { copyQuestion } from '@/code/questions'
+
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/types/api'
-import {
-  mergeSelects,
-  selectBase,
-  selectQuestionTags,
-  selectTypeSpecific,
-  selectOfficialAnswers,
-} from '@/code/question/select'
-
-/**
- * Select clause for copying questions.
- * Includes: type-specific data, official answers, professor-only info, tags
- * Note: Used when copying questions (needs all data to create copies)
- */
-const selectForQuestionCopy = (): Prisma.QuestionSelect => {
-  return mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectTypeSpecific(),
-    selectOfficialAnswers(),
-    selectQuestionTags(),
-  )
-}
+import { selectForQuestionCopy } from '@/code/question/select'
+import { copyQuestion } from '@/code/question/copy'
 
 const post = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
@@ -57,6 +39,11 @@ const post = async (ctx: IApiContext) => {
     res.status(400).json({ message: 'Invalid groupScope' })
     return
   }
+
+  console.log(
+    'selectForQuestionCopy',
+    util.inspect(selectForQuestionCopy(), { depth: null }),
+  )
 
   // Step 1: Retrieve the question
   const question = await prisma.question.findFirst({
@@ -81,7 +68,10 @@ const post = async (ctx: IApiContext) => {
   let questionCopy = null
   await (prisma as PrismaClient).$transaction(
     async (tx: Prisma.TransactionClient) => {
-      questionCopy = await copyQuestion(tx, question, QuestionSource.COPY)
+      questionCopy = await copyQuestion(question.id, {
+        source: QuestionSource.COPY,
+        prefix: 'Copy of ',
+      })
     },
   )
 

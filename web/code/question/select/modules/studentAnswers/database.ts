@@ -17,30 +17,24 @@
 import { Prisma } from '@prisma/client'
 
 /**
- * Runtime function that returns the question tags select.
- * For backward compatibility and runtime use.
- */
-export const selectQuestionTags = (): Prisma.QuestionSelect =>
-  SELECT_QUESTION_TAGS
-
-/**
- * Selects tag relation.
+ * Selects Database student answers.
  *
- * Using const literal with `satisfies` preserves literal types for type inference,
- * allowing reuse for selects, type safety, and payload validation.
+ * Using const literal with `satisfies` preserves literal types for type inference.
  */
-export const SELECT_QUESTION_TAGS = {
-  questionToTag: {
-    select: {
-      questionId: true,
-      groupId: true,
-      label: true,
-      tag: {
-        select: {
-          label: true,
-          groupId: true,
-        },
-      },
+const SELECT_STUDENT_ANSWER_DATABASE = {
+  queries: {
+    include: {
+      query: true,
+      studentOutput: true,
+    },
+    orderBy: {
+      query: { order: 'asc' },
     },
   },
-} as const satisfies Prisma.QuestionSelect
+} as const satisfies Prisma.StudentAnswerDatabaseSelect
+
+/**
+ * Selects Database student answers.
+ * Exported for composition in student answers index.
+ */
+export { SELECT_STUDENT_ANSWER_DATABASE }

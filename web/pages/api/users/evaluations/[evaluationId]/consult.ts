@@ -24,14 +24,12 @@ import { withPurgeGuard } from '@/middleware/withPurged'
 
 import { getUser } from '@/code/auth/auth'
 import {
-  mergeSelects,
-  selectBase,
-  selectQuestionTags,
-  selectTypeSpecific,
-  selectOfficialAnswers,
-  selectStudentAnswersForUser,
-  selectStudentGradings,
+  SELECT_BASE,
+  SELECT_QUESTION_TAGS,
+  SELECT_TYPE_SPECIFIC,
+  SELECT_OFFICIAL_ANSWERS,
 } from '@/code/question/select'
+import { selectStudentAnswersForUserWithGrading } from '@/code/question/select/modules/studentAnswers'
 import { isFinished } from './questions/[questionId]/answers/utils'
 
 /**
@@ -44,16 +42,18 @@ const selectForStudentConsultation = (
   userEmail: string,
   includeOfficialAnswers: boolean,
 ): Prisma.QuestionSelect => {
-  const base = mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: false }),
-    selectTypeSpecific(),
-    selectStudentAnswersForUser(userEmail),
-    selectStudentGradings(),
-    selectQuestionTags(),
-  )
+  const base = {
+    ...SELECT_BASE,
+    ...SELECT_TYPE_SPECIFIC,
+    ...selectStudentAnswersForUserWithGrading(userEmail),
+    ...SELECT_QUESTION_TAGS,
+  } as const satisfies Prisma.QuestionSelect
 
   if (includeOfficialAnswers) {
-    return mergeSelects(base, selectOfficialAnswers())
+    return {
+      ...base,
+      ...SELECT_OFFICIAL_ANSWERS,
+    } as const satisfies Prisma.QuestionSelect
   }
 
   return base

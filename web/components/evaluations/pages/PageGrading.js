@@ -312,7 +312,7 @@ const PageGrading = () => {
       ready &&
       evaluationToQuestion?.question.studentAnswer.find(
         (answer) => answer.user.id === participantId,
-      )[evaluationToQuestion.question.type],
+      )?.[evaluationToQuestion.question.type],
     [evaluationToQuestion, participantId, ready],
   )
 

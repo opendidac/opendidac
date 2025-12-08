@@ -19,37 +19,63 @@ import { Prisma } from '@prisma/client'
 /**
  * Selects ExactMatchField relation
  * Note: Official answers (matchRegex) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
  */
-const selectExactMatchFieldsSelect = (): Prisma.ExactMatchFieldSelect => {
-  return {
-    id: true,
-    order: true,
-    statement: true,
-  }
-}
+const SELECT_EXACT_MATCH_FIELDS = {
+  id: true,
+  order: true,
+  statement: true,
+} as const satisfies Prisma.ExactMatchFieldSelect
 
 /**
  * Selects ExactMatch relation
  * Note: Official answers (matchRegex) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
  */
-const selectExactMatchSelect = (): Prisma.ExactMatchSelect => {
-  return {
-    questionId: true,
-    fields: {
-      select: selectExactMatchFieldsSelect(),
-      orderBy: [{ order: 'asc' }, { id: 'asc' }],
-    },
-  }
-}
+const SELECT_EXACT_MATCH = {
+  questionId: true,
+  fields: {
+    select: SELECT_EXACT_MATCH_FIELDS,
+    orderBy: [{ order: 'asc' }, { id: 'asc' }],
+  },
+} as const satisfies Prisma.ExactMatchSelect
 
 /**
  * Selects exact match type-specific relation for Question
  * Note: Official answers (matchRegex) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference,
+ * allowing reuse for selects, type safety, and payload validation.
  */
-export const selectExactMatch = (): Prisma.QuestionSelect => {
-  return {
-    exactMatch: {
-      select: selectExactMatchSelect(),
-    },
-  }
-}
+const SELECT_EXACT_MATCH_QUESTION = {
+  exactMatch: {
+    select: SELECT_EXACT_MATCH,
+  },
+} as const satisfies Prisma.QuestionSelect
+
+/**
+ * Runtime function that returns the exact match select.
+ * For backward compatibility and runtime use.
+ */
+export const selectExactMatch = (): Prisma.QuestionSelect =>
+  SELECT_EXACT_MATCH_QUESTION
+
+/**
+ * Selects ExactMatchField relation.
+ * Exported for composition in official answers selects.
+ */
+export { SELECT_EXACT_MATCH_FIELDS }
+
+/**
+ * Selects ExactMatch relation.
+ * Exported for composition in official answers selects.
+ */
+export { SELECT_EXACT_MATCH }
+
+/**
+ * Selects exact match type-specific relation for Question.
+ * Exported for composition in type-specific index.
+ */
+export { SELECT_EXACT_MATCH_QUESTION }

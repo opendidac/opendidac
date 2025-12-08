@@ -28,9 +28,6 @@ export function loadHandlebars() {
   )
 
   // Register aliases for partials (templates use different names than exports)
-  if (templates.partials.student) {
-    Handlebars.registerPartial('studentInfo', templates.partials.student)
-  }
   if (templates.partials.studentAnswerExactMatchNeutral) {
     Handlebars.registerPartial(
       'studentAnswerExactMatch',

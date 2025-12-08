@@ -19,21 +19,41 @@ import { Prisma } from '@prisma/client'
 /**
  * Selects Database relation
  * Note: Official answers (solutionQueries) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
  */
-const selectDatabaseSelect = (): Prisma.DatabaseSelect => {
-  return {
-    image: true,
-  }
-}
+const SELECT_DATABASE = {
+  image: true,
+} as const satisfies Prisma.DatabaseSelect
 
 /**
  * Selects database type-specific relation for Question
  * Note: Official answers (solutionQueries) are handled by officialAnswers select
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference,
+ * allowing reuse for selects, type safety, and payload validation.
  */
-export const selectDatabase = (): Prisma.QuestionSelect => {
-  return {
-    database: {
-      select: selectDatabaseSelect(),
-    },
-  }
-}
+const SELECT_DATABASE_QUESTION = {
+  database: {
+    select: SELECT_DATABASE,
+  },
+} as const satisfies Prisma.QuestionSelect
+
+/**
+ * Runtime function that returns the database select.
+ * For backward compatibility and runtime use.
+ */
+export const selectDatabase = (): Prisma.QuestionSelect =>
+  SELECT_DATABASE_QUESTION
+
+/**
+ * Selects Database relation.
+ * Exported for composition in official answers selects.
+ */
+export { SELECT_DATABASE }
+
+/**
+ * Selects database type-specific relation for Question.
+ * Exported for composition in type-specific index.
+ */
+export { SELECT_DATABASE_QUESTION }

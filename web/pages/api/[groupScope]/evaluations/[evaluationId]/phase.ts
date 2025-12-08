@@ -29,27 +29,7 @@ import {
 import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/types/api'
 import { copyQuestion } from '@/code/questions'
-import {
-  mergeSelects,
-  selectBase,
-  selectQuestionTags,
-  selectTypeSpecific,
-  selectOfficialAnswers,
-} from '@/code/question/select'
-
-/**
- * Select clause for copying questions during evaluation phase transition.
- * Includes: type-specific data, official answers, professor-only info, tags
- * Note: Used when copying questions for evaluation (needs all data to create copies)
- */
-const selectForQuestionCopy = (): Prisma.QuestionSelect => {
-  return mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectTypeSpecific(),
-    selectOfficialAnswers(),
-    selectQuestionTags(),
-  )
-}
+import { selectForQuestionCopy } from '@/code/question/select'
 
 // Compute duration delta in milliseconds from activation flag, hours and minutes
 function computeDurationDeltaMs(
