@@ -20,31 +20,41 @@ import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/types/api'
 import { withPurgeGuard } from '@/middleware/withPurged'
 import { withEvaluation } from '@/middleware/withEvaluation'
+
 import {
   SELECT_BASE_WITH_PROFESSOR_INFO,
   SELECT_QUESTION_TAGS,
   SELECT_TYPE_SPECIFIC,
   SELECT_OFFICIAL_ANSWERS,
 } from '@/code/question/select'
-import { selectStudentAnswersForUserWithGrading } from '@/code/question/select/modules/studentAnswers'
+
+import { SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING } from '@/code/question/select/modules/studentAnswers'
 
 /**
- * Select clause for professor consulting a specific user's answers
- * Includes: type-specific data, official answers, professor-only info,
- *           specific user's answers, and gradings.
+ * Base literal for professor consultation.
+ * This stays deep-typed and reusable.
  */
-const selectForProfessorConsultation = (
-  userEmail: string,
-): Prisma.QuestionSelect => {
-  return {
-    ...SELECT_BASE_WITH_PROFESSOR_INFO,
-    ...SELECT_TYPE_SPECIFIC,
-    ...SELECT_OFFICIAL_ANSWERS,
-    ...selectStudentAnswersForUserWithGrading(userEmail),
-    ...SELECT_QUESTION_TAGS,
-  } as const satisfies Prisma.QuestionSelect
-}
+export const SELECT_FOR_PROFESSOR_CONSULTATION = {
+  ...SELECT_BASE_WITH_PROFESSOR_INFO,
+  ...SELECT_TYPE_SPECIFIC,
+  ...SELECT_OFFICIAL_ANSWERS,
+  ...SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
+  ...SELECT_QUESTION_TAGS,
+} as const satisfies Prisma.QuestionSelect
 
+/**
+ * Creates the per-user select by PATCHING the dynamic filter.
+ * The select stays 100% inferred from the literal above.
+ */
+const buildSelectForProfessorConsultation = (
+  userEmail: string,
+): Prisma.QuestionSelect => ({
+  ...SELECT_FOR_PROFESSOR_CONSULTATION,
+  studentAnswer: {
+    ...SELECT_FOR_PROFESSOR_CONSULTATION.studentAnswer,
+    where: { userEmail },
+  },
+})
 /*
   Professor can consult the user's answers to the questions of an evaluation
 */
@@ -70,7 +80,7 @@ const get = async (ctx: IApiContext) => {
       evaluationToQuestions: {
         include: {
           question: {
-            select: selectForProfessorConsultation(userEmail),
+            select: buildSelectForProfessorConsultation(userEmail),
           },
         },
         orderBy: {
