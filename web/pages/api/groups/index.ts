@@ -119,11 +119,9 @@ const get = async (ctx: IApiContext) => {
       }),
     )
 
-    res
-      .status(200)
-      .json({ groups: groupsWithMembershipInfo } as {
-        groups: GroupWithMembershipInfo[]
-      })
+    res.status(200).json({ groups: groupsWithMembershipInfo } as {
+      groups: GroupWithMembershipInfo[]
+    })
   } catch (e) {
     console.error('Error fetching groups:', e)
     res.status(500).json({ message: 'Internal server error' })
