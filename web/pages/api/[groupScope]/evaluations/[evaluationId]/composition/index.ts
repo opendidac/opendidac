@@ -23,10 +23,9 @@ import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/types/api'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
 import {
-  mergeSelects,
-  selectBase,
-  selectQuestionTags,
-  selectTypeSpecific,
+  SELECT_BASE_WITH_PROFESSOR_INFO,
+  SELECT_TYPE_SPECIFIC,
+  SELECT_QUESTION_TAGS,
 } from '@/code/question/select'
 
 /**
@@ -34,13 +33,11 @@ import {
  * Includes: type-specific data, tags, professor-only info
  * Note: Does NOT include official answers (not needed for listing)
  */
-const selectForProfessorListing = (): Prisma.QuestionSelect => {
-  return mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectTypeSpecific(),
-    selectQuestionTags(),
-  )
-}
+const SELECT_FOR_PROFESSOR_LISTING = {
+  ...SELECT_BASE_WITH_PROFESSOR_INFO,
+  ...SELECT_TYPE_SPECIFIC,
+  ...SELECT_QUESTION_TAGS,
+} as const satisfies Prisma.QuestionSelect
 
 interface PostBody {
   questionIds: string[]
@@ -64,7 +61,7 @@ const get = async (ctx: IApiContext) => {
         include: {
           question: {
             select: {
-              ...selectForProfessorListing(),
+              ...SELECT_FOR_PROFESSOR_LISTING,
               sourceQuestion: {
                 // Only Active
                 where: {
@@ -158,7 +155,7 @@ const post = async (ctx: IApiContext) => {
     },
     include: {
       question: {
-        select: selectForProfessorListing(),
+        select: SELECT_FOR_PROFESSOR_LISTING,
       },
     },
   })

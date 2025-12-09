@@ -14,38 +14,50 @@
  * limitations under the License.
  */
 
-import { mergeSelects } from '@/code/question/select'
-import { selectBase } from '@/code/question/select'
-import { selectTypeSpecific } from '@/code/question/select'
-import { selectStudentAnswersForUser } from '@/code/question/select'
-import { selectStudentGradings } from '@/code/question/select'
-import { selectQuestionTags } from '@/code/question/select'
-import { selectAllStudentAnswers } from '@/code/question/select'
-import { selectOfficialAnswers } from '@/code/question/select'
+import {
+  SELECT_BASE,
+  SELECT_BASE_WITH_PROFESSOR_INFO,
+  SELECT_TYPE_SPECIFIC,
+  SELECT_QUESTION_TAGS,
+  SELECT_OFFICIAL_ANSWERS,
+  SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
+  SELECT_STUDENT_ANSWER_WITH_GRADING,
+} from '@/code/question/select'
+import { Prisma } from '@prisma/client'
 
 /**
  * Select for student export.
  * @param email - The student's email.
  * @returns The select for student export.
  */
-export const selectForStudentExport = (email: string) =>
-  mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: false }),
-    selectTypeSpecific(),
-    selectStudentAnswersForUser(email),
-    selectStudentGradings(),
-    selectQuestionTags(),
-  )
+export const selectForStudentExport = (
+  email: string,
+): Prisma.QuestionSelect => {
+  return {
+    ...SELECT_BASE,
+    ...SELECT_TYPE_SPECIFIC,
+    ...SELECT_QUESTION_TAGS,
+    studentAnswer: {
+      select: SELECT_STUDENT_ANSWER_WITH_GRADING,
+      where: { userEmail: email },
+    },
+  } as const satisfies Prisma.QuestionSelect
+}
 
-export const selectForProfessorExport = (includeSubs: boolean) => {
-  const base = mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectTypeSpecific(),
-    selectOfficialAnswers(),
-    selectQuestionTags(),
-  )
+export const selectForProfessorExport = (
+  includeSubs: boolean,
+): Prisma.QuestionSelect => {
+  const base: Prisma.QuestionSelect = {
+    ...SELECT_BASE_WITH_PROFESSOR_INFO,
+    ...SELECT_TYPE_SPECIFIC,
+    ...SELECT_OFFICIAL_ANSWERS,
+    ...SELECT_QUESTION_TAGS,
+  } as const satisfies Prisma.QuestionSelect
 
   return includeSubs
-    ? mergeSelects(base, selectAllStudentAnswers(), selectStudentGradings())
+    ? ({
+        ...base,
+        ...SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
+      } as const satisfies Prisma.QuestionSelect)
     : base
 }

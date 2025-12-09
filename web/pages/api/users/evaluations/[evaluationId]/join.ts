@@ -31,10 +31,9 @@ import { isJoinable } from '@/code/phase'
 import { grading } from '@/code/grading/engine'
 import { getUser } from '@/code/auth/auth'
 import {
-  mergeSelects,
-  selectBase,
-  selectTypeSpecific,
-  selectOfficialAnswers,
+  SELECT_BASE,
+  SELECT_TYPE_SPECIFIC,
+  SELECT_OFFICIAL_ANSWERS,
 } from '@/code/question/select'
 
 /**
@@ -42,13 +41,11 @@ import {
  * Includes: type-specific data, official answers (for templates)
  * Note: Does NOT include professor-only info or tags (not needed for student joining)
  */
-const selectForStudentJoin = (): Prisma.QuestionSelect => {
-  return mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: false }),
-    selectTypeSpecific(),
-    selectOfficialAnswers(),
-  )
-}
+const SELECT_FOR_STUDENT_JOIN = {
+  ...SELECT_BASE,
+  ...SELECT_TYPE_SPECIFIC,
+  ...SELECT_OFFICIAL_ANSWERS,
+} as const satisfies Prisma.QuestionSelect
 
 const post = async (ctx: IApiContextWithEvaluation | IApiContext) => {
   const { req, res, prisma } = ctx
@@ -130,7 +127,7 @@ const post = async (ctx: IApiContextWithEvaluation | IApiContext) => {
         },
         include: {
           question: {
-            select: selectForStudentJoin(),
+            select: SELECT_FOR_STUDENT_JOIN,
           },
         },
         orderBy: {

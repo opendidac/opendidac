@@ -22,7 +22,7 @@ import { Prisma } from '@prisma/client'
  *
  * Using const literal with `satisfies` preserves literal types for type inference.
  */
-const SELECT_BASE = {
+export const SELECT_BASE = {
   id: true,
   type: true,
   status: true,
@@ -56,10 +56,3 @@ export const SELECT_BASE_WITH_PROFESSOR_INFO = {
   title: true,
   scratchpad: true,
 } as const satisfies Prisma.QuestionSelect
-
-/**
- * Selects base scalar fields for the question select clause.
- * Base version without professor-only info (title, scratchpad).
- * Exported for use in API endpoints that don't need professor-only info.
- */
-export { SELECT_BASE }

@@ -33,7 +33,7 @@ import { SELECT_DATABASE_QUESTION } from './database'
  * Using const literal with `satisfies` preserves literal types for type inference,
  * allowing reuse for selects, type safety, and payload validation.
  */
-const SELECT_TYPE_SPECIFIC = {
+export const SELECT_TYPE_SPECIFIC = {
   ...SELECT_MULTIPLE_CHOICE_QUESTION,
   ...SELECT_TRUE_FALSE_QUESTION,
   ...SELECT_ESSAY_QUESTION,
@@ -49,9 +49,3 @@ const SELECT_TYPE_SPECIFIC = {
  */
 export const selectTypeSpecific = (): Prisma.QuestionSelect =>
   SELECT_TYPE_SPECIFIC
-
-/**
- * Selects all type-specific relations.
- * Exported for use in API endpoints and question copying.
- */
-export { SELECT_TYPE_SPECIFIC }

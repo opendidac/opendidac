@@ -15,22 +15,18 @@
  */
 
 import {
-  mergeSelects,
-  selectBase,
-  selectQuestionTags,
-  selectTypeSpecific,
-  selectOfficialAnswers,
+  SELECT_BASE_WITH_PROFESSOR_INFO,
+  SELECT_TYPE_SPECIFIC,
+  SELECT_OFFICIAL_ANSWERS,
+  SELECT_QUESTION_TAGS,
 } from '@/code/question/select'
+import { Prisma } from '@prisma/client'
 
-const selectForProfessorEditing = () => {
-  return mergeSelects(
-    selectBase({ includeProfessorOnlyInfo: true }),
-    selectTypeSpecific(),
-    selectOfficialAnswers(),
-    selectQuestionTags(),
-  )
-}
+const SELECT_FOR_PROFESSOR_EDITING = {
+  ...SELECT_BASE_WITH_PROFESSOR_INFO,
+  ...SELECT_TYPE_SPECIFIC,
+  ...SELECT_OFFICIAL_ANSWERS,
+  ...SELECT_QUESTION_TAGS,
+} as const satisfies Prisma.QuestionSelect
 
-const selectClause = selectForProfessorEditing()
-
-console.log(JSON.stringify(selectClause, null, 2))
+console.log(JSON.stringify(SELECT_FOR_PROFESSOR_EDITING, null, 2))
