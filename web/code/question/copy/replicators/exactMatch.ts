@@ -24,8 +24,6 @@ import { SELECT_EXACT_MATCH_MERGED_QUESTION } from '@/code/question/select/modul
 
 import type { QuestionReplicator } from '.'
 
-type Tx = Prisma.TransactionClient
-
 /**
  * Extract the properly-typed exactMatch relation from the merged literal structure.
  * The select structure is composed in the select modules, keeping schema details
@@ -46,11 +44,11 @@ export type ExactCopyPayload = Omit<QuestionCopyPayload, 'exactMatch'> & {
 
 export const exactMatchReplicator: QuestionReplicator<ExactCopyPayload> = {
   async replicate(
-    tx: Tx,
-    q: ExactCopyPayload,
-    baseData: BaseQuestionCreateData,
+    prisma: Prisma.TransactionClient,
+    sourceQuestion: ExactCopyPayload,
+    commonFields: BaseQuestionCreateData,
   ): Promise<Question> {
-    const em = q.exactMatch
+    const em = sourceQuestion.exactMatch
 
     if (!em) {
       throw new Error(
@@ -58,9 +56,9 @@ export const exactMatchReplicator: QuestionReplicator<ExactCopyPayload> = {
       )
     }
 
-    return tx.question.create({
+    return prisma.question.create({
       data: {
-        ...baseData,
+        ...commonFields,
         exactMatch: {
           create: {
             fields: em.fields

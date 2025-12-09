@@ -24,8 +24,6 @@ import { SELECT_ESSAY_MERGED_QUESTION } from '@/code/question/select/modules/off
 
 import type { QuestionReplicator } from '.'
 
-type Tx = Prisma.TransactionClient
-
 /**
  * Extract the properly-typed essay relation from the merged literal structure.
  * The select structure is composed in the select modules, keeping schema details
@@ -46,11 +44,11 @@ export type EssayCopyPayload = Omit<QuestionCopyPayload, 'essay'> & {
 
 export const essayReplicator: QuestionReplicator<EssayCopyPayload> = {
   async replicate(
-    tx: Tx,
-    q: EssayCopyPayload,
-    baseData: BaseQuestionCreateData,
+    prisma: Prisma.TransactionClient,
+    sourceQuestion: EssayCopyPayload,
+    commonFields: BaseQuestionCreateData,
   ): Promise<Question> {
-    const es = q.essay
+    const es = sourceQuestion.essay
 
     if (!es) {
       throw new Error(
@@ -58,9 +56,9 @@ export const essayReplicator: QuestionReplicator<EssayCopyPayload> = {
       )
     }
 
-    return tx.question.create({
+    return prisma.question.create({
       data: {
-        ...baseData,
+        ...commonFields,
         essay: {
           create: {
             solution: es.solution ?? null,

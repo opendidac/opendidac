@@ -39,6 +39,4 @@ export {
 export { SELECT_STUDENT_GRADINGS } from './modules/gradings'
 
 // Expose the select for question copy from the copy base
-export {
-  SELECT_FOR_QUESTION_COPY,
-} from '@/code/question/copy/base'
+export { SELECT_FOR_QUESTION_COPY } from '@/code/question/copy/base'

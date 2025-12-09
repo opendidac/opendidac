@@ -22,9 +22,7 @@ import {
   SELECT_OFFICIAL_ANSWERS,
 } from '@/code/question/select'
 
-import {
-  SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
-} from '@/code/question/select/modules/studentAnswers'
+import { SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING } from '@/code/question/select/modules/studentAnswers'
 
 import { isFinished } from './questions/[questionId]/answers/utils'
 /**
@@ -36,7 +34,7 @@ export const SELECT_FOR_STUDENT_CONSULTATION = {
   ...SELECT_TYPE_SPECIFIC,
   ...SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
   ...SELECT_QUESTION_TAGS,
-} as const satisfies Prisma.QuestionSelect;
+} as const satisfies Prisma.QuestionSelect
 
 /**
  * Builds final select for student consultation.
@@ -55,14 +53,13 @@ const buildSelectForStudentConsultation = (
       ...SELECT_FOR_STUDENT_CONSULTATION.studentAnswer,
       where: { userEmail },
     },
-  };
+  }
 
   return {
     ...withFilter,
     ...(includeOfficial ? SELECT_OFFICIAL_ANSWERS : {}),
-  } as const satisfies Prisma.QuestionSelect;
-};
-
+  } as const satisfies Prisma.QuestionSelect
+}
 
 const get = async (ctx: IApiContextWithEvaluation | IApiContext) => {
   const { req, res, prisma } = ctx
@@ -120,7 +117,7 @@ const get = async (ctx: IApiContextWithEvaluation | IApiContext) => {
               question: {
                 select: buildSelectForStudentConsultation(
                   email,
-                  evaluation.showSolutionsWhenFinished
+                  evaluation.showSolutionsWhenFinished,
                 ),
               },
             },

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import util from 'util'
 import { Role, QuestionSource, Prisma, PrismaClient } from '@prisma/client'
 
 import {
@@ -63,7 +62,7 @@ const post = async (ctx: IApiContext) => {
   let questionCopy = null
   await (prisma as PrismaClient).$transaction(
     async (tx: Prisma.TransactionClient) => {
-      questionCopy = await copyQuestion(question.id, {
+      questionCopy = await copyQuestion(tx, question.id, {
         source: QuestionSource.COPY,
         prefix: 'Copy of ',
       })

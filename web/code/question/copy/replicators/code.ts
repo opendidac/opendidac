@@ -34,8 +34,6 @@ import { SELECT_CODE_MERGED_QUESTION } from '@/code/question/select/modules/offi
 
 import type { QuestionReplicator } from '.'
 
-type Tx = Prisma.TransactionClient
-
 /**
  * Extract the properly-typed code relation from the merged literal structure.
  * The select structure is composed in the select modules, keeping schema details
@@ -56,27 +54,25 @@ type QuestionPayload = Omit<QuestionCopyPayload, 'code'> & {
 
 export const codeReplicator: QuestionReplicator<QuestionPayload> = {
   async replicate(
-    tx: Tx,
-    qRaw,
-    baseData: BaseQuestionCreateData,
+    prisma: Prisma.TransactionClient,
+    sourceQuestion: QuestionPayload,
+    commonFields: BaseQuestionCreateData,
   ): Promise<Question> {
     // Runtime + compile-time guard: we only support code questions here.
-    const q = qRaw as QuestionPayload
-
-    if (!q.code) {
+    if (!sourceQuestion.code) {
       throw new Error(
         'codeReplicator called with question that has no code relation',
       )
     }
 
-    const c = q.code
+    const c = sourceQuestion.code
 
     // -------------------------------------------------------------------------
     // Step 1: Create the question + code root
     // -------------------------------------------------------------------------
-    const newQ = await tx.question.create({
+    const newQ = await prisma.question.create({
       data: {
-        ...baseData,
+        ...commonFields,
         code: {
           create: {
             language: c.language ?? null,
@@ -100,7 +96,7 @@ export const codeReplicator: QuestionReplicator<QuestionPayload> = {
     if (c.codeWriting) {
       const cw = c.codeWriting
 
-      await tx.codeWriting.create({
+      await prisma.codeWriting.create({
         data: {
           questionId: newQ.id,
           codeCheckEnabled: cw.codeCheckEnabled ?? true,
@@ -120,7 +116,7 @@ export const codeReplicator: QuestionReplicator<QuestionPayload> = {
 
       // Template files
       for (const f of cw.templateFiles ?? []) {
-        const file = await tx.file.create({
+        const file = await prisma.file.create({
           data: {
             questionId: newQ.id,
             path: f.file.path,
@@ -129,7 +125,7 @@ export const codeReplicator: QuestionReplicator<QuestionPayload> = {
           },
         })
 
-        await tx.codeToTemplateFile.create({
+        await prisma.codeToTemplateFile.create({
           data: {
             questionId: newQ.id,
             fileId: file.id,
@@ -141,7 +137,7 @@ export const codeReplicator: QuestionReplicator<QuestionPayload> = {
 
       // Solution files
       for (const f of cw.solutionFiles ?? []) {
-        const file = await tx.file.create({
+        const file = await prisma.file.create({
           data: {
             questionId: newQ.id,
             path: f.file.path,
@@ -150,7 +146,7 @@ export const codeReplicator: QuestionReplicator<QuestionPayload> = {
           },
         })
 
-        await tx.codeToSolutionFile.create({
+        await prisma.codeToSolutionFile.create({
           data: {
             questionId: newQ.id,
             fileId: file.id,
@@ -166,7 +162,7 @@ export const codeReplicator: QuestionReplicator<QuestionPayload> = {
     if (c.codeReading) {
       const cr = c.codeReading
 
-      await tx.codeReading.create({
+      await prisma.codeReading.create({
         data: {
           questionId: newQ.id,
           contextExec: cr.contextExec ?? null,

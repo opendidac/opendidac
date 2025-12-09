@@ -55,20 +55,20 @@ const SELECT_FOR_GROUP_LISTING: Prisma.GroupInclude = {
       members: true,
     },
   },
-} 
+}
 
 type GroupListing = Prisma.GroupGetPayload<{
   include: typeof SELECT_FOR_GROUP_LISTING
 }>
 
 type GroupWithMembershipInfo = GroupListing & {
-  isCurrentUserMember: boolean;
+  isCurrentUserMember: boolean
   _count: {
-    members: number;
-    questions: number;
-    evaluations: number;
-  };
-};
+    members: number
+    questions: number
+    evaluations: number
+  }
+}
 
 const get = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
@@ -119,14 +119,18 @@ const get = async (ctx: IApiContext) => {
       }),
     )
 
-    res.status(200).json({ groups: groupsWithMembershipInfo } as { groups: GroupWithMembershipInfo[] })
+    res
+      .status(200)
+      .json({ groups: groupsWithMembershipInfo } as {
+        groups: GroupWithMembershipInfo[]
+      })
   } catch (e) {
     console.error('Error fetching groups:', e)
     res.status(500).json({ message: 'Internal server error' })
   }
 }
 const post = async (ctx: IApiContext) => {
-  const { req, res, prisma, user  } = ctx
+  const { req, res, prisma, user } = ctx
   const { label, scope, select } = req.body
 
   // 1. Check if group exists

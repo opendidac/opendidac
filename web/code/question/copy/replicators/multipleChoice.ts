@@ -20,8 +20,6 @@ import { SELECT_MULTIPLE_CHOICE_MERGED_QUESTION } from '@/code/question/select/m
 
 import type { QuestionReplicator } from '.'
 
-type Tx = Prisma.TransactionClient
-
 /**
  * Extract the properly-typed multipleChoice relation from the merged literal structure.
  * The select structure is composed in the select modules, keeping schema details
@@ -42,11 +40,11 @@ export type MCCopyPayload = Omit<QuestionCopyPayload, 'multipleChoice'> & {
 
 export const multipleChoiceReplicator: QuestionReplicator<MCCopyPayload> = {
   async replicate(
-    tx: Tx,
-    q: MCCopyPayload,
-    baseData: BaseQuestionCreateData,
+    prisma: Prisma.TransactionClient,
+    sourceQuestion: MCCopyPayload,
+    commonFields: BaseQuestionCreateData,
   ): Promise<Question> {
-    const mc = q.multipleChoice
+    const mc = sourceQuestion.multipleChoice
 
     if (!mc) {
       throw new Error(
@@ -54,9 +52,9 @@ export const multipleChoiceReplicator: QuestionReplicator<MCCopyPayload> = {
       )
     }
 
-    return tx.question.create({
+    return prisma.question.create({
       data: {
-        ...baseData,
+        ...commonFields,
         multipleChoice: {
           create: {
             gradingPolicy: mc.gradingPolicy,
