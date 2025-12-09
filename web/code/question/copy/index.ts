@@ -19,9 +19,9 @@
  * tags, base fields, and any nested structures.
  */
 
-import { Question } from '@prisma/client'
-import { selectForQuestionCopy } from '@/code/question/select'
-import { buildBaseData } from './base'
+import { Question, QuestionType } from '@prisma/client'
+import { SELECT_FOR_QUESTION_COPY } from '@/code/question/select'
+import { buildBaseData, QuestionCopyPayload } from './base'
 import { replicatorRegistry } from './registry'
 import { QuestionSource } from '@prisma/client'
 import { getPrismaClient } from '@/code/hooks/usePrisma'
@@ -42,17 +42,18 @@ export async function copyQuestion(
     // 1. Load full question payload using your composed selects
     const payload = await tx.question.findUniqueOrThrow({
       where: { id: questionId },
-      select: selectForQuestionCopy(),
+      select: SELECT_FOR_QUESTION_COPY,
     })
 
     // 2. Build base fields (title, tags, group, etc.)
-    const baseData = buildBaseData(payload, source, prefix)
+    const baseData = buildBaseData(payload as QuestionCopyPayload, source, prefix)
 
     // 3. Pick replicator based on question.type
-    const replicator = replicatorRegistry[payload.type]
+    const questionType = payload.type as QuestionType
+    const replicator = replicatorRegistry[questionType]
 
     if (!replicator) {
-      throw new Error(`No replicator registered for type ${payload.type}`)
+      throw new Error(`No replicator registered for type ${questionType}`)
     }
 
     // 4. Delegate deep copy to the appropriate replicator

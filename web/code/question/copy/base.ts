@@ -46,8 +46,6 @@ export const SELECT_FOR_QUESTION_COPY = {
   ...SELECT_QUESTION_TAGS,
 } as const satisfies Prisma.QuestionSelect
 
-export const selectForQuestionCopy = () => SELECT_FOR_QUESTION_COPY
-
 /**
  * Payload type produced by selectForQuestionCopy().
  * Uses the const directly to preserve deep literal types.

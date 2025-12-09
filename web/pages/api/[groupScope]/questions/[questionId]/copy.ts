@@ -23,7 +23,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/types/api'
-import { selectForQuestionCopy } from '@/code/question/select'
+import { SELECT_FOR_QUESTION_COPY } from '@/code/question/select'
 import { copyQuestion } from '@/code/question/copy'
 
 const post = async (ctx: IApiContext) => {
@@ -40,11 +40,6 @@ const post = async (ctx: IApiContext) => {
     return
   }
 
-  console.log(
-    'selectForQuestionCopy',
-    util.inspect(selectForQuestionCopy(), { depth: null }),
-  )
-
   // Step 1: Retrieve the question
   const question = await prisma.question.findFirst({
     where: {
@@ -54,7 +49,7 @@ const post = async (ctx: IApiContext) => {
       },
     },
     select: {
-      ...selectForQuestionCopy(),
+      ...SELECT_FOR_QUESTION_COPY,
       groupId: true, // Need this for copyQuestion function
     },
   })
