@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import languages from '@/code/languages.json'
+import languages from '@/core/languages.json'
 
 export const fetcher = async (url) => {
   const res = await fetch(url)

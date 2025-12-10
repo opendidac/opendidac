@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from '@prisma/client'
 
 import {
   SELECT_BASE_WITH_PROFESSOR_INFO,
   SELECT_TYPE_SPECIFIC,
   SELECT_QUESTION_TAGS,
-  SELECT_OFFICIAL_ANSWERS,
-} from "@/core/question/select";
+} from '@/core/question/select'
 
 /**
  * SELECT for GET /questions (listing)
@@ -33,22 +32,8 @@ export const SELECT_FOR_PROFESSOR_LISTING = {
   ...SELECT_BASE_WITH_PROFESSOR_INFO,
   ...SELECT_TYPE_SPECIFIC,
   ...SELECT_QUESTION_TAGS,
-} as const satisfies Prisma.QuestionSelect;
+} as const satisfies Prisma.QuestionSelect
 
 export type ProfessorListingPayload = Prisma.QuestionGetPayload<{
-  select: typeof SELECT_FOR_PROFESSOR_LISTING;
-}>;
-
-/**
- * SELECT for POST /questions → full editing view
- */
-export const SELECT_FOR_PROFESSOR_EDITING = {
-  ...SELECT_BASE_WITH_PROFESSOR_INFO,
-  ...SELECT_TYPE_SPECIFIC,
-  ...SELECT_OFFICIAL_ANSWERS,
-  ...SELECT_QUESTION_TAGS,
-} as const satisfies Prisma.QuestionSelect;
-
-export type ProfessorEditingPayload = Prisma.QuestionGetPayload<{
-  select: typeof SELECT_FOR_PROFESSOR_EDITING;
-}>;
+  select: typeof SELECT_FOR_PROFESSOR_LISTING
+}>

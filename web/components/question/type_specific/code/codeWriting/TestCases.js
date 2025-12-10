@@ -27,7 +27,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { useDebouncedCallback } from 'use-debounce'
-import languages from '@/code/languages.json'
+import languages from '@/core/languages.json'
 import { fetcher } from '@/core/utils'
 import ScrollContainer from '@/components/layout/ScrollContainer'
 import { useSnackbar } from '@/context/SnackbarContext'

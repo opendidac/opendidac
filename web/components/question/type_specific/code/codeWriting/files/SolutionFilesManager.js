@@ -21,7 +21,7 @@ import { Button, IconButton, Stack } from '@mui/material'
 import FileEditor from '../../FileEditor'
 import Image from 'next/image'
 
-import languages from '@/code/languages.json'
+import languages from '@/core/languages.json'
 import CodeCheck from '../CodeCheck'
 import Loading from '@/components/feedback/Loading'
 import { fetcher } from '@/core/utils'

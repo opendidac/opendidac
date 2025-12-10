@@ -18,7 +18,7 @@ import { Role } from '@prisma/client'
 import { runSandbox } from '@/sandbox/runSandboxTC'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import languages from '@/code/languages.json'
+import languages from '@/core/languages.json'
 
 const environments = languages.environments
 

@@ -39,8 +39,19 @@ import CopyQuestionDialog from '../list/CopyQuestionDialog'
 import ImportQuestionsDialog from '../list/ImportQuestionsDialog'
 import QuestionsGrid from '../list/QuestionsGrid'
 import { usePinnedFilter } from '@/context/PinnedFilterContext'
+import type { ProfessorListingPayload } from '@/api-types/[groupScope]/questions/index'
 
-const ExportQuestionsButton = ({ selection, groupScope, onExportSuccess }) => {
+interface ExportQuestionsButtonProps {
+  selection: ProfessorListingPayload[]
+  groupScope: string
+  onExportSuccess?: () => void
+}
+
+const ExportQuestionsButton: React.FC<ExportQuestionsButtonProps> = ({ 
+  selection, 
+  groupScope, 
+  onExportSuccess 
+}) => {
   const { show: showSnackbar } = useSnackbar()
 
   const handleExportSelected = useCallback(async () => {
@@ -88,7 +99,8 @@ const ExportQuestionsButton = ({ selection, groupScope, onExportSuccess }) => {
       onExportSuccess?.() // Clear selection after export
     } catch (error) {
       console.error('Export error:', error)
-      showSnackbar(`Export failed: ${error.message}`, 'error')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      showSnackbar(`Export failed: ${errorMessage}`, 'error')
     }
   }, [selection, groupScope, showSnackbar, onExportSuccess])
 
@@ -109,7 +121,7 @@ const ExportQuestionsButton = ({ selection, groupScope, onExportSuccess }) => {
   )
 }
 
-const PageList = () => {
+const PageList: React.FC = () => {
   const router = useRouter()
 
   const { groupScope } = router.query
@@ -117,43 +129,47 @@ const PageList = () => {
   const { show: showSnackbar } = useSnackbar()
 
   const { getPinnedFilter } = usePinnedFilter()
-  const pinnedFilter = useMemo(
-    () => getPinnedFilter(groupScope),
-    [getPinnedFilter, groupScope],
-  )
+  
+  const pinnedFilter = useMemo<Record<string, any> | undefined>(() => {
+    if (!groupScope || typeof groupScope !== 'string') return undefined
+    const filter = (getPinnedFilter as (groupId: string) => Record<string, any> | undefined)(groupScope)
+    return filter && typeof filter === 'object' ? filter : undefined
+  }, [getPinnedFilter, groupScope])
 
-  const [queryString, setQueryString] = useState(
-    pinnedFilter ? new URLSearchParams(pinnedFilter).toString() : '',
+  const [queryString, setQueryString] = useState<string>(
+    pinnedFilter ? new URLSearchParams(pinnedFilter as any).toString() : '',
   )
 
   const {
     data: questions,
     error,
     mutate,
-  } = useSWR(
-    `/api/${groupScope}/questions?${queryString}`,
-    groupScope ? fetcher : null,
+  } = useSWR<ProfessorListingPayload[]>(
+    groupScope ? `/api/${groupScope}/questions?${queryString}` : null,
+    fetcher,
   )
 
-  const setAppliedFilter = useCallback((filter) => {
+  const setAppliedFilter = useCallback((filter: Record<string, any>) => {
     setQueryString(new URLSearchParams(filter).toString())
   }, [])
 
-  const [openSideUpdate, setOpenSideUpdate] = useState(false)
-  const [addDialogOpen, setAddDialogOpen] = useState(false)
-  const [copyDialogOpen, setCopyDialogOpen] = useState(false)
-  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [openSideUpdate, setOpenSideUpdate] = useState<boolean>(false)
+  const [addDialogOpen, setAddDialogOpen] = useState<boolean>(false)
+  const [copyDialogOpen, setCopyDialogOpen] = useState<boolean>(false)
+  const [importDialogOpen, setImportDialogOpen] = useState<boolean>(false)
 
-  const [selected, setSelected] = useState(undefined)
+  const [selected, setSelected] = useState<ProfessorListingPayload | undefined>(undefined)
 
-  const [selection, setSelection] = useState([])
+  const [selection, setSelection] = useState<ProfessorListingPayload[]>([])
 
   useEffect(() => {
     setSelection([])
   }, [groupScope])
 
   const createQuestion = useCallback(
-    async (type, options) => {
+    async (type: string, options: Record<string, any>) => {
+      if (!groupScope || typeof groupScope !== 'string') return
+      
       // language only used for code questions
       await fetch(`/api/${groupScope}/questions`, {
         method: 'POST',
@@ -167,20 +183,22 @@ const PageList = () => {
         }),
       })
         .then((res) => res.json())
-        .then(async (createdQuestion) => {
+        .then(async (result: { id: string }) => {
           showSnackbar('Question created', 'success')
-          await mutate([...questions, createdQuestion])
-          await router.push(`/${groupScope}/questions/${createdQuestion.id}`)
+          await mutate() // Refresh the list
+          await router.push(`/${groupScope}/questions/${result.id}`)
         })
         .catch(() => {
           showSnackbar('Error creating questions', 'error')
         })
     },
-    [groupScope, router, showSnackbar, questions, mutate],
+    [groupScope, router, showSnackbar, mutate],
   )
 
   const copyQuestion = useCallback(
-    async (questionId) => {
+    async (questionId: string) => {
+      if (!groupScope || typeof groupScope !== 'string') return
+      
       await fetch(`/api/${groupScope}/questions/${questionId}/copy`, {
         method: 'POST',
       })
@@ -197,7 +215,7 @@ const PageList = () => {
   )
 
   const handleImportSuccess = useCallback(
-    async (result) => {
+    async (result: { count: number }) => {
       showSnackbar(
         `Successfully imported ${result.count} question${result.count > 1 ? 's' : ''}`,
         'success',
@@ -207,9 +225,13 @@ const PageList = () => {
     [showSnackbar, mutate],
   )
 
+  if (!groupScope || typeof groupScope !== 'string') {
+    return null
+  }
+
   return (
-    <Authorization allowRoles={[Role.PROFESSOR]}>
-      <LayoutMain header={<MainMenu />}>
+    <Authorization allowRoles={[Role.PROFESSOR] as any}>
+      <LayoutMain header={<MainMenu />} subheader={undefined}>
         <LayoutSplitScreen
           leftPanel={
             <QuestionFilter
@@ -219,8 +241,10 @@ const PageList = () => {
             />
           }
           rightWidth={80}
+          subheader={undefined}
+          footer={undefined}
           rightPanel={
-            <Loading loading={!questions} errors={[error]}>
+            <Loading loading={!questions} errors={error ? [error] : [] as any}>
               {questions && (
                 <Stack height={'100%'} p={1} pt={2}>
                   <QuestionsGrid
@@ -248,14 +272,13 @@ const PageList = () => {
                     setSelected={setSelected}
                     selection={selection}
                     setSelection={setSelection}
-                    setAddDialogOpen={setAddDialogOpen}
-                    onRowClick={(question) => {
+                    onRowClick={(question: ProfessorListingPayload) => {
                       setSelected(question)
                       setOpenSideUpdate(true)
                     }}
                     groupScope={groupScope}
                     setCopyDialogOpen={setCopyDialogOpen}
-                    setOpenSideUpdate={(q) => {
+                    setOpenSideUpdate={(q: ProfessorListingPayload) => {
                       setSelected(q)
                       setOpenSideUpdate(true)
                     }}
@@ -271,11 +294,13 @@ const PageList = () => {
                     <Box pt={2} width={'100%'} height={'100%'}>
                       {openSideUpdate && selected && (
                         <QuestionUpdate
-                          groupScope={router.query.groupScope}
+                          groupScope={groupScope}
                           questionId={selected.id}
-                          onUpdate={async (question) => {
+                          onUpdate={async () => {
                             await mutate()
-                            setSelected(question)
+                            // Refresh the selected question - fetch it again from the list
+                            // Since mutate() doesn't return the data directly, we'll just refresh
+                            // and the selected question will be updated when the list refreshes
                           }}
                           onDelete={async () => {
                             await mutate()
@@ -303,7 +328,7 @@ const PageList = () => {
         <AddQuestionDialog
           open={addDialogOpen}
           onClose={() => setAddDialogOpen(false)}
-          handleAddQuestion={async (type, options) => {
+          handleAddQuestion={async (type: string, options: Record<string, any>) => {
             await createQuestion(type, options)
             setAddDialogOpen(false)
           }}
@@ -313,8 +338,10 @@ const PageList = () => {
           open={copyDialogOpen}
           onClose={() => setCopyDialogOpen(false)}
           handleCopyQuestion={async () => {
-            await copyQuestion(selected.id)
-            setCopyDialogOpen(false)
+            if (selected) {
+              await copyQuestion(selected.id)
+              setCopyDialogOpen(false)
+            }
           }}
         />
         <ImportQuestionsDialog
@@ -329,3 +356,4 @@ const PageList = () => {
 }
 
 export default PageList
+

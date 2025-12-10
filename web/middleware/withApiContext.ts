@@ -19,7 +19,6 @@ import type { IApiContext } from '@/core/types/api'
 import { getPrismaClient } from '@/core/hooks/usePrisma'
 import { getUser } from '@/core/auth/auth'
 
-
 /* --------------------------------------------------------------------------
  * API Context Middleware
  * --------------------------------------------------------------------------
