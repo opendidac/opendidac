@@ -23,7 +23,7 @@ import {
 import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/core/types/api'
 import { SELECT_FOR_QUESTION_COPY } from '@/core/question/select'
-import { copyQuestion } from '@/core/questions'
+import { copyQuestion } from '@/core/question/copy'
 
 const post = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
@@ -62,7 +62,7 @@ const post = async (ctx: IApiContext) => {
   let questionCopy = null
   await (prisma as PrismaClient).$transaction(
     async (tx: Prisma.TransactionClient) => {
-      questionCopy = await copyQuestion(tx, question.id, {
+      questionCopy = await copyQuestion(prisma, question.id, {
         source: QuestionSource.COPY,
         prefix: 'Copy of ',
       })

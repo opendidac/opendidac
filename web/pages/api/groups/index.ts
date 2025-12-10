@@ -19,7 +19,7 @@ import { QuestionStatus, QuestionSource, Role } from '@prisma/client'
 import { getUser } from '@/core/auth/auth'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import { IApiContext } from '@/types/api'
+import { IApiContext } from '@/core/types/api'
 
 /**
  * Managing groups

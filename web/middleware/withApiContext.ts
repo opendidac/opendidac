@@ -57,24 +57,3 @@ export function withApiContext(handlers: Record<string, Function>) {
     return handler(ctx)
   }
 }
-
-
-export type ApiErrorResponse = {
-  status: 400 | 401 | 403 | 404 | 500
-  message: string
-}
-
-export type ApiSuccessResponse<T> = {
-  status: 200
-  data: T
-}
-
-export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse
-
-export function withApiType<T>(
-  handler: (ctx: IApiContext) => Promise<ApiResponse<T>>
-) {
-  return async (ctx: IApiContext): Promise<ApiResponse<T>> => {
-    return handler(ctx)
-  }
-}

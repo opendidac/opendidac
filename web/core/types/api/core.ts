@@ -60,6 +60,17 @@ export type ApiSuccessResponse<T> = {
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 /**
+ * Helper for the *frontend*: extract only the successful payload.
+ *
+ * Used with SWR:
+ *   useSWR<ApiPayload<QuestionListPayload>>(...)
+ *
+ * This resolves to the inner payload `T`, NOT `{ status, data }`.
+ */
+export type ApiPayload<T> = ApiSuccessResponse<T>["data"];
+
+
+/**
  * Helper type for handlers returning typed API responses.
  *
  * Example usage:

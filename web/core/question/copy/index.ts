@@ -19,7 +19,7 @@
  * tags, base fields, and any nested structures.
  */
 
-import { Question, QuestionType, Prisma } from '@prisma/client'
+import { Question, QuestionType, Prisma, PrismaClient } from '@prisma/client'
 import { SELECT_FOR_QUESTION_COPY } from '@/core/question/select'
 import { buildBaseData, QuestionCopyPayload } from './base'
 import { QuestionSource } from '@prisma/client'
@@ -43,7 +43,7 @@ import {
  * @returns The newly created question
  */
 export async function copyQuestion(
-  prisma: Prisma.TransactionClient,
+  prisma: PrismaClient,
   questionId: string,
   args?: {
     source?: QuestionSource

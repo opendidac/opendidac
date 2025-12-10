@@ -37,3 +37,5 @@ export type ApiContextWithRoles = IApiContextWithRoles
 export type ApiContextWithEvaluation = IApiContextWithEvaluation
 export type EvaluationInContext = IEvaluationInContext
 // Note: SessionUser is exported as a class, not a type alias
+
+export type { ApiHandler, ApiPayload } from "./core";

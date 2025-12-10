@@ -14,159 +14,106 @@
  * limitations under the License.
  */
 
-import { Role, QuestionType, CodeQuestionType, Prisma } from '@prisma/client'
+import { Role, QuestionType, CodeQuestionType, Prisma } from "@prisma/client";
+import { withAuthorization, withGroupScope } from "@/middleware/withAuthorization";
+import { withApiContext } from "@/middleware/withApiContext";
+import type { ApiHandler, IApiContext } from "@/core/types/api";
+
+import { questionsFilterWhereClause } from "@/core/questionsFilter";
+import { codeInitialUpdateQuery, questionTypeSpecific } from "@/core/questions";
+
+import languages from "@/core/languages.json";
+import databaseTemplate from "@/core/database.json";
+
+// ---------- IMPORT VIEW SELECTS + PAYLOAD TYPES ----------
 import {
-  withAuthorization,
-  withGroupScope,
-} from '@/middleware/withAuthorization'
-import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext } from '@/core/types/api'
-import { codeInitialUpdateQuery, questionTypeSpecific } from '@/core/questions'
-import { questionsFilterWhereClause } from '@/core/questionsFilter'
-import languages from '@/core/languages.json'
-import databaseTemplate from '@/core/database.json'
-import {
-  SELECT_BASE_WITH_PROFESSOR_INFO,
-  SELECT_TYPE_SPECIFIC,
-  SELECT_OFFICIAL_ANSWERS,
-  SELECT_QUESTION_TAGS,
-} from '@/core/question/select'
+  SELECT_FOR_PROFESSOR_LISTING,
+  SELECT_FOR_PROFESSOR_EDITING,
+  type ProfessorListingPayload,
+  type ProfessorEditingPayload,
+} from "@/api-types/[groupScope]/questions/index";
 
-/**
- * Select clause for professor listing questions.
- * Composed directly from module selects without exposing schema structure.
- * Includes: base fields (with professor info), type-specific data, tags.
- * Note: Does NOT include official answers (not needed for listing).
- */
-const SELECT_FOR_PROFESSOR_LISTING = {
-  lastUsed: true,
-  usageStatus: true,
-  evaluation: true,
-  ...SELECT_BASE_WITH_PROFESSOR_INFO,
-  ...SELECT_TYPE_SPECIFIC,
-  ...SELECT_QUESTION_TAGS,
-} as const satisfies Prisma.QuestionSelect
 
-type ProfessorListingSelectPayload = Prisma.QuestionGetPayload<{
-  select: typeof SELECT_FOR_PROFESSOR_LISTING
-}>
+// ----------------------------------------------------------
+// GET /api/[groupScope]/questions
+// ----------------------------------------------------------
 
-/**
- * 
- * export function useProfessorQuestions() {
-  const { data, error, isLoading } = useSWR<ProfessorListingSelectPayload[]>(
-    "/api/professor/questions",
-    fetcher
-  );
+const get: ApiHandler<ProfessorListingPayload[]> = async (ctx: IApiContext) => {
+  const { req, prisma } = ctx;
 
-  return {
-    questions: data,
-    isLoading,
-    error,
-  };
-}
- */
-
-const SELECT_FOR_PROFESSOR_EDITING = {
-  ...SELECT_BASE_WITH_PROFESSOR_INFO,
-  ...SELECT_TYPE_SPECIFIC,
-  ...SELECT_OFFICIAL_ANSWERS,
-  ...SELECT_QUESTION_TAGS,
-} as const satisfies Prisma.QuestionSelect
-
-const environments = languages.environments
-
-/**
- * Managing the questions of a group
- *
- * get: list questions of a group (filter by title, content, tags, question types, code languages)
- * post: create a new question
- * del: delete a question
- *
- */
-
-interface PostQuestionBody {
-  type: string
-  options?: {
-    language?: string
-    codeQuestionType?: CodeQuestionType
-    codeWritingTemplate?: string
-    tags?: string[]
-  }
-}
-
-const get = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
-  const where = questionsFilterWhereClause(req.query)
+  const where = questionsFilterWhereClause(req.query);
 
   const questions = await prisma.question.findMany({
     ...where,
     select: SELECT_FOR_PROFESSOR_LISTING,
-    orderBy: {
-      createdAt: 'desc',
-    },
-  })
+    orderBy: { createdAt: "desc" },
+  });
 
-  res.status(200).json(questions as ProfessorListingSelectPayload[])
-}
+  return { status: 200, data: questions };
+};
 
-export const post = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
-  const { groupScope } = req.query
-  const body = req.body as PostQuestionBody
-  const { type, options } = body
 
-  if (!type) {
-    return res.status(400).json({ message: 'Invalid question type' })
-  }
+// ----------------------------------------------------------
+// POST /api/[groupScope]/questions
+// ----------------------------------------------------------
 
-  const questionType = QuestionType[type as keyof typeof QuestionType]
+const post: ApiHandler<ProfessorEditingPayload> = async (ctx: IApiContext) => {
+  const { req, prisma } = ctx;
+  const { groupScope } = req.query;
 
-  if (!questionType) {
-    return res.status(400).json({ message: 'Invalid question type' })
-  }
-  if (!groupScope || typeof groupScope !== 'string') {
-    return res.status(400).json({ message: 'Missing groupScope' })
-  }
+  // NO PostQuestionBody TYPE — WE JUST USE req.body DIRECTLY
+  const body = req.body ?? {};
+  const type = body.type as string | undefined;
 
-  const fullSelect = SELECT_FOR_PROFESSOR_EDITING
+  const options = (body.options ?? {}) as {
+    language?: string;
+    codeQuestionType?: CodeQuestionType;
+    codeWritingTemplate?: string;
+    tags?: string[];
+  };
+
+  if (!type) return { status: 400, message: "Invalid question type" };
+
+  const questionType = QuestionType[type as keyof typeof QuestionType];
+  if (!questionType) return { status: 400, message: "Invalid question type" };
+
+  if (!groupScope || typeof groupScope !== "string")
+    return { status: 400, message: "Missing groupScope" };
 
   try {
-    const createdQuestion = await prisma.$transaction(async (tx) => {
-      // Fetch the group to get its id
+    const result = await prisma.$transaction(async (tx) => {
       const group = await tx.group.findUnique({
         where: { scope: groupScope },
         select: { id: true },
-      })
-      if (!group) throw new Error('Group not found for scope: ' + groupScope)
-      // 1) Create with the minimum we need for follow-up updates
+      });
+
+      if (!group) throw new Error("Group not found: " + groupScope);
+
       const created = await tx.question.create({
         data: {
           type: questionType,
-          title: '',
-          content: '',
+          title: "",
+          content: "",
           [questionType]: {
             create: questionTypeSpecific(questionType, null),
           },
           group: { connect: { scope: groupScope } },
         },
-        select: { id: true }, // keep payload tiny; we'll fetch once at the end
-      })
+        select: { id: true },
+      });
 
-      // 2) Type-specific initialization
       switch (questionType) {
         case QuestionType.code: {
-          const language = options?.language
-          const codeQuestionType = options?.codeQuestionType
-          const defaultCode = defaultCodeBasedOnLanguageAndType(
-            language,
-            codeQuestionType,
-            options,
-          )
+          const def = defaultCodeBasedOnLanguageAndType(
+            options.language,
+            options.codeQuestionType,
+            options
+          );
+
           await tx.code.update(
-            codeInitialUpdateQuery(created.id, defaultCode, codeQuestionType),
-          )
-          break
+            codeInitialUpdateQuery(created.id, def, options.codeQuestionType)
+          );
+          break;
         }
 
         case QuestionType.database: {
@@ -184,117 +131,101 @@ export const post = async (ctx: IApiContext) => {
                   testQuery: q.testQuery,
                   studentPermission: q.studentPermission,
                   databaseToSolutionQuery: {
-                    create: {
-                      database: { connect: { questionId: created.id } },
-                    },
+                    create: { database: { connect: { questionId: created.id } } },
                   },
                 })),
               },
             },
-          })
-          break
+          });
+          break;
         }
-
-        default:
-          // No additional initialization needed
-          break
       }
 
-      // 3) Tags initialization (if any)
-      if (
-        options?.tags &&
-        Array.isArray(options.tags) &&
-        options.tags.length > 0
-      ) {
+      if (options.tags?.length) {
         await Promise.all(
-          options.tags.map((tag) =>
+          options.tags.map((label) =>
             tx.questionToTag.create({
-              data: {
-                questionId: created.id,
-                groupId: group.id,
-                label: tag,
-              },
-            }),
-          ),
-        )
+              data: { questionId: created.id, groupId: group.id, label },
+            })
+          )
+        );
       }
 
-      // 4) Single, final fetch with full INCLUDE
       return tx.question.findUnique({
         where: { id: created.id },
-        select: fullSelect as Prisma.QuestionSelect,
-      })
-    })
+        select: SELECT_FOR_PROFESSOR_EDITING,
+      });
+    });
 
-    res.status(200).json(createdQuestion)
+    return { status: 200, data: result as ProfessorEditingPayload };
   } catch (err) {
-    console.error('POST /question error:', err)
-    res.status(500).json({ message: 'Failed to create question' })
+    console.error("POST /question error:", err);
+    return { status: 500, message: "Failed to create question" };
   }
-}
+};
 
-const defaultCodeBasedOnLanguageAndType = (
-  language: string | undefined,
-  codeQuestionType: CodeQuestionType | undefined,
-  options: PostQuestionBody['options'],
-) => {
-  if (!language) {
-    throw new Error('Language is required')
-  }
 
-  const index = environments.findIndex((env) => env.language === language)
-  const environment = environments[index]
-
-  if (!environment) {
-    throw new Error(`Environment not found for language: ${language}`)
-  }
-
-  const data = {
-    language: environment.language,
-    sandbox: {
-      image: environment.sandbox.image,
-      beforeAll: environment.sandbox.beforeAll,
-    },
-  }
-
-  if (codeQuestionType === CodeQuestionType.codeWriting) {
-    const codeWriting = environment.codeWriting.find(
-      (cw) => cw.value === options?.codeWritingTemplate,
-    )?.setup
-
-    if (!codeWriting) {
-      throw new Error(
-        `Code writing template not found: ${options?.codeWritingTemplate}`,
-      )
-    }
-
-    if ('beforeAll' in codeWriting && codeWriting.beforeAll) {
-      data.sandbox.beforeAll = codeWriting.beforeAll as string
-    }
-
-    if ('image' in codeWriting && codeWriting.image) {
-      data.sandbox.image = codeWriting.image as string
-    }
-
-    return {
-      ...data,
-      files: codeWriting.files,
-      testCases: codeWriting.testCases,
-    }
-  } else if (codeQuestionType === CodeQuestionType.codeReading) {
-    return {
-      ...data,
-      contextExec: environment.sandbox.exec,
-      contextPath: environment.sandbox.defaultPath,
-      context: environment.codeReading.context,
-      snippets: environment.codeReading.snippets,
-    }
-  }
-
-  return data
-}
+// ----------------------------------------------------------
 
 export default withApiContext({
   GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
   POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
-})
+});
+
+
+// ----------------------------------------------------------
+// HELPERS
+// ----------------------------------------------------------
+
+function defaultCodeBasedOnLanguageAndType(
+  language: string | undefined,
+  codeQuestionType: CodeQuestionType | undefined,
+  options: {
+    language?: string;
+    codeQuestionType?: CodeQuestionType;
+    codeWritingTemplate?: string;
+    tags?: string[];
+  }
+) {
+  if (!language) throw new Error("Language is required");
+
+  const env = languages.environments.find((e) => e.language === language);
+  if (!env) throw new Error("Environment not found: " + language);
+  if (!env.sandbox.beforeAll) throw new Error("sandbox.beforeAll is required for language: " + language);
+
+  const base = {
+    language: env.language,
+    sandbox: {
+      image: env.sandbox.image,
+      beforeAll: env.sandbox.beforeAll,
+    },
+  };
+
+  if (codeQuestionType === CodeQuestionType.codeWriting) {
+    const tpl = env.codeWriting.find((cw) => cw.value === options.codeWritingTemplate)
+      ?.setup;
+    if (!tpl) throw new Error("Invalid codeWriting template");
+
+    return {
+      ...base,
+      sandbox: {
+        image: base.sandbox.image,
+        beforeAll: base.sandbox.beforeAll,
+      },
+      files: tpl.files,
+      testCases: tpl.testCases,
+    };
+  }
+
+  if (codeQuestionType === CodeQuestionType.codeReading) {
+    return {
+      ...base,
+      contextExec: env.sandbox.exec,
+      contextPath: env.sandbox.defaultPath,
+      context: env.codeReading.context,
+      snippets: env.codeReading.snippets,
+    };
+  }
+
+  return base;
+}

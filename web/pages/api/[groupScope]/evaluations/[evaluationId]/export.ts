@@ -38,8 +38,8 @@ import { mapStudentSubmission } from '@/core/evaluation/export/engine/mapStudent
 import { selectForProfessorExport } from '@/core/evaluation/export/engine/select'
 
 // @ts-ignore
-import mainTemplate from '@/code/evaluation/export/templates/main.hbs'
-import muiTheme from '@/code/evaluation/muiTheme.json'
+import mainTemplate from '@/core/evaluation/export/templates/main.hbs'
+import muiTheme from '@/core/evaluation/muiTheme.json'
 
 const OUTPUT_FORMAT = 'pdf' as 'html' | 'pdf'
 

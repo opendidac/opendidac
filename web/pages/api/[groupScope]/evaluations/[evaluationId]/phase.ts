@@ -28,7 +28,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/core/types/api'
-import { copyQuestion } from '@/core/questions'
+import { copyQuestion } from '@/core/question/copy'
 import { SELECT_FOR_QUESTION_COPY } from '@/core/question/select'
 
 // Compute duration delta in milliseconds from activation flag, hours and minutes
@@ -69,9 +69,12 @@ const copyQuestionsForEvaluation = async (
 
     for (const eToQ of evaluationToQuestions) {
       const newQuestion = await copyQuestion(
-        tx,
-        eToQ.question,
-        QuestionSource.EVAL,
+        prisma,
+        eToQ.question.id,
+        {
+          source: QuestionSource.COPY,
+          prefix: 'Copy of ',
+        }
       )
       await tx.evaluationToQuestion.create({
         data: {

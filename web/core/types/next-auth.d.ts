@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-import { Role } from '@prisma/client'
+import { Role } from "@prisma/client";
 
-declare module 'next-auth' {
+declare module "next-auth" {
   interface User {
-    id: string
-    roles: Role[]
-    groups?: string[]
-    selected_group?: string | null
+    roles: Role[];
   }
 
   interface Session {
-    user: User
+    user: {
+      id: string;
+      email: string;
+      name?: string | null;
+      image?: string | null;
+      roles: Role[];
+      groups?: string[];
+      selected_group?: string | null;
+    };
   }
 }
