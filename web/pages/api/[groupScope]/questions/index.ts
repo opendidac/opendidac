@@ -23,8 +23,8 @@ import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/core/types/api'
 import { codeInitialUpdateQuery, questionTypeSpecific } from '@/core/questions'
 import { questionsFilterWhereClause } from '@/core/questionsFilter'
-import languages from '@/code/languages.json'
-import databaseTemplate from '@/code/database.json'
+import languages from '@/core/languages.json'
+import databaseTemplate from '@/core/database.json'
 import {
   SELECT_BASE_WITH_PROFESSOR_INFO,
   SELECT_TYPE_SPECIFIC,
@@ -51,7 +51,6 @@ type ProfessorListingSelectPayload = Prisma.QuestionGetPayload<{
   select: typeof SELECT_FOR_PROFESSOR_LISTING
 }>
 
-
 /**
  * 
  * export function useProfessorQuestions() {
@@ -67,7 +66,6 @@ type ProfessorListingSelectPayload = Prisma.QuestionGetPayload<{
   };
 }
  */
-
 
 const SELECT_FOR_PROFESSOR_EDITING = {
   ...SELECT_BASE_WITH_PROFESSOR_INFO,

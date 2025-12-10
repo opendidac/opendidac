@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
+import { Prisma } from '@prisma/client'
 import { QuestionStatus, QuestionSource, Role } from '@prisma/client'
 import { getUser } from '@/core/auth/auth'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
+import { IApiContext } from '@/types/api'
+
 /**
  * Managing groups
  *
@@ -26,40 +29,55 @@ import { withApiContext } from '@/middleware/withApiContext'
  *
  */
 
-const get = async (ctx) => {
+const SELECT_FOR_GROUP_LISTING: Prisma.GroupInclude = {
+  createdBy: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+    },
+  },
+  members: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    },
+  },
+  _count: {
+    select: {
+      members: true,
+    },
+  },
+}
+
+type GroupListing = Prisma.GroupGetPayload<{
+  include: typeof SELECT_FOR_GROUP_LISTING
+}>
+
+type GroupWithMembershipInfo = GroupListing & {
+  isCurrentUserMember: boolean
+  _count: {
+    members: number
+    questions: number
+    evaluations: number
+  }
+}
+
+const get = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
   // get all groups with their created by information and members
   const user = await getUser(req, res)
 
   try {
     const groups = await prisma.group.findMany({
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-          },
-        },
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-              },
-            },
-          },
-        },
-        _count: {
-          select: {
-            members: true,
-          },
-        },
-      },
+      include: SELECT_FOR_GROUP_LISTING,
       orderBy: {
         createdAt: 'desc',
       },
@@ -67,7 +85,7 @@ const get = async (ctx) => {
 
     // Add isCurrentUserMember flag and custom question count for each group
     const groupsWithMembershipInfo = await Promise.all(
-      groups.map(async (group) => {
+      groups.map(async (group: GroupListing) => {
         // Count only ACTIVE questions not from EVAL source
         const activeQuestionCount = await prisma.question.count({
           where: {
@@ -90,7 +108,7 @@ const get = async (ctx) => {
         return {
           ...group,
           isCurrentUserMember: group.members.some(
-            (member) => member.userId === user.id,
+            (member) => member.userId === user?.id,
           ),
           _count: {
             ...group._count,
@@ -101,67 +119,46 @@ const get = async (ctx) => {
       }),
     )
 
-    res.status(200).json({ groups: groupsWithMembershipInfo })
+    res.status(200).json({ groups: groupsWithMembershipInfo } as {
+      groups: GroupWithMembershipInfo[]
+    })
   } catch (e) {
     console.error('Error fetching groups:', e)
     res.status(500).json({ message: 'Internal server error' })
   }
 }
-
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
-  // create a new group
+const post = async (ctx: IApiContext) => {
+  const { req, res, prisma, user } = ctx
   const { label, scope, select } = req.body
 
-  const user = await getUser(req, res)
+  // 1. Check if group exists
+  const existing = await prisma.group.findUnique({
+    where: { label },
+    select: { id: true },
+  })
 
-  try {
-    const group = await prisma.group.create({
-      data: {
-        label: label,
-        scope: scope,
-        createdBy: {
-          connect: {
-            id: user.id,
-          },
-        },
-        members: {
-          create: {
-            userId: user.id,
-          },
+  if (existing) {
+    return res.status(409).json({
+      message: 'A group with that label already exists',
+    })
+  }
+
+  // 2. Create group + membership in one call
+  const group = await prisma.group.create({
+    data: {
+      label,
+      scope,
+      createdBy: { connect: { id: user.id } },
+      members: {
+        create: {
+          userId: user.id,
+          selected: !!select,
         },
       },
-    })
+    },
+  })
 
-    if (select) {
-      await prisma.userOnGroup.upsert({
-        where: {
-          userId_groupId: {
-            userId: user.id,
-            groupId: group.id,
-          },
-        },
-        update: {
-          selected: true,
-        },
-        create: {
-          selected: true,
-        },
-      })
-    }
-
-    res.status(200).json(group)
-  } catch (e) {
-    switch (e.code) {
-      case 'P2002':
-        res
-          .status(409)
-          .json({ message: 'A group with that label already exists' })
-        break
-      default:
-        res.status(500).json({ message: 'Internal server error' })
-    }
-  }
+  res.status(200).json(group)
 }
 
 export default withApiContext({

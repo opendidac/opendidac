@@ -29,7 +29,7 @@ import {
 import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/core/types/api'
 import { copyQuestion } from '@/core/questions'
-import { selectForQuestionCopy } from '@/core/question/select'
+import { SELECT_FOR_QUESTION_COPY } from '@/core/question/select'
 
 // Compute duration delta in milliseconds from activation flag, hours and minutes
 function computeDurationDeltaMs(
@@ -55,7 +55,7 @@ const copyQuestionsForEvaluation = async (
     include: {
       question: {
         select: {
-          ...selectForQuestionCopy(),
+          ...SELECT_FOR_QUESTION_COPY,
           groupId: true,
         },
       },

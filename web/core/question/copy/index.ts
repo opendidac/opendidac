@@ -19,14 +19,31 @@
  * tags, base fields, and any nested structures.
  */
 
-import { Question } from '@prisma/client'
-import { selectForQuestionCopy } from '@/core/question/select'
-import { buildBaseData } from './base'
-import { replicatorRegistry } from './registry'
+import { Question, QuestionType, Prisma } from '@prisma/client'
+import { SELECT_FOR_QUESTION_COPY } from '@/core/question/select'
+import { buildBaseData, QuestionCopyPayload } from './base'
 import { QuestionSource } from '@prisma/client'
-import { getPrismaClient } from '@/core/hooks/usePrisma'
+import {
+  codeReplicator,
+  databaseReplicator,
+  essayReplicator,
+  exactMatchReplicator,
+  multipleChoiceReplicator,
+  trueFalseReplicator,
+  webReplicator,
+  type QuestionReplicator,
+} from './replicators'
 
+/**
+ * Copies a question, including type-specific data, tags, base fields, and nested structures.
+ *
+ * @param prisma - Prisma transaction client (transaction should be managed by caller)
+ * @param questionId - ID of the question to copy
+ * @param args - Optional arguments for source and title prefix
+ * @returns The newly created question
+ */
 export async function copyQuestion(
+  prisma: Prisma.TransactionClient,
   questionId: string,
   args?: {
     source?: QuestionSource
@@ -36,28 +53,45 @@ export async function copyQuestion(
   const source = args?.source ?? QuestionSource.COPY
   const prefix = args?.prefix ?? ''
 
-  const prisma = getPrismaClient()
-
-  return prisma.$transaction(async (tx) => {
-    // 1. Load full question payload using your composed selects
-    const payload = await tx.question.findUniqueOrThrow({
-      where: { id: questionId },
-      select: selectForQuestionCopy(),
-    })
-
-    // 2. Build base fields (title, tags, group, etc.)
-    const baseData = buildBaseData(payload, source, prefix)
-
-    // 3. Pick replicator based on question.type
-    const replicator = replicatorRegistry[payload.type]
-
-    if (!replicator) {
-      throw new Error(`No replicator registered for type ${payload.type}`)
-    }
-
-    // 4. Delegate deep copy to the appropriate replicator
-    const newQuestion = await replicator.replicate(tx, payload as any, baseData)
-
-    return newQuestion
+  // 1. Load full question payload using your composed selects
+  const payload = await prisma.question.findUniqueOrThrow({
+    where: { id: questionId },
+    select: SELECT_FOR_QUESTION_COPY,
   })
+
+  // 2. Build base fields (title, tags, group, etc.)
+  const baseData = buildBaseData(payload as QuestionCopyPayload, source, prefix)
+
+  // 3. Pick replicator based on question.type
+  const questionType = payload.type as QuestionType
+  const replicator = replicatorRegistry[questionType]
+
+  if (!replicator) {
+    throw new Error(`No replicator registered for type ${questionType}`)
+  }
+
+  // 4. Delegate deep copy to the appropriate replicator
+  const newQuestion = await replicator.replicate(
+    prisma,
+    payload as any,
+    baseData,
+  )
+
+  return newQuestion
 }
+
+/**
+ * Registry mapping each QuestionType → its corresponding replicator.
+ *
+ * We only care that each value implements QuestionReplicator.
+ * The specific payload narrowing is handled inside each replicator.
+ */
+const replicatorRegistry = {
+  multipleChoice: multipleChoiceReplicator,
+  trueFalse: trueFalseReplicator,
+  essay: essayReplicator,
+  web: webReplicator,
+  exactMatch: exactMatchReplicator,
+  code: codeReplicator,
+  database: databaseReplicator,
+} satisfies Record<QuestionType, QuestionReplicator>

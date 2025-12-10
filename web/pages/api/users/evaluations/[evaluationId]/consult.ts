@@ -3,6 +3,15 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import { Role, Prisma } from '@prisma/client'
@@ -22,9 +31,7 @@ import {
   SELECT_OFFICIAL_ANSWERS,
 } from '@/core/question/select'
 
-import {
-  SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
-} from '@/core/question/select/modules/studentAnswers'
+import { SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING } from '@/core/question/select/modules/studentAnswers'
 
 import { isFinished } from './questions/[questionId]/answers/utils'
 /**
@@ -36,7 +43,7 @@ export const SELECT_FOR_STUDENT_CONSULTATION = {
   ...SELECT_TYPE_SPECIFIC,
   ...SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
   ...SELECT_QUESTION_TAGS,
-} as const satisfies Prisma.QuestionSelect;
+} as const satisfies Prisma.QuestionSelect
 
 /**
  * Builds final select for student consultation.
@@ -55,14 +62,13 @@ const buildSelectForStudentConsultation = (
       ...SELECT_FOR_STUDENT_CONSULTATION.studentAnswer,
       where: { userEmail },
     },
-  };
+  }
 
   return {
     ...withFilter,
     ...(includeOfficial ? SELECT_OFFICIAL_ANSWERS : {}),
-  } as const satisfies Prisma.QuestionSelect;
-};
-
+  } as const satisfies Prisma.QuestionSelect
+}
 
 const get = async (ctx: IApiContextWithEvaluation | IApiContext) => {
   const { req, res, prisma } = ctx
@@ -120,7 +126,7 @@ const get = async (ctx: IApiContextWithEvaluation | IApiContext) => {
               question: {
                 select: buildSelectForStudentConsultation(
                   email,
-                  evaluation.showSolutionsWhenFinished
+                  evaluation.showSolutionsWhenFinished,
                 ),
               },
             },

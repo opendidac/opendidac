@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import util from 'util'
 import { Role, QuestionSource, Prisma, PrismaClient } from '@prisma/client'
 
 import {
@@ -23,8 +22,8 @@ import {
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import type { IApiContext } from '@/core/types/api'
-import { selectForQuestionCopy } from '@/core/question/select'
-import { copyQuestion } from '@/core/question/copy'
+import { SELECT_FOR_QUESTION_COPY } from '@/core/question/select'
+import { copyQuestion } from '@/core/questions'
 
 const post = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
@@ -40,11 +39,6 @@ const post = async (ctx: IApiContext) => {
     return
   }
 
-  console.log(
-    'selectForQuestionCopy',
-    util.inspect(selectForQuestionCopy(), { depth: null }),
-  )
-
   // Step 1: Retrieve the question
   const question = await prisma.question.findFirst({
     where: {
@@ -54,7 +48,7 @@ const post = async (ctx: IApiContext) => {
       },
     },
     select: {
-      ...selectForQuestionCopy(),
+      ...SELECT_FOR_QUESTION_COPY,
       groupId: true, // Need this for copyQuestion function
     },
   })
@@ -68,7 +62,7 @@ const post = async (ctx: IApiContext) => {
   let questionCopy = null
   await (prisma as PrismaClient).$transaction(
     async (tx: Prisma.TransactionClient) => {
-      questionCopy = await copyQuestion(question.id, {
+      questionCopy = await copyQuestion(tx, question.id, {
         source: QuestionSource.COPY,
         prefix: 'Copy of ',
       })

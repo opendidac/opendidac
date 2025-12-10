@@ -24,8 +24,6 @@ import { SELECT_WEB_MERGED_QUESTION } from '@/core/question/select/modules/offic
 
 import type { QuestionReplicator } from '.'
 
-type Tx = Prisma.TransactionClient
-
 /**
  * Extract the properly-typed web relation from the merged literal structure.
  * The select structure is composed in the select modules, keeping schema details
@@ -46,11 +44,11 @@ export type WebCopyPayload = Omit<QuestionCopyPayload, 'web'> & {
 
 export const webReplicator: QuestionReplicator<WebCopyPayload> = {
   async replicate(
-    tx: Tx,
-    q: WebCopyPayload,
-    baseData: BaseQuestionCreateData,
+    prisma: Prisma.TransactionClient,
+    sourceQuestion: WebCopyPayload,
+    commonFields: BaseQuestionCreateData,
   ): Promise<Question> {
-    const w = q.web
+    const w = sourceQuestion.web
 
     if (!w) {
       throw new Error(
@@ -58,9 +56,9 @@ export const webReplicator: QuestionReplicator<WebCopyPayload> = {
       )
     }
 
-    return tx.question.create({
+    return prisma.question.create({
       data: {
-        ...baseData,
+        ...commonFields,
         web: {
           create: {
             templateHtml: w.templateHtml ?? null,

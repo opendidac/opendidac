@@ -20,7 +20,7 @@ export { mergeSelects } from './merge'
 // Export const literals from modules
 export { SELECT_BASE_WITH_PROFESSOR_INFO, SELECT_BASE } from './modules/base'
 export { SELECT_QUESTION_TAGS } from './modules/tags'
-export { SELECT_TYPE_SPECIFIC } from './modules/typeSpecific'
+export { SELECT_TYPE_SPECIFIC } from './modules/typeSpecific/index'
 export {
   SELECT_OFFICIAL_ANSWERS,
   SELECT_CODE_MERGED_QUESTION,
@@ -34,22 +34,9 @@ export {
 export {
   SELECT_ALL_STUDENT_ANSWERS,
   SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
-} from './modules/studentAnswers'
+  SELECT_STUDENT_ANSWER_WITH_GRADING,
+} from './modules/studentAnswers/index'
 export { SELECT_STUDENT_GRADINGS } from './modules/gradings'
 
-// Export functions for backward compatibility (deprecated - use const literals instead)
-export { selectBase } from './modules/base'
-export { selectQuestionTags } from './modules/tags'
-export { selectTypeSpecific } from './modules/typeSpecific'
-export { selectOfficialAnswers } from './modules/officialAnswers'
-export {
-  selectStudentAnswersForUser,
-  selectStudentAnswersForUserWithGrading,
-} from './modules/studentAnswers'
-export { selectStudentGradings } from './modules/gradings'
-
 // Expose the select for question copy from the copy base
-export {
-  selectForQuestionCopy,
-  SELECT_FOR_QUESTION_COPY,
-} from '@/core/question/copy/base'
+export { SELECT_FOR_QUESTION_COPY } from '@/core/question/copy/base'

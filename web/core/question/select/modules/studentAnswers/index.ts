@@ -86,7 +86,7 @@ const SELECT_STUDENT_ANSWER_WITH_GRADING = {
 /**
  * Selects ALL student answers for a question.
  */
-const SELECT_ALL_STUDENT_ANSWERS = {
+export const SELECT_ALL_STUDENT_ANSWERS = {
   studentAnswer: {
     select: SELECT_STUDENT_ANSWER,
   },
@@ -95,15 +95,10 @@ const SELECT_ALL_STUDENT_ANSWERS = {
 /**
  * Same but includes grading information.
  */
-const SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING = {
+export const SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING = {
   studentAnswer: {
     select: SELECT_STUDENT_ANSWER_WITH_GRADING,
   },
 } as const satisfies Prisma.QuestionSelect
 
-export {
-  SELECT_STUDENT_ANSWER,
-  SELECT_STUDENT_ANSWER_WITH_GRADING,
-  SELECT_ALL_STUDENT_ANSWERS,
-  SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
-}
+export { SELECT_STUDENT_ANSWER, SELECT_STUDENT_ANSWER_WITH_GRADING }

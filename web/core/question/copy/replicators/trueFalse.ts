@@ -24,8 +24,6 @@ import { SELECT_TRUE_FALSE_MERGED_QUESTION } from '@/core/question/select/module
 
 import type { QuestionReplicator } from '.'
 
-type Tx = Prisma.TransactionClient
-
 /**
  * Extract the properly-typed trueFalse relation from the merged literal structure.
  * The select structure is composed in the select modules, keeping schema details
@@ -46,11 +44,11 @@ export type TFCopyPayload = Omit<QuestionCopyPayload, 'trueFalse'> & {
 
 export const trueFalseReplicator: QuestionReplicator<TFCopyPayload> = {
   async replicate(
-    tx: Tx,
-    q: TFCopyPayload,
-    baseData: BaseQuestionCreateData,
+    prisma: Prisma.TransactionClient,
+    sourceQuestion: TFCopyPayload,
+    commonFields: BaseQuestionCreateData,
   ): Promise<Question> {
-    const tf = q.trueFalse
+    const tf = sourceQuestion.trueFalse
 
     if (!tf) {
       throw new Error(
@@ -58,9 +56,9 @@ export const trueFalseReplicator: QuestionReplicator<TFCopyPayload> = {
       )
     }
 
-    return tx.question.create({
+    return prisma.question.create({
       data: {
-        ...baseData,
+        ...commonFields,
         trueFalse: {
           create: {
             isTrue: tf.isTrue ?? null,

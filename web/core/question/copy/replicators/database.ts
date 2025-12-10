@@ -24,8 +24,6 @@ import { SELECT_DATABASE_MERGED_QUESTION } from '@/core/question/select/modules/
 
 import type { QuestionReplicator } from '.'
 
-type Tx = Prisma.TransactionClient
-
 /**
  * Extract the properly-typed database relation from the merged literal structure.
  * The select structure is composed in the select modules, keeping schema details
@@ -46,11 +44,11 @@ export type DBCopyPayload = Omit<QuestionCopyPayload, 'database'> & {
 
 export const databaseReplicator: QuestionReplicator<DBCopyPayload> = {
   async replicate(
-    tx: Tx,
-    q: DBCopyPayload,
-    baseData: BaseQuestionCreateData,
+    prisma: Prisma.TransactionClient,
+    sourceQuestion: DBCopyPayload,
+    commonFields: BaseQuestionCreateData,
   ): Promise<Question> {
-    const db = q.database
+    const db = sourceQuestion.database
 
     if (!db) {
       throw new Error(
@@ -58,9 +56,9 @@ export const databaseReplicator: QuestionReplicator<DBCopyPayload> = {
       )
     }
 
-    const newQ = await tx.question.create({
+    const newQ = await prisma.question.create({
       data: {
-        ...baseData,
+        ...commonFields,
         database: {
           create: {
             image: db.image ?? '',
@@ -80,7 +78,7 @@ export const databaseReplicator: QuestionReplicator<DBCopyPayload> = {
         queryOutputTests?: Array<{ test: DatabaseQueryOutputTest }>
       }
 
-      const newQuery = await tx.databaseQuery.create({
+      const newQuery = await prisma.databaseQuery.create({
         data: {
           questionId: newQ.id,
           order: qData.order,
@@ -110,7 +108,7 @@ export const databaseReplicator: QuestionReplicator<DBCopyPayload> = {
       let newOutput = null
 
       if (out) {
-        newOutput = await tx.databaseQueryOutput.create({
+        newOutput = await prisma.databaseQueryOutput.create({
           data: {
             queryId: newQuery.id,
             output: out.output as Prisma.InputJsonValue,
@@ -121,7 +119,7 @@ export const databaseReplicator: QuestionReplicator<DBCopyPayload> = {
         })
       }
 
-      await tx.databaseToSolutionQuery.create({
+      await prisma.databaseToSolutionQuery.create({
         data: {
           questionId: newQ.id,
           queryId: newQuery.id,

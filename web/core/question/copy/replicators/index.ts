@@ -17,11 +17,29 @@
 import type { Prisma, Question } from '@prisma/client'
 import type { BaseQuestionCreateData } from '../base'
 
+/**
+ * Interface for question replicators that handle copying questions of specific types.
+ *
+ * Each replicator is responsible for:
+ * - Taking the source question data (with type-specific relations)
+ * - Combining it with common fields (title, content, tags, group, etc.)
+ * - Creating a new question with all type-specific nested data
+ *
+ * @template TPayload - The typed payload containing the source question data with type-specific relations
+ */
 export interface QuestionReplicator<TPayload = any> {
+  /**
+   * Replicates a question by creating a copy with all its type-specific data.
+   *
+   * @param prisma - Prisma transaction client for database operations
+   * @param sourceQuestion - The source question data loaded from database, including type-specific relations
+   * @param commonFields - Common questionfields (title, content, tags, group, source tracking) for Prisma create
+   * @returns The newly created question
+   */
   replicate(
-    tx: Prisma.TransactionClient,
-    payload: TPayload,
-    baseData: BaseQuestionCreateData,
+    prisma: Prisma.TransactionClient,
+    sourceQuestion: TPayload,
+    commonFields: BaseQuestionCreateData,
   ): Promise<Question>
 }
 
