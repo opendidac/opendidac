@@ -14,61 +14,62 @@
  * limitations under the License.
  */
 
-/**
- * ExactMatch Replicator
- */
-
 import type { Prisma, Question } from '@prisma/client'
 import type { BaseQuestionCreateData, QuestionCopyPayload } from '../base'
-import { SELECT_EXACT_MATCH_MERGED_QUESTION } from '@/code/question/select/modules/officialAnswers'
+import { SELECT_MULTIPLE_CHOICE_MERGED_QUESTION } from '@/core/question/select/modules/officialAnswers'
 
 import type { QuestionReplicator } from '.'
 
 type Tx = Prisma.TransactionClient
 
 /**
- * Extract the properly-typed exactMatch relation from the merged literal structure.
+ * Extract the properly-typed multipleChoice relation from the merged literal structure.
  * The select structure is composed in the select modules, keeping schema details
  * out of the replicator code.
  */
-type ExactMatchRelationType = Prisma.QuestionGetPayload<{
-  select: typeof SELECT_EXACT_MATCH_MERGED_QUESTION
-}>['exactMatch']
+type MultipleChoiceRelationType = Prisma.QuestionGetPayload<{
+  select: typeof SELECT_MULTIPLE_CHOICE_MERGED_QUESTION
+}>['multipleChoice']
 
 /**
- * Payload type with properly-typed exactMatch relation.
+ * Payload type with properly-typed multipleChoice relation.
  * Combines the base QuestionCopyPayload (which has all other fields correctly typed)
- * with our explicitly-typed exactMatch relation that preserves deep literal structure.
+ * with our explicitly-typed multipleChoice relation that preserves deep literal structure.
  */
-export type ExactCopyPayload = Omit<QuestionCopyPayload, 'exactMatch'> & {
-  exactMatch: ExactMatchRelationType | null
+export type MCCopyPayload = Omit<QuestionCopyPayload, 'multipleChoice'> & {
+  multipleChoice: MultipleChoiceRelationType | null
 }
 
-export const exactMatchReplicator: QuestionReplicator<ExactCopyPayload> = {
+export const multipleChoiceReplicator: QuestionReplicator<MCCopyPayload> = {
   async replicate(
     tx: Tx,
-    q: ExactCopyPayload,
+    q: MCCopyPayload,
     baseData: BaseQuestionCreateData,
   ): Promise<Question> {
-    const em = q.exactMatch
+    const mc = q.multipleChoice
 
-    if (!em) {
+    if (!mc) {
       throw new Error(
-        'exactMatchReplicator called with question that has no exactMatch relation',
+        'multipleChoiceReplicator called with question that has no multipleChoice relation',
       )
     }
 
     return tx.question.create({
       data: {
         ...baseData,
-        exactMatch: {
+        multipleChoice: {
           create: {
-            fields: em.fields
+            gradingPolicy: mc.gradingPolicy,
+            activateStudentComment: mc.activateStudentComment,
+            studentCommentLabel: mc.studentCommentLabel,
+            activateSelectionLimit: mc.activateSelectionLimit,
+            selectionLimit: mc.selectionLimit,
+            options: mc.options
               ? {
-                  create: em.fields.map((f) => ({
-                    order: f.order,
-                    statement: f.statement ?? null,
-                    matchRegex: f.matchRegex ?? null,
+                  create: mc.options.map((opt) => ({
+                    order: opt.order,
+                    text: opt.text,
+                    isCorrect: opt.isCorrect,
                   })),
                 }
               : undefined,

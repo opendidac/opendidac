@@ -15,7 +15,7 @@
  */
 
 import { Role } from '@prisma/client'
-import { exportQuestion } from '@/code/questionsImportExport'
+import { exportQuestion } from '@/core/questionsImportExport'
 import {
   withAuthorization,
   withGroupScope,

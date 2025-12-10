@@ -15,9 +15,10 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-import type { IApiContext } from '@/types/api'
-import { getPrismaClient } from '@/code/hooks/usePrisma'
-import { getUser } from '@/code/auth/auth'
+import type { IApiContext } from '@/core/types/api'
+import { getPrismaClient } from '@/core/hooks/usePrisma'
+import { getUser } from '@/core/auth/auth'
+
 
 /* --------------------------------------------------------------------------
  * API Context Middleware
@@ -53,6 +54,27 @@ export function withApiContext(handlers: Record<string, Function>) {
       prisma: getPrismaClient(),
     }
 
+    return handler(ctx)
+  }
+}
+
+
+export type ApiErrorResponse = {
+  status: 400 | 401 | 403 | 404 | 500
+  message: string
+}
+
+export type ApiSuccessResponse<T> = {
+  status: 200
+  data: T
+}
+
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse
+
+export function withApiType<T>(
+  handler: (ctx: IApiContext) => Promise<ApiResponse<T>>
+) {
+  return async (ctx: IApiContext): Promise<ApiResponse<T>> => {
     return handler(ctx)
   }
 }

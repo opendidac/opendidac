@@ -16,7 +16,7 @@
 
 import { EvaluationPhase, Role, UserOnEvaluationStatus } from '@prisma/client'
 
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 import { isInProgress } from './questions/[questionId]/answers/utils'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'

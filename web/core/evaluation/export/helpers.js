@@ -18,7 +18,7 @@ import { DatabaseQueryOutputStatus } from '@prisma/client'
 import Handlebars from 'handlebars'
 import { Remarkable } from 'remarkable'
 import htmlspecialchars from 'htmlspecialchars'
-import { regexpFromPattern } from '@/code/utils'
+import { regexpFromPattern } from '@/core/utils'
 
 const md = new Remarkable({
   html: true,

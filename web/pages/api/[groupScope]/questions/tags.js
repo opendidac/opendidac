@@ -20,7 +20,7 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import { questionsFilterWhereClause } from '@/code/questionsFilter'
+import { questionsFilterWhereClause } from '@/core/questionsFilter'
 
 /**
  * List of tags for a group

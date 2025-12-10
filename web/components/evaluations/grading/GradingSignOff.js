@@ -33,7 +33,7 @@ import DecimalInput from '@/components/input/DecimalInput'
 import GradingStatus from './GradingStatus'
 import GradingSigned from './GradingSigned'
 import GradingPointsComment from './GradingPointsComment'
-import { computeCoefficient } from '@/code/grading/coefficient'
+import { computeCoefficient } from '@/core/grading/coefficient'
 
 const GradingSignOff = ({
   loading,

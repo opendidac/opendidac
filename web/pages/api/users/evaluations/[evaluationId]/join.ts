@@ -18,7 +18,7 @@ import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import { withRestrictions } from '@/middleware/withRestrictions'
 import { withEvaluation } from '@/middleware/withEvaluation'
-import type { IApiContext, IApiContextWithEvaluation } from '@/types/api'
+import type { IApiContext, IApiContextWithEvaluation } from '@/core/types/api'
 import {
   Role,
   QuestionType,
@@ -27,15 +27,15 @@ import {
   Prisma,
   PrismaClient,
 } from '@prisma/client'
-import { isJoinable } from '@/code/phase'
-import { grading } from '@/code/grading/engine'
-import { getUser } from '@/code/auth/auth'
+import { isJoinable } from '@/core/phase'
+import { grading } from '@/core/grading/engine'
+import { getUser } from '@/core/auth/auth'
 import {
   mergeSelects,
   selectBase,
   selectTypeSpecific,
   selectOfficialAnswers,
-} from '@/code/question/select'
+} from '@/core/question/select'
 
 /**
  * Select clause for student joining evaluation.

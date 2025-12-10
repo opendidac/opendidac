@@ -15,56 +15,61 @@
  */
 
 /**
- * Essay Replicator
+ * Web Replicator
  */
 
 import type { Prisma, Question } from '@prisma/client'
 import type { BaseQuestionCreateData, QuestionCopyPayload } from '../base'
-import { SELECT_ESSAY_MERGED_QUESTION } from '@/code/question/select/modules/officialAnswers'
+import { SELECT_WEB_MERGED_QUESTION } from '@/core/question/select/modules/officialAnswers'
 
 import type { QuestionReplicator } from '.'
 
 type Tx = Prisma.TransactionClient
 
 /**
- * Extract the properly-typed essay relation from the merged literal structure.
+ * Extract the properly-typed web relation from the merged literal structure.
  * The select structure is composed in the select modules, keeping schema details
  * out of the replicator code.
  */
-type EssayRelationType = Prisma.QuestionGetPayload<{
-  select: typeof SELECT_ESSAY_MERGED_QUESTION
-}>['essay']
+type WebRelationType = Prisma.QuestionGetPayload<{
+  select: typeof SELECT_WEB_MERGED_QUESTION
+}>['web']
 
 /**
- * Payload type with properly-typed essay relation.
+ * Payload type with properly-typed web relation.
  * Combines the base QuestionCopyPayload (which has all other fields correctly typed)
- * with our explicitly-typed essay relation that preserves deep literal structure.
+ * with our explicitly-typed web relation that preserves deep literal structure.
  */
-export type EssayCopyPayload = Omit<QuestionCopyPayload, 'essay'> & {
-  essay: EssayRelationType | null
+export type WebCopyPayload = Omit<QuestionCopyPayload, 'web'> & {
+  web: WebRelationType | null
 }
 
-export const essayReplicator: QuestionReplicator<EssayCopyPayload> = {
+export const webReplicator: QuestionReplicator<WebCopyPayload> = {
   async replicate(
     tx: Tx,
-    q: EssayCopyPayload,
+    q: WebCopyPayload,
     baseData: BaseQuestionCreateData,
   ): Promise<Question> {
-    const es = q.essay
+    const w = q.web
 
-    if (!es) {
+    if (!w) {
       throw new Error(
-        'essayReplicator called with question that has no essay relation',
+        'webReplicator called with question that has no web relation',
       )
     }
 
     return tx.question.create({
       data: {
         ...baseData,
-        essay: {
+        web: {
           create: {
-            solution: es.solution ?? null,
-            template: es.template ?? null,
+            templateHtml: w.templateHtml ?? null,
+            templateCss: w.templateCss ?? null,
+            templateJs: w.templateJs ?? null,
+
+            solutionHtml: w.solutionHtml ?? null,
+            solutionCss: w.solutionCss ?? null,
+            solutionJs: w.solutionJs ?? null,
           },
         },
       },

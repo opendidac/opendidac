@@ -27,8 +27,8 @@ import {
   UserOnEvaluationAccessMode,
 } from '@prisma/client'
 import useSWR from 'swr'
-import { fetcher } from '@/code/utils'
-import { phaseGT } from '@/code/phase'
+import { fetcher } from '@/core/utils'
+import { phaseGT } from '@/core/phase'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 
 const Presets = [

@@ -17,7 +17,7 @@
 import { Role } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
 /**
  *

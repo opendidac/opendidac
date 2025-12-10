@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react'
 import ConfigPopper from '@/components/layout/utils/ConfigPopper'
 import { Stack, Typography } from '@mui/material'
 import DropdownSelector from '@/components/input/DropdownSelector'
-import GradingPolicy from '@/code/grading/policy'
+import GradingPolicy from '@/core/grading/policy'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import { Box } from '@mui/system'
 

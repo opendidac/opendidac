@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import { mergeSelects } from '@/code/question/select'
-import { selectBase } from '@/code/question/select'
-import { selectTypeSpecific } from '@/code/question/select'
-import { selectStudentAnswersForUser } from '@/code/question/select'
-import { selectStudentGradings } from '@/code/question/select'
-import { selectQuestionTags } from '@/code/question/select'
-import { selectAllStudentAnswers } from '@/code/question/select'
-import { selectOfficialAnswers } from '@/code/question/select'
+import { mergeSelects } from '@/core/question/select'
+import { selectBase } from '@/core/question/select'
+import { selectTypeSpecific } from '@/core/question/select'
+import { selectStudentAnswersForUser } from '@/core/question/select'
+import { selectStudentGradings } from '@/core/question/select'
+import { selectQuestionTags } from '@/core/question/select'
+import { selectAllStudentAnswers } from '@/core/question/select'
+import { selectOfficialAnswers } from '@/core/question/select'
 
 /**
  * Select for student export.

@@ -15,14 +15,14 @@
  */
 
 import { DatabaseQueryOutputType, Prisma, Role } from '@prisma/client'
-import { grading } from '@/code/grading/engine'
+import { grading } from '@/core/grading/engine'
 import { isInProgress } from '@/pages/api/users/evaluations/[evaluationId]/questions/[questionId]/answers/utils'
 import { runSandboxDB } from '@/sandbox/runSandboxDB'
-import { runTestsOnDatasets } from '@/code/database'
+import { runTestsOnDatasets } from '@/core/database'
 import { runSQLFluffSandbox } from '@/sandbox/runSQLFluffSandbox'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
 /*
  endpoint to run the database sandbox for a users answers

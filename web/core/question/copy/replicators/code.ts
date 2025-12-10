@@ -30,7 +30,7 @@
 
 import type { Prisma, Question } from '@prisma/client'
 import type { BaseQuestionCreateData, QuestionCopyPayload } from '../base'
-import { SELECT_CODE_MERGED_QUESTION } from '@/code/question/select/modules/officialAnswers'
+import { SELECT_CODE_MERGED_QUESTION } from '@/core/question/select/modules/officialAnswers'
 
 import type { QuestionReplicator } from '.'
 

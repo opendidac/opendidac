@@ -20,22 +20,22 @@ import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
-import type { IApiContext } from '@/types/api'
+import type { IApiContext } from '@/core/types/api'
 
-import { loadHandlebars } from '@/code/evaluation/export/engine/handlebars'
-import { generatePDF } from '@/code/evaluation/export/engine/pdf'
+import { loadHandlebars } from '@/core/evaluation/export/engine/handlebars'
+import { generatePDF } from '@/core/evaluation/export/engine/pdf'
 
 import {
   QuestionPayloadProfessor,
   StudentSubmission,
   UserPayload,
   QuestionWithMeta,
-} from '@/code/evaluation/export/engine/types'
+} from '@/core/evaluation/export/engine/types'
 
-import { mapProfessorQuestion } from '@/code/evaluation/export/engine/mapProfessorQuestions'
-import { mapStudentSubmission } from '@/code/evaluation/export/engine/mapStudentSubmissions'
+import { mapProfessorQuestion } from '@/core/evaluation/export/engine/mapProfessorQuestions'
+import { mapStudentSubmission } from '@/core/evaluation/export/engine/mapStudentSubmissions'
 
-import { selectForProfessorExport } from '@/code/evaluation/export/engine/select'
+import { selectForProfessorExport } from '@/core/evaluation/export/engine/select'
 
 // @ts-ignore
 import mainTemplate from '@/code/evaluation/export/templates/main.hbs'

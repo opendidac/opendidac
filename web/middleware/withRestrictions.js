@@ -17,8 +17,8 @@
 import net from 'net'
 import { EvaluationPhase } from '@prisma/client'
 import { UserOnEvaluationAccessMode } from '@prisma/client'
-import { getUser } from '@/code/auth/auth'
-import { phaseGT } from '@/code/phase'
+import { getUser } from '@/core/auth/auth'
+import { phaseGT } from '@/core/phase'
 
 const isIpInRange = (ip, range) => {
   // Handle CIDR notation

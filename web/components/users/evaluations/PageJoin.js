@@ -18,7 +18,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { useCallback, useEffect, useState } from 'react'
 import LoadingAnimation from '../../feedback/LoadingAnimation'
-import { studentPhaseRedirect } from '../../../code/phase'
+import { studentPhaseRedirect } from '../../../core/phase'
 
 /*
  *    Used as entry point for students

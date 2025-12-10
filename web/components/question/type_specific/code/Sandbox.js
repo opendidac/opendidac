@@ -19,7 +19,7 @@ import { useDebouncedCallback } from 'use-debounce'
 import { Stack, TextField } from '@mui/material'
 import useSWR from 'swr'
 import Loading from '@/components/feedback/Loading'
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import DockerImageField from '@/components/input/DockerImageField'
 
 const Sandbox = ({ groupScope, questionId, onUpdate }) => {

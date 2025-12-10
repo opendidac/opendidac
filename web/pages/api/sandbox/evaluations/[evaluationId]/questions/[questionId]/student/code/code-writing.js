@@ -16,14 +16,14 @@
 
 import { EvaluationPhase, Role, UserOnEvaluationStatus } from '@prisma/client'
 import { runSandbox } from '@/sandbox/runSandboxTC'
-import { grading } from '@/code/grading/engine'
+import { grading } from '@/core/grading/engine'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
 /*
  endpoint to run the code sandbox for a users (generally students) answers

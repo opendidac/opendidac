@@ -28,7 +28,7 @@ import {
 import { useEffect, useState } from 'react'
 import { Role, EvaluationPhase } from '@prisma/client'
 
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 
 import BackButton from '@/components/layout/BackButton'
 import LayoutMain from '@/components/layout/LayoutMain'

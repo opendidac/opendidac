@@ -15,61 +15,63 @@
  */
 
 /**
- * Web Replicator
+ * ExactMatch Replicator
  */
 
 import type { Prisma, Question } from '@prisma/client'
 import type { BaseQuestionCreateData, QuestionCopyPayload } from '../base'
-import { SELECT_WEB_MERGED_QUESTION } from '@/code/question/select/modules/officialAnswers'
+import { SELECT_EXACT_MATCH_MERGED_QUESTION } from '@/core/question/select/modules/officialAnswers'
 
 import type { QuestionReplicator } from '.'
 
 type Tx = Prisma.TransactionClient
 
 /**
- * Extract the properly-typed web relation from the merged literal structure.
+ * Extract the properly-typed exactMatch relation from the merged literal structure.
  * The select structure is composed in the select modules, keeping schema details
  * out of the replicator code.
  */
-type WebRelationType = Prisma.QuestionGetPayload<{
-  select: typeof SELECT_WEB_MERGED_QUESTION
-}>['web']
+type ExactMatchRelationType = Prisma.QuestionGetPayload<{
+  select: typeof SELECT_EXACT_MATCH_MERGED_QUESTION
+}>['exactMatch']
 
 /**
- * Payload type with properly-typed web relation.
+ * Payload type with properly-typed exactMatch relation.
  * Combines the base QuestionCopyPayload (which has all other fields correctly typed)
- * with our explicitly-typed web relation that preserves deep literal structure.
+ * with our explicitly-typed exactMatch relation that preserves deep literal structure.
  */
-export type WebCopyPayload = Omit<QuestionCopyPayload, 'web'> & {
-  web: WebRelationType | null
+export type ExactCopyPayload = Omit<QuestionCopyPayload, 'exactMatch'> & {
+  exactMatch: ExactMatchRelationType | null
 }
 
-export const webReplicator: QuestionReplicator<WebCopyPayload> = {
+export const exactMatchReplicator: QuestionReplicator<ExactCopyPayload> = {
   async replicate(
     tx: Tx,
-    q: WebCopyPayload,
+    q: ExactCopyPayload,
     baseData: BaseQuestionCreateData,
   ): Promise<Question> {
-    const w = q.web
+    const em = q.exactMatch
 
-    if (!w) {
+    if (!em) {
       throw new Error(
-        'webReplicator called with question that has no web relation',
+        'exactMatchReplicator called with question that has no exactMatch relation',
       )
     }
 
     return tx.question.create({
       data: {
         ...baseData,
-        web: {
+        exactMatch: {
           create: {
-            templateHtml: w.templateHtml ?? null,
-            templateCss: w.templateCss ?? null,
-            templateJs: w.templateJs ?? null,
-
-            solutionHtml: w.solutionHtml ?? null,
-            solutionCss: w.solutionCss ?? null,
-            solutionJs: w.solutionJs ?? null,
+            fields: em.fields
+              ? {
+                  create: em.fields.map((f) => ({
+                    order: f.order,
+                    statement: f.statement ?? null,
+                    matchRegex: f.matchRegex ?? null,
+                  })),
+                }
+              : undefined,
           },
         },
       },

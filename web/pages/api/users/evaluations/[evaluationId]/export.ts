@@ -18,21 +18,21 @@ import { Role } from '@prisma/client'
 import { withApiContext } from '@/middleware/withApiContext'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withEvaluation } from '@/middleware/withEvaluation'
-import type { IApiContextWithEvaluation, IApiContext } from '@/types/api'
+import type { IApiContextWithEvaluation, IApiContext } from '@/core/types/api'
 
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
-import { loadHandlebars } from '@/code/evaluation/export/engine/handlebars'
-import { generatePDF } from '@/code/evaluation/export/engine/pdf'
+import { loadHandlebars } from '@/core/evaluation/export/engine/handlebars'
+import { generatePDF } from '@/core/evaluation/export/engine/pdf'
 
 import {
   StudentSubmission,
   QuestionPayloadStudent,
   UserPayload,
-} from '@/code/evaluation/export/engine/types'
+} from '@/core/evaluation/export/engine/types'
 
-import { mapStudentQuestions } from '@/code/evaluation/export/engine/mapQuestions'
-import { selectForStudentExport } from '@/code/evaluation/export/engine/select'
+import { mapStudentQuestions } from '@/core/evaluation/export/engine/mapQuestions'
+import { selectForStudentExport } from '@/core/evaluation/export/engine/select'
 
 // @ts-ignore – template file
 import studentMainTemplate from '@/code/evaluation/export/templates/studentMain.hbs'

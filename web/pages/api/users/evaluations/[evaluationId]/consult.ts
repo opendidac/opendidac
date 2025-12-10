@@ -8,23 +8,23 @@
 import { Role, Prisma } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext, IApiContextWithEvaluation } from '@/types/api'
+import type { IApiContext, IApiContextWithEvaluation } from '@/core/types/api'
 import { withRestrictions } from '@/middleware/withRestrictions'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import { withPurgeGuard } from '@/middleware/withPurged'
 
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
 import {
   SELECT_BASE,
   SELECT_QUESTION_TAGS,
   SELECT_TYPE_SPECIFIC,
   SELECT_OFFICIAL_ANSWERS,
-} from '@/code/question/select'
+} from '@/core/question/select'
 
 import {
   SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
-} from '@/code/question/select/modules/studentAnswers'
+} from '@/core/question/select/modules/studentAnswers'
 
 import { isFinished } from './questions/[questionId]/answers/utils'
 /**

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getPrismaClient } from '@/code/hooks/usePrisma'
+import { getPrismaClient } from '@/core/hooks/usePrisma'
 
 export const MAX_CONN = 5
 

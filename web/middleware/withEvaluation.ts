@@ -32,7 +32,7 @@ import type { Prisma } from '@prisma/client'
 import type {
   IApiContext,
   IApiContextWithEvaluation,
-} from '@/types/api/context'
+} from '@/core/types/api/context'
 
 /**
  * Public contract for what ctx.evaluation contains.
@@ -70,7 +70,7 @@ export type EvaluationInContext = Prisma.EvaluationGetPayload<{
 }>
 
 // Re-export the interface version for consistency
-export type { IEvaluationInContext } from '@/types/api/context'
+export type { IEvaluationInContext } from '@/core/types/api/context'
 
 /**
  * Middleware: fetches evaluation, injects it into ctx.

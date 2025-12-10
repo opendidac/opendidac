@@ -20,15 +20,15 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext } from '@/types/api'
+import type { IApiContext } from '@/core/types/api'
 import { withPurgeGuard } from '@/middleware/withPurged'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import {
   SELECT_BASE_WITH_PROFESSOR_INFO,
   SELECT_QUESTION_TAGS,
   SELECT_TYPE_SPECIFIC,
-} from '@/code/question/select'
-import { SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING } from '@/code/question/select/modules/studentAnswers'
+} from '@/core/question/select'
+import { SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING } from '@/core/question/select/modules/studentAnswers'
 
 /**
  * Select clause for professor tracking progress during evaluation.

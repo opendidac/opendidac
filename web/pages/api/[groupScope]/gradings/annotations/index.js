@@ -20,7 +20,7 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
 /** Create the annotation for a student answer
  *

@@ -26,7 +26,7 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 /*
   Student checked his answer to a code reading snippet during an evaluation
 

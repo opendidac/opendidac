@@ -20,7 +20,7 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext } from '@/types/api'
+import type { IApiContext } from '@/core/types/api'
 import { withPurgeGuard } from '@/middleware/withPurged'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import {
@@ -29,7 +29,7 @@ import {
   SELECT_TYPE_SPECIFIC,
   SELECT_OFFICIAL_ANSWERS,
   SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING,
-} from '@/code/question/select'
+} from '@/core/question/select'
 
 /**
  * Select clause for evaluation results.

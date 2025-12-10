@@ -22,7 +22,7 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
 // The student can answer with a comment in some multi-choice setups
 const put = async (ctx) => {

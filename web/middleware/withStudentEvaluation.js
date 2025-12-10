@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
 export function withStudentStatus(handler, args = {}) {
   const { statuses: allowedStatuses = [] } = args

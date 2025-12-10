@@ -26,8 +26,8 @@ import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth/auth'
-import { grading } from '@/code/grading/engine'
+import { getUser } from '@/core/auth/auth'
+import { grading } from '@/core/grading/engine'
 
 const put = async (ctx) => {
   const { req, res, prisma } = ctx

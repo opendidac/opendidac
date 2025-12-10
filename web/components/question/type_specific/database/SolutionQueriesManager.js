@@ -15,7 +15,7 @@
  */
 
 import useSWR from 'swr'
-import { fetcher } from '../../../../code/utils'
+import { fetcher } from '../../../../core/utils'
 import Loading from '../../../feedback/Loading'
 import { Button, Stack, Typography, useTheme } from '@mui/material'
 import React, { useCallback, useEffect, useRef, useState } from 'react'

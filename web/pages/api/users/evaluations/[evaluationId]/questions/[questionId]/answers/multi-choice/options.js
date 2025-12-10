@@ -21,14 +21,14 @@ import {
   UserOnEvaluationStatus,
 } from '@prisma/client'
 
-import { grading } from '@/code/grading/engine'
+import { grading } from '@/core/grading/engine'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
 const addOrRemoveOption = async (ctx) => {
   const { req, res, prisma } = ctx

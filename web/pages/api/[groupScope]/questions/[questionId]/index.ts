@@ -20,14 +20,14 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext } from '@/types/api'
+import type { IApiContext } from '@/core/types/api'
 import {
   SELECT_BASE_WITH_PROFESSOR_INFO,
   SELECT_TYPE_SPECIFIC,
   SELECT_OFFICIAL_ANSWERS,
   SELECT_QUESTION_TAGS,
-} from '@/code/question/select'
-import { questionTypeSpecific } from '@/code/questions'
+} from '@/core/question/select'
+import { questionTypeSpecific } from '@/core/questions'
 
 /**
  * Select clause for professor editing a question.

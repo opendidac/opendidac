@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import { withRestrictions } from '@/middleware/withRestrictions'

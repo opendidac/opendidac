@@ -20,9 +20,9 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext } from '@/types/api'
-import { codeInitialUpdateQuery, questionTypeSpecific } from '@/code/questions'
-import { questionsFilterWhereClause } from '@/code/questionsFilter'
+import type { IApiContext } from '@/core/types/api'
+import { codeInitialUpdateQuery, questionTypeSpecific } from '@/core/questions'
+import { questionsFilterWhereClause } from '@/core/questionsFilter'
 import languages from '@/code/languages.json'
 import databaseTemplate from '@/code/database.json'
 import {
@@ -30,7 +30,7 @@ import {
   SELECT_TYPE_SPECIFIC,
   SELECT_OFFICIAL_ANSWERS,
   SELECT_QUESTION_TAGS,
-} from '@/code/question/select'
+} from '@/core/question/select'
 
 /**
  * Select clause for professor listing questions.

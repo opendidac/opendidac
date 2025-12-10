@@ -27,9 +27,9 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext } from '@/types/api'
-import { copyQuestion } from '@/code/questions'
-import { selectForQuestionCopy } from '@/code/question/select'
+import type { IApiContext } from '@/core/types/api'
+import { copyQuestion } from '@/core/questions'
+import { selectForQuestionCopy } from '@/core/question/select'
 
 // Compute duration delta in milliseconds from activation flag, hours and minutes
 function computeDurationDeltaMs(

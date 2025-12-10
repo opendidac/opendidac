@@ -20,14 +20,14 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext } from '@/types/api'
+import type { IApiContext } from '@/core/types/api'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
 import {
   mergeSelects,
   selectBase,
   selectQuestionTags,
   selectTypeSpecific,
-} from '@/code/question/select'
+} from '@/core/question/select'
 
 /**
  * Select clause for professor listing questions

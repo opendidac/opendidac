@@ -18,7 +18,7 @@ import { Role, ArchivalPhase } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import { withEvaluation } from '@/middleware/withEvaluation'
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
 const post = async (ctx) => {
   const { req, res, prisma, evaluation } = ctx

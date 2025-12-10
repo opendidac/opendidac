@@ -17,7 +17,7 @@
 import useSWR from 'swr'
 import { CodeQuestionType } from '@prisma/client'
 
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import Loading from '@/components/feedback/Loading'
 
 import AnswerCodeReading from './codeReading/AnswerCodeReading'

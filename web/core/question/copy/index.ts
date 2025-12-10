@@ -20,11 +20,11 @@
  */
 
 import { Question } from '@prisma/client'
-import { selectForQuestionCopy } from '@/code/question/select'
+import { selectForQuestionCopy } from '@/core/question/select'
 import { buildBaseData } from './base'
 import { replicatorRegistry } from './registry'
 import { QuestionSource } from '@prisma/client'
-import { getPrismaClient } from '@/code/hooks/usePrisma'
+import { getPrismaClient } from '@/core/hooks/usePrisma'
 
 export async function copyQuestion(
   questionId: string,

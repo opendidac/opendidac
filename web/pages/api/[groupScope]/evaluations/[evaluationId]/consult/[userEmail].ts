@@ -17,7 +17,7 @@
 import { Role, Prisma } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext } from '@/types/api'
+import type { IApiContext } from '@/core/types/api'
 import { withPurgeGuard } from '@/middleware/withPurged'
 import { withEvaluation } from '@/middleware/withEvaluation'
 
@@ -26,9 +26,9 @@ import {
   SELECT_QUESTION_TAGS,
   SELECT_TYPE_SPECIFIC,
   SELECT_OFFICIAL_ANSWERS,
-} from '@/code/question/select'
+} from '@/core/question/select'
 
-import { SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING } from '@/code/question/select/modules/studentAnswers'
+import { SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING } from '@/core/question/select/modules/studentAnswers'
 
 /**
  * Base literal for professor consultation.

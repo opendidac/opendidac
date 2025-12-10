@@ -23,7 +23,7 @@ import LayoutMain from '@/components/layout/LayoutMain'
 
 import { useSnackbar } from '@/context/SnackbarContext'
 
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import DialogFeedback from '@/components/feedback/DialogFeedback'

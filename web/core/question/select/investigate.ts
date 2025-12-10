@@ -20,7 +20,7 @@ import {
   selectQuestionTags,
   selectTypeSpecific,
   selectOfficialAnswers,
-} from '@/code/question/select'
+} from '@/core/question/select'
 
 const selectForProfessorEditing = () => {
   return mergeSelects(

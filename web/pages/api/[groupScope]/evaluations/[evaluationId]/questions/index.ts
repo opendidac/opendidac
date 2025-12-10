@@ -20,13 +20,13 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext } from '@/types/api'
+import type { IApiContext } from '@/core/types/api'
 import {
   SELECT_BASE_WITH_PROFESSOR_INFO,
   SELECT_TYPE_SPECIFIC,
   SELECT_OFFICIAL_ANSWERS,
-} from '@/code/question/select'
-import { SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING } from '@/code/question/select/modules/studentAnswers'
+} from '@/core/question/select'
+import { SELECT_ALL_STUDENT_ANSWERS_WITH_GRADING } from '@/core/question/select/modules/studentAnswers'
 
 /**
  * Select clause for evaluation questions with optional gradings.

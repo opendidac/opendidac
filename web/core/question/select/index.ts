@@ -52,4 +52,4 @@ export { selectStudentGradings } from './modules/gradings'
 export {
   selectForQuestionCopy,
   SELECT_FOR_QUESTION_COPY,
-} from '@/code/question/copy/base'
+} from '@/core/question/copy/base'

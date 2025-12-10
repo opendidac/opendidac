@@ -22,7 +22,7 @@ import {
   StudentAnswerCodeReadingOutputStatus,
 } from '@prisma/client'
 import GradingPolicy from './policy'
-import { regexpFromPattern } from '@/code/utils'
+import { regexpFromPattern } from '@/core/utils'
 
 /*
     This function is used to grade a users answers to a question.

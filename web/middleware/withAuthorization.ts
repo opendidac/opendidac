@@ -15,7 +15,7 @@
  */
 
 import type { Role } from '@prisma/client'
-import type { IApiContext, IApiContextWithRoles } from '@/types/api'
+import type { IApiContext, IApiContextWithRoles } from '@/core/types/api'
 
 /**
  * Group owned entities are entities that are owned by a group.

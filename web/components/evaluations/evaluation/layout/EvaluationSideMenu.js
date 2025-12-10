@@ -38,7 +38,7 @@ import { Box, Stack } from '@mui/system'
 import { phaseGreaterThan } from '../phases'
 import StatusDisplay from '@/components/feedback/StatusDisplay'
 import Image from 'next/image'
-import { getStudentEntryLink } from '@/code/utils'
+import { getStudentEntryLink } from '@/core/utils'
 import Link from 'next/link'
 
 const EvaluationSideMenu = ({

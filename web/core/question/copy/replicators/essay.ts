@@ -15,55 +15,56 @@
  */
 
 /**
- * TrueFalse Replicator
+ * Essay Replicator
  */
 
 import type { Prisma, Question } from '@prisma/client'
 import type { BaseQuestionCreateData, QuestionCopyPayload } from '../base'
-import { SELECT_TRUE_FALSE_MERGED_QUESTION } from '@/code/question/select/modules/officialAnswers'
+import { SELECT_ESSAY_MERGED_QUESTION } from '@/core/question/select/modules/officialAnswers'
 
 import type { QuestionReplicator } from '.'
 
 type Tx = Prisma.TransactionClient
 
 /**
- * Extract the properly-typed trueFalse relation from the merged literal structure.
+ * Extract the properly-typed essay relation from the merged literal structure.
  * The select structure is composed in the select modules, keeping schema details
  * out of the replicator code.
  */
-type TrueFalseRelationType = Prisma.QuestionGetPayload<{
-  select: typeof SELECT_TRUE_FALSE_MERGED_QUESTION
-}>['trueFalse']
+type EssayRelationType = Prisma.QuestionGetPayload<{
+  select: typeof SELECT_ESSAY_MERGED_QUESTION
+}>['essay']
 
 /**
- * Payload type with properly-typed trueFalse relation.
+ * Payload type with properly-typed essay relation.
  * Combines the base QuestionCopyPayload (which has all other fields correctly typed)
- * with our explicitly-typed trueFalse relation that preserves deep literal structure.
+ * with our explicitly-typed essay relation that preserves deep literal structure.
  */
-export type TFCopyPayload = Omit<QuestionCopyPayload, 'trueFalse'> & {
-  trueFalse: TrueFalseRelationType | null
+export type EssayCopyPayload = Omit<QuestionCopyPayload, 'essay'> & {
+  essay: EssayRelationType | null
 }
 
-export const trueFalseReplicator: QuestionReplicator<TFCopyPayload> = {
+export const essayReplicator: QuestionReplicator<EssayCopyPayload> = {
   async replicate(
     tx: Tx,
-    q: TFCopyPayload,
+    q: EssayCopyPayload,
     baseData: BaseQuestionCreateData,
   ): Promise<Question> {
-    const tf = q.trueFalse
+    const es = q.essay
 
-    if (!tf) {
+    if (!es) {
       throw new Error(
-        'trueFalseReplicator called with question that has no trueFalse relation',
+        'essayReplicator called with question that has no essay relation',
       )
     }
 
     return tx.question.create({
       data: {
         ...baseData,
-        trueFalse: {
+        essay: {
           create: {
-            isTrue: tf.isTrue ?? null,
+            solution: es.solution ?? null,
+            template: es.template ?? null,
           },
         },
       },

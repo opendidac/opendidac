@@ -18,7 +18,7 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import useSWR from 'swr'
 import { Role } from '@prisma/client'
 import { useSession } from 'next-auth/react'
-import { fetcher } from '../code/utils'
+import { fetcher } from '../core/utils'
 import { useRouter } from 'next/router'
 
 const TagsContext = createContext({

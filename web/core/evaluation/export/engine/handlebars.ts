@@ -19,8 +19,8 @@
  * @returns The Handlebars instance.
  */
 import Handlebars from 'handlebars'
-import * as templates from '@/code/evaluation/export/templates' // central export file
-import * as helpers from '@/code/evaluation/export/helpers'
+import * as templates from '@/core/evaluation/export/templates' // central export file
+import * as helpers from '@/core/evaluation/export/helpers'
 
 export function loadHandlebars() {
   Object.entries(templates.partials).forEach(([name, tpl]) =>

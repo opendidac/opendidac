@@ -15,10 +15,10 @@
  */
 
 import { Prisma, QuestionSource, QuestionUsageStatus } from '@prisma/client'
-import { SELECT_BASE_WITH_PROFESSOR_INFO } from '@/code/question/select/modules/base'
-import { SELECT_TYPE_SPECIFIC } from '@/code/question/select/modules/typeSpecific'
-import { SELECT_OFFICIAL_ANSWERS } from '@/code/question/select/modules/officialAnswers'
-import { SELECT_QUESTION_TAGS } from '@/code/question/select/modules/tags'
+import { SELECT_BASE_WITH_PROFESSOR_INFO } from '@/core/question/select/modules/base'
+import { SELECT_TYPE_SPECIFIC } from '@/core/question/select/modules/typeSpecific'
+import { SELECT_OFFICIAL_ANSWERS } from '@/core/question/select/modules/officialAnswers'
+import { SELECT_QUESTION_TAGS } from '@/core/question/select/modules/tags'
 
 /**
  * Selects all fields needed for question copying.

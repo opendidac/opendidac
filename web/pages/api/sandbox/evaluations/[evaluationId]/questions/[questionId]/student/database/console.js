@@ -19,7 +19,7 @@ import { isInProgress } from '@/pages/api/users/evaluations/[evaluationId]/quest
 import { runSandboxDB } from '@/sandbox/runSandboxDB'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
 /*
  endpoint to run the database console query sandbox for a users

@@ -19,7 +19,7 @@ import ResizePanel from '@/components/layout/utils/ResizePanel'
 import ScrollContainer from '../layout/ScrollContainer'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import { MonoSpaceTextField } from '@/components/input/MonoSpaceTextField'
-import { regexpFromPattern } from '@/code/utils'
+import { regexpFromPattern } from '@/core/utils'
 
 const CompareExactMatch = ({ solution, answer }) => {
   return (

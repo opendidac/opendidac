@@ -22,9 +22,9 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext } from '@/types/api'
-import { selectForQuestionCopy } from '@/code/question/select'
-import { copyQuestion } from '@/code/question/copy'
+import type { IApiContext } from '@/core/types/api'
+import { selectForQuestionCopy } from '@/core/question/select'
+import { copyQuestion } from '@/core/question/copy'
 
 const post = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx

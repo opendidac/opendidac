@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { IApiContext } from '@/types/api'
+import type { IApiContext } from '@/core/types/api'
 import { withApiContext } from '@/middleware/withApiContext'
 
 const get = async (ctx: IApiContext) => {

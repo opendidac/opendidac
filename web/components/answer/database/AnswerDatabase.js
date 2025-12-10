@@ -20,7 +20,7 @@ import { useDebouncedCallback } from 'use-debounce'
 import { Button, Stack } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
 
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import Loading from '@/components/feedback/Loading'
 import BottomCollapsiblePanel from '@/components/layout/utils/BottomCollapsiblePanel'
 import ScrollContainer from '@/components/layout/ScrollContainer'

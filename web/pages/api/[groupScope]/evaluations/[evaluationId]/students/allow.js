@@ -24,7 +24,7 @@ import {
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import { phaseGT } from '@/code/phase'
+import { phaseGT } from '@/core/phase'
 
 /* 
 Add particular student to the access list. 

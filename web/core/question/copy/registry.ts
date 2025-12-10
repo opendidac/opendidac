@@ -24,7 +24,7 @@ import {
   trueFalseReplicator,
   webReplicator,
   type QuestionReplicator,
-} from '@/code/question/copy/replicators'
+} from '@/core/question/copy/replicators'
 
 /**
  * Registry mapping each QuestionType → its corresponding replicator.
