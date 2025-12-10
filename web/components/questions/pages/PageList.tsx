@@ -130,11 +130,11 @@ const PageList: React.FC = () => {
 
   const { getPinnedFilter } = usePinnedFilter()
   
-  const pinnedFilter = useMemo<Record<string, any> | undefined>(() => {
-    if (!groupScope || typeof groupScope !== 'string') return undefined
-    const filter = (getPinnedFilter as (groupId: string) => Record<string, any> | undefined)(groupScope)
-    return filter && typeof filter === 'object' ? filter : undefined
-  }, [getPinnedFilter, groupScope])
+  const pinnedFilter = useMemo(
+    () => getPinnedFilter(groupScope as string),
+    [getPinnedFilter, groupScope]
+  )
+  
 
   const [queryString, setQueryString] = useState<string>(
     pinnedFilter ? new URLSearchParams(pinnedFilter as any).toString() : '',
