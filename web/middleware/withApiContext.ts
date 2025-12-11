@@ -21,12 +21,9 @@ import { getUser } from '@/core/auth/auth'
 
 /* --------------------------------------------------------------------------
  * API Context Middleware
- * --------------------------------------------------------------------------
- * Exposes Next.js request/response objects directly in context.
- * -------------------------------------------------------------------------- */
 
 /**
- * Unified entry point for all API routes.
+ * Unified entry point for all authenticated API routes.
  * Builds:
  *   - Next.js req / res objects (passed as first two arguments)
  *   - raw NextAuth session user
