@@ -9,7 +9,7 @@
     "dev:https": "next dev --webpack --experimental-https --hostname 127.0.0.1",
     "dev": "next dev --turbopack",
     "dev:migration": "npx prisma migrate dev && npx next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint . --ext .js,.ts,.tsx && echo No lint errors found.",
     "lint:fix": "eslint --fix . --ext .js,.ts,.tsx && echo Linting complete.",
