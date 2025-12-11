@@ -21,8 +21,8 @@ import { Role } from '@prisma/client'
 // Test group scopes to exclude (exact matches)
 const EXCLUDED_GROUP_SCOPES = ['demo', 'test']
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
 
   try {
     const { academicYear } = req.query

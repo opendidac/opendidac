@@ -18,8 +18,8 @@ import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import { Role } from '@prisma/client'
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
 
   try {
     // Get min and max dates from StudentAnswer to determine the actual data range

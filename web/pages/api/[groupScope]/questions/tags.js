@@ -40,8 +40,8 @@ import { questionsFilterWhereClause } from '@/core/questionsFilter'
  *   - unused
  *
  */
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   const where = questionsFilterWhereClause(req.query)
 
   // Group tags from filtered questions

@@ -28,8 +28,8 @@ import {
 import { withApiContext } from '@/middleware/withApiContext'
 import { getUser } from '@/core/auth/auth'
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   // shallow session to question get -> we just need to count the number of questions
   const { groupScope } = req.query
 
@@ -78,8 +78,8 @@ const get = async (ctx) => {
 /*
  ** Creating a new evaluation
  * */
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { groupScope } = req.query
 
   const {

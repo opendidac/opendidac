@@ -30,8 +30,8 @@ import {
 } from '@/middleware/withStudentEvaluation'
 import { getUser } from '@/core/auth/auth'
 
-const addOrRemoveOption = async (ctx) => {
-  const { req, res, prisma } = ctx
+const addOrRemoveOption = async (req, res, ctx) => {
+  const { prisma } = ctx
   const user = await getUser(req, res)
   const studentEmail = user.email
   const { evaluationId, questionId } = req.query

@@ -15,8 +15,8 @@
  */
 
 export const withPurgeGuard = (handler, args = {}) => {
-  return async (ctx) => {
-    const { req, res, prisma, evaluation } = ctx
+  return async (req, res, ctx) => {
+    const { prisma, evaluation } = ctx
     const { evaluationId } = req.query || {}
 
     if (!prisma) {
@@ -28,7 +28,7 @@ export const withPurgeGuard = (handler, args = {}) => {
     }
 
     if (!evaluationId) {
-      return handler(ctx)
+      return handler(req, res, ctx)
     }
 
     // Evaluation must be provided by withEvaluation middleware
@@ -50,6 +50,6 @@ export const withPurgeGuard = (handler, args = {}) => {
       })
     }
 
-    return handler(ctx)
+    return handler(req, res, ctx)
   }
 }

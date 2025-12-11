@@ -21,8 +21,8 @@ import {
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { groupScope, evaluationId, questionId } = req.query
   const { addendum } = req.body
 

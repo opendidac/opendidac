@@ -28,6 +28,7 @@
  * @important If you add fields, make sure to control all student /api/users endpoints for overfetch to not send any sensitive data to the student.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
 import type { Prisma } from '@prisma/client'
 import type {
   IApiContext,
@@ -76,13 +77,23 @@ export type { IEvaluationInContext } from '@/core/types/api/context'
  * Middleware: fetches evaluation, injects it into ctx.
  */
 export const withEvaluation =
-  (handler: (ctx: IApiContextWithEvaluation | IApiContext) => Promise<any>) =>
-  async (ctx: IApiContext): Promise<any> => {
+  (
+    handler: (
+      req: NextApiRequest,
+      res: NextApiResponse,
+      ctx: IApiContextWithEvaluation | IApiContext,
+    ) => Promise<any>,
+  ) =>
+  async (
+    req: NextApiRequest,
+    res: NextApiResponse,
+    ctx: IApiContext,
+  ): Promise<any> => {
     const { prisma } = ctx
-    const { evaluationId } = ctx.req.query
+    const { evaluationId } = req.query
 
     if (!prisma) {
-      return ctx.res.status(500).json({
+      return res.status(500).json({
         message:
           'Prisma client not available. Did you call withPrisma middleware?',
       })
@@ -90,7 +101,7 @@ export const withEvaluation =
 
     if (!evaluationId) {
       // No evaluation in URL → just continue
-      return handler(ctx)
+      return handler(req, res, ctx)
     }
 
     const evaluation = await prisma.evaluation.findUnique({
@@ -99,7 +110,7 @@ export const withEvaluation =
     })
 
     if (!evaluation) {
-      return ctx.res.status(404).json({ message: 'Evaluation not found' })
+      return res.status(404).json({ message: 'Evaluation not found' })
     }
 
     // Inject evaluation into context
@@ -108,5 +119,5 @@ export const withEvaluation =
       evaluation,
     }
 
-    return handler(ctxWithEvaluation)
+    return handler(req, res, ctxWithEvaluation)
   }

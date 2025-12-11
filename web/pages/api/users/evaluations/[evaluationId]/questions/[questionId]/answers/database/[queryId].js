@@ -34,8 +34,8 @@ import { getUser } from '@/core/auth/auth'
   Student update a database query during a evaluation
 */
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const user = await getUser(req, res)
   const studentEmail = user.email
   const { evaluationId, questionId, queryId } = req.query

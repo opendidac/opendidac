@@ -22,8 +22,8 @@ import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 import { Role } from '@prisma/client'
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { fields } = req.body
 
   await prisma.$transaction(async (prisma) => {

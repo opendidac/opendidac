@@ -21,8 +21,8 @@ import {
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
   const question = await prisma.question.findUnique({
     where: { id: questionId },

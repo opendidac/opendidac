@@ -29,8 +29,8 @@ import {
 import { getUser } from '@/core/auth/auth'
 import { grading } from '@/core/grading/engine'
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const user = await getUser(req, res)
   const userEmail = user.email
   const { evaluationId, questionId } = req.query

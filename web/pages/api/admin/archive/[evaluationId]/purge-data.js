@@ -21,8 +21,8 @@ import { withEvaluation } from '@/middleware/withEvaluation'
 import { getUser } from '@/core/auth/auth'
 import { purgeEvaluationData } from '@/core/evaluation/purge'
 
-const post = async (ctx) => {
-  const { req, res, prisma, evaluation } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma, evaluation } = ctx
   const { evaluationId } = req.query
 
   // Only allow purging from ARCHIVED phase

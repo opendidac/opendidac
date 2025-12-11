@@ -26,8 +26,8 @@ import { withApiContext } from '@/middleware/withApiContext'
  * Used by the page Evaluation Grading
  */
 
-const patch = async (ctx) => {
-  const { req, res, prisma } = ctx
+const patch = async (req, res, ctx) => {
+  const { prisma } = ctx
   const {
     grading: {
       questionId,

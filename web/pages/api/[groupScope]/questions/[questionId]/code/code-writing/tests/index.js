@@ -28,8 +28,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * post: create a new test case for a code question
  */
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   // get the list of test cases for a code question
   const { questionId } = req.query
   const testCases = await prisma.testCase.findMany({
@@ -44,8 +44,8 @@ const get = async (ctx) => {
   res.status(200).json(testCases)
 }
 
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   // create a new test case for a code question
   const { questionId } = req.query
   const { exec, input, expectedOutput } = req.body

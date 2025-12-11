@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { QuestionStatus, Role, Prisma } from '@prisma/client'
 import {
   withAuthorization,
@@ -43,8 +44,12 @@ interface PostBody {
   questionIds: string[]
 }
 
-const get = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const get = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   const { evaluationId } = req.query
 
   if (!evaluationId || typeof evaluationId !== 'string') {
@@ -86,8 +91,12 @@ const get = async (ctx: IApiContext) => {
   res.status(200).json(evaluation.evaluationToQuestions)
 }
 
-const post = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const post = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   // add a new question to a evaluation
   const { evaluationId } = req.query
   const body = req.body as PostBody

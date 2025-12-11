@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-import type { IApiContext } from '@/core/types/api'
 import { withApiContext } from '@/middleware/withApiContext'
+import { NextApiRequest, NextApiResponse } from 'next'
 
-const get = async (ctx: IApiContext) => {
-  const { res } = ctx
+const get = async (_: NextApiRequest, res: NextApiResponse) => {
   const terms = process.env.TERMS_OF_SERVICE
-  if (!terms) return res.status(400).json({ message: 'Terms not configured' })
+  if (!terms) return res.status(400).json({ code: 'terms_not_configured', message: 'Terms not configured' })
 
   return res.status(200).json({ terms })
 }

@@ -24,8 +24,8 @@ import { getUser } from '@/core/auth/auth'
 /*
  endpoint to run the database console query sandbox for a users
  */
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const user = await getUser(req, res)
 
   const { evaluationId, questionId } = req.query

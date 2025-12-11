@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { Role, QuestionStatus, Prisma } from '@prisma/client'
 import {
   withAuthorization,
@@ -50,8 +51,12 @@ const SELECT_FOR_PROFESSOR_EDITING = {
  *  database and code question have separate endpoints
  */
 
-const get = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const get = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   // get a question by id
   const { groupScope, questionId } = req.query
 
@@ -95,8 +100,12 @@ interface PutQuestionBody {
   }
 }
 
-const put = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const put = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   const { groupScope } = req.query
   const body = req.body as PutQuestionBody
   const { question } = body
@@ -163,8 +172,12 @@ const put = async (ctx: IApiContext) => {
   res.status(200).json(updatedQuestion)
 }
 
-const del = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const del = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   const { questionId } = req.query
 
   if (!questionId || typeof questionId !== 'string') {

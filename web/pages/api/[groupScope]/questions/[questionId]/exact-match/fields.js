@@ -22,8 +22,8 @@ import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 import { Role } from '@prisma/client'
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
   const { field } = req.body
 
@@ -50,8 +50,8 @@ const put = async (ctx) => {
   res.status(200).json(updatedField)
 }
 
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
   const { field } = req.body
 
@@ -71,8 +71,8 @@ const post = async (ctx) => {
   res.status(200).json(newField)
 }
 
-const del = async (ctx) => {
-  const { req, res, prisma } = ctx
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
   const { fieldId } = req.body
 
@@ -118,8 +118,8 @@ const del = async (ctx) => {
   res.status(200).json({ message: 'Field deleted successfully' })
 }
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
 
   const exactMatch = await prisma.exactMatch.findUnique({

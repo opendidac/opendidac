@@ -55,8 +55,8 @@ model Annotation {
 }
  */
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { annotation } = req.body
 
   const user = await getUser(req, res)
@@ -80,8 +80,8 @@ const put = async (ctx) => {
   res.status(200).json(updatedAnnotation)
 }
 
-const del = async (ctx) => {
-  const { req, res, prisma } = ctx
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { annotationId } = req.query
 
   await prisma.annotation.delete({

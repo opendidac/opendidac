@@ -20,8 +20,8 @@ import { withApiContext } from '@/middleware/withApiContext'
 import { withEvaluation } from '@/middleware/withEvaluation'
 import { getUser } from '@/core/auth/auth'
 
-const post = async (ctx) => {
-  const { req, res, prisma, evaluation } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma, evaluation } = ctx
   const { evaluationId } = req.query
   const { archiveDate } = req.body
 

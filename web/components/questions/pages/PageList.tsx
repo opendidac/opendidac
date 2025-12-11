@@ -39,10 +39,10 @@ import CopyQuestionDialog from '../list/CopyQuestionDialog'
 import ImportQuestionsDialog from '../list/ImportQuestionsDialog'
 import QuestionsGrid from '../list/QuestionsGrid'
 import { usePinnedFilter } from '@/context/PinnedFilterContext'
-import type { ProfessorListingPayload } from '@/api-types/[groupScope]/questions/index'
+import type { ProfessorQuestionListingPayload } from '@/api-types/[groupScope]/questions/index'
 
 interface ExportQuestionsButtonProps {
-  selection: ProfessorListingPayload[]
+  selection: ProfessorQuestionListingPayload[]
   groupScope: string
   onExportSuccess?: () => void
 }
@@ -144,7 +144,7 @@ const PageList: React.FC = () => {
     data: questions,
     error,
     mutate,
-  } = useSWR<ProfessorListingPayload[]>(
+  } = useSWR<ProfessorQuestionListingPayload[]>(
     groupScope ? `/api/${groupScope}/questions?${queryString}` : null,
     fetcher,
   )
@@ -158,9 +158,9 @@ const PageList: React.FC = () => {
   const [copyDialogOpen, setCopyDialogOpen] = useState<boolean>(false)
   const [importDialogOpen, setImportDialogOpen] = useState<boolean>(false)
 
-  const [selected, setSelected] = useState<ProfessorListingPayload | undefined>(undefined)
+  const [selected, setSelected] = useState<ProfessorQuestionListingPayload | undefined>(undefined)
 
-  const [selection, setSelection] = useState<ProfessorListingPayload[]>([])
+  const [selection, setSelection] = useState<ProfessorQuestionListingPayload[]>([])
 
   useEffect(() => {
     setSelection([])
@@ -272,13 +272,13 @@ const PageList: React.FC = () => {
                     setSelected={setSelected}
                     selection={selection}
                     setSelection={setSelection}
-                    onRowClick={(question: ProfessorListingPayload) => {
+                    onRowClick={(question: ProfessorQuestionListingPayload) => {
                       setSelected(question)
                       setOpenSideUpdate(true)
                     }}
                     groupScope={groupScope}
                     setCopyDialogOpen={setCopyDialogOpen}
-                    setOpenSideUpdate={(q: ProfessorListingPayload) => {
+                    setOpenSideUpdate={(q: ProfessorQuestionListingPayload) => {
                       setSelected(q)
                       setOpenSideUpdate(true)
                     }}

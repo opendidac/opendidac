@@ -31,8 +31,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * put: update the database part of a question
  */
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   // get the "database" part of the question
   const { questionId } = req.query
   const database = await prisma.database.findUnique({
@@ -44,8 +44,8 @@ const get = async (ctx) => {
   res.status(200).json(database)
 }
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update the "database" part of the question
   const { questionId } = req.query
   const { image } = req.body

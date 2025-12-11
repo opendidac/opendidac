@@ -24,8 +24,8 @@ import { withApiContext } from '@/middleware/withApiContext'
 
  */
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { mode = 'todo' } = req.query
 
   // Build mode-specific where conditions

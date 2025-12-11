@@ -23,8 +23,8 @@ import { withApiContext } from '@/middleware/withApiContext'
  endpoint to run the sandbox for a question with solution or template files recovered from the database
  used to run the sandbox for professor files, also use by pull solution output
  */
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId, nature } = req.query
 
   if (!['solution', 'template'].includes(nature)) {

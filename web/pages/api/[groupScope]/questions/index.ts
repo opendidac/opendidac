@@ -15,12 +15,13 @@
  */
 
 import { Role, QuestionType, CodeQuestionType } from '@prisma/client'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import {
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
-import type { IApiContext } from '@/core/types/api'
+import type { IApiContext, ApiResponse } from '@/core/types/api'
 
 import { questionsFilterWhereClause } from '@/core/questionsFilter'
 import { codeInitialUpdateQuery, questionTypeSpecific } from '@/core/questions'
@@ -31,15 +32,15 @@ import databaseTemplate from '@/core/database.json'
 // ---------- IMPORT VIEW SELECTS + PAYLOAD TYPES ----------
 import {
   SELECT_FOR_PROFESSOR_LISTING,
-  type ProfessorListingPayload,
+  type ProfessorQuestionListingPayload,
 } from '@/api-types/[groupScope]/questions/index'
 
-// ----------------------------------------------------------
-// GET /api/[groupScope]/questions
-// ----------------------------------------------------------
-
-const get = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const get = async (
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse<ProfessorQuestionListingPayload[]>>,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
 
   const where = questionsFilterWhereClause(req.query)
 
@@ -49,15 +50,19 @@ const get = async (ctx: IApiContext) => {
     orderBy: { createdAt: 'desc' },
   })
 
-  res.status(200).json(questions as ProfessorListingPayload[])
-}
+  res.status(200).json(questions)
+} 
 
 // ----------------------------------------------------------
 // POST /api/[groupScope]/questions
 // ----------------------------------------------------------
 
-const post = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const post = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   const { groupScope } = req.query
 
   const body = req.body ?? {}

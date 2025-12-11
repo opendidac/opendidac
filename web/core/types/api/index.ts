@@ -37,3 +37,12 @@ export type ApiContextWithRoles = IApiContextWithRoles
 export type ApiContextWithEvaluation = IApiContextWithEvaluation
 export type EvaluationInContext = IEvaluationInContext
 // Note: SessionUser is exported as a class, not a type alias
+
+type ApiResponse<T> = T | ApiMessage
+
+type ApiMessage = {
+  code: string
+  message: string
+}
+
+export type { ApiResponse, ApiMessage }

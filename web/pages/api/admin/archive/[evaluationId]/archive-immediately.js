@@ -19,8 +19,8 @@ import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import { withEvaluation } from '@/middleware/withEvaluation'
 
-const post = async (ctx) => {
-  const { req, res, prisma, evaluation, user } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma, evaluation, user } = ctx
   if (!user) {
     res.status(401).json({ message: 'Unauthorized' })
     return

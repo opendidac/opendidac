@@ -29,8 +29,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * post: create a new snippet for a code question
  */
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   // get the [nature] files for a code question
 
   const { questionId } = req.query
@@ -45,8 +45,8 @@ const get = async (ctx) => {
   res.status(200).json(snippets)
 }
 
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   // create a new snippet for a code question
 
   const { questionId } = req.query

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import { withRestrictions } from '@/middleware/withRestrictions'
@@ -47,8 +48,12 @@ const SELECT_FOR_STUDENT_JOIN = {
   ...SELECT_OFFICIAL_ANSWERS,
 } as const satisfies Prisma.QuestionSelect
 
-const post = async (ctx: IApiContextWithEvaluation | IApiContext) => {
-  const { req, res, prisma } = ctx
+const post = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContextWithEvaluation | IApiContext,
+) => {
+  const { prisma } = ctx
   const { evaluationId } = req.query
 
   if (!evaluationId || typeof evaluationId !== 'string') {

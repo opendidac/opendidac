@@ -24,8 +24,8 @@ import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 // Update a single option of a multiple choice question
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId, optionId } = req.query
   const { text, isCorrect } = req.body || {}
 
@@ -71,8 +71,8 @@ const put = async (ctx) => {
 }
 
 // Delete a single option of a multiple choice question
-const del = async (ctx) => {
-  const { req, res, prisma } = ctx
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId, optionId } = req.query
 
   // Ensure the option exists and belongs to the question

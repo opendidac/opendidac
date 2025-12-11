@@ -22,8 +22,8 @@ import {
 import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update a file for a code question
   // as the file is created for a code question we handle it through CodeToFile entity
 
@@ -77,8 +77,8 @@ const put = async (ctx) => {
   res.status(200).json(file)
 }
 
-const del = async (ctx) => {
-  const { req, res, prisma } = ctx
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   // delete a file for a code question, cascade from codeToFile wont work here
   // as the file is created for a code question we handle it through CodeToFile entity
 

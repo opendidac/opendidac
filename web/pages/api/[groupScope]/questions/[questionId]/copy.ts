@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { Role, QuestionSource, Prisma, PrismaClient } from '@prisma/client'
 
 import {
@@ -25,8 +26,12 @@ import type { IApiContext } from '@/core/types/api'
 import { SELECT_FOR_QUESTION_COPY } from '@/core/question/select'
 import { copyQuestion } from '@/core/question/copy'
 
-const post = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const post = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   const { groupScope, questionId } = req.query
 
   if (!questionId || typeof questionId !== 'string') {

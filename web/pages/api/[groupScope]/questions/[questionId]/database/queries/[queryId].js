@@ -28,8 +28,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * del: delete a query for a database question
  */
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update a query for a database question
 
   const { questionId, queryId } = req.query
@@ -93,8 +93,8 @@ const put = async (ctx) => {
   res.status(200).json(query)
 }
 
-const del = async (ctx) => {
-  const { req, res, prisma } = ctx
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   // DELETE a query for a database question
 
   const { questionId, queryId } = req.query

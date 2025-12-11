@@ -29,8 +29,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  */
 
 // get the multichoice
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
 
   const multiChoice = await prisma.multipleChoice.findUnique({
@@ -55,8 +55,8 @@ const get = async (ctx) => {
 }
 
 // update the multichoice first level attributes
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
   const {
     activateStudentComment,

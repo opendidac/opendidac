@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { Role, Prisma } from '@prisma/client'
 import {
   withAuthorization,
@@ -45,8 +46,12 @@ const selectForEvaluationResults = (): Prisma.QuestionSelect => {
   } as const satisfies Prisma.QuestionSelect
 }
 
-const get = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const get = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   const { evaluationId } = req.query
 
   if (!evaluationId || typeof evaluationId !== 'string') {

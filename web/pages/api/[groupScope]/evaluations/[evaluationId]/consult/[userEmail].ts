@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { Role, Prisma } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
@@ -58,8 +59,12 @@ const buildSelectForProfessorConsultation = (
 /*
   Professor can consult the user's answers to the questions of an evaluation
 */
-const get = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const get = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   const { evaluationId, userEmail } = req.query
 
   if (!evaluationId || typeof evaluationId !== 'string') {

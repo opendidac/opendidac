@@ -29,8 +29,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  */
 
 // create a new option for the multichoice question
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
   const { option } = req.body
 

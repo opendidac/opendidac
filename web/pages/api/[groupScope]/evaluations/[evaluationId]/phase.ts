@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
 import {
   EvaluationPhase,
   QuestionSource,
@@ -88,8 +89,12 @@ const copyQuestionsForEvaluation = async (
 
 type PatchBody = Pick<Prisma.EvaluationUpdateInput, 'phase'>
 
-const get = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const get = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   const { evaluationId } = req.query
 
   if (!evaluationId || typeof evaluationId !== 'string') {
@@ -116,8 +121,12 @@ const get = async (ctx: IApiContext) => {
   res.status(200).json(evaluation)
 }
 
-const patch = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const patch = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   const { evaluationId } = req.query
   const body = req.body as PatchBody
   const { phase: nextPhase } = body

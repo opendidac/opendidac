@@ -18,8 +18,8 @@ import { Role } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 
-const put = async (ctx) => {
-  const { req, res, prisma, user } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma, user } = ctx
   // change the selected group of the users
   const { groupScope } = req.body
 

@@ -26,8 +26,8 @@ import { withApiContext } from '@/middleware/withApiContext'
  * del: remove a member from a group
  */
 
-const get = async (ctx) => {
-  const { req, res, prisma, user } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma, user } = ctx
   // get all members of group
   const { groupId } = req.query
 
@@ -73,8 +73,8 @@ const get = async (ctx) => {
   res.status(200).json(members)
 }
 
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   // add member to group
   const { groupId } = req.query
   const { member } = req.body
@@ -126,8 +126,8 @@ const post = async (ctx) => {
   }
 }
 
-const del = async (ctx) => {
-  const { req, res, prisma } = ctx
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   // remove a member from a group
   const { groupId } = req.query
   const { userId: targetUserId } = req.body || {}

@@ -78,8 +78,8 @@ async function trackSessionChanges(
 }
 
 // The main endpoint for getting student status
-const get = async (ctx) => {
-  const { req, res, prisma, evaluation } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma, evaluation } = ctx
   const user = await getUser(req, res)
   const { email: studentEmail, id: userId } = user
   const { evaluationId } = req.query
@@ -132,8 +132,8 @@ const get = async (ctx) => {
 }
 
 // student ends his evaluation
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const user = await getUser(req, res)
   const studentEmail = user.email
   const { evaluationId } = req.query

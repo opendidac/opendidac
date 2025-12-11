@@ -16,8 +16,8 @@
 
 function withEntityUpdate(updateFunction) {
   return function (handler, args = {}) {
-    return async (ctx) => {
-      const { req, res, prisma } = ctx
+    return async (req, res, ctx) => {
+      const { prisma } = ctx
 
       if (!prisma) {
         return res.status(500).json({
@@ -29,14 +29,14 @@ function withEntityUpdate(updateFunction) {
 
       // Execute the original handler
       try {
-        await handler(ctx)
+        await handler(req, res, ctx)
 
         // Check if the response was successful and update the entity
         // res.statusCode is set when res.status() is called
         // Only update if status code is explicitly 200
         if (res.statusCode === 200) {
           try {
-            await updateFunction(ctx)
+            await updateFunction(req, res, ctx)
           } catch (error) {
             console.error('Error during update:', error)
             // Handle error as needed - don't fail the request
@@ -51,8 +51,8 @@ function withEntityUpdate(updateFunction) {
   }
 }
 
-export const withQuestionUpdate = withEntityUpdate(async (ctx) => {
-  const { req, prisma } = ctx
+export const withQuestionUpdate = withEntityUpdate(async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
 
   if (!questionId) {
@@ -66,8 +66,8 @@ export const withQuestionUpdate = withEntityUpdate(async (ctx) => {
   })
 })
 
-export const withEvaluationUpdate = withEntityUpdate(async (ctx) => {
-  const { req, prisma } = ctx
+export const withEvaluationUpdate = withEntityUpdate(async (req, res, ctx) => {
+  const { prisma } = ctx
   const { evaluationId } = req.query
   await prisma.evaluation.update({
     where: { id: evaluationId },

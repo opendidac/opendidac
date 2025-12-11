@@ -27,8 +27,7 @@ import { Role } from '@prisma/client'
 const stat = promisify(fs.stat)
 const readFile = promisify(fs.readFile)
 
-const get = async (ctx) => {
-  const { req, res } = ctx
+const get = async (req, res, ctx) => {
   const { path: filePathArray } = req.query
   const filePath = filePathArray.join('/')
 

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { Prisma } from '@prisma/client'
 import { QuestionStatus, QuestionSource, Role } from '@prisma/client'
 import { getUser } from '@/core/auth/auth'
@@ -70,8 +71,12 @@ type GroupWithMembershipInfo = GroupListing & {
   }
 }
 
-const get = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const get = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   // get all groups with their created by information and members
   const user = await getUser(req, res)
 
@@ -127,8 +132,12 @@ const get = async (ctx: IApiContext) => {
     res.status(500).json({ message: 'Internal server error' })
   }
 }
-const post = async (ctx: IApiContext) => {
-  const { req, res, prisma, user } = ctx
+const post = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma, user } = ctx
   const { label, scope, select } = req.body
 
   // 1. Check if group exists

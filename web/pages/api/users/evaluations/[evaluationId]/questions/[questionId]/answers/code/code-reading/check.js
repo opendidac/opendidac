@@ -31,8 +31,8 @@ import { getUser } from '@/core/auth/auth'
   Student checked his answer to a code reading snippet during an evaluation
 
 */
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const user = await getUser(req, res)
   const studentEmail = user.email
   const { evaluationId, questionId } = req.query

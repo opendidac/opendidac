@@ -35,8 +35,8 @@ import { getUser } from '@/core/auth/auth'
   DELETE : Set the answer status to IN_PROGRESS
 */
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update users answers
   const user = await getUser(req, res)
   const studentEmail = user.email
@@ -57,8 +57,8 @@ const put = async (ctx) => {
   res.status(200).json({ message: 'Answer submitted' })
 }
 
-const del = async (ctx) => {
-  const { req, res, prisma } = ctx
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update users answers
   const user = await getUser(req, res)
   const studentEmail = user.email

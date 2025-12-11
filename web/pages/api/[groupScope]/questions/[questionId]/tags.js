@@ -28,8 +28,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * put: update tags of a question
  */
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
 
   // get all tags linked to this question
@@ -44,8 +44,8 @@ const get = async (ctx) => {
 
   res.status(200).json(tags)
 }
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { groupScope } = req.query
   const { tags } = req.body
   const { questionId } = req.query

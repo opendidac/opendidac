@@ -55,8 +55,8 @@ model Annotation {
 }
  */
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { entityType, entityId } = req.query
 
   const annotation = await prisma.annotation.findUnique({
@@ -71,8 +71,8 @@ const get = async (ctx) => {
   res.status(200).json(annotation)
 }
 
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { student, question, annotation, entityType, entity } = req.body
 
   const user = await getUser(req, res)

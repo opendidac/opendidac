@@ -32,8 +32,8 @@ import { getUser } from '@/core/auth/auth'
   Student updated his answer to a code wiritng file during an evaluation
 
 */
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const user = await getUser(req, res)
   const studentEmail = user.email
   const { evaluationId, questionId, fileId } = req.query

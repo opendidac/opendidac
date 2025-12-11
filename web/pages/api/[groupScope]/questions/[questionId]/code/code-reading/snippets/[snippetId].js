@@ -22,8 +22,8 @@ import {
 import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update a code snippet
 
   const { questionId, snippetId } = req.query
@@ -61,8 +61,8 @@ const put = async (ctx) => {
   res.status(200).json(codeReadingSnippet)
 }
 
-const del = async (ctx) => {
-  const { req, res, prisma } = ctx
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   // delete a code snippet
 
   const { questionId, snippetId } = req.query

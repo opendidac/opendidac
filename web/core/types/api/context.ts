@@ -23,12 +23,6 @@ import { evaluationContextSelect } from '@/middleware/withEvaluation'
  * BASE API CONTEXT
  * -------------------------------------------------------------------------- */
 export interface IApiContext {
-  /** Next.js request object */
-  req: NextApiRequest
-
-  /** Next.js response object */
-  res: NextApiResponse
-
   prisma: PrismaClient
 
   /** Authenticated user from NextAuth session */

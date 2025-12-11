@@ -30,8 +30,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  *
  */
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   //
   const { questionId } = req.query
   const codeReading = await prisma.codeReading.findUnique({
@@ -45,8 +45,8 @@ const get = async (ctx) => {
   res.status(200).json(codeReading)
 }
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update a code reading
   const { questionId } = req.query
 

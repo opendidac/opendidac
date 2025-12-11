@@ -24,8 +24,8 @@ import { withApiContext } from '@/middleware/withApiContext'
  * del: delete a group
  * put: update a group label
  */
-const del = async (ctx) => {
-  const { req, res, prisma } = ctx
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   // delete a group
   const { groupId } = req.query
 
@@ -55,8 +55,8 @@ const del = async (ctx) => {
   res.status(200).json({ message: 'Group deleted' })
 }
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update a group
   const { groupId } = req.query
   const { label, scope } = req.body

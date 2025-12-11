@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
 import type { Role } from '@prisma/client'
 import type { IApiContext, IApiContextWithRoles } from '@/core/types/api'
 
@@ -49,18 +50,14 @@ type EntityModelName = Lowercase<EntityName>
  * Important: Always use the singular form of the entity id variable name in the query string.
  */
 export function withGroupScope<T extends IApiContext>(
-  handler: (ctx: T) => Promise<any>,
+  handler: (req: NextApiRequest, res: NextApiResponse, ctx: T) => Promise<any>,
   args: Record<string, unknown> = {},
 ) {
-  return async (ctx: T): Promise<any> => {
-    const { req, res } = ctx
-
-    if (!req || !res) {
-      return res
-        .status(500)
-        .json({ message: 'Request or response not available in context.' })
-    }
-
+  return async (
+    req: NextApiRequest,
+    res: NextApiResponse,
+    ctx: T,
+  ): Promise<any> => {
     const { groupScope } = req.query
 
     if (!groupScope) {
@@ -136,7 +133,7 @@ export function withGroupScope<T extends IApiContext>(
       }
     }
 
-    return handler(ctx)
+    return handler(req, res, ctx)
   }
 }
 
@@ -149,17 +146,21 @@ export interface WithAuthorizationOptions {
  * Adds roles to the context as IApiContextWithRoles.
  */
 export function withAuthorization<T extends IApiContext>(
-  handler: (ctx: T & IApiContextWithRoles) => Promise<any>,
+  handler: (
+    req: NextApiRequest,
+    res: NextApiResponse,
+    ctx: T & IApiContextWithRoles,
+  ) => Promise<any>,
   options: WithAuthorizationOptions = {},
-): (ctx: T) => Promise<any> {
+): (req: NextApiRequest, res: NextApiResponse, ctx: T) => Promise<any> {
   const { roles: allowedRoles = [] } = options
 
-  return async (ctx: T): Promise<any> => {
-    const { res, user } = ctx
-
-    if (!res) {
-      throw new Error('Response not available in context.')
-    }
+  return async (
+    req: NextApiRequest,
+    res: NextApiResponse,
+    ctx: T,
+  ): Promise<any> => {
+    const { user } = ctx
 
     const userRoles = user.roles
 
@@ -185,6 +186,6 @@ export function withAuthorization<T extends IApiContext>(
       roles: userRoles,
     }
 
-    return handler(ctxWithRoles)
+    return handler(req, res, ctxWithRoles)
   }
 }

@@ -24,8 +24,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
 /*
  endpoint to run the sandbox for a database question with queries recovered from the database
  */
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
 
   const database = await prisma.database.findUnique({

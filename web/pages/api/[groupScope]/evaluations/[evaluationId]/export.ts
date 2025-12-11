@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { Role } from '@prisma/client'
 import { withApiContext } from '@/middleware/withApiContext'
 import {
@@ -45,8 +46,12 @@ const OUTPUT_FORMAT = 'pdf' as 'html' | 'pdf'
 
 // ----------------------------------------------------------
 
-const get = async (ctx: IApiContext) => {
-  const { req, res, prisma } = ctx
+const get = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
+  const { prisma } = ctx
   const { evaluationId, groupScope } = req.query
 
   if (typeof evaluationId !== 'string')

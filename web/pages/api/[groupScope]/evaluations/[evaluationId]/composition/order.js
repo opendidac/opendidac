@@ -24,8 +24,8 @@ import { withEvaluationUpdate } from '@/middleware/withUpdate'
 
 /** Managing the order of the questions in an evaluation */
 
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update the order of the questions in the evaluation
   const { evaluationId } = req.query
   const { questions } = req.body

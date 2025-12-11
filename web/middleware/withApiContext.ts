@@ -28,12 +28,14 @@ import { getUser } from '@/core/auth/auth'
 /**
  * Unified entry point for all API routes.
  * Builds:
- *   - Next.js req / res objects
+ *   - Next.js req / res objects (passed as first two arguments)
  *   - raw NextAuth session user
  *   - prisma client
  *
- * Usage: ctx.req.query, ctx.req.body, res.status(200).json(), etc.
+ * Usage: req.query, req.body, res.status(200).json(), etc.
  */
+
+
 export function withApiContext(handlers: Record<string, Function>) {
   return async (nextReq: NextApiRequest, nextRes: NextApiResponse) => {
     const handler = handlers[nextReq.method || '']
@@ -47,12 +49,10 @@ export function withApiContext(handlers: Record<string, Function>) {
     }
 
     const ctx: IApiContext = {
-      req: nextReq,
-      res: nextRes,
       user: rawUser,
       prisma: getPrismaClient(),
     }
 
-    return handler(ctx)
+    return handler(nextReq, nextRes, ctx)
   }
 }

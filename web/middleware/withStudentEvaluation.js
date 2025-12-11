@@ -18,8 +18,8 @@ import { getUser } from '@/core/auth/auth'
 
 export function withStudentStatus(handler, args = {}) {
   const { statuses: allowedStatuses = [] } = args
-  return async (ctx) => {
-    const { req, res, prisma } = ctx
+  return async (req, res, ctx) => {
+    const { prisma } = ctx
 
     if (!prisma) {
       return res.status(500).json({
@@ -54,14 +54,14 @@ export function withStudentStatus(handler, args = {}) {
     }
 
     // Continue with the original handler
-    await handler(ctx)
+    await handler(req, res, ctx)
   }
 }
 
 export function withEvaluationPhase(handler, args = {}) {
   const { phases: allowedPhases = [] } = args
-  return async (ctx) => {
-    const { req, res, prisma, evaluation } = ctx
+  return async (req, res, ctx) => {
+    const { prisma, evaluation } = ctx
     const { evaluationId } = req.query
 
     if (!prisma) {
@@ -86,6 +86,6 @@ export function withEvaluationPhase(handler, args = {}) {
     }
 
     // Continue with the original handler if the phase is allowed
-    await handler(ctx)
+    await handler(req, res, ctx)
   }
 }

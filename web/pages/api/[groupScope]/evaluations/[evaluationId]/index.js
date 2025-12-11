@@ -26,8 +26,8 @@ import {
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { evaluationId } = req.query
 
   const evaluation = await prisma.evaluation.findUnique({
@@ -57,8 +57,8 @@ const get = async (ctx) => {
   res.status(200).json(evaluation)
 }
 
-const patch = async (ctx) => {
-  const { req, res, prisma } = ctx
+const patch = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { evaluationId } = req.query
 
   const currentEvaluation = await prisma.evaluation.findUnique({
@@ -273,8 +273,8 @@ const patch = async (ctx) => {
   res.status(200).json(evaluationAfterUpdate)
 }
 
-const del = async (ctx) => {
-  const { req, res, prisma } = ctx
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { groupScope, evaluationId } = req.query
 
   /*

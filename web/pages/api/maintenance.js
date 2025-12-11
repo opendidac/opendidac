@@ -168,8 +168,8 @@ const cleanupUnusedUploads = async (prisma, domainName) => {
   }
 }
 
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { action, options } = req.body
 
   switch (action) {

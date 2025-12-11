@@ -23,8 +23,8 @@ import {
 import { withApiContext } from '@/middleware/withApiContext'
 
 // update the status of a student in an evaluation
-const put = async (ctx) => {
-  const { req, res, prisma } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { evaluationId, studentEmail } = req.query
 
   const { status } = req.body

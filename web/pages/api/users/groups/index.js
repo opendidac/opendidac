@@ -18,8 +18,8 @@ import { Role } from '@prisma/client'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 
-const get = async (ctx) => {
-  const { res, prisma, user } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma, user } = ctx
   if (!user) {
     res.status(401).json({ message: 'Unauthorized' })
     return

@@ -29,8 +29,8 @@ fetch the informations necessary to decide where the users should be redirected
 based on the phase of the evaluation and the relation between the users and the evaluation
 Will respond with the Evaluation phase and the UserOnEvaluation object
 * */
-const get = async (ctx) => {
-  const { req, res, prisma, evaluation } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma, evaluation } = ctx
   const { evaluationId } = req.query
 
   const user = await getUser(req, res)

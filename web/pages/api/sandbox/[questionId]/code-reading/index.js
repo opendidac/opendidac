@@ -26,8 +26,8 @@ const environments = languages.environments
  endpoint to run the sandbox for a code question of type reading to fill the expected output
  used to run the sandbox for admin, students cant run sandox for code reading
  */
-const post = async (ctx) => {
-  const { req, res, prisma } = ctx
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
 
   const code = await prisma.code.findUnique({

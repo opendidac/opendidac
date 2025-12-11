@@ -34,6 +34,6 @@ export const SELECT_FOR_PROFESSOR_LISTING = {
   ...SELECT_QUESTION_TAGS,
 } as const satisfies Prisma.QuestionSelect
 
-export type ProfessorListingPayload = Prisma.QuestionGetPayload<{
+export type ProfessorQuestionListingPayload = Prisma.QuestionGetPayload<{
   select: typeof SELECT_FOR_PROFESSOR_LISTING
 }>

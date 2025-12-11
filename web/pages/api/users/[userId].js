@@ -22,8 +22,8 @@ import { withApiContext } from '@/middleware/withApiContext'
  *
  * Update the roles of the user
  */
-const patch = async (ctx) => {
-  const { req, res, prisma } = ctx
+const patch = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { roles } = req.body
 
   const { userId } = req.query

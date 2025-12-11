@@ -127,8 +127,8 @@ export const isUserInAccessList = async (userEmail, evaluation, prisma) => {
  * @returns {Function} Wrapped handler with restrictions applied
  */
 export const withRestrictions = (handler, args = {}) => {
-  return async (ctx) => {
-    const { req, res, prisma, evaluation } = ctx
+  return async (req, res, ctx) => {
+    const { prisma, evaluation } = ctx
     const { evaluationId } = req.query
     const user = await getUser(req, res)
 
@@ -141,7 +141,7 @@ export const withRestrictions = (handler, args = {}) => {
     }
 
     if (!evaluationId) {
-      return handler(ctx)
+      return handler(req, res, ctx)
     }
 
     if (!evaluation) {
@@ -218,6 +218,6 @@ export const withRestrictions = (handler, args = {}) => {
     }
 
     // ---- PASS THROUGH WHEN ALL RULES OK ----
-    return handler(ctx)
+    return handler(req, res, ctx)
   }
 }

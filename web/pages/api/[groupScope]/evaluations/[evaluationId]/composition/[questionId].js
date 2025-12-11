@@ -23,8 +23,8 @@ import { withApiContext } from '@/middleware/withApiContext'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
 import { withEvaluation } from '@/middleware/withEvaluation'
 
-const put = async (ctx) => {
-  const { req, res, prisma, evaluation } = ctx
+const put = async (req, res, ctx) => {
+  const { prisma, evaluation } = ctx
   // update the evaluationToQuestion
   const { evaluationId, questionId } = req.query
   const body = req.body
@@ -58,8 +58,8 @@ const put = async (ctx) => {
   res.status(200).json({ message: 'OK' })
 }
 
-const del = async (ctx) => {
-  const { req, res, prisma, evaluation } = ctx
+const del = async (req, res, ctx) => {
+  const { prisma, evaluation } = ctx
   // delete a question from an evaluation
   const { evaluationId, questionId } = req.query
 

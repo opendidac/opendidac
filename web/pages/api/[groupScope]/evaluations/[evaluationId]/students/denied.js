@@ -25,8 +25,8 @@ import { withApiContext } from '@/middleware/withApiContext'
 Get the list of students who have been denied access to the evaluation
 */
 
-const get = async (ctx) => {
-  const { req, res, prisma } = ctx
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { evaluationId } = req.query
   const evaluation = await prisma.evaluation.findUnique({
     where: {
