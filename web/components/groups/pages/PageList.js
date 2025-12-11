@@ -25,7 +25,7 @@ import { Box, Button, Stack, Typography } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos'
 
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import { useGroup } from '@/context/GroupContext'
 
 import LayoutMain from '@/components/layout/LayoutMain'

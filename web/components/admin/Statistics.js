@@ -17,7 +17,7 @@
 import { useState, useEffect } from 'react'
 import { Box, Typography, Grid, Alert, Stack } from '@mui/material'
 import useSWR from 'swr'
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
 import Loading from '@/components/feedback/Loading'
 import {

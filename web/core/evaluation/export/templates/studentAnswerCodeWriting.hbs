@@ -1,0 +1,56 @@
+<div style="display:flex;flex-direction:column;gap:15px;">
+    {{> studentAnswerHeader studentAnswer}}
+    <span>Only editable files are shown</span>
+    {{#each studentAnswer.code.codeWriting.files}}
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+      {{#if (equals this.studentPermission 'UPDATE')}}
+        <div>{{this.file.path}}</div>
+        <div>
+          {{> codeBloc this.file.content}}
+        </div>
+        
+        {{#if this.file.annotation}}
+          <div style="margin-top: 10px;">
+            <div style="font-weight: bold; color: #0000ff; margin-bottom: 5px;">Professor's Annotated Version:</div>
+            <div style="border: 2px solid #0000ff40; border-radius: 5px; padding: 10px; background-color: #f8f9ff;">
+              {{> codeBloc this.file.annotation.content}}
+            </div>
+          </div>
+        {{/if}}
+      {{/if}}
+  
+      </div>
+    {{/each}}
+    <h5>Test Case Results</h5>
+    {{#each studentAnswer.code.codeWriting.testCaseResults}}
+      <div style="display: flex; flex-direction: column; gap: 5px;">
+        <div style="display: flex; align-items: flex-start;">
+          <label style="width: 150px;">Exec:</label>
+          <span style="flex:1;">{{> codeBloc this.exec}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <label style="width: 150px;">Input:</label>
+          <span style="flex:1;">{{> codeBloc this.input}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <label style="width: 150px;">Output:</label>
+          <span style="flex:1;">{{> codeBloc this.output}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <label style="width: 150px;">Expected Output:</label>
+          <span style="flex:1;">{{> codeBloc this.expectedOutput}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <label style="width: 150px;">Passed:</label>
+          <span style="flex:1;">{{this.passed}}</span>
+        </div>
+      </div>
+    {{/each}}
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+    {{#if studentAnswer.code.codeWriting.allTestCasesPassed}}
+      <label class="success">All Test Cases Passed!</label>
+    {{else}}
+      <label class="error">Some Test Cases Failed!</label>
+    {{/if}}
+    </div>
+</div>

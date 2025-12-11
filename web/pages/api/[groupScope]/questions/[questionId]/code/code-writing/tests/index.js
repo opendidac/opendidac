@@ -18,9 +18,8 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /**
@@ -29,7 +28,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * post: create a new test case for a code question
  */
 
-const get = async (req, res, prisma) => {
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   // get the list of test cases for a code question
   const { questionId } = req.query
   const testCases = await prisma.testCase.findMany({
@@ -44,7 +44,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(testCases)
 }
 
-const post = async (req, res, prisma) => {
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   // create a new test case for a code question
   const { questionId } = req.query
   const { exec, input, expectedOutput } = req.body
@@ -67,11 +68,11 @@ const post = async (req, res, prisma) => {
   res.status(200).json(testCase)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  POST: withGroupScope(
+    withAuthorization(withQuestionUpdate(post), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

@@ -18,11 +18,11 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
-const get = async (req, res, prisma) => {
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   // get the code of the question
   const { questionId } = req.query
   const code = await prisma.code.findUnique({
@@ -34,8 +34,6 @@ const get = async (req, res, prisma) => {
   res.status(200).json(code)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+})

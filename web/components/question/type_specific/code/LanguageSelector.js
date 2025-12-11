@@ -17,7 +17,7 @@
 import React from 'react'
 import { MenuItem, Stack, Typography } from '@mui/material'
 import DropDown from '@/components/input/DropDown'
-import languages from '@/code/languages.json'
+import languages from '@/core/languages.json'
 import LanguageIcon from './LanguageIcon'
 
 const environments = languages.environments

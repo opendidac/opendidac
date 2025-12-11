@@ -16,7 +16,7 @@
 
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import { Typography } from '@mui/material'
-import GradingPolicy from '@/code/grading/policy'
+import GradingPolicy from '@/core/grading/policy'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 
 const GradingPolicyBreakdown = ({

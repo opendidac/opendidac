@@ -19,9 +19,8 @@ import { Role, StudentPermission } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /**
@@ -30,7 +29,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * Pull deletes any existing template files and replaces them with the solution files
  */
 
-const post = async (req, res, prisma) => {
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   // copy solution files to template files
 
   const { questionId, nature } = req.query
@@ -105,9 +105,10 @@ const post = async (req, res, prisma) => {
   res.status(200).json(newCodeToFiles || [])
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(
-    withGroupScope(withQuestionUpdate(withPrisma(post))),
-    [Role.PROFESSOR],
+export default withApiContext({
+  POST: withGroupScope(
+    withAuthorization(withQuestionUpdate(post), {
+      roles: [Role.PROFESSOR],
+    }),
   ),
 })

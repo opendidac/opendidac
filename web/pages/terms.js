@@ -31,7 +31,7 @@ const Terms = () => {
           }
           return res.json()
         })
-        .then((json) => setTerms(json.terms))
+        .then((terms) => setTerms(terms))
         .catch((err) => {
           console.error('Error fetching terms of service:', err)
           setTerms(

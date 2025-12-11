@@ -15,15 +15,15 @@
  */
 
 import { Role } from '@prisma/client'
-import { getUser } from '@/code/auth/auth'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 
-const get = async (req, res, prisma) => {
-  const user = await getUser(req, res)
+const get = async (req, res, ctx) => {
+  const { prisma, user } = ctx
+  if (!user) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
   // get the list of groups that this users is a member of
   const groups = await prisma.userOnGroup.findMany({
     where: {
@@ -42,6 +42,6 @@ const get = async (req, res, prisma) => {
   res.status(200).json(groups)
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
+export default withApiContext({
+  GET: withAuthorization(get, { roles: [Role.PROFESSOR] }),
 })

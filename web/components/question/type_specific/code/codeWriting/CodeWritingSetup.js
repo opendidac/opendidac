@@ -20,7 +20,7 @@ import Sandbox from '../Sandbox'
 import ToggleWithLabel from '@/components/input/ToggleWithLabel'
 import { useDebouncedCallback } from 'use-debounce'
 
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import Loading from '@/components/feedback/Loading'
 import { useCallback, useEffect, useState } from 'react'
 import { Stack } from '@mui/material'

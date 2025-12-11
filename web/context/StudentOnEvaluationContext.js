@@ -21,7 +21,7 @@ import React, {
   useEffect,
   useState,
 } from 'react'
-import { fetcher } from '../code/utils'
+import { fetcher } from '../core/utils'
 import useSWR from 'swr'
 import { useRouter } from 'next/router'
 import {

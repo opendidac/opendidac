@@ -16,17 +16,15 @@
 
 import { Role } from '@prisma/client'
 import { runSandbox } from '@/sandbox/runSandboxTC'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 
 /*
  endpoint to run the sandbox for a question with solution or template files recovered from the database
  used to run the sandbox for professor files, also use by pull solution output
  */
-const post = async (req, res, prisma) => {
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId, nature } = req.query
 
   if (!['solution', 'template'].includes(nature)) {
@@ -79,6 +77,6 @@ const post = async (req, res, prisma) => {
   res.status(200).send(result)
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
+export default withApiContext({
+  POST: withAuthorization(post, { roles: [Role.PROFESSOR] }),
 })

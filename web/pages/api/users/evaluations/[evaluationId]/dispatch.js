@@ -15,43 +15,25 @@
  */
 
 import { Role, EvaluationPhase } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
-import {
-  withMethodHandler,
-  withAuthorization,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 
-import { phaseGT } from '@/code/phase'
-import { getUser } from '@/code/auth/auth'
+import { phaseGT } from '@/core/phase'
+import { getUser } from '@/core/auth/auth'
 import { withRestrictions } from '@/middleware/withRestrictions'
+import { withEvaluation } from '@/middleware/withEvaluation'
+import { withPurgeGuard } from '@/middleware/withPurged'
 
 /*
 fetch the informations necessary to decide where the users should be redirected
 based on the phase of the evaluation and the relation between the users and the evaluation
 Will respond with the Evaluation phase and the UserOnEvaluation object
 * */
-const get = async (req, res, prisma) => {
+const get = async (req, res, ctx) => {
+  const { prisma, evaluation } = ctx
   const { evaluationId } = req.query
 
   const user = await getUser(req, res)
-
-  const evaluation = await prisma.evaluation.findUnique({
-    where: {
-      id: evaluationId,
-    },
-    select: {
-      phase: true,
-      label: true,
-      accessMode: true,
-      accessList: true,
-    },
-  })
-
-  if (!evaluation) {
-    // something fishy is going on
-    res.status(401).json({ type: 'error', message: 'Unauthorized' })
-    return
-  }
 
   const userOnEvaluation = await prisma.userOnEvaluation.findFirst({
     where: {
@@ -63,15 +45,22 @@ const get = async (req, res, prisma) => {
   if (!userOnEvaluation) {
     if (phaseGT(evaluation.phase, EvaluationPhase.IN_PROGRESS)) {
       // the users is not in the evaluation, and the evaluation after the in progress phase
-      res
-        .status(401)
-        .json({ message: "It is too late to apologize. It's too late." })
+      res.status(401).json({
+        type: 'error',
+        id: 'too-late-to-join',
+        message: "It is too late to apologize. It's too late.",
+      })
       return
     }
     // the users is not in the evaluation, but its not to late to join
     // the response is still ok
+    // Return only the evaluation fields needed by students (exclude sensitive admin fields)
     res.status(200).json({
-      evaluation: evaluation,
+      evaluation: {
+        id: evaluation.id,
+        phase: evaluation.phase,
+        label: evaluation.label,
+      },
       userOnEvaluation: null,
     })
     return
@@ -87,8 +76,14 @@ const get = async (req, res, prisma) => {
   })
 }
 
-export default withMethodHandler({
-  GET: withRestrictions(
-    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+export default withApiContext({
+  GET: withEvaluation(
+    withPurgeGuard(
+      withRestrictions(
+        withAuthorization(get, {
+          roles: [Role.PROFESSOR, Role.STUDENT],
+        }),
+      ),
+    ),
   ),
 })

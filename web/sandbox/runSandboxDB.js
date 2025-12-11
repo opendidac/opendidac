@@ -25,7 +25,7 @@ import {
   postgresDetermineOutputType,
   postgresGenerateFeedbackMessage,
   postgresOutputToToDataset,
-} from '../code/database'
+} from '../core/database'
 import { pullImageIfNotExists } from './utils'
 
 const { Client } = pkg

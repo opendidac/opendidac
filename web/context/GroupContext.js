@@ -15,7 +15,7 @@
  */
 
 import React, { createContext, useContext } from 'react'
-import { fetcher } from '../code/utils'
+import { fetcher } from '../core/utils'
 import useSWR from 'swr'
 
 const GroupContext = createContext()

@@ -18,12 +18,12 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
-const get = async (req, res, prisma) => {
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   // get the solution queries for a database question
 
   const { questionId } = req.query
@@ -54,7 +54,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(queries)
 }
 
-const post = async (req, res, prisma) => {
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   // create a new empty solution query for a database question
   const { questionId } = req.query
 
@@ -92,11 +93,11 @@ const post = async (req, res, prisma) => {
   res.status(200).json(newQuery)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  POST: withGroupScope(
+    withAuthorization(withQuestionUpdate(post), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

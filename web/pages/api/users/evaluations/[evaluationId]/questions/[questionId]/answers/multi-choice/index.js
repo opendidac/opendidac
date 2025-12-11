@@ -16,65 +16,63 @@
 
 import { EvaluationPhase, Role, UserOnEvaluationStatus } from '@prisma/client'
 
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 
 // The student can answer with a comment in some multi-choice setups
-const put = withEvaluationPhase(
-  [EvaluationPhase.IN_PROGRESS],
-  withStudentStatus(
-    [UserOnEvaluationStatus.IN_PROGRESS],
-    async (req, res, prisma) => {
-      const user = await getUser(req, res)
-      const studentEmail = user.email
-      const { evaluationId, questionId } = req.query
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
+  const user = await getUser(req, res)
+  const studentEmail = user.email
+  const { evaluationId, questionId } = req.query
 
-      const { comment } = req.body
+  const { comment } = req.body
 
-      // Get all options including their official answer status,
-      // these are used to grade the user's answers
-      // WARNING! they should not be returned by the api to the users
-      const evaluationToQuestion = await prisma.evaluationToQuestion.findUnique(
-        {
-          where: {
-            evaluationId_questionId: {
-              evaluationId: evaluationId,
-              questionId: questionId,
-            },
-          },
-        },
-      )
-
-      if (!evaluationToQuestion) {
-        res.status(400).json({ message: 'Internal Server Error' })
-        return
-      }
-
-      await prisma.studentAnswerMultipleChoice.update({
-        where: {
-          userEmail_questionId: {
-            userEmail: studentEmail,
-            questionId: questionId,
-          },
-        },
-        data: {
-          comment: comment,
-        },
-      })
-
-      res.status(200).json({ message: 'Comment updated' })
+  // Get all options including their official answer status,
+  // these are used to grade the user's answers
+  // WARNING! they should not be returned by the api to the users
+  const evaluationToQuestion = await prisma.evaluationToQuestion.findUnique({
+    where: {
+      evaluationId_questionId: {
+        evaluationId: evaluationId,
+        questionId: questionId,
+      },
     },
-  ),
-)
+  })
 
-export default withMethodHandler({
-  PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR, Role.STUDENT]),
+  if (!evaluationToQuestion) {
+    res.status(400).json({ message: 'Internal Server Error' })
+    return
+  }
+
+  await prisma.studentAnswerMultipleChoice.update({
+    where: {
+      userEmail_questionId: {
+        userEmail: studentEmail,
+        questionId: questionId,
+      },
+    },
+    data: {
+      comment: comment,
+    },
+  })
+
+  res.status(200).json({ message: 'Comment updated' })
+}
+
+export default withApiContext({
+  PUT: withAuthorization(
+    withEvaluationPhase(
+      withStudentStatus(put, {
+        statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+      }),
+      { phases: [EvaluationPhase.IN_PROGRESS] },
+    ),
+    { roles: [Role.PROFESSOR, Role.STUDENT] },
+  ),
 })

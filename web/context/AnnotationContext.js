@@ -23,7 +23,7 @@ import React, {
   useRef,
 } from 'react'
 import useSWR from 'swr'
-import { fetcher } from '../code/utils'
+import { fetcher } from '../core/utils'
 import { useRouter } from 'next/router'
 import { useDebouncedCallback } from 'use-debounce'
 import AnnotationHighlight from '@/components/evaluations/grading/annotation/AnnotationHighlight'

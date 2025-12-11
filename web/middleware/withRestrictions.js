@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { EvaluationPhase, Role } from '@prisma/client'
-import { getPrisma } from './withPrisma'
+import net from 'net'
+import { EvaluationPhase } from '@prisma/client'
 import { UserOnEvaluationAccessMode } from '@prisma/client'
-import { getUser } from '@/code/auth/auth'
-import { phaseGT } from '@/code/phase'
+import { getUser } from '@/core/auth/auth'
+import { phaseGT } from '@/core/phase'
 
 const isIpInRange = (ip, range) => {
   // Handle CIDR notation
@@ -60,6 +60,25 @@ const isIpAllowed = (ip, restrictions) => {
   return ranges.some((range) => isIpInRange(ip, range))
 }
 
+const extractClientIp = (req) => {
+  const xff = req.headers['x-forwarded-for']
+
+  if (typeof xff === 'string' && xff.length > 0) {
+    const raw = xff.split(',')[0].trim() // leftmost entry only
+    const ip = normalizeIp(raw)
+    if (ip !== null) return ip
+  }
+
+  const socketIp = req.socket?.remoteAddress || ''
+  return normalizeIp(socketIp) ?? socketIp
+}
+
+// Validate IPv4 addresses only (infrastructure is IPv4-only)
+const normalizeIp = (input) => {
+  if (!input) return null
+  return net.isIP(input) === 4 ? input : null
+}
+
 export const isUserInAccessList = async (userEmail, evaluation, prisma) => {
   if (
     evaluation.accessMode === UserOnEvaluationAccessMode.LINK_AND_ACCESS_LIST &&
@@ -83,36 +102,57 @@ export const isUserInAccessList = async (userEmail, evaluation, prisma) => {
   return true
 }
 
-export const withRestrictions = (handler) => {
-  return async (req, res) => {
-    const prisma = getPrisma()
+/**
+ * Middleware that enforces evaluation access restrictions (IP, desktop app, access list, phase).
+ *
+ * IMPORTANT: This middleware is ONLY used in student-facing endpoints under /api/users.
+ * It applies restrictions to ALL users accessing these endpoints, regardless of their role
+ * (students, professors, student assistants). This ensures:
+ *
+ * 1. Consistency: All users accessing student endpoints are subject to the same restrictions
+ * 2. Verification: Professors can verify that IP restrictions and other mechanisms work correctly
+ *    when accessing student endpoints (e.g., for testing or monitoring)
+ * 3. Security: Student assistants are also restricted, preventing unauthorized access
+ *
+ * Restrictions enforced:
+ * - Evaluation phase must be after COMPOSITION phase
+ * - Desktop app requirement (if enabled)
+ * - IP address restrictions (if configured)
+ * - Access list validation (if LINK_AND_ACCESS_LIST mode is enabled)
+ *
+ * @requires withPrisma middleware must be called before this middleware
+ * @requires withEvaluation middleware must be called before this middleware
+ * @param {Function} handler - The route handler to wrap
+ * @param {Object} args - Optional configuration arguments
+ * @returns {Function} Wrapped handler with restrictions applied
+ */
+export const withRestrictions = (handler, args = {}) => {
+  return async (req, res, ctx) => {
+    const { prisma, evaluation } = ctx
     const { evaluationId } = req.query
     const user = await getUser(req, res)
 
-    // If evaluationId is missing, pass through (let the handler deal with it)
+    if (!prisma) {
+      return res.status(500).json({
+        type: 'error',
+        message:
+          'Prisma client not available. Did you call withPrisma middleware?',
+      })
+    }
+
     if (!evaluationId) {
-      return handler(req, res)
+      return handler(req, res, ctx)
     }
 
-    const evaluation = await prisma.evaluation.findUnique({
-      where: { id: evaluationId },
-      // Explicitly select desktopAppRequired to ensure it's always included
-      select: {
-        id: true,
-        phase: true,
-        desktopAppRequired: true,
-        ipRestrictions: true,
-        accessMode: true,
-        accessList: true,
-      },
-    })
-
-    // If evaluation not found, pass through (let the handler return 404)
     if (!evaluation) {
-      return handler(req, res)
+      return res.status(500).json({
+        type: 'error',
+        message:
+          'Evaluation not found in context. Did you call withEvaluation middleware before withRestrictions?',
+      })
     }
 
-    // All student actions are restricted before the registration phase
+    // ---- RULE 1: Evaluation Phase ---- (independent)
     if (!phaseGT(evaluation.phase, EvaluationPhase.COMPOSITION)) {
       return res.status(400).json({
         type: 'error',
@@ -121,27 +161,21 @@ export const withRestrictions = (handler) => {
       })
     }
 
-    // Check if desktop app is required - this applies to ALL users (students and non-students)
-    // This check must happen before the non-student early return
+    // ---- RULE 2: Desktop App Restriction ---- (independent)
     if (evaluation.desktopAppRequired) {
-      const rawUserAgent = req.headers['user-agent'] || ''
-      const userAgent = rawUserAgent.toLowerCase()
-      const desktopAppHeader = req.headers['x-opendidac-desktop'] || ''
+      const desktopHeader = req.headers['x-opendidac-desktop']
+      const opendidacInUserAgent =
+        req.headers['user-agent']?.includes('OpenDidacDesktop')
+      const isDesktop = desktopHeader === 'true' && opendidacInUserAgent
 
-      // Check both user agent (case-insensitive) and custom header for robustness
-      const hasUserAgent = userAgent.includes('opendidacdesktop')
-      const hasCustomHeader =
-        desktopAppHeader === 'true' || desktopAppHeader === '1'
-
-      if (!hasUserAgent && !hasCustomHeader) {
-        // Log access denial for production monitoring (this should not happen in normal flow)
+      if (!isDesktop) {
         console.warn('[Desktop App Restriction] Access denied:', {
           evaluationId: evaluation.id,
-          userAgent: rawUserAgent || 'missing',
-          customHeader: desktopAppHeader || 'missing',
-          ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+          userAgent: req.headers['user-agent'] || 'missing',
+          customHeader: req.headers['x-opendidac-desktop'] || 'missing',
+          ip: extractClientIp(req),
           userEmail: user?.email || 'anonymous',
-          userRoles: user?.roles || [],
+          roles: user?.roles || [],
         })
 
         return res.status(401).json({
@@ -153,12 +187,8 @@ export const withRestrictions = (handler) => {
       }
     }
 
-    // Skip IP check for non-student users (but desktop app check already happened above)
-    if (user && user.roles && !user.roles.includes(Role.STUDENT)) {
-      return handler(req, res)
-    }
-
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+    // ---- RULE 3: IP Restriction ---- (independent)
+    const clientIp = extractClientIp(req)
 
     if (
       evaluation.ipRestrictions &&
@@ -171,16 +201,13 @@ export const withRestrictions = (handler) => {
       })
     }
 
-    const userEmail = user?.email
+    // ---- RULE 4: Access List ---- (independent)
+    const userEmail = user?.email?.toLowerCase()
 
-    // Check if user is in access list (only if user is authenticated)
     if (userEmail) {
-      const isAllowedAccessList = await isUserInAccessList(
-        userEmail,
-        evaluation,
-        prisma,
-      )
-      if (!isAllowedAccessList) {
+      const allowed = await isUserInAccessList(userEmail, evaluation, prisma)
+
+      if (!allowed) {
         return res.status(401).json({
           type: 'info',
           id: 'access-list',
@@ -190,6 +217,7 @@ export const withRestrictions = (handler) => {
       }
     }
 
-    return handler(req, res)
+    // ---- PASS THROUGH WHEN ALL RULES OK ----
+    return handler(req, res, ctx)
   }
 }

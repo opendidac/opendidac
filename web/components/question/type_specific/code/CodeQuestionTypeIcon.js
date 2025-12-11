@@ -17,7 +17,7 @@
 import { Stack, Typography, Tooltip } from '@mui/material'
 import Image from 'next/image'
 import React from 'react'
-import languages from '@/code/languages.json'
+import languages from '@/core/languages.json'
 import { CodeQuestionType } from '@prisma/client'
 
 const codeTypeToIcon = {

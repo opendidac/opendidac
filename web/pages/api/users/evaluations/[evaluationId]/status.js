@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-import { getUser } from '@/code/auth/auth'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { getUser } from '@/core/auth/auth'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withRestrictions } from '@/middleware/withRestrictions'
+import { withEvaluation } from '@/middleware/withEvaluation'
 import {
   withEvaluationPhase,
   withStudentStatus,
@@ -80,29 +78,11 @@ async function trackSessionChanges(
 }
 
 // The main endpoint for getting student status
-const get = async (req, res, prisma) => {
+const get = async (req, res, ctx) => {
+  const { prisma, evaluation } = ctx
   const user = await getUser(req, res)
   const { email: studentEmail, id: userId } = user
   const { evaluationId } = req.query
-
-  // Fetch the evaluation details
-  const evaluation = await prisma.evaluation.findUnique({
-    where: {
-      id: evaluationId,
-    },
-    select: {
-      phase: true,
-      durationActive: true,
-      startAt: true,
-      endAt: true,
-      conditions: true,
-    },
-  })
-
-  if (!evaluation) {
-    res.status(404).json({ message: 'Evaluation not found' })
-    return
-  }
 
   // Fetch user's participation in the evaluation
   const userOnEvaluation = await prisma.userOnEvaluation.findUnique({
@@ -134,9 +114,17 @@ const get = async (req, res, prisma) => {
     )
   }
 
-  // Return the evaluation and user status
+  // Return only the evaluation fields needed by students (exclude sensitive admin fields)
   res.status(200).json({
-    evaluation,
+    evaluation: {
+      id: evaluation.id,
+      phase: evaluation.phase,
+      label: evaluation.label,
+      durationActive: evaluation.durationActive,
+      startAt: evaluation.startAt,
+      endAt: evaluation.endAt,
+      conditions: evaluation.conditions,
+    },
     userOnEvaluation: {
       status: userOnEvaluation.status,
     },
@@ -144,38 +132,47 @@ const get = async (req, res, prisma) => {
 }
 
 // student ends his evaluation
-const put = withEvaluationPhase(
-  [EvaluationPhase.IN_PROGRESS],
-  withStudentStatus(
-    [UserOnEvaluationStatus.IN_PROGRESS],
-    async (req, res, prisma) => {
-      const user = await getUser(req, res)
-      const studentEmail = user.email
-      const { evaluationId } = req.query
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
+  const user = await getUser(req, res)
+  const studentEmail = user.email
+  const { evaluationId } = req.query
 
-      await prisma.userOnEvaluation.update({
-        where: {
-          userEmail_evaluationId: {
-            userEmail: studentEmail,
-            evaluationId: evaluationId,
-          },
-        },
-        data: {
-          status: UserOnEvaluationStatus.FINISHED,
-          finishedAt: new Date(),
-        },
-      })
-
-      res.status(200).json({ message: 'Evaluation completed' })
+  await prisma.userOnEvaluation.update({
+    where: {
+      userEmail_evaluationId: {
+        userEmail: studentEmail,
+        evaluationId: evaluationId,
+      },
     },
-  ),
-)
+    data: {
+      status: UserOnEvaluationStatus.FINISHED,
+      finishedAt: new Date(),
+    },
+  })
 
-export default withMethodHandler({
-  GET: withRestrictions(
-    withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
+  res.status(200).json({ message: 'Evaluation completed' })
+}
+
+export default withApiContext({
+  GET: withEvaluation(
+    withRestrictions(
+      withAuthorization(get, {
+        roles: [Role.PROFESSOR, Role.STUDENT],
+      }),
+    ),
   ),
-  PUT: withRestrictions(
-    withAuthorization(withPrisma(put), [Role.PROFESSOR, Role.STUDENT]),
+  PUT: withEvaluation(
+    withRestrictions(
+      withAuthorization(
+        withEvaluationPhase(
+          withStudentStatus(put, {
+            statuses: [UserOnEvaluationStatus.IN_PROGRESS],
+          }),
+          { phases: [EvaluationPhase.IN_PROGRESS] },
+        ),
+        { roles: [Role.PROFESSOR, Role.STUDENT] },
+      ),
+    ),
   ),
 })

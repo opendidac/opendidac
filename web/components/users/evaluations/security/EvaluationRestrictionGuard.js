@@ -30,6 +30,9 @@ export const isAccessListError = (error) => error?.id === 'access-list'
 export const isIpRestrictionError = (error) => error?.id === 'ip-restriction'
 export const isDesktopAppRequiredError = (error) =>
   error?.id === 'desktop-app-required'
+export const isTooLateToJoinError = (error) => error?.id === 'too-late-to-join'
+export const isEvaluationPurgedError = (error) =>
+  error?.id === 'evaluation-purged'
 
 /**
  * Main component that handles all evaluation restrictions
@@ -154,6 +157,21 @@ export const EvaluationRestrictionGuard = ({
                 </Box>
               </Stack>
             </Stack>
+          </Stack>
+        </AlertFeedback>
+      </Overlay>
+    )
+  }
+
+  if (isTooLateToJoinError(error) || isEvaluationPurgedError(error)) {
+    return (
+      <Overlay>
+        <AlertFeedback severity="error">
+          <Stack spacing={1}>
+            <Typography variant="h5">Too Late to Join</Typography>
+            <Typography variant="body2" color="text.secondary">
+              The evaluation cannot be joined anymore.
+            </Typography>
           </Stack>
         </AlertFeedback>
       </Overlay>

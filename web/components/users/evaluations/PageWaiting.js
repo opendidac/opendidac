@@ -22,7 +22,7 @@ import Loading from '../../feedback/Loading'
 import StudentPhaseRedirect from './StudentPhaseRedirect'
 import LoadingAnimation from '../../feedback/LoadingAnimation'
 import { Button, Typography } from '@mui/material'
-import { fetcher } from '../../../code/utils'
+import { fetcher } from '../../../core/utils'
 import { signOut } from 'next-auth/react'
 
 const phaseToPhrase = (phase) => {

@@ -51,7 +51,7 @@ import CheckboxLabel from '@/components/input/CheckboxLabel'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import { useSnackbar } from '@/context/SnackbarContext'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
-import { computeCoefficient } from '@/code/grading/coefficient'
+import { computeCoefficient } from '@/core/grading/coefficient'
 
 const EvaluationComposition = ({
   groupScope,

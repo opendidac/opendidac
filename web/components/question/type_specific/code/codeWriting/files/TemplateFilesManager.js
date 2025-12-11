@@ -31,7 +31,7 @@ import { StudentPermission } from '@prisma/client'
 
 import CodeCheck from '../CodeCheck'
 import Loading from '../../../../../feedback/Loading'
-import { fetcher } from '../../../../../../code/utils'
+import { fetcher } from '../../../../../../core/utils'
 import ScrollContainer from '../../../../../layout/ScrollContainer'
 import { useDebouncedCallback } from 'use-debounce'
 import BottomCollapsiblePanel from '../../../../../layout/utils/BottomCollapsiblePanel'

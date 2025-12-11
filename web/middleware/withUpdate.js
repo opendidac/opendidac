@@ -14,56 +14,60 @@
  * limitations under the License.
  */
 
-import { getPrisma } from './withPrisma'
-
 function withEntityUpdate(updateFunction) {
-  const prisma = getPrisma()
+  return function (handler, args = {}) {
+    return async (req, res, ctx) => {
+      const { prisma } = ctx
 
-  return function (handler) {
-    return async (req, res) => {
-      // Wrap the original response.send function
-      const originalSend = res.send.bind(res)
-
-      // Replace the res.send function with custom logic
-      res.send = async function (...args) {
-        // Call the original send function to send the response
-        originalSend(...args)
-
-        // Check if the response was successful
-        if (res.statusCode === 200) {
-          // Execute the update function passed as an argument
-          try {
-            await updateFunction(req, prisma)
-          } catch (error) {
-            console.error('Error during update:', error)
-            // Handle error as needed
-          }
-        }
+      if (!prisma) {
+        return res.status(500).json({
+          type: 'error',
+          message:
+            'Prisma client not available. Did you call withPrisma middleware?',
+        })
       }
 
       // Execute the original handler
-      await handler(req, res, prisma)
+      try {
+        await handler(req, res, ctx)
+
+        // Check if the response was successful and update the entity
+        // res.statusCode is set when res.status() is called
+        // Only update if status code is explicitly 200
+        if (res.statusCode === 200) {
+          try {
+            await updateFunction(req, res, ctx)
+          } catch (error) {
+            console.error('Error during update:', error)
+            // Handle error as needed - don't fail the request
+          }
+        }
+      } catch (error) {
+        // If handler throws, re-throw it (don't update entity on error)
+        // This allows Next.js to handle the error properly
+        throw error
+      }
     }
   }
 }
 
-export const withQuestionUpdate = withEntityUpdate(async (req, prisma) => {
+export const withQuestionUpdate = withEntityUpdate(async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
+
+  if (!questionId) {
+    console.error('withQuestionUpdate: questionId not found in req.query')
+    return
+  }
+
   await prisma.question.update({
     where: { id: questionId },
     data: { updatedAt: new Date() },
   })
 })
 
-export const withCollectionUpdate = withEntityUpdate(async (req, prisma) => {
-  const { collectionId } = req.query
-  await prisma.collection.update({
-    where: { id: collectionId },
-    data: { updatedAt: new Date() },
-  })
-})
-
-export const withEvaluationUpdate = withEntityUpdate(async (req, prisma) => {
+export const withEvaluationUpdate = withEntityUpdate(async (req, res, ctx) => {
+  const { prisma } = ctx
   const { evaluationId } = req.query
   await prisma.evaluation.update({
     where: { id: evaluationId },

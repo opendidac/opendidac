@@ -25,7 +25,7 @@ import { useCallback, useMemo, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { Chip, Stack, TextField } from '@mui/material'
 import Loading from '../feedback/Loading'
-import { fetcher } from '../../code/utils'
+import { fetcher } from '../../core/utils'
 import { useDebounce } from 'use-debounce'
 
 /**

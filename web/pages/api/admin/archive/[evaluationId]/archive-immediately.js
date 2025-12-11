@@ -15,31 +15,17 @@
  */
 
 import { Role, ArchivalPhase } from '@prisma/client'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
-import { getUser } from '@/code/auth/auth'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
+import { withEvaluation } from '@/middleware/withEvaluation'
 
-const post = async (req, res, prisma) => {
-  const { evaluationId } = req.query
-
-  const evaluation = await prisma.evaluation.findUnique({
-    where: { id: evaluationId },
-    select: {
-      id: true,
-      label: true,
-      archivalPhase: true,
-      archivedAt: true,
-      purgedAt: true,
-    },
-  })
-
-  if (!evaluation) {
-    res.status(404).json({ message: 'Evaluation not found' })
+const post = async (req, res, ctx) => {
+  const { prisma, evaluation, user } = ctx
+  if (!user) {
+    res.status(401).json({ message: 'Unauthorized' })
     return
   }
+  const { evaluationId } = req.query
 
   if (evaluation.archivalPhase === 'ARCHIVED') {
     res.status(400).json({ message: 'Evaluation is already archived' })
@@ -50,13 +36,6 @@ const post = async (req, res, prisma) => {
     res
       .status(400)
       .json({ message: 'Cannot archive - evaluation data has been purged' })
-    return
-  }
-
-  // Get the user performing the action
-  const user = await getUser(req, res)
-  if (!user) {
-    res.status(401).json({ message: 'Unauthorized' })
     return
   }
 
@@ -80,6 +59,10 @@ const post = async (req, res, prisma) => {
   })
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.SUPER_ADMIN, Role.ARCHIVIST]),
+export default withApiContext({
+  POST: withEvaluation(
+    withAuthorization(post, {
+      roles: [Role.SUPER_ADMIN, Role.ARCHIVIST],
+    }),
+  ),
 })

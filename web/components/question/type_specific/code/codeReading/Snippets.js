@@ -16,7 +16,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import useSWR from 'swr'
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import SnippetEditor from './SnippetEditor'
 import RunSnippets from './RunSnippets'
 import Loading from '@/components/feedback/Loading'

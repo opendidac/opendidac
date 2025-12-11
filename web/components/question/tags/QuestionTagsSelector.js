@@ -19,7 +19,7 @@ import { useCallback } from 'react'
 import useSWR from 'swr'
 import TagsEditor from '../../input/TagsEditor'
 import Loading from '../../feedback/Loading'
-import { fetcher } from '../../../code/utils'
+import { fetcher } from '../../../core/utils'
 
 const QuestionTagsSelector = ({ groupScope, questionId, size, onChange }) => {
   const { tags: allTags, upsert } = useTags()

@@ -20,8 +20,8 @@ import Authentication from '../../security/Authentication'
 import Authorization from '../../security/Authorization'
 import useSWR from 'swr'
 import { useEffect } from 'react'
-import { studentPhaseRedirect } from '../../../code/phase'
-import { fetcher } from '../../../code/utils'
+import { studentPhaseRedirect } from '../../../core/phase'
+import { fetcher } from '../../../core/utils'
 import Loading from '../../feedback/Loading'
 import { EvaluationRestrictionGuard } from '@/components/users/evaluations/security/EvaluationRestrictionGuard'
 
@@ -32,7 +32,9 @@ const PageDispatch = () => {
   const { data, error: dispatchError } = useSWR(
     `/api/users/evaluations/${evaluationId}/dispatch`,
     evaluationId ? fetcher : null,
-    { refreshInterval: 1000 },
+    {
+      refreshInterval: 1000,
+    },
   )
 
   useEffect(() => {

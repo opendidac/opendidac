@@ -14,13 +14,21 @@
  * limitations under the License.
  */
 
-import { getUser } from '@/code/auth/auth'
-import { getPrisma } from './withPrisma'
+import { getUser } from '@/core/auth/auth'
 
-export function withStudentStatus(allowedStatuses = [], handler) {
-  const prisma = getPrisma()
+export function withStudentStatus(handler, args = {}) {
+  const { statuses: allowedStatuses = [] } = args
+  return async (req, res, ctx) => {
+    const { prisma } = ctx
 
-  return async (req, res) => {
+    if (!prisma) {
+      return res.status(500).json({
+        type: 'error',
+        message:
+          'Prisma client not available. Did you call withPrisma middleware?',
+      })
+    }
+
     const user = await getUser(req, res)
     if (!user) {
       return res.status(403).json({ message: 'Access denied.' })
@@ -46,27 +54,38 @@ export function withStudentStatus(allowedStatuses = [], handler) {
     }
 
     // Continue with the original handler
-    await handler(req, res, prisma)
+    await handler(req, res, ctx)
   }
 }
 
-export function withEvaluationPhase(allowedPhases = [], handler) {
-  const prisma = getPrisma()
-
-  return async (req, res) => {
+export function withEvaluationPhase(handler, args = {}) {
+  const { phases: allowedPhases = [] } = args
+  return async (req, res, ctx) => {
+    const { prisma, evaluation } = ctx
     const { evaluationId } = req.query
 
-    const evaluation = await prisma.evaluation.findUnique({
-      where: { id: evaluationId },
-    })
+    if (!prisma) {
+      return res.status(500).json({
+        type: 'error',
+        message:
+          'Prisma client not available. Did you call withPrisma middleware?',
+      })
+    }
 
-    if (!evaluation || !allowedPhases.includes(evaluation.phase)) {
+    // Use evaluation from context if available, otherwise fetch it
+    const evalToCheck =
+      evaluation ||
+      (await prisma.evaluation.findUnique({
+        where: { id: evaluationId },
+      }))
+
+    if (!evalToCheck || !allowedPhases.includes(evalToCheck.phase)) {
       return res
         .status(403)
         .json({ message: 'Access denied due to evaluation phase.' })
     }
 
     // Continue with the original handler if the phase is allowed
-    await handler(req, res, prisma)
+    await handler(req, res, ctx)
   }
 }

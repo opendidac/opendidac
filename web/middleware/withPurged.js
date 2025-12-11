@@ -14,23 +14,35 @@
  * limitations under the License.
  */
 
-import { getPrisma } from './withPrisma'
-
-export const withPurgeGuard = (handler) => {
-  return async (req, res) => {
-    const prisma = getPrisma()
+export const withPurgeGuard = (handler, args = {}) => {
+  return async (req, res, ctx) => {
+    const { prisma, evaluation } = ctx
     const { evaluationId } = req.query || {}
 
-    if (!evaluationId) {
-      return handler(req, res)
+    if (!prisma) {
+      return res.status(500).json({
+        type: 'error',
+        message:
+          'Prisma client not available. Did you call withPrisma middleware?',
+      })
     }
 
-    const evaluation = await prisma.evaluation.findUnique({
-      where: { id: evaluationId },
-      select: { id: true, purgedAt: true },
-    })
+    if (!evaluationId) {
+      return handler(req, res, ctx)
+    }
 
-    if (evaluation?.purgedAt) {
+    // Evaluation must be provided by withEvaluation middleware
+    if (!evaluation) {
+      return res.status(500).json({
+        type: 'error',
+        message:
+          'Evaluation not available in context. Did you call withEvaluation middleware?',
+      })
+    }
+
+    const evalToCheck = evaluation
+
+    if (evalToCheck.purgedAt) {
       return res.status(410).json({
         type: 'info',
         id: 'evaluation-purged',
@@ -38,6 +50,6 @@ export const withPurgeGuard = (handler) => {
       })
     }
 
-    return handler(req, res)
+    return handler(req, res, ctx)
   }
 }

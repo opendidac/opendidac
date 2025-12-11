@@ -17,7 +17,7 @@
 import { Stack, Typography } from '@mui/material'
 import Image from 'next/image'
 import React from 'react'
-import languages from '@/code/languages.json'
+import languages from '@/core/languages.json'
 
 const environments = languages.environments
 const LanguageIcon = ({ language, size = 24, withLabel = false }) => {

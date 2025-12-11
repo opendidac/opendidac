@@ -20,16 +20,14 @@ import fs from 'fs'
 import path from 'path'
 import mime from 'mime'
 import { promisify } from 'util'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import { Role } from '@prisma/client'
 
 const stat = promisify(fs.stat)
 const readFile = promisify(fs.readFile)
 
-const get = async (req, res) => {
+const get = async (req, res, ctx) => {
   const { path: filePathArray } = req.query
   const filePath = filePathArray.join('/')
 
@@ -56,6 +54,8 @@ const get = async (req, res) => {
   }
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(get, [Role.PROFESSOR, Role.SUPER_ADMIN, Role.STUDENT]),
+export default withApiContext({
+  GET: withAuthorization(get, {
+    roles: [Role.PROFESSOR, Role.SUPER_ADMIN, Role.STUDENT],
+  }),
 })

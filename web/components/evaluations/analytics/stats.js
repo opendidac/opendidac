@@ -21,7 +21,7 @@ import {
   StudentAnswerStatus,
   StudentQuestionGradingStatus,
 } from '@prisma/client'
-import { regexpFromPattern } from '@/code/utils'
+import { regexpFromPattern } from '@/core/utils'
 
 export const getSignedSuccessRate = (evaluationToQuestions) => {
   // total signed points

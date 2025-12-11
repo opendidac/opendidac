@@ -23,7 +23,7 @@ import ScrollContainer from '@/components/layout/ScrollContainer'
 import ReorderableList from '@/components/layout/utils/ReorderableList'
 import { useDebouncedCallback } from 'use-debounce'
 import { useSnackbar } from '@/context/SnackbarContext'
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import useSWR from 'swr'
 import Loading from '@/components/feedback/Loading'
 

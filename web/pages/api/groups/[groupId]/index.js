@@ -15,19 +15,17 @@
  */
 
 import { Role } from '@prisma/client'
-import { getUser } from '@/code/auth/auth'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { getUser } from '@/core/auth/auth'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 /**
  * Managing group
  *
  * del: delete a group
  * put: update a group label
  */
-const del = async (req, res, prisma) => {
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   // delete a group
   const { groupId } = req.query
 
@@ -57,7 +55,8 @@ const del = async (req, res, prisma) => {
   res.status(200).json({ message: 'Group deleted' })
 }
 
-const put = async (req, res, prisma) => {
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update a group
   const { groupId } = req.query
   const { label, scope } = req.body
@@ -109,7 +108,7 @@ const put = async (req, res, prisma) => {
   res.status(200).json(updatedGroup)
 }
 
-export default withMethodHandler({
-  DELETE: withAuthorization(withPrisma(del), [Role.PROFESSOR]),
-  PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
+export default withApiContext({
+  DELETE: withAuthorization(del, { roles: [Role.PROFESSOR] }),
+  PUT: withAuthorization(put, { roles: [Role.PROFESSOR] }),
 })

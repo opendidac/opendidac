@@ -18,11 +18,11 @@ import { Role, QuestionStatus, EvaluationPhase } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
-const archive = async (req, res, prisma) => {
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
   const question = await prisma.question.findUnique({
     where: { id: questionId },
@@ -113,8 +113,6 @@ const archive = async (req, res, prisma) => {
   res.status(200).json(archivedQuestion)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    POST: withAuthorization(withPrisma(archive), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
+})
