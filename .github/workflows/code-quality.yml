@@ -25,6 +25,11 @@ jobs:
           cd web
           npm install
 
+      - name: Type Check
+        run: |
+          cd web
+          npm run type-check
+
       - name: Run ESLint
         run: |
           cd web 
