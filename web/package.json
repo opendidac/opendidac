@@ -6,7 +6,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "dev:https": "next dev --experimental-https --hostname 127.0.0.1",
+    "dev:https": "next dev --webpack --experimental-https --hostname 127.0.0.1",
     "dev": "next dev --turbopack",
     "dev:migration": "npx prisma migrate dev && npx next dev",
     "build": "next build",
