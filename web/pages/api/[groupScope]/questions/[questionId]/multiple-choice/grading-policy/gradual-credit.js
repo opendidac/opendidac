@@ -19,9 +19,8 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /**
@@ -30,7 +29,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  */
 
 // get the multichoice
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
 
   const gradualCredit =
@@ -44,7 +44,8 @@ const get = async (req, res, prisma) => {
 }
 
 // update the gradual credit policy
-const put = async (req, res, prisma) => {
+const put = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
   const { negativeMarking, threshold } = req.body
 
@@ -62,7 +63,8 @@ const put = async (req, res, prisma) => {
 }
 
 // create the gradual credit policy
-const post = async (req, res, prisma) => {
+const post = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { questionId } = req.query
   const { negativeMarking, threshold } = req.body
 
@@ -84,14 +86,16 @@ const post = async (req, res, prisma) => {
   res.status(200).json(createdGradualCredit)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  PUT: withGroupScope(
+    withAuthorization(withQuestionUpdate(put), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+  POST: withGroupScope(
+    withAuthorization(withQuestionUpdate(post), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

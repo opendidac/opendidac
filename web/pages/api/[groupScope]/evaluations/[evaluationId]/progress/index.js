@@ -15,16 +15,17 @@
  */
 
 import { Role } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import {
-  withMethodHandler,
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 import { withPurgeGuard } from '@/middleware/withPurged'
+import { withEvaluation } from '@/middleware/withEvaluation'
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const evaluation = await prisma.evaluation.findUnique({
     where: {
@@ -53,7 +54,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(evaluation.evaluationToQuestions)
 }
 
-const patch = async (req, res, prisma) => {
+const patch = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const { action, amountMinutes } = req.body
 
@@ -111,9 +113,13 @@ const patch = async (req, res, prisma) => {
   res.status(200).json(updated)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPurgeGuard(withPrisma(get)), [Role.PROFESSOR]),
-    PATCH: withAuthorization(withPrisma(patch), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(
+    withEvaluation(
+      withAuthorization(withPurgeGuard(get), {
+        roles: [Role.PROFESSOR],
+      }),
+    ),
+  ),
+  PATCH: withGroupScope(withAuthorization(patch, { roles: [Role.PROFESSOR] })),
+})

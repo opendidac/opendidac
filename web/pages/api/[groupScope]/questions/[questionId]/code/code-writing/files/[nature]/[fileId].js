@@ -18,12 +18,12 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
-const put = async (req, res, prisma) => {
+const put = async (ctx) => {
+  const { req, res, prisma } = ctx
   // update a file for a code question
   // as the file is created for a code question we handle it through CodeToFile entity
 
@@ -77,7 +77,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json(file)
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx) => {
+  const { req, res, prisma } = ctx
   // delete a file for a code question, cascade from codeToFile wont work here
   // as the file is created for a code question we handle it through CodeToFile entity
 
@@ -129,13 +130,15 @@ const del = async (req, res, prisma) => {
   res.status(200).json({ message: 'Deleted' })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  PUT: withGroupScope(
+    withAuthorization(withQuestionUpdate(put), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+  DELETE: withGroupScope(
+    withAuthorization(withQuestionUpdate(del), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

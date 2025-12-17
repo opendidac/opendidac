@@ -20,12 +20,11 @@ import {
   QuestionUsageStatus,
   Role,
 } from '@prisma/client'
-import { withPrisma } from '@/middleware/withPrisma'
 import {
-  withMethodHandler,
   withAuthorization,
   withGroupScope,
 } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import { copyQuestion, questionSelectClause } from '@/code/questions'
 
 // Compute duration delta in milliseconds from activation flag, hours and minutes
@@ -82,7 +81,8 @@ const copyQuestionsForEvaluation = async (prisma, evaluationId) => {
   })
 }
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const evaluation = await prisma.evaluation.findUnique({
     where: {
@@ -97,7 +97,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(evaluation)
 }
 
-const patch = async (req, res, prisma) => {
+const patch = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { evaluationId } = req.query
   const { phase: nextPhase } = req.body
 
@@ -182,9 +183,11 @@ const patch = async (req, res, prisma) => {
   res.status(200).json(evaluation)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR, Role.STUDENT]),
-    PATCH: withAuthorization(withPrisma(patch), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(
+    withAuthorization(get, {
+      roles: [Role.PROFESSOR, Role.STUDENT],
+    }),
+  ),
+  PATCH: withGroupScope(withAuthorization(patch, { roles: [Role.PROFESSOR] })),
+})

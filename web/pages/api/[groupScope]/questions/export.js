@@ -19,11 +19,11 @@ import { exportQuestion } from '@/code/questionsImportExport'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
-const post = async (req, res, prisma) => {
+const post = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { groupScope } = req.query
   const { questionIds } = req.body
 
@@ -78,8 +78,6 @@ const post = async (req, res, prisma) => {
   }
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
+})

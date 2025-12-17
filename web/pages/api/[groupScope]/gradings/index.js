@@ -17,16 +17,17 @@
 import { Role } from '@prisma/client'
 import {
   withAuthorization,
-  withMethodHandler,
+  withGroupScope,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
 /** Managing the grading of a qstudent answer
  *
  * Used by the page Evaluation Grading
  */
 
-const patch = async (req, res, prisma) => {
+const patch = async (ctx) => {
+  const { req, res, prisma } = ctx
   const {
     grading: {
       questionId,
@@ -59,6 +60,6 @@ const patch = async (req, res, prisma) => {
   res.status(200).json(updatedGrading)
 }
 
-export default withMethodHandler({
-  PATCH: withAuthorization(withPrisma(patch), [Role.PROFESSOR]),
+export default withApiContext({
+  PATCH: withGroupScope(withAuthorization(patch, { roles: [Role.PROFESSOR] })),
 })

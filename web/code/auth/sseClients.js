@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getPrisma } from '@/middleware/withPrisma'
+import { getPrismaClient } from '@/code/hooks/usePrisma'
 
 export const MAX_CONN = 5
 
@@ -51,7 +51,7 @@ function startSSEHeartbeat(res, intervalMs = 60000) {
 
 async function logConnectedClients(action, userId) {
   try {
-    const prisma = getPrisma()
+    const prisma = getPrismaClient()
     const current = await prisma.user.findUnique({
       where: { id: userId },
       select: { email: true },

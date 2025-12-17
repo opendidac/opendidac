@@ -19,11 +19,11 @@ import { copyQuestion, questionSelectClause } from '@/code/questions'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
-const post = async (req, res, prisma) => {
+const post = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { groupScope, questionId } = req.query
 
   // Step 1: Retrieve the question
@@ -54,8 +54,6 @@ const post = async (req, res, prisma) => {
   res.status(200).json(questionCopy)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
+})

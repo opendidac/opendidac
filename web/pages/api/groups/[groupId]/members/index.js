@@ -16,11 +16,8 @@
 
 import { Role } from '@prisma/client'
 import { getUser } from '@/code/auth/auth'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 
 /** Managing the members of a group
  *
@@ -29,7 +26,8 @@ import { withPrisma } from '@/middleware/withPrisma'
  * del: remove a member from a group
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   // get all members of group
   const { groupId } = req.query
 
@@ -73,7 +71,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(members)
 }
 
-const post = async (req, res, prisma) => {
+const post = async (ctx) => {
+  const { req, res, prisma } = ctx
   // add member to group
   const { groupId } = req.query
   const { member } = req.body
@@ -125,7 +124,8 @@ const post = async (req, res, prisma) => {
   }
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx) => {
+  const { req, res, prisma } = ctx
   // remove a member from a group
   const { groupId } = req.query
   const { userId: targetUserId } = req.body || {}
@@ -181,8 +181,8 @@ const del = async (req, res, prisma) => {
   res.status(200).json({ message: 'Member removed' })
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
-  DELETE: withAuthorization(withPrisma(del), [Role.PROFESSOR]),
+export default withApiContext({
+  GET: withAuthorization(get, { roles: [Role.PROFESSOR] }),
+  POST: withAuthorization(post, { roles: [Role.PROFESSOR] }),
+  DELETE: withAuthorization(del, { roles: [Role.PROFESSOR] }),
 })

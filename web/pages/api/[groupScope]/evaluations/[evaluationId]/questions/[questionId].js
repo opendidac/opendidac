@@ -18,11 +18,11 @@ import { Role, QuestionSource } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
-const put = async (req, res, prisma) => {
+const put = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { groupScope, evaluationId, questionId } = req.query
   const { addendum } = req.body
 
@@ -67,8 +67,6 @@ const put = async (req, res, prisma) => {
   }
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  PUT: withGroupScope(withAuthorization(put, { roles: [Role.PROFESSOR] })),
+})

@@ -15,17 +15,16 @@
  */
 
 import { Role } from '@prisma/client'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import { IncludeStrategy, questionSelectClause } from '@/code/questions'
 import { withPurgeGuard } from '@/middleware/withPurged'
+import { withEvaluation } from '@/middleware/withEvaluation'
 /*
   Professor can consult the users's answers to the questions of a evaluation
 */
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { evaluationId, userEmail } = req.query
 
   const evaluation = await prisma.evaluation.findUnique({
@@ -57,6 +56,10 @@ const get = async (req, res, prisma) => {
   res.status(200).json(evaluation)
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(withPurgeGuard(withPrisma(get)), [Role.PROFESSOR]),
+export default withApiContext({
+  GET: withEvaluation(
+    withAuthorization(withPurgeGuard(get), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
 })

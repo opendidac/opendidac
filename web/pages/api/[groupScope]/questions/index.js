@@ -18,9 +18,8 @@ import { Role, QuestionType, CodeQuestionType } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import {
   codeInitialUpdateQuery,
   questionSelectClause,
@@ -41,7 +40,8 @@ const environments = languages.environments
  *
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   const where = questionsFilterWhereClause(req.query)
 
   const questions = await prisma.question.findMany({
@@ -64,7 +64,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(questions)
 }
 
-export const post = async (req, res, prisma) => {
+export const post = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { groupScope } = req.query
   const { type, options } = req.body
   const questionType = QuestionType[type]
@@ -231,9 +232,7 @@ const defaultCodeBasedOnLanguageAndType = (
   }
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
+})

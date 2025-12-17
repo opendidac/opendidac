@@ -15,11 +15,8 @@
  */
 
 import { Role } from '@prisma/client'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 /**
  * Check the group existence
  * Used by the group creation form to check if a group with the given label already exists
@@ -28,7 +25,8 @@ import { withPrisma } from '@/middleware/withPrisma'
  *
  */
 
-const get = async (req, res, prisma) => {
+const get = async (ctx) => {
+  const { req, res, prisma } = ctx
   const { label, scope, groupId } = req.query
 
   let whereClause = {
@@ -54,6 +52,6 @@ const get = async (req, res, prisma) => {
   }
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
+export default withApiContext({
+  GET: withAuthorization(get, { roles: [Role.PROFESSOR] }),
 })

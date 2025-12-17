@@ -14,19 +14,30 @@
  * limitations under the License.
  */
 
-import { Role } from '@prisma/client'
+import { Role, EvaluationPhase } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
+import { withEvaluation } from '@/middleware/withEvaluation'
 
-const put = async (req, res, prisma) => {
+const put = async (ctx) => {
+  const { req, res, prisma, evaluation } = ctx
   // update the evaluationToQuestion
   const { evaluationId, questionId } = req.query
   const body = req.body
+
+  // Check if evaluation is still in COMPOSITION phase
+  // Once it moves to REGISTRATION, questions are frozen (copied)
+  if (evaluation.phase !== EvaluationPhase.COMPOSITION) {
+    res.status(403).json({
+      message:
+        'Cannot update composition: evaluation has moved beyond composition phase',
+    })
+    return
+  }
 
   const allowedFields = ['points', 'title', 'gradingPoints']
 
@@ -47,9 +58,19 @@ const put = async (req, res, prisma) => {
   res.status(200).json({ message: 'OK' })
 }
 
-const del = async (req, res, prisma) => {
+const del = async (ctx) => {
+  const { req, res, prisma, evaluation } = ctx
   // delete a question from an evaluation
   const { evaluationId, questionId } = req.query
+
+  // Check if evaluation is still in COMPOSITION phase
+  if (evaluation.phase !== EvaluationPhase.COMPOSITION) {
+    res.status(403).json({
+      message:
+        'Cannot modify composition: evaluation has moved beyond composition phase',
+    })
+    return
+  }
 
   // get the order of this question in the evaluation
   const order = await prisma.evaluationToQuestion.findFirst({
@@ -92,13 +113,15 @@ const del = async (req, res, prisma) => {
   res.status(200).json({ message: 'OK' })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withEvaluationUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withEvaluationUpdate(withPrisma(del)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  PUT: withGroupScope(
+    withAuthorization(withEvaluation(withEvaluationUpdate(put)), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+  DELETE: withGroupScope(
+    withAuthorization(withEvaluation(withEvaluationUpdate(del)), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

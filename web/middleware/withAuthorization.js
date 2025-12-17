@@ -15,7 +15,6 @@
  */
 
 import { getRoles, getUser } from '../code/auth/auth'
-import { getPrisma } from './withPrisma'
 
 /*
     Function to check if a users is member of the group
@@ -74,8 +73,17 @@ const EntityNameQueryStringIdPair = Object.freeze({
     Important: Always use the singular form of the entity id variable name in the query string.
 */
 
-export function withGroupScope(handler) {
-  return async (req, res) => {
+export function withGroupScope(handler, args = {}) {
+  return async (ctx) => {
+    const { req, res } = ctx
+
+    if (!req || !res) {
+      return res?.status(500).json({
+        type: 'error',
+        message: 'Request or response not available in context.',
+      })
+    }
+
     const { groupScope } = req.query
 
     if (!groupScope) {
@@ -99,15 +107,21 @@ export function withGroupScope(handler) {
 
     if (entityPair) {
       // A group owned entity or any of its related entities are concerned
-
       const [entityName, queryStringId] = entityPair
-
-      const prisma = getPrisma()
-
       const entityId = req.query[queryStringId]
 
       if (!entityId) {
         return res.status(400).json({ message: 'Entity id is required' })
+      }
+
+      // Get prisma from context
+      const { prisma } = ctx
+
+      if (!prisma) {
+        return res.status(500).json({
+          type: 'error',
+          message: 'Prisma client not available in context.',
+        })
       }
 
       const entity = await prisma[entityName].findUnique({
@@ -138,12 +152,22 @@ export function withGroupScope(handler) {
       }
     }
 
-    return handler(req, res)
+    return handler(ctx)
   }
 }
 
-export function withAuthorization(handler, allowedRoles) {
-  return async (req, res) => {
+export function withAuthorization(handler, args = {}) {
+  const { roles: allowedRoles = [] } = args
+  return async (ctx) => {
+    const { req, res } = ctx
+
+    if (!req || !res) {
+      return res?.status(500).json({
+        type: 'error',
+        message: 'Request or response not available in context.',
+      })
+    }
+
     const userRoles = await getRoles(req, res)
     if (!userRoles) {
       return res
@@ -162,17 +186,8 @@ export function withAuthorization(handler, allowedRoles) {
       })
     }
 
-    return handler(req, res)
-  }
-}
-
-export function withMethodHandler(methodHandlers) {
-  return async (req, res) => {
-    const handler = methodHandlers[req.method]
-    if (!handler) {
-      return res.status(405).json({ message: 'Method not allowed' })
-    }
-
-    await handler(req, res)
+    // Add roles to context
+    const ctxWithRoles = { ...ctx, roles: userRoles }
+    return handler(ctxWithRoles)
   }
 }
