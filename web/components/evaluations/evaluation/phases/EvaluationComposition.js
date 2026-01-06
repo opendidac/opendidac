@@ -117,7 +117,7 @@ const EvaluationComposition = ({
       <QuestionIncludeDrawer
         open={showIncludeDrawer}
         groupScope={groupScope}
-        includedQuestions={composition.map((eq) => eq.question)}
+        includedQuestions={composition?.map((eq) => eq.question) ?? []}
         onInclude={(questionIds) => {
           saveIncludeQuestions(questionIds)
         }}
@@ -137,7 +137,7 @@ const CompositionGrid = ({
   onCompositionChanged,
 }) => {
   const [questions, setQuestions] = useCtrlState(
-    composition,
+    composition ?? [],
     `${evaluationId}-composition`,
   )
 
@@ -147,7 +147,7 @@ const CompositionGrid = ({
     useCompositionCompliance(questions)
 
   useEffect(() => {
-    setQuestions(composition)
+    setQuestions(composition ?? [])
   }, [composition, setQuestions])
 
   const saveReOrder = useCallback(

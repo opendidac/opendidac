@@ -151,58 +151,6 @@ const EvaluationPage = () => {
     evaluation &&
     phaseGT(evaluation.phase, EvaluationPhase.IN_PROGRESS)
 
-  useEffect(() => {
-    console.log('[PageEvaluation] Fetch conditions:', {
-      groupScope,
-      evaluationId,
-      evaluation: evaluation
-        ? {
-            id: evaluation.id,
-            phase: evaluation.phase,
-            label: evaluation.label,
-          }
-        : null,
-      shouldFetchPhase,
-      shouldFetchEvaluation,
-      shouldFetchComposition,
-      shouldFetchAttendance,
-      shouldFetchProgress,
-      shouldFetchResults,
-      phaseIndices: evaluation
-        ? {
-            COMPOSITION: Object.keys(EvaluationPhase).indexOf(
-              EvaluationPhase.COMPOSITION,
-            ),
-            REGISTRATION: Object.keys(EvaluationPhase).indexOf(
-              EvaluationPhase.REGISTRATION,
-            ),
-            IN_PROGRESS: Object.keys(EvaluationPhase).indexOf(
-              EvaluationPhase.IN_PROGRESS,
-            ),
-            GRADING: Object.keys(EvaluationPhase).indexOf(
-              EvaluationPhase.GRADING,
-            ),
-            currentPhase: Object.keys(EvaluationPhase).indexOf(
-              evaluation.phase,
-            ),
-          }
-        : null,
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    groupScope,
-    evaluationId,
-    evaluation?.id,
-    evaluation?.phase,
-    evaluation?.label,
-    shouldFetchPhase,
-    shouldFetchEvaluation,
-    shouldFetchComposition,
-    shouldFetchAttendance,
-    shouldFetchProgress,
-    shouldFetchResults,
-  ])
-
   const {
     data: results,
     error: errorResults,
