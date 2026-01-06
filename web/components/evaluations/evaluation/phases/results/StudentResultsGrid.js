@@ -33,7 +33,7 @@ const StudentResultsGrid = ({
   const [participants, setParticipants] = useState([])
 
   useEffect(() => {
-    setParticipants(attendance.registered.map((r) => r.user))
+    setParticipants(attendance?.registered?.map((r) => r.user) ?? [])
   }, [attendance])
 
   if (!results) {
