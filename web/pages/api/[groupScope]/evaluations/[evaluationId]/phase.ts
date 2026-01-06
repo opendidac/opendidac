@@ -70,8 +70,8 @@ const copyQuestionsForEvaluation = async (
 
     for (const eToQ of evaluationToQuestions) {
       const newQuestion = await copyQuestion(prisma, eToQ.question.id, {
-        source: QuestionSource.COPY,
-        prefix: 'Copy of ',
+        source: QuestionSource.EVAL,
+        prefix: '',
       })
       await tx.evaluationToQuestion.create({
         data: {
