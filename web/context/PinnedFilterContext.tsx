@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-} from 'react'
+import React, { createContext, useContext, useState, useCallback } from 'react'
 
 type Filter = Record<string, any>
 
@@ -33,55 +28,61 @@ const PinnedFilterContext = createContext<PinnedFilterContextType>({
   setPinnedFilter: () => {},
 })
 
-export function PinnedFilterProvider({ children }: { children: React.ReactNode }) {
+export function PinnedFilterProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const [pinnedFilters, setPinnedFiltersState] = useState<
     Record<string, Filter | undefined>
   >(() => {
     try {
-      const stored = localStorage.getItem("pinnedFilters");
-      return stored ? JSON.parse(stored) : {};
+      const stored = localStorage.getItem('pinnedFilters')
+      return stored ? JSON.parse(stored) : {}
     } catch {
-      return {};
+      return {}
     }
-  });
+  })
 
   React.useEffect(() => {
     const handler = (event: StorageEvent) => {
-      if (event.key === "pinnedFilters") {
+      if (event.key === 'pinnedFilters') {
         try {
-          setPinnedFiltersState(event.newValue ? JSON.parse(event.newValue) : {});
+          setPinnedFiltersState(
+            event.newValue ? JSON.parse(event.newValue) : {},
+          )
         } catch {
-          console.error("Failed to parse pinnedFilters from storage");
+          console.error('Failed to parse pinnedFilters from storage')
         }
       }
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
+    }
+    window.addEventListener('storage', handler)
+    return () => window.removeEventListener('storage', handler)
+  }, [])
 
   const getPinnedFilter = useCallback(
     (groupId: string): Filter => pinnedFilters[groupId] || {},
-    [pinnedFilters]
+    [pinnedFilters],
   )
-  
+
   const setPinnedFilter = useCallback(
     (groupId: string, filter: Filter | undefined) => {
-      const next: Record<string, Filter | undefined> = { ...pinnedFilters };
+      const next: Record<string, Filter | undefined> = { ...pinnedFilters }
 
-      if (filter === undefined) delete next[groupId];
-      else next[groupId] = filter;
+      if (filter === undefined) delete next[groupId]
+      else next[groupId] = filter
 
-      setPinnedFiltersState(next);
-      localStorage.setItem("pinnedFilters", JSON.stringify(next));
+      setPinnedFiltersState(next)
+      localStorage.setItem('pinnedFilters', JSON.stringify(next))
     },
-    [pinnedFilters]
-  );
+    [pinnedFilters],
+  )
 
   return (
     <PinnedFilterContext.Provider value={{ getPinnedFilter, setPinnedFilter }}>
       {children}
     </PinnedFilterContext.Provider>
-  );
+  )
 }
 
 export function usePinnedFilter() {

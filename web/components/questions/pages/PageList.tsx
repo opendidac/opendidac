@@ -47,10 +47,10 @@ interface ExportQuestionsButtonProps {
   onExportSuccess?: () => void
 }
 
-const ExportQuestionsButton: React.FC<ExportQuestionsButtonProps> = ({ 
-  selection, 
-  groupScope, 
-  onExportSuccess 
+const ExportQuestionsButton: React.FC<ExportQuestionsButtonProps> = ({
+  selection,
+  groupScope,
+  onExportSuccess,
 }) => {
   const { show: showSnackbar } = useSnackbar()
 
@@ -99,7 +99,8 @@ const ExportQuestionsButton: React.FC<ExportQuestionsButtonProps> = ({
       onExportSuccess?.() // Clear selection after export
     } catch (error) {
       console.error('Export error:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error'
       showSnackbar(`Export failed: ${errorMessage}`, 'error')
     }
   }, [selection, groupScope, showSnackbar, onExportSuccess])
@@ -129,12 +130,11 @@ const PageList: React.FC = () => {
   const { show: showSnackbar } = useSnackbar()
 
   const { getPinnedFilter } = usePinnedFilter()
-  
+
   const pinnedFilter = useMemo(
     () => getPinnedFilter(groupScope as string),
-    [getPinnedFilter, groupScope]
+    [getPinnedFilter, groupScope],
   )
-  
 
   const [queryString, setQueryString] = useState<string>(
     pinnedFilter ? new URLSearchParams(pinnedFilter as any).toString() : '',
@@ -158,9 +158,13 @@ const PageList: React.FC = () => {
   const [copyDialogOpen, setCopyDialogOpen] = useState<boolean>(false)
   const [importDialogOpen, setImportDialogOpen] = useState<boolean>(false)
 
-  const [selected, setSelected] = useState<ProfessorQuestionListingPayload | undefined>(undefined)
+  const [selected, setSelected] = useState<
+    ProfessorQuestionListingPayload | undefined
+  >(undefined)
 
-  const [selection, setSelection] = useState<ProfessorQuestionListingPayload[]>([])
+  const [selection, setSelection] = useState<ProfessorQuestionListingPayload[]>(
+    [],
+  )
 
   useEffect(() => {
     setSelection([])
@@ -169,7 +173,7 @@ const PageList: React.FC = () => {
   const createQuestion = useCallback(
     async (type: string, options: Record<string, any>) => {
       if (!groupScope || typeof groupScope !== 'string') return
-      
+
       // language only used for code questions
       await fetch(`/api/${groupScope}/questions`, {
         method: 'POST',
@@ -198,7 +202,7 @@ const PageList: React.FC = () => {
   const copyQuestion = useCallback(
     async (questionId: string) => {
       if (!groupScope || typeof groupScope !== 'string') return
-      
+
       await fetch(`/api/${groupScope}/questions/${questionId}/copy`, {
         method: 'POST',
       })
@@ -244,7 +248,10 @@ const PageList: React.FC = () => {
           subheader={undefined}
           footer={undefined}
           rightPanel={
-            <Loading loading={!questions} errors={error ? [error] : [] as any}>
+            <Loading
+              loading={!questions}
+              errors={error ? [error] : ([] as any)}
+            >
               {questions && (
                 <Stack height={'100%'} p={1} pt={2}>
                   <QuestionsGrid
@@ -328,7 +335,10 @@ const PageList: React.FC = () => {
         <AddQuestionDialog
           open={addDialogOpen}
           onClose={() => setAddDialogOpen(false)}
-          handleAddQuestion={async (type: string, options: Record<string, any>) => {
+          handleAddQuestion={async (
+            type: string,
+            options: Record<string, any>,
+          ) => {
             await createQuestion(type, options)
             setAddDialogOpen(false)
           }}
@@ -356,4 +366,3 @@ const PageList: React.FC = () => {
 }
 
 export default PageList
-

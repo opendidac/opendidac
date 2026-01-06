@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import type { NextApiRequest, NextApiResponse } from 'next'
 import type { Session } from 'next-auth'
 import type { PrismaClient, Role, Prisma } from '@prisma/client'
 import { evaluationContextSelect } from '@/middleware/withEvaluation'

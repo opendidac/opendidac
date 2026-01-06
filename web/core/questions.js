@@ -17,9 +17,7 @@
 import {
   QuestionType,
   StudentPermission,
-  QuestionSource,
   CodeQuestionType,
-  QuestionUsageStatus,
 } from '@prisma/client'
 
 export const IncludeStrategy = {

@@ -17,18 +17,21 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ApiResponse } from '@/core/types/api'
 
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ApiResponse<string>>,
 ) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ code: 'method_not_allowed', message: 'Method not allowed' })
+    return res
+      .status(405)
+      .json({ code: 'method_not_allowed', message: 'Method not allowed' })
   }
   const terms = process.env.TERMS_OF_SERVICE
   console.log('Terms of service:', terms)
   if (!terms) {
-    return res.status(400).json({ code: 'terms_not_configured', message: 'Terms not configured' })
+    return res
+      .status(400)
+      .json({ code: 'terms_not_configured', message: 'Terms not configured' })
   }
   return res.status(200).json(terms)
 }

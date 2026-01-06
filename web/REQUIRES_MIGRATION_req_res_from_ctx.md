@@ -7,6 +7,7 @@ This document lists all occurrences of the pattern `const { req, res` where `req
 ## Migration Pattern
 
 **Before:**
+
 ```typescript
 const handler = async (ctx: IApiContext) => {
   const { req, res, prisma } = ctx
@@ -15,8 +16,13 @@ const handler = async (ctx: IApiContext) => {
 ```
 
 **After:**
+
 ```typescript
-const handler = async (req: NextApiRequest, res: NextApiResponse, ctx: IApiContext) => {
+const handler = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  ctx: IApiContext,
+) => {
   const { prisma } = ctx
   // ...
 }

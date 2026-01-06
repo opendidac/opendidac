@@ -51,7 +51,7 @@ const get = async (
   })
 
   res.status(200).json(questions)
-} 
+}
 
 // ----------------------------------------------------------
 // POST /api/[groupScope]/questions

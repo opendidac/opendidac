@@ -32,7 +32,6 @@ import { getUser } from '@/core/auth/auth'
  * Usage: req.query, req.body, res.status(200).json(), etc.
  */
 
-
 export function withApiContext(handlers: Record<string, Function>) {
   return async (nextReq: NextApiRequest, nextRes: NextApiResponse) => {
     const handler = handlers[nextReq.method || '']
