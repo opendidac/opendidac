@@ -145,6 +145,8 @@ const PageProfConsult = () => {
     [evaluationToQuestions, selected],
   )
 
+  const readOnly = evaluation?.phase === EvaluationPhase.IN_PROGRESS
+
   const onAddendumChanged = useCallback(
     (value) => {
       setEvaluationToQuestions(
@@ -158,8 +160,6 @@ const PageProfConsult = () => {
     },
     [evaluationToQuestions, selected],
   )
-
-  const readOnly = evaluation?.phase === EvaluationPhase.IN_PROGRESS
 
   const student = useMemo(
     () => selected?.question.studentAnswer[0].user,
@@ -215,12 +215,14 @@ const PageProfConsult = () => {
                     question={selected.question}
                     totalPages={evaluationToQuestions.length}
                     above={
-                      <Addendum
-                        groupScope={groupScope}
-                        evaluationId={evaluationId}
-                        evaluationToQuestion={selected}
-                        onAddendumChanged={onAddendumChanged}
-                      />
+                      !readOnly && (
+                        <Addendum
+                          groupScope={groupScope}
+                          evaluationId={evaluationId}
+                          evaluationToQuestion={selected}
+                          onAddendumChanged={onAddendumChanged}
+                        />
+                      )
                     }
                   />
                 )

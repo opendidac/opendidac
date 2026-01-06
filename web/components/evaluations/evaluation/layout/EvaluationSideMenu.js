@@ -160,7 +160,7 @@ const EvaluationSideMenu = ({
                 />
               </IconButton>
             </Tooltip>
-            {attendance.registered?.length} registered
+            {attendance?.registered?.length || 0} registered
           </>
         }
         phase={EvaluationPhase.REGISTRATION}
@@ -401,10 +401,13 @@ const CompositionSummary = ({ evaluation, composition }) => {
 }
 
 const AttendanceSummary = ({ attendance }) => {
+  if (!attendance) {
+    return null
+  }
   return (
     <Stack>
       <Typography variant="caption">
-        - {attendance.registered?.length} students registered.
+        - {attendance.registered?.length || 0} students registered.
       </Typography>
       {attendance.denied?.length > 0 && (
         <Typography variant="caption" color={'error'}>

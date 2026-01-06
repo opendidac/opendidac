@@ -76,6 +76,43 @@ const SELECT_CODE_WRITING = {
 } as const satisfies Prisma.CodeWritingSelect
 
 /**
+ * Selects CodeWriting relation WITH ALL templateFiles (including HIDDEN).
+ * Used for export/copy operations where we need to preserve all files.
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
+ */
+const SELECT_CODE_WRITING_WITH_ALL_FILES = {
+  codeCheckEnabled: true,
+
+  templateFiles: {
+    select: {
+      order: true,
+      studentPermission: true,
+      file: {
+        select: {
+          path: true,
+          content: true,
+          createdAt: true,
+        },
+      },
+    },
+    orderBy: { order: 'asc' },
+  },
+
+  testCases: {
+    select: {
+      index: true,
+      exec: true,
+      input: true,
+      expectedOutput: true,
+    },
+    orderBy: { index: 'asc' },
+  },
+
+  // solutionFiles excluded (official answers only)
+} as const satisfies Prisma.CodeWritingSelect
+
+/**
  * Selects Code relation
  * Note: Official answers (solutionFiles, output, context fields) are handled by officialAnswers select
  *
@@ -102,6 +139,32 @@ const SELECT_CODE = {
 } as const satisfies Prisma.CodeSelect
 
 /**
+ * Selects Code relation WITH ALL templateFiles (including HIDDEN).
+ * Used for export/copy operations where we need to preserve all files.
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
+ */
+const SELECT_CODE_WITH_ALL_FILES = {
+  language: true,
+  codeType: true,
+
+  sandbox: {
+    select: {
+      image: true,
+      beforeAll: true,
+    },
+  },
+
+  codeWriting: {
+    select: SELECT_CODE_WRITING_WITH_ALL_FILES,
+  },
+
+  codeReading: {
+    select: SELECT_CODE_READING,
+  },
+} as const satisfies Prisma.CodeSelect
+
+/**
  * Selects code type-specific relation for Question
  * Note: Official answers (solutionFiles, output, context fields) are handled by officialAnswers select
  *
@@ -115,9 +178,16 @@ const SELECT_CODE_QUESTION = {
 } as const satisfies Prisma.QuestionSelect
 
 /**
- * Runtime function that returns the code select.
+ * Selects code type-specific relation for Question WITH ALL templateFiles (including HIDDEN).
+ * Used for export/copy operations where we need to preserve all files.
+ *
+ * Using const literal with `satisfies` preserves literal types for type inference.
  */
-export const selectCode = (): Prisma.QuestionSelect => SELECT_CODE_QUESTION
+const SELECT_CODE_QUESTION_WITH_ALL_FILES = {
+  code: {
+    select: SELECT_CODE_WITH_ALL_FILES,
+  },
+} as const satisfies Prisma.QuestionSelect
 
 /**
  * Selects CodeReading relation.
@@ -142,3 +212,9 @@ export { SELECT_CODE }
  * Exported for composition in type-specific index.
  */
 export { SELECT_CODE_QUESTION }
+
+/**
+ * Selects code type-specific relation for Question WITH ALL templateFiles (including HIDDEN).
+ * Exported for export/copy operations.
+ */
+export { SELECT_CODE_QUESTION_WITH_ALL_FILES }

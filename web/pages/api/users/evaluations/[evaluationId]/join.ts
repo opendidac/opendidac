@@ -331,13 +331,16 @@ const createDatabaseTypeSpecificData = async (
         lintRules: query.lintRules,
         studentPermission: query.studentPermission,
         testQuery: query.testQuery,
-        queryOutputTests: {
-          create: query.queryOutputTests.map((queryOutputTest: any) => {
-            return {
-              test: queryOutputTest.test,
-            }
-          }),
-        },
+        queryOutputTests:
+          query.queryOutputTests && query.queryOutputTests.length > 0
+            ? {
+                create: query.queryOutputTests.map((queryOutputTest: any) => {
+                  return {
+                    test: queryOutputTest.test,
+                  }
+                }),
+              }
+            : undefined,
         database: {
           connect: {
             questionId: question.id,

@@ -24,11 +24,17 @@ import {
 /**
  * Selects the official answers *inside the codeWriting relation only*.
  * Merges base SELECT_CODE_WRITING with solution data (solutionFiles).
+ * Includes ALL templateFiles (including HIDDEN) when official answers are merged.
  *
  * Using const literal with `satisfies` preserves literal types for type inference.
  */
 const SELECT_OFFICIAL_ANSWERS_CODE_WRITING = {
   ...SELECT_CODE_WRITING,
+  // Override templateFiles to remove the HIDDEN filter when official answers are included
+  templateFiles: {
+    select: SELECT_CODE_WRITING.templateFiles.select,
+    orderBy: SELECT_CODE_WRITING.templateFiles.orderBy,
+  },
   solutionFiles: {
     include: { file: true },
     orderBy: { order: 'asc' },

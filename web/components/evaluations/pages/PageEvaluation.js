@@ -56,13 +56,17 @@ const EvaluationPage = () => {
 
   const [activeMenu, setActiveMenu] = useState(null)
 
+  const shouldFetchPhase = groupScope && evaluationId
+
   const {
     data: phase,
     error: errorPhase,
     mutate: mutatePhase,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}/phase`,
-    groupScope && evaluationId ? fetcher : null,
+    shouldFetchPhase
+      ? `/api/${groupScope}/evaluations/${evaluationId}/phase`
+      : null,
+    fetcher,
   )
 
   useEffect(() => {
@@ -71,71 +75,143 @@ const EvaluationPage = () => {
     }
   }, [phase])
 
+  const shouldFetchEvaluation = groupScope && evaluationId
+
   const {
     data: evaluation,
     error,
     mutate,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}`,
-    groupScope && evaluationId ? fetcher : null,
+    shouldFetchEvaluation
+      ? `/api/${groupScope}/evaluations/${evaluationId}`
+      : null,
+    fetcher,
   )
+
+  const shouldFetchComposition =
+    groupScope &&
+    evaluationId &&
+    evaluation &&
+    !phaseGT(EvaluationPhase.COMPOSITION, evaluation.phase)
 
   const {
     data: composition,
     error: errorComposition,
     mutate: mutateComposition,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}/composition`,
-    groupScope &&
-      evaluationId &&
-      evaluation &&
-      !phaseGT(EvaluationPhase.COMPOSITION, evaluation.phase)
-      ? fetcher
+    shouldFetchComposition
+      ? `/api/${groupScope}/evaluations/${evaluationId}/composition`
       : null,
+    fetcher,
   )
+
+  const shouldFetchAttendance =
+    groupScope &&
+    evaluationId &&
+    evaluation &&
+    !phaseGT(EvaluationPhase.REGISTRATION, evaluation.phase)
 
   const {
     data: attendance,
     error: errorAttendance,
     mutate: mutateAttendance,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}/attendance`,
-    groupScope &&
-      evaluationId &&
-      evaluation &&
-      !phaseGT(EvaluationPhase.REGISTRATION, evaluation.phase)
-      ? fetcher
+    shouldFetchAttendance
+      ? `/api/${groupScope}/evaluations/${evaluationId}/attendance`
       : null,
-    { refreshInterval: STUDENTS_ATTENDANCE_PULL_INTERVAL },
+    fetcher,
+    {
+      refreshInterval: shouldFetchAttendance
+        ? STUDENTS_ATTENDANCE_PULL_INTERVAL
+        : 0,
+    },
   )
+
+  const shouldFetchProgress =
+    groupScope &&
+    evaluationId &&
+    evaluation &&
+    !phaseGT(EvaluationPhase.IN_PROGRESS, evaluation.phase)
 
   const {
     data: progress,
     error: errorProgress,
     mutate: mutateProgress,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}/progress`,
-    groupScope &&
-      evaluationId &&
-      evaluation &&
-      !phaseGT(EvaluationPhase.IN_PROGRESS, evaluation.phase)
-      ? fetcher
+    shouldFetchProgress
+      ? `/api/${groupScope}/evaluations/${evaluationId}/progress`
       : null,
+    fetcher,
     { refreshInterval: STUDENTS_PROGRESS_PULL_INTERVAL },
   )
+
+  const shouldFetchResults =
+    groupScope &&
+    evaluationId &&
+    evaluation &&
+    phaseGT(evaluation.phase, EvaluationPhase.IN_PROGRESS)
+
+  useEffect(() => {
+    console.log('[PageEvaluation] Fetch conditions:', {
+      groupScope,
+      evaluationId,
+      evaluation: evaluation
+        ? {
+            id: evaluation.id,
+            phase: evaluation.phase,
+            label: evaluation.label,
+          }
+        : null,
+      shouldFetchPhase,
+      shouldFetchEvaluation,
+      shouldFetchComposition,
+      shouldFetchAttendance,
+      shouldFetchProgress,
+      shouldFetchResults,
+      phaseIndices: evaluation
+        ? {
+            COMPOSITION: Object.keys(EvaluationPhase).indexOf(
+              EvaluationPhase.COMPOSITION,
+            ),
+            REGISTRATION: Object.keys(EvaluationPhase).indexOf(
+              EvaluationPhase.REGISTRATION,
+            ),
+            IN_PROGRESS: Object.keys(EvaluationPhase).indexOf(
+              EvaluationPhase.IN_PROGRESS,
+            ),
+            GRADING: Object.keys(EvaluationPhase).indexOf(
+              EvaluationPhase.GRADING,
+            ),
+            currentPhase: Object.keys(EvaluationPhase).indexOf(
+              evaluation.phase,
+            ),
+          }
+        : null,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    groupScope,
+    evaluationId,
+    evaluation?.id,
+    evaluation?.phase,
+    evaluation?.label,
+    shouldFetchPhase,
+    shouldFetchEvaluation,
+    shouldFetchComposition,
+    shouldFetchAttendance,
+    shouldFetchProgress,
+    shouldFetchResults,
+  ])
 
   const {
     data: results,
     error: errorResults,
     mutate: mutateResults,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}/results`,
-    groupScope &&
-      evaluationId &&
-      evaluation &&
-      !phaseGT(EvaluationPhase.GRADING, evaluation.phase)
-      ? fetcher
+    shouldFetchResults
+      ? `/api/${groupScope}/evaluations/${evaluationId}/results`
       : null,
+    fetcher,
   )
 
   const isMenuDisabled = (key) => {
@@ -165,8 +241,13 @@ const EvaluationPage = () => {
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
       <Loading
-        error={[error, errorPhase]}
-        loading={!evaluation || !phase || !composition || !attendance}
+        error={[error, errorPhase, errorComposition, errorAttendance]}
+        loading={
+          !evaluation ||
+          !phase ||
+          (shouldFetchComposition && composition === undefined) ||
+          (shouldFetchAttendance && attendance === undefined)
+        }
       >
         {evaluation && (
           <LayoutMain

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Role, QuestionSource } from '@prisma/client'
+import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
@@ -28,12 +28,13 @@ const put = async (req, res, ctx) => {
 
   try {
     // First verify the evaluation to question exists and belongs to the correct group
+    // Note: We don't filter by question source because copied questions (QuestionSource.COPY)
+    // should also allow addendum updates
     const evaluationToQuestion = await prisma.evaluationToQuestion.findFirst({
       where: {
         evaluationId: evaluationId,
         questionId: questionId,
-        question: {
-          source: QuestionSource.EVAL,
+        evaluation: {
           group: {
             scope: groupScope,
           },

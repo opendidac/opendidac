@@ -105,6 +105,8 @@ export const databaseReplicator: QuestionReplicator<DBCopyPayload> = {
         },
       })
 
+      // Copy the query output if it exists
+      // Outputs are included in SELECT_OFFICIAL_ANSWERS_DATABASE via include: { output: true }
       let newOutput = null
 
       if (out) {

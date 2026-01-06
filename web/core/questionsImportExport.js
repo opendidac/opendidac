@@ -19,7 +19,7 @@ import {
   StudentPermission,
   CodeQuestionType,
 } from '@prisma/client'
-import { selectForQuestionExport } from './questions'
+import { SELECT_FOR_QUESTION_COPY } from '@/core/question/select'
 
 // #### Question import / export ####
 
@@ -54,7 +54,7 @@ const stripEmpty = (x) => {
  */
 export const buildExportPrismaQuery = (questionId) => ({
   where: { id: questionId },
-  select: selectForQuestionExport(),
+  select: SELECT_FOR_QUESTION_COPY,
 })
 
 /**
@@ -157,7 +157,19 @@ const exportDatabase = (db) => {
       content: sq.query.content ?? null,
       template: sq.query.template ?? null,
       testQuery: sq.query.testQuery,
-      expectedOutputType: sq.output?.type ?? null,
+      studentPermission: sq.query.studentPermission,
+      queryOutputTests: sq.query.queryOutputTests?.map((t) => ({
+        test: t.test,
+      })),
+      // Export full output data if it exists
+      output: sq.output
+        ? {
+            output: sq.output.output,
+            status: sq.output.status,
+            type: sq.output.type,
+            dbms: sq.output.dbms,
+          }
+        : null,
     })),
   }
 }
@@ -498,7 +510,13 @@ export const buildImportPrismaQuery = (questionJson, group) => {
         content: nn(sq.content),
         template: nn(sq.template),
         testQuery: !!sq.testQuery,
-        expectedOutputType: sq.expectedOutputType ?? null,
+        studentPermission: sq.studentPermission ?? StudentPermission.UPDATE,
+        queryOutputTests:
+          sq.queryOutputTests && sq.queryOutputTests.length > 0
+            ? sq.queryOutputTests
+            : undefined,
+        // Include output data if it exists
+        output: sq.output || null,
       })),
     }
   }
@@ -576,20 +594,54 @@ export const runImportPost = async (prisma, createdQuestion, postPlan) => {
   if (postPlan.dbSolution && Array.isArray(postPlan.dbSolution.queries)) {
     // Create each query and immediately link it as a solution query
     for (const queryData of postPlan.dbSolution.queries) {
-      const { expectedOutputType, ...queryFields } = queryData
+      const { output, queryOutputTests, ...queryFields } = queryData
 
       // Create the database query
       const newQuery = await prisma.databaseQuery.create({
-        data: queryFields,
+        data: {
+          order: queryFields.order,
+          title: queryFields.title,
+          description: queryFields.description,
+          lintActive: queryFields.lintActive,
+          lintRules: queryFields.lintRules,
+          content: queryFields.content,
+          template: queryFields.template,
+          testQuery: queryFields.testQuery,
+          studentPermission: queryFields.studentPermission,
+          questionId: createdQuestion.id,
+          queryOutputTests:
+            queryOutputTests && queryOutputTests.length > 0
+              ? {
+                  create: queryOutputTests.map((t) => ({
+                    test: t.test,
+                  })),
+                }
+              : undefined,
+        },
         select: { id: true },
       })
 
-      // Link it as a solution query
+      // Create the output if it exists
+      let newOutput = null
+      if (output) {
+        newOutput = await prisma.databaseQueryOutput.create({
+          data: {
+            queryId: newQuery.id,
+            output: output.output,
+            status: output.status,
+            type: output.type,
+            dbms: output.dbms,
+          },
+          select: { id: true },
+        })
+      }
+
+      // Link it as a solution query with the output if it exists
       await prisma.databaseToSolutionQuery.create({
         data: {
           questionId: createdQuestion.id,
           queryId: newQuery.id,
-          // If you decide to also create a DatabaseQueryOutput, do it here and set outputId.
+          outputId: newOutput?.id ?? null,
         },
       })
     }

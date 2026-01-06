@@ -158,13 +158,27 @@ const CompareDatabase = ({ solution, answer }) => {
                 />
               }
               rightPanel={
-                <ConsultQuery
-                  header={
-                    <Typography variant={'caption'}>Solution output</Typography>
-                  }
-                  query={getSolutionQuery(saQ.query.order).query}
-                  output={getSolutionQuery(saQ.query.order)?.output.output}
-                />
+                getSolutionQuery(saQ.query.order) ? (
+                  <ConsultQuery
+                    header={
+                      <Typography variant={'caption'}>
+                        Solution output
+                      </Typography>
+                    }
+                    query={getSolutionQuery(saQ.query.order).query}
+                    output={getSolutionQuery(saQ.query.order)?.output?.output}
+                  />
+                ) : (
+                  <ConsultQuery
+                    header={
+                      <Typography variant={'caption'}>
+                        Solution output
+                      </Typography>
+                    }
+                    query={null}
+                    output={null}
+                  />
+                )
               }
             />
           ))}
