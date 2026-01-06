@@ -226,12 +226,15 @@ function defaultCodeBasedOnLanguageAndType(
     )?.setup
     if (!tpl) throw new Error('Invalid codeWriting template')
 
+    // Override sandbox properties with template-specific ones if they exist
+    const templateImage = 'image' in tpl ? tpl.image : undefined
+    const templateBeforeAll = 'beforeAll' in tpl ? tpl.beforeAll : undefined
+
     return {
       ...base,
-      // Override sandbox properties with template-specific ones if they exist
       sandbox: {
-        image: tpl.image ?? base.sandbox.image,
-        beforeAll: tpl.beforeAll ?? base.sandbox.beforeAll,
+        image: templateImage ?? base.sandbox.image,
+        beforeAll: templateBeforeAll ?? base.sandbox.beforeAll,
       },
       files: tpl.files,
       testCases: tpl.testCases,
