@@ -32,6 +32,7 @@ const nextConfig = {
     })
     return config
   },
+  turbopack: {},
 }
 
 module.exports = withTM(nextConfig)
