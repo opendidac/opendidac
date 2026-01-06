@@ -23,22 +23,42 @@
     // Skip type checking of declaration files
     "skipLibCheck": true,
     // Preserve JSX for Next.js
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     // Incremental compilation for faster builds
     "incremental": true,
     // Base URL for module resolution
     "baseUrl": "./",
     // Path mappings
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     },
     // Include these types
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     // Next.js specific - include latest ES features
-    "lib": ["dom", "dom.iterable", "esnext", "ES2024"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext",
+      "ES2024"
+    ],
     "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
-  "exclude": ["node_modules", ".next", "out", "build"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out",
+    "build"
+  ]
 }
