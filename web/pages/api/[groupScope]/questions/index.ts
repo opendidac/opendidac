@@ -228,6 +228,11 @@ function defaultCodeBasedOnLanguageAndType(
 
     return {
       ...base,
+      // Override sandbox properties with template-specific ones if they exist
+      sandbox: {
+        image: tpl.image ?? base.sandbox.image,
+        beforeAll: tpl.beforeAll ?? base.sandbox.beforeAll,
+      },
       files: tpl.files,
       testCases: tpl.testCases,
     }
