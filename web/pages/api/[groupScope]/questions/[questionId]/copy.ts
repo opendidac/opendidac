@@ -67,7 +67,7 @@ const post = async (
   let questionCopy = null
   await (prisma as PrismaClient).$transaction(
     async (tx: Prisma.TransactionClient) => {
-      questionCopy = await copyQuestion(prisma, question.id, {
+      questionCopy = await copyQuestion(tx, question.id, {
         source: QuestionSource.COPY,
         prefix: 'Copy of ',
       })
