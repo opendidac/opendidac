@@ -152,7 +152,6 @@ const PageGrading = () => {
 
   const onChangeGrading = useCallback(
     (grading) => {
-      console.log('onChangeGrading', grading)
       const newEvaluationToQuestions = [...evaluationToQuestions]
       const evaluationToQuestion = newEvaluationToQuestions.find(
         (jstq) => jstq.question.id === grading.questionId,

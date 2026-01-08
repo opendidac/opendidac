@@ -32,7 +32,7 @@ import {
   UserPayload,
 } from '@/core/evaluation/export/engine/types'
 
-import { mapStudentQuestions } from '@/core/evaluation/export/engine/mapQuestions'
+import { mapStudentSubmission } from '@/core/evaluation/export/engine/mapStudentSubmissions'
 import { selectForStudentExport } from '@/core/evaluation/export/engine/select'
 
 // @ts-ignore – template file
@@ -113,7 +113,7 @@ const get = async (
   // Map all questions using shared mapper
   const questions: StudentSubmission<QuestionPayloadStudent>[] =
     userOnEvaluation.evaluation.evaluationToQuestions.map((etq) =>
-      mapStudentQuestions(etq, student, currentEmail),
+      mapStudentSubmission(etq, student, currentEmail),
     )
 
   const studentWithQuestionsAndAnswers: StudentWithQuestionsAndAnswers = {
