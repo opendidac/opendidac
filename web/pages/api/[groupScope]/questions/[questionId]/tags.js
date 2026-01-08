@@ -18,9 +18,8 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /**
@@ -29,7 +28,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * put: update tags of a question
  */
 
-const get = async (req, res, prisma) => {
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
 
   // get all tags linked to this question
@@ -44,7 +44,8 @@ const get = async (req, res, prisma) => {
 
   res.status(200).json(tags)
 }
-const put = async (req, res, prisma) => {
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { groupScope } = req.query
   const { tags } = req.body
   const { questionId } = req.query
@@ -112,11 +113,11 @@ const put = async (req, res, prisma) => {
   res.status(200).json(response)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  PUT: withGroupScope(
+    withAuthorization(withQuestionUpdate(put), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

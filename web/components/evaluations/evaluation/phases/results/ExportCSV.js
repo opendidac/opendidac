@@ -23,9 +23,9 @@ const COLUMN_SEPARATOR = ','
 const LINE_SEPARATOR = '\r'
 
 const ExportCSV = ({ evaluation, results, attendance }) => {
-  const participants = attendance.registered.map((r) => r.user)
-
   const exportAsCSV = useCallback(() => {
+    const participants = attendance?.registered?.map((r) => r.user) ?? []
+
     let csv = `Name${COLUMN_SEPARATOR}Email${COLUMN_SEPARATOR}Success Rate${COLUMN_SEPARATOR}Total Points${COLUMN_SEPARATOR}Obtained Points${COLUMN_SEPARATOR}`
     results.forEach((jstq) => (csv += `Q${jstq.order + 1}${COLUMN_SEPARATOR}`))
     csv += LINE_SEPARATOR
@@ -70,7 +70,7 @@ const ExportCSV = ({ evaluation, results, attendance }) => {
       `evaluation-${evaluation.id}-${sessionLabel}-results.csv`,
     )
     link.click()
-  }, [evaluation, results, participants])
+  }, [evaluation, results, attendance])
 
   return (
     <Button

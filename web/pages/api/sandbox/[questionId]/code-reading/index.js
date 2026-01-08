@@ -16,12 +16,9 @@
 
 import { Role } from '@prisma/client'
 import { runSandbox } from '@/sandbox/runSandboxTC'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
-import languages from '@/code/languages.json'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
+import languages from '@/core/languages.json'
 
 const environments = languages.environments
 
@@ -29,7 +26,8 @@ const environments = languages.environments
  endpoint to run the sandbox for a code question of type reading to fill the expected output
  used to run the sandbox for admin, students cant run sandox for code reading
  */
-const post = async (req, res, prisma) => {
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
 
   const code = await prisma.code.findUnique({
@@ -153,6 +151,6 @@ const post = async (req, res, prisma) => {
   res.status(200).send(results)
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR]),
+export default withApiContext({
+  POST: withAuthorization(post, { roles: [Role.PROFESSOR] }),
 })

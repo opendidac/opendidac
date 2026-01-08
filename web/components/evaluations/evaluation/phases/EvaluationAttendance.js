@@ -48,10 +48,10 @@ const EvaluationAttendance = ({
           <StudentsInEvaluation
             groupScope={groupScope}
             evaluationId={evaluationId}
-            students={attendance.registered}
+            students={attendance?.registered ?? []}
           />
         </Stack>
-        {attendance.denied.length > 0 && (
+        {attendance?.denied?.length > 0 && (
           <Stack flex={1}>
             <Typography variant="h6">Denied Students</Typography>
             <DeniedStudentsInEvaluation

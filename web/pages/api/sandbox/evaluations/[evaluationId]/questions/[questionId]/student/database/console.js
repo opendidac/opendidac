@@ -17,17 +17,15 @@
 import { Role } from '@prisma/client'
 import { isInProgress } from '@/pages/api/users/evaluations/[evaluationId]/questions/[questionId]/answers/utils'
 import { runSandboxDB } from '@/sandbox/runSandboxDB'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
-import { getUser } from '@/code/auth/auth'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
+import { getUser } from '@/core/auth/auth'
 
 /*
  endpoint to run the database console query sandbox for a users
  */
-const post = async (req, res, prisma) => {
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const user = await getUser(req, res)
 
   const { evaluationId, questionId } = req.query
@@ -113,6 +111,8 @@ const post = async (req, res, prisma) => {
   res.status(200).json(result[at])
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.PROFESSOR, Role.STUDENT]),
+export default withApiContext({
+  POST: withAuthorization(post, {
+    roles: [Role.PROFESSOR, Role.STUDENT],
+  }),
 })

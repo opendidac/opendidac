@@ -84,12 +84,14 @@ const EvaluationResults = ({ groupScope, evaluation, attendance, results }) => {
         questionCellClick={async (questionId, participantId) => {
           const questionOrder =
             results.find((jstq) => jstq.question.id === questionId).order + 1
-          const participantEmail = attendance.registered.find(
+          const participantEmail = attendance?.registered?.find(
             (r) => r.user.id === participantId,
-          ).user.email
-          await router.push(
-            `/${groupScope}/evaluations/${evaluationId}/consult/${participantEmail}/${questionOrder}`,
-          )
+          )?.user.email
+          if (participantEmail) {
+            await router.push(
+              `/${groupScope}/evaluations/${evaluationId}/consult/${participantEmail}/${questionOrder}`,
+            )
+          }
         }}
       />
     </Stack>

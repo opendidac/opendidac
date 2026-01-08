@@ -25,8 +25,8 @@ import slugify from 'slugify'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import { Role } from '@prisma/client'
 
 const MAX_IMAGE_WIDTH_PX = 1920
@@ -92,7 +92,7 @@ const upload = multer({
   limits: { fileSize: MAX_FILE_SIZE },
 }).single('file')
 
-const post = async (req, res) => {
+const post = async (req, res, ctx) => {
   upload(req, res, async function (err) {
     if (err) {
       return res.status(500).json({ message: 'Upload error: ' + err.message })
@@ -149,11 +149,9 @@ async function processImage(filePath) {
   return filePath
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    POST: withAuthorization(post, [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
+})
 
 export const config = {
   api: {

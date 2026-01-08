@@ -20,7 +20,7 @@ import { QuestionType, StudentAnswerStatus } from '@prisma/client'
 import { useDebouncedCallback } from 'use-debounce'
 import { useRouter } from 'next/router'
 import { Button, Stack, Typography } from '@mui/material'
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 
 import TrueFalse from '@/components/question/type_specific/TrueFalse'
 import Loading from '@/components/feedback/Loading'

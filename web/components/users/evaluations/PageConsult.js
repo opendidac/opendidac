@@ -29,7 +29,7 @@ import GradingPointsComment from '../../evaluations/grading/GradingPointsComment
 import LayoutMain from '../../layout/LayoutMain'
 import AnswerConsult from '../../answer/AnswerConsult'
 import Loading from '../../feedback/Loading'
-import { fetcher } from '../../../code/utils'
+import { fetcher } from '../../../core/utils'
 import AnswerCompare from '@/components/answer/AnswerCompare'
 import Overlay from '@/components/ui/Overlay'
 import AlertFeedback from '@/components/feedback/AlertFeedback'

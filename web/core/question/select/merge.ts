@@ -1,0 +1,77 @@
+/**
+ * Copyright 2022-2024 HEIG-VD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Deep merge for Prisma select trees.
+ * No JS builtin or library can safely merge Prisma selects:
+ * - Object.assign is shallow and overwrites nested selects
+ * - lodash/merge merges objects inside arrays element-wise, corrupting Prisma orderBy arrays that need separate objects
+ * - structuredClone/JSON serialization break non-JSON Prisma nodes
+ *
+ * This merge preserves Prisma semantics:
+ * - deep-merge plain objects
+ * - replace arrays and scalars entirely
+ * - allow arbitrary nested { select: {...} } shapes
+ */
+
+/**
+  // Lodash merge (WRONG for Prisma)
+  const lodashResult = _.merge({}, select1, select2);
+
+  console.log(JSON.stringify(lodashResult, null, 2)) 
+*/
+
+export const mergeSelects = <T extends Record<string, any>>(
+  ...parts: T[]
+): T => {
+  const result = {} as T
+
+  for (const part of parts) {
+    deepMerge(result, part)
+  }
+
+  return result
+}
+
+/**
+ * Internal deep-merge helper.
+ * Uses Record<string, any> because Prisma select trees contain mixed,
+ * non-JSON-serializable shapes that cannot be modeled strictly.
+ */
+const deepMerge = (
+  target: Record<string, any>,
+  source: Record<string, any>,
+) => {
+  for (const key of Object.keys(source)) {
+    const src = source[key]
+    const tgt = target[key]
+
+    if (isPlainObject(tgt) && isPlainObject(src)) {
+      deepMerge(tgt, src)
+      continue
+    }
+
+    target[key] = src
+  }
+}
+
+/**
+ * Checks for a plain object.
+ * Must allow any for flexibility in Prisma nested select structures.
+ */
+const isPlainObject = (v: any): v is Record<string, any> => {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
+}

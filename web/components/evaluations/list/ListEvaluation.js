@@ -20,13 +20,13 @@ import Link from 'next/link'
 import { EvaluationPhase, EvaluationStatus } from '@prisma/client'
 import { Box, Button, IconButton, Stack, Tooltip } from '@mui/material'
 
-import { getStudentEntryLink } from '@/code/utils'
+import { getStudentEntryLink } from '@/core/utils'
 import DisplayPhase from '../DisplayPhase'
 import GridGrouping from '@/components/ui/GridGrouping'
 import { weeksAgo } from '@/components/questions/list/utils'
 import DateTimeAgo from '@/components/feedback/DateTimeAgo'
 import AddEvaluationDialog from './AddEvaluationDialog'
-import { phaseGT } from '@/code/phase'
+import { phaseGT } from '@/core/phase'
 import ArchivalStatusMiniStamp from '@/components/admin/archiving/ArchivalStatusMiniStamp'
 
 const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {

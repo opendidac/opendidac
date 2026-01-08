@@ -18,14 +18,14 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /** Managing the order of the options of a multichoice question */
 
-const put = async (req, res, prisma) => {
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update the order of the options in the multiple choice question
   const { options } = req.body
 
@@ -44,10 +44,10 @@ const put = async (req, res, prisma) => {
   res.status(200).json({ message: 'OK' })
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  PUT: withGroupScope(
+    withAuthorization(withQuestionUpdate(put), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

@@ -18,7 +18,7 @@ import { useRouter } from 'next/router'
 import {
   phasePageRelationship,
   studentPhaseRedirect,
-} from '../../../code/phase'
+} from '../../../core/phase'
 /*
     Checks if the current pathname corresponds to the expected pathname for the current phase.
     If not, redirects to the expected pathname.

@@ -31,7 +31,7 @@ import UndoIcon from '@mui/icons-material/Undo'
 import ClearIcon from '@mui/icons-material/Clear'
 
 import { toArray as typesToArray } from './types.js'
-import languages from '../../code/languages.json'
+import languages from '../../core/languages.json'
 import TagsSelector from '../input/TagsSelector'
 import CheckboxLabel from '../input/CheckboxLabel.js'
 import { QuestionStatus } from '@prisma/client'

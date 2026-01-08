@@ -29,7 +29,7 @@ import FileEditor from '@/components/question/type_specific/code/FileEditor'
 import useSWR from 'swr'
 
 import ScrollContainer from '@/components/layout/ScrollContainer'
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import Loading from '@/components/feedback/Loading'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 

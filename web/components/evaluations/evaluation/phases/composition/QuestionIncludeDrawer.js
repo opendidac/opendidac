@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import Loading from '@/components/feedback/Loading'
 import ResizableDrawer from '@/components/layout/utils/ResizableDrawer'
 import QuestionFilter from '@/components/question/QuestionFilter'

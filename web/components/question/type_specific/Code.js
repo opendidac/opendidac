@@ -19,7 +19,7 @@ import { Stack } from '@mui/material'
 
 import Loading from '../../feedback/Loading'
 
-import { fetcher } from '../../../code/utils'
+import { fetcher } from '../../../core/utils'
 import { CodeQuestionType } from '@prisma/client'
 import CodeWriting from './code/codeWriting/CodeWriting'
 import CodeReading from './code/codeReading/CodeReading'

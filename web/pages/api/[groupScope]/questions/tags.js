@@ -18,10 +18,9 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
-import { questionsFilterWhereClause } from '@/code/questionsFilter'
+import { withApiContext } from '@/middleware/withApiContext'
+import { questionsFilterWhereClause } from '@/core/questionsFilter'
 
 /**
  * List of tags for a group
@@ -41,7 +40,8 @@ import { questionsFilterWhereClause } from '@/code/questionsFilter'
  *   - unused
  *
  */
-const get = async (req, res, prisma) => {
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   const where = questionsFilterWhereClause(req.query)
 
   // Group tags from filtered questions
@@ -63,8 +63,6 @@ const get = async (req, res, prisma) => {
   res.status(200).json(result)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+})

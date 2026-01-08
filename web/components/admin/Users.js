@@ -15,7 +15,7 @@
  */
 
 import { Role } from '@prisma/client'
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import Loading from '../feedback/Loading'
 import useSWR from 'swr'
 import UserAvatar from '../layout/UserAvatar'

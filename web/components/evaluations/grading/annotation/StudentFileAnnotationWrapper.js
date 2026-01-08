@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { languageBasedOnPathExtension } from '@/code/utils'
+import { languageBasedOnPathExtension } from '@/core/utils'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import DropdownSelector from '@/components/input/DropdownSelector'

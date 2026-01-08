@@ -16,19 +16,17 @@
 
 import { EvaluationPhase, Role, UserOnEvaluationStatus } from '@prisma/client'
 
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 import { isInProgress } from './questions/[questionId]/answers/utils'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 import {
   withEvaluationPhase,
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
 import { withRestrictions } from '@/middleware/withRestrictions'
 import { withPurgeGuard } from '@/middleware/withPurged'
+import { withEvaluation } from '@/middleware/withEvaluation'
 
 /*
 Get the details about thr evaluation for a users
@@ -40,10 +38,9 @@ Each question has included the answer for that particular users only
 */
 
 const get = withEvaluationPhase(
-  [EvaluationPhase.IN_PROGRESS],
   withStudentStatus(
-    [UserOnEvaluationStatus.IN_PROGRESS],
-    async (req, res, prisma) => {
+    async (req, res, ctx) => {
+      const { prisma } = ctx
       const { evaluationId } = req.query
       const user = await getUser(req, res)
 
@@ -106,14 +103,17 @@ const get = withEvaluationPhase(
 
       res.status(200).json(userOnEvaluation.evaluation.evaluationToQuestions)
     },
+    { statuses: [UserOnEvaluationStatus.IN_PROGRESS] },
   ),
+  { phases: [EvaluationPhase.IN_PROGRESS] },
 )
 
-export default withMethodHandler({
-  GET: withRestrictions(
-    withAuthorization(withPurgeGuard(withPrisma(get)), [
-      Role.PROFESSOR,
-      Role.STUDENT,
-    ]),
+export default withApiContext({
+  GET: withEvaluation(
+    withRestrictions(
+      withAuthorization(withPurgeGuard(get), {
+        roles: [Role.PROFESSOR, Role.STUDENT],
+      }),
+    ),
   ),
 })

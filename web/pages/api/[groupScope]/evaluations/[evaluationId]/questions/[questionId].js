@@ -14,26 +14,27 @@
  * limitations under the License.
  */
 
-import { Role, QuestionSource } from '@prisma/client'
+import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 
-const put = async (req, res, prisma) => {
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { groupScope, evaluationId, questionId } = req.query
   const { addendum } = req.body
 
   try {
     // First verify the evaluation to question exists and belongs to the correct group
+    // Note: We don't filter by question source because copied questions (QuestionSource.COPY)
+    // should also allow addendum updates
     const evaluationToQuestion = await prisma.evaluationToQuestion.findFirst({
       where: {
         evaluationId: evaluationId,
         questionId: questionId,
-        question: {
-          source: QuestionSource.EVAL,
+        evaluation: {
           group: {
             scope: groupScope,
           },
@@ -67,8 +68,6 @@ const put = async (req, res, prisma) => {
   }
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
-  }),
-)
+export default withApiContext({
+  PUT: withGroupScope(withAuthorization(put, { roles: [Role.PROFESSOR] })),
+})

@@ -51,7 +51,7 @@ import CheckboxLabel from '@/components/input/CheckboxLabel'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import { useSnackbar } from '@/context/SnackbarContext'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
-import { computeCoefficient } from '@/code/grading/coefficient'
+import { computeCoefficient } from '@/core/grading/coefficient'
 
 const EvaluationComposition = ({
   groupScope,
@@ -117,7 +117,7 @@ const EvaluationComposition = ({
       <QuestionIncludeDrawer
         open={showIncludeDrawer}
         groupScope={groupScope}
-        includedQuestions={composition.map((eq) => eq.question)}
+        includedQuestions={composition?.map((eq) => eq.question) ?? []}
         onInclude={(questionIds) => {
           saveIncludeQuestions(questionIds)
         }}
@@ -137,7 +137,7 @@ const CompositionGrid = ({
   onCompositionChanged,
 }) => {
   const [questions, setQuestions] = useCtrlState(
-    composition,
+    composition ?? [],
     `${evaluationId}-composition`,
   )
 
@@ -147,7 +147,7 @@ const CompositionGrid = ({
     useCompositionCompliance(questions)
 
   useEffect(() => {
-    setQuestions(composition)
+    setQuestions(composition ?? [])
   }, [composition, setQuestions])
 
   const saveReOrder = useCallback(

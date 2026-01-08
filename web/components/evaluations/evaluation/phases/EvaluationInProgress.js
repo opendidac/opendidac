@@ -108,7 +108,7 @@ const EvaluationInProgress = ({
       <StudentProgressGrid
         groupScope={groupScope}
         evaluationId={evaluationId}
-        students={attendance.registered}
+        students={attendance?.registered ?? []}
         progress={progress}
       />
     </Stack>

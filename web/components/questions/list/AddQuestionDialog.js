@@ -32,7 +32,7 @@ import QuestionTypeIcon from '@/components/question/QuestionTypeIcon'
 import LanguageSelector from '@/components/question/type_specific/code/LanguageSelector'
 import TypeSelector from '@/components/question/TypeSelector'
 
-import languages from '@/code/languages.json'
+import languages from '@/core/languages.json'
 import DropDown from '@/components/input/DropDown'
 import CodeQuestionTypeIcon from '@/components/question/type_specific/code/CodeQuestionTypeIcon'
 import QuestionTagsViewer from '@/components/question/tags/QuestionTagsViewer'

@@ -15,7 +15,7 @@
  */
 
 import { Paper, Stack, Typography, ListItemButton } from '@mui/material'
-import { getStudentEntryLink } from '@/code/utils'
+import { getStudentEntryLink } from '@/core/utils'
 
 const JoinClipboard = ({ evaluationId, desktopAppRequired = false }) => {
   const link = getStudentEntryLink(evaluationId, desktopAppRequired)

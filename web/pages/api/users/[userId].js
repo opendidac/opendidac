@@ -15,17 +15,15 @@
  */
 
 import { Role } from '@prisma/client'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 
 /**
  *
  * Update the roles of the user
  */
-const patch = async (req, res, prisma) => {
+const patch = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { roles } = req.body
 
   const { userId } = req.query
@@ -62,6 +60,6 @@ const patch = async (req, res, prisma) => {
   res.status(200).json(updatedUser)
 }
 
-export default withMethodHandler({
-  PATCH: withAuthorization(withPrisma(patch), [Role.SUPER_ADMIN]),
+export default withApiContext({
+  PATCH: withAuthorization(patch, { roles: [Role.SUPER_ADMIN] }),
 })

@@ -19,9 +19,8 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /**
@@ -32,7 +31,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * put: update the database part of a question
  */
 
-const get = async (req, res, prisma) => {
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   // get the "database" part of the question
   const { questionId } = req.query
   const database = await prisma.database.findUnique({
@@ -44,7 +44,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(database)
 }
 
-const put = async (req, res, prisma) => {
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update the "database" part of the question
   const { questionId } = req.query
   const { image } = req.body
@@ -61,11 +62,11 @@ const put = async (req, res, prisma) => {
   res.status(200).json(database)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    GET: withAuthorization(withPrisma(get), [Role.PROFESSOR]),
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  GET: withGroupScope(withAuthorization(get, { roles: [Role.PROFESSOR] })),
+  PUT: withGroupScope(
+    withAuthorization(withQuestionUpdate(put), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

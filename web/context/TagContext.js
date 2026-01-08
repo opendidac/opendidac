@@ -18,10 +18,13 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import useSWR from 'swr'
 import { Role } from '@prisma/client'
 import { useSession } from 'next-auth/react'
-import { fetcher } from '../code/utils'
+import { fetcher } from '../core/utils'
 import { useRouter } from 'next/router'
 
-const TagsContext = createContext()
+const TagsContext = createContext({
+  tags: [],
+  upsert: async () => {},
+})
 export const useTags = () => useContext(TagsContext)
 
 const isProfessor = (user) => user?.roles?.includes(Role.PROFESSOR) || false
@@ -39,7 +42,7 @@ export const TagsProvider = ({ children }) => {
     error,
   } = useSWR(
     `/api/${groupScope}/questions/tags`,
-    groupScope && isProfessor(session.user) ? fetcher : null,
+    groupScope && session?.user && isProfessor(session.user) ? fetcher : null,
     { fallbackData: [] },
   )
 
@@ -70,8 +73,6 @@ export const TagsProvider = ({ children }) => {
     },
     [groupScope, mutate],
   )
-
-  if (error) return children // they wont have access to tags
 
   return (
     <TagsContext.Provider

@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    // Allow JavaScript files to be imported alongside TypeScript files
+    "allowJs": true,
+    // Don't check JavaScript files, only TypeScript files
+    "checkJs": false,
+    // Use ESNext as the target (includes latest features including ES2025 proposals)
+    "target": "ESNext",
+    // Use ES modules
+    "module": "esnext",
+    // Use Node.js module resolution
+    "moduleResolution": "bundler",
+    // Enable all strict type-checking options
+    "strict": true,
+    // Allow default imports from modules with no default export
+    "esModuleInterop": true,
+    // Resolve JSON modules
+    "resolveJsonModule": true,
+    // Isolated modules for better performance
+    "isolatedModules": true,
+    // Emit declaration files
+    "declaration": false,
+    // Skip type checking of declaration files
+    "skipLibCheck": true,
+    // Preserve JSX for Next.js
+    "jsx": "react-jsx",
+    // Incremental compilation for faster builds
+    "incremental": true,
+    // Base URL for module resolution
+    "baseUrl": "./",
+    // Path mappings
+    "paths": {
+      "@/*": ["./*"]
+    },
+    // Include these types
+    "types": ["node"],
+    // Next.js specific - include latest ES features
+    "lib": ["dom", "dom.iterable", "esnext", "ES2024"],
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
+  "exclude": ["node_modules", ".next", "out", "build"]
+}

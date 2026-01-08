@@ -18,7 +18,7 @@ import React, { useEffect, useState } from 'react'
 import { Box, Stack, TextField, Typography } from '@mui/material'
 import InlineMonacoEditor from '../../../input/InlineMonacoEditor'
 import { useTheme } from '@emotion/react'
-import { languageBasedOnPathExtension } from '@/code/utils'
+import { languageBasedOnPathExtension } from '@/core/utils'
 
 const FileEditor = ({
   file,

@@ -15,18 +15,13 @@
  */
 
 import { Role } from '@prisma/client'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
-import { getUser } from '@/code/auth/auth'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 
-const put = async (req, res, prisma) => {
+const put = async (req, res, ctx) => {
+  const { prisma, user } = ctx
   // change the selected group of the users
   const { groupScope } = req.body
-
-  const user = await getUser(req, res)
 
   const allUserGroups = await prisma.userOnGroup.findMany({
     where: {
@@ -81,6 +76,6 @@ const put = async (req, res, prisma) => {
   res.status(200).json({ message: 'ok' })
 }
 
-export default withMethodHandler({
-  PUT: withAuthorization(withPrisma(put), [Role.PROFESSOR]),
+export default withApiContext({
+  PUT: withAuthorization(put, { roles: [Role.PROFESSOR] }),
 })

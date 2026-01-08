@@ -19,9 +19,8 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /**
@@ -30,7 +29,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  * del: delete a test case
  */
 
-const put = async (req, res, prisma) => {
+const put = async (req, res, ctx) => {
+  const { prisma } = ctx
   // update a test case
   const { questionId, index } = req.query
   const { exec, input, expectedOutput } = req.body
@@ -50,7 +50,8 @@ const put = async (req, res, prisma) => {
   res.status(200).json(testCase)
 }
 
-const del = async (req, res, prisma) => {
+const del = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId, index } = req.query
 
   // update the index of the test cases after the deleted one
@@ -91,13 +92,15 @@ const del = async (req, res, prisma) => {
   res.status(200).json('Test case deleted')
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    PUT: withAuthorization(withQuestionUpdate(withPrisma(put)), [
-      Role.PROFESSOR,
-    ]),
-    DELETE: withAuthorization(withQuestionUpdate(withPrisma(del)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  PUT: withGroupScope(
+    withAuthorization(withQuestionUpdate(put), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+  DELETE: withGroupScope(
+    withAuthorization(withQuestionUpdate(del), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

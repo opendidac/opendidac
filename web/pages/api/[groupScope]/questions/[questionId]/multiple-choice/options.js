@@ -19,9 +19,8 @@ import { Role } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
-  withMethodHandler,
 } from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withApiContext } from '@/middleware/withApiContext'
 import { withQuestionUpdate } from '@/middleware/withUpdate'
 
 /**
@@ -30,7 +29,8 @@ import { withQuestionUpdate } from '@/middleware/withUpdate'
  */
 
 // create a new option for the multichoice question
-const post = async (req, res, prisma) => {
+const post = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { questionId } = req.query
   const { option } = req.body
 
@@ -60,10 +60,10 @@ const post = async (req, res, prisma) => {
   res.status(200).json(newOption)
 }
 
-export default withGroupScope(
-  withMethodHandler({
-    POST: withAuthorization(withQuestionUpdate(withPrisma(post)), [
-      Role.PROFESSOR,
-    ]),
-  }),
-)
+export default withApiContext({
+  POST: withGroupScope(
+    withAuthorization(withQuestionUpdate(post), {
+      roles: [Role.PROFESSOR],
+    }),
+  ),
+})

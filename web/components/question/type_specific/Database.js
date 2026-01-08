@@ -20,7 +20,7 @@ import TabPanel from '../../layout/utils/TabPanel'
 import TabContent from '../../layout/utils/TabContent'
 import Setup from './database/Setup'
 import useSWR from 'swr'
-import { fetcher } from '../../../code/utils'
+import { fetcher } from '../../../core/utils'
 import SolutionQueriesManager from './database/SolutionQueriesManager'
 import Loading from '../../feedback/Loading'
 

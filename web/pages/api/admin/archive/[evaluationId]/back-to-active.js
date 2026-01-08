@@ -15,31 +15,14 @@
  */
 
 import { Role, ArchivalPhase } from '@prisma/client'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
-import { getUser } from '@/code/auth/auth'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
+import { withEvaluation } from '@/middleware/withEvaluation'
+import { getUser } from '@/core/auth/auth'
 
-const post = async (req, res, prisma) => {
+const post = async (req, res, ctx) => {
+  const { prisma, evaluation } = ctx
   const { evaluationId } = req.query
-
-  const evaluation = await prisma.evaluation.findUnique({
-    where: { id: evaluationId },
-    select: {
-      id: true,
-      label: true,
-      archivalPhase: true,
-      archivedAt: true,
-      purgedAt: true,
-    },
-  })
-
-  if (!evaluation) {
-    res.status(404).json({ message: 'Evaluation not found' })
-    return
-  }
 
   // Debug: Log the actual archival phase
   console.log('Evaluation archival phase:', evaluation.archivalPhase)
@@ -88,6 +71,10 @@ const post = async (req, res, prisma) => {
   })
 }
 
-export default withMethodHandler({
-  POST: withAuthorization(withPrisma(post), [Role.SUPER_ADMIN, Role.ARCHIVIST]),
+export default withApiContext({
+  POST: withEvaluation(
+    withAuthorization(post, {
+      roles: [Role.SUPER_ADMIN, Role.ARCHIVIST],
+    }),
+  ),
 })

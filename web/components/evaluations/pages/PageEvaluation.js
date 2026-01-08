@@ -17,7 +17,8 @@
 import { useRouter } from 'next/router'
 import useSWR from 'swr'
 import { getPhaseDetails, phaseGreaterThan } from '../evaluation/phases'
-import { fetcher } from '@/code/utils'
+import { phaseGT } from '@/core/phase'
+import { fetcher } from '@/core/utils'
 import Authorization from '@/components/security/Authorization'
 import Loading from '@/components/feedback/Loading'
 import LayoutMain from '@/components/layout/LayoutMain'
@@ -55,13 +56,17 @@ const EvaluationPage = () => {
 
   const [activeMenu, setActiveMenu] = useState(null)
 
+  const shouldFetchPhase = groupScope && evaluationId
+
   const {
     data: phase,
     error: errorPhase,
     mutate: mutatePhase,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}/phase`,
-    groupScope && evaluationId ? fetcher : null,
+    shouldFetchPhase
+      ? `/api/${groupScope}/evaluations/${evaluationId}/phase`
+      : null,
+    fetcher,
   )
 
   useEffect(() => {
@@ -70,51 +75,87 @@ const EvaluationPage = () => {
     }
   }, [phase])
 
+  const shouldFetchEvaluation = groupScope && evaluationId
+
   const {
     data: evaluation,
     error,
     mutate,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}`,
-    groupScope && evaluationId ? fetcher : null,
+    shouldFetchEvaluation
+      ? `/api/${groupScope}/evaluations/${evaluationId}`
+      : null,
+    fetcher,
   )
+
+  const shouldFetchComposition = groupScope && evaluationId && evaluation
 
   const {
     data: composition,
     error: errorComposition,
     mutate: mutateComposition,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}/composition`,
-    groupScope && evaluationId ? fetcher : null,
+    shouldFetchComposition
+      ? `/api/${groupScope}/evaluations/${evaluationId}/composition`
+      : null,
+    fetcher,
   )
+
+  const shouldFetchAttendance =
+    groupScope &&
+    evaluationId &&
+    evaluation &&
+    !phaseGT(EvaluationPhase.REGISTRATION, evaluation.phase)
 
   const {
     data: attendance,
     error: errorAttendance,
     mutate: mutateAttendance,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}/attendance`,
-    groupScope && evaluationId ? fetcher : null,
-    { refreshInterval: STUDENTS_ATTENDANCE_PULL_INTERVAL },
+    shouldFetchAttendance
+      ? `/api/${groupScope}/evaluations/${evaluationId}/attendance`
+      : null,
+    fetcher,
+    {
+      refreshInterval: shouldFetchAttendance
+        ? STUDENTS_ATTENDANCE_PULL_INTERVAL
+        : 0,
+    },
   )
+
+  const shouldFetchProgress =
+    groupScope &&
+    evaluationId &&
+    evaluation &&
+    !phaseGT(EvaluationPhase.IN_PROGRESS, evaluation.phase)
 
   const {
     data: progress,
     error: errorProgress,
     mutate: mutateProgress,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}/progress`,
-    groupScope && evaluationId ? fetcher : null,
+    shouldFetchProgress
+      ? `/api/${groupScope}/evaluations/${evaluationId}/progress`
+      : null,
+    fetcher,
     { refreshInterval: STUDENTS_PROGRESS_PULL_INTERVAL },
   )
+
+  const shouldFetchResults =
+    groupScope &&
+    evaluationId &&
+    evaluation &&
+    phaseGT(evaluation.phase, EvaluationPhase.IN_PROGRESS)
 
   const {
     data: results,
     error: errorResults,
     mutate: mutateResults,
   } = useSWR(
-    `/api/${groupScope}/evaluations/${evaluationId}/results`,
-    groupScope && evaluationId ? fetcher : null,
+    shouldFetchResults
+      ? `/api/${groupScope}/evaluations/${evaluationId}/results`
+      : null,
+    fetcher,
   )
 
   const isMenuDisabled = (key) => {
@@ -144,8 +185,13 @@ const EvaluationPage = () => {
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
       <Loading
-        error={[error, errorPhase]}
-        loading={!evaluation || !phase || !composition || !attendance}
+        error={[error, errorPhase, errorComposition, errorAttendance]}
+        loading={
+          !evaluation ||
+          !phase ||
+          (shouldFetchComposition && composition === undefined) ||
+          (shouldFetchAttendance && attendance === undefined)
+        }
       >
         {evaluation && (
           <LayoutMain

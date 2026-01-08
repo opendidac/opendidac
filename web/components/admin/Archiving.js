@@ -15,7 +15,7 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 import Loading from '../feedback/Loading'
 import UserHelpPopper from '../feedback/UserHelpPopper'
 import DateTimeAgo from '../feedback/DateTimeAgo'

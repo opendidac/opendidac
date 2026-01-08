@@ -15,11 +15,8 @@
  */
 
 import { Role, EvaluationPhase, ArchivalPhase } from '@prisma/client'
-import {
-  withAuthorization,
-  withMethodHandler,
-} from '@/middleware/withAuthorization'
-import { withPrisma } from '@/middleware/withPrisma'
+import { withAuthorization } from '@/middleware/withAuthorization'
+import { withApiContext } from '@/middleware/withApiContext'
 
 /** Administrating evaluation data in regards to the archive
  *
@@ -27,7 +24,8 @@ import { withPrisma } from '@/middleware/withPrisma'
 
  */
 
-const get = async (req, res, prisma) => {
+const get = async (req, res, ctx) => {
+  const { prisma } = ctx
   const { mode = 'todo' } = req.query
 
   // Build mode-specific where conditions
@@ -166,6 +164,8 @@ const get = async (req, res, prisma) => {
   res.status(200).json(evaluations)
 }
 
-export default withMethodHandler({
-  GET: withAuthorization(withPrisma(get), [Role.SUPER_ADMIN, Role.ARCHIVIST]),
+export default withApiContext({
+  GET: withAuthorization(get, {
+    roles: [Role.SUPER_ADMIN, Role.ARCHIVIST],
+  }),
 })

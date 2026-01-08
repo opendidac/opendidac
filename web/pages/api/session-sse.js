@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getUser } from '@/code/auth/auth'
+import { getUser } from '@/core/auth/auth'
 import {
   addSSEClient,
   getSSEClients,
@@ -23,7 +23,7 @@ import {
   startSSEHeartbeat,
   sseSend,
   MAX_CONN,
-} from '@/code/auth/sseClients'
+} from '@/core/auth/sseClients'
 
 export default async function handler(req, res) {
   console.log('Opening SSE connection')

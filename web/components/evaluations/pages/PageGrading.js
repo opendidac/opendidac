@@ -36,7 +36,7 @@ import { useDebouncedCallback } from 'use-debounce'
 
 import DialogFeedback from '@/components/feedback/DialogFeedback'
 import PiePercent from '@/components/feedback/PiePercent'
-import { fetcher } from '@/code/utils'
+import { fetcher } from '@/core/utils'
 
 import LayoutMain from '@/components/layout/LayoutMain'
 import BackButton from '@/components/layout/BackButton'
@@ -311,7 +311,7 @@ const PageGrading = () => {
       ready &&
       evaluationToQuestion?.question.studentAnswer.find(
         (answer) => answer.user.id === participantId,
-      )[evaluationToQuestion.question.type],
+      )?.[evaluationToQuestion.question.type],
     [evaluationToQuestion, participantId, ready],
   )
 
