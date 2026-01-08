@@ -88,11 +88,7 @@ const EvaluationPage = () => {
     fetcher,
   )
 
-  const shouldFetchComposition =
-    groupScope &&
-    evaluationId &&
-    evaluation &&
-    !phaseGT(EvaluationPhase.COMPOSITION, evaluation.phase)
+  const shouldFetchComposition = groupScope && evaluationId && evaluation
 
   const {
     data: composition,

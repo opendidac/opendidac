@@ -19,20 +19,12 @@
  * tags, base fields, and any nested structures.
  */
 
-import { Question, QuestionType, Prisma, PrismaClient } from '@prisma/client'
+import { Question, QuestionType, PrismaClient } from '@prisma/client'
 import { SELECT_FOR_QUESTION_COPY } from '@/core/question/select'
 import { buildBaseData, QuestionCopyPayload } from './base'
 import { QuestionSource } from '@prisma/client'
-import {
-  codeReplicator,
-  databaseReplicator,
-  essayReplicator,
-  exactMatchReplicator,
-  multipleChoiceReplicator,
-  trueFalseReplicator,
-  webReplicator,
-  type QuestionReplicator,
-} from './replicators'
+import { type QuestionReplicator } from './replicators'
+import { replicatorRegistry } from './registry'
 
 /**
  * Copies a question, including type-specific data, tags, base fields, and nested structures.
@@ -64,7 +56,7 @@ export async function copyQuestion(
 
   // 3. Pick replicator based on question.type
   const questionType = payload.type as QuestionType
-  const replicator = replicatorRegistry[questionType]
+  const replicator = replicatorRegistry[questionType] as QuestionReplicator
 
   if (!replicator) {
     throw new Error(`No replicator registered for type ${questionType}`)
@@ -79,19 +71,3 @@ export async function copyQuestion(
 
   return newQuestion
 }
-
-/**
- * Registry mapping each QuestionType → its corresponding replicator.
- *
- * We only care that each value implements QuestionReplicator.
- * The specific payload narrowing is handled inside each replicator.
- */
-const replicatorRegistry = {
-  multipleChoice: multipleChoiceReplicator,
-  trueFalse: trueFalseReplicator,
-  essay: essayReplicator,
-  web: webReplicator,
-  exactMatch: exactMatchReplicator,
-  code: codeReplicator,
-  database: databaseReplicator,
-} satisfies Record<QuestionType, QuestionReplicator>

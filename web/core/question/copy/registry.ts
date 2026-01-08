@@ -32,7 +32,7 @@ import {
  * We only care that each value implements QuestionReplicator.
  * The specific payload narrowing is handled inside each replicator.
  */
-export const replicatorRegistry = {
+export const replicatorRegistry: Record<QuestionType, QuestionReplicator> = {
   multipleChoice: multipleChoiceReplicator,
   trueFalse: trueFalseReplicator,
   essay: essayReplicator,
@@ -40,4 +40,4 @@ export const replicatorRegistry = {
   exactMatch: exactMatchReplicator,
   code: codeReplicator,
   database: databaseReplicator,
-} satisfies Record<QuestionType, QuestionReplicator>
+}
