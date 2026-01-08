@@ -27,7 +27,11 @@ const SELECT_OFFICIAL_ANSWERS_DATABASE = {
   ...SELECT_DATABASE,
   solutionQueries: {
     include: {
-      query: true,
+      query: {
+        include: {
+          queryOutputTests: true,
+        },
+      },
       output: true,
     },
     orderBy: {

@@ -72,8 +72,9 @@ export const databaseReplicator: QuestionReplicator<DBCopyPayload> = {
       const qData = sq.query
       const out = sq.output
 
-      // queryOutputTests is included via include: { query: true }, but TypeScript
-      // doesn't infer nested relations. We use type assertion since the data is present at runtime.
+      // queryOutputTests is included via SELECT_OFFICIAL_ANSWERS_DATABASE which includes
+      // query: { include: { queryOutputTests: true } }. TypeScript doesn't infer nested
+      // relations, so we use type assertion to access the data.
       const queryWithTests = qData as typeof qData & {
         queryOutputTests?: Array<{ test: DatabaseQueryOutputTest }>
       }
