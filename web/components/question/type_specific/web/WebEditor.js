@@ -16,9 +16,9 @@
 
 import { Stack, Typography } from '@mui/material'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
 import InlineMonacoEditor from '../../../input/InlineMonacoEditor'
 import { useTheme } from '@emotion/react'
+import { useCtrlState } from '@/hooks/useCtrlState'
 
 const WebEditor = ({
   id = 'web',
@@ -27,9 +27,42 @@ const WebEditor = ({
   web: initial,
   onChange,
 }) => {
-  const [web, setWeb] = useState(initial)
+  const {
+    state: html,
+    setState: setHtml,
+    get: getHtml,
+  } = useCtrlState(initial?.html || '', `${id}-html`)
 
-  useEffect(() => setWeb(initial), [initial, id])
+  const {
+    state: css,
+    setState: setCss,
+    get: getCss,
+  } = useCtrlState(initial?.css || '', `${id}-css`)
+
+  const {
+    state: js,
+    setState: setJs,
+    get: getJs,
+  } = useCtrlState(initial?.js || '', `${id}-js`)
+
+  const handleChange = (field, value) => {
+    if (field === 'html') {
+      setHtml(value)
+    } else if (field === 'css') {
+      setCss(value)
+    } else if (field === 'js') {
+      setJs(value)
+    }
+
+    if (onChange) {
+      const newWeb = {
+        html: field === 'html' ? value : getHtml(),
+        css: field === 'css' ? value : getCss(),
+        js: field === 'js' ? value : getJs(),
+      }
+      onChange(newWeb)
+    }
+  }
 
   return (
     <Stack spacing={0} pt={0} position={'relative'} pb={24}>
@@ -40,48 +73,40 @@ const WebEditor = ({
       )}
 
       <WebEditorInput
-        id={`html`}
+        id={`${id}-html`}
         language={'html'}
-        code={web?.html || ''}
+        code={html}
         readOnly={readOnly}
-        onChange={(code) => {
-          const newWeb = { ...web, html: code }
-          setWeb(newWeb)
-          onChange && onChange(newWeb)
-        }}
+        onChange={(code) => handleChange('html', code)}
       />
       <WebEditorInput
-        id={`css`}
+        id={`${id}-css`}
         language={'css'}
-        code={web?.css || ''}
+        code={css}
         readOnly={readOnly}
-        onChange={(code) => {
-          const newWeb = { ...web, css: code }
-          setWeb(newWeb)
-          onChange && onChange(newWeb)
-        }}
+        onChange={(code) => handleChange('css', code)}
       />
       <WebEditorInput
-        id={`js`}
+        id={`${id}-js`}
         language={'javascript'}
-        code={web?.js || ''}
+        code={js}
         readOnly={readOnly}
-        onChange={(code) => {
-          const newWeb = { ...web, js: code }
-          setWeb(newWeb)
-          onChange && onChange(newWeb)
-        }}
+        onChange={(code) => handleChange('js', code)}
       />
     </Stack>
   )
 }
 
-const WebEditorInput = ({ language, code: initial, readOnly, onChange }) => {
+const WebEditorInput = ({
+  id,
+  language,
+  code: initial,
+  readOnly,
+  onChange,
+}) => {
   const theme = useTheme()
 
-  const [code, setCode] = useState(initial)
-
-  useEffect(() => setCode(initial || ''), [initial])
+  const { state: code, setState: setCode } = useCtrlState(initial || '', id)
 
   return (
     <Stack spacing={1} position={'relative'}>
@@ -98,7 +123,7 @@ const WebEditorInput = ({ language, code: initial, readOnly, onChange }) => {
       >
         <Image
           src={`/svg/languages/${language}.svg`}
-          alt="HTML"
+          alt={language}
           width={24}
           height={24}
         />
@@ -110,7 +135,10 @@ const WebEditorInput = ({ language, code: initial, readOnly, onChange }) => {
         language={language}
         code={code}
         readOnly={readOnly}
-        onChange={(content) => onChange(content)}
+        onChange={(content) => {
+          setCode(content)
+          onChange(content)
+        }}
       />
     </Stack>
   )

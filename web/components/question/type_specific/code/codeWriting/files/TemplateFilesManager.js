@@ -55,9 +55,11 @@ const TemplateFilesManager = ({ groupScope, questionId, onUpdate }) => {
       setLockCodeCheck(true)
       await update('template', groupScope, questionId, codeToTemplateFile)
       setLockCodeCheck(false)
+      mutate()
+      console.log('mutate template')
       onUpdate && onUpdate()
     },
-    [groupScope, questionId, onUpdate],
+    [groupScope, questionId, mutate, onUpdate],
   )
 
   const debouncedOnFileChange = useDebouncedCallback(onFileUpdate, 500)
