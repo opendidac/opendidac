@@ -30,7 +30,8 @@ import { useReorderable } from '@/components/layout/utils/ReorderableList'
 import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import { useTheme } from '@emotion/react'
-import useCtrlState from '@/hooks/useCtrlState'
+import { useCtrlState } from '@/hooks/useCtrlState'
+import { useState, useEffect } from 'react'
 
 const MultipleChoice = ({
   groupScope,
@@ -40,10 +41,11 @@ const MultipleChoice = ({
   previewMode = false,
   onOptionsChanged,
 }) => {
-  const [options, setOptions] = useCtrlState(
-    initial,
-    `${questionId}-multiple-choice-options`,
-  )
+  const [options, setOptions] = useState(initial || [])
+
+  useEffect(() => {
+    setOptions(initial || [])
+  }, [questionId, initial])
 
   // Optimistic updates to the options state before the debounced API calls
 
@@ -152,14 +154,20 @@ const MultipleChoiceOptionUpdate = ({
 }) => {
   const theme = useTheme()
 
-  const [text, setText] = useCtrlState(
-    option.text,
+  const {
+    state: text,
+    setState: setText,
+    get: getText,
+  } = useCtrlState(
+    option?.text || '',
     `${questionId}-multiple-choice-option-text-${option.id}`,
   )
-  const [isCorrect, setIsCorrect] = useCtrlState(
-    option.isCorrect,
-    `${questionId}-multiple-choice-option-is-correct-${option.id}`,
-  )
+
+  const [isCorrect, setIsCorrect] = useState(option?.isCorrect ?? false)
+
+  useEffect(() => {
+    setIsCorrect(option?.isCorrect ?? false)
+  }, [option?.id, option?.isCorrect])
 
   const {
     handleDragStart,
@@ -194,11 +202,11 @@ const MultipleChoiceOptionUpdate = ({
   const debounceSaveOption = useDebouncedCallback(onSaveOption, 300)
 
   const onChangeOption = useCallback(
-    async (id, text, isCorrect) => {
-      setText(text)
-      setIsCorrect(isCorrect)
-      onOptionChange(id, text, isCorrect)
-      debounceSaveOption(id, text, isCorrect)
+    async (id, newText, newIsCorrect) => {
+      setText(newText)
+      setIsCorrect(newIsCorrect)
+      onOptionChange(id, newText, newIsCorrect)
+      debounceSaveOption(id, newText, newIsCorrect)
     },
     [onOptionChange, debounceSaveOption, setText, setIsCorrect],
   )
@@ -238,7 +246,7 @@ const MultipleChoiceOptionUpdate = ({
         size="small"
         onChange={(e) => {
           e.stopPropagation()
-          onChangeOption(option.id, text, !isCorrect)
+          onChangeOption(option.id, getText(), !isCorrect)
         }}
         disabled={isDragging}
         sx={
@@ -247,7 +255,7 @@ const MultipleChoiceOptionUpdate = ({
           }
         }
       >
-        {option.isCorrect ? <CheckIcon /> : <ClearIcon />}
+        {isCorrect ? <CheckIcon /> : <ClearIcon />}
       </ToggleButton>
 
       <Stack width={'100%'} height={'100%'}>

@@ -16,7 +16,7 @@
 
 import { useCallback } from 'react'
 import { TextField, Typography } from '@mui/material'
-import useCtrlState from '@/hooks/useCtrlState'
+import { useCtrlState } from '@/hooks/useCtrlState'
 
 const QuestionTitleField = ({
   id,
@@ -25,11 +25,16 @@ const QuestionTitleField = ({
   readOnly = false,
   onChangeTitle,
 }) => {
-  const [localTitle, setLocalTitle] = useCtrlState(currentTitle, id)
+  const { state: localTitle, setStateControlled: setLocalTitle } = useCtrlState(
+    currentTitle,
+    id,
+  )
 
   const handleTitleChange = useCallback(
     (value) => {
+      // Immediately update local state for visual feedback
       setLocalTitle(value)
+      // Debounced parent update is handled by the parent component
       onChangeTitle(value)
     },
     [onChangeTitle, setLocalTitle],
