@@ -16,8 +16,8 @@
 
 import { NextApiRequest, NextApiResponse } from 'next'
 import { withApiContext } from '@/middleware/withApiContext'
+import type { IApiContext } from '@/core/types/api'
 import { getUser } from '@/core/auth/auth'
-import { IApiContext } from '@/middleware/withApiContext'
 
 /**
  * POST /api/users/evaluations/join-by-pin
@@ -69,9 +69,7 @@ const post = async (
     })
 
     if (!evaluation) {
-      return res
-        .status(404)
-        .json({ message: 'No evaluation found with this PIN' })
+      return res.status(404).json({ message: 'Incorrect PIN' })
     }
 
     // Return evaluation details so the frontend can redirect to the join page

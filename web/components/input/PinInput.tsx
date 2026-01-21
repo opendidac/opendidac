@@ -17,9 +17,23 @@
 import { useState, useRef, useEffect } from 'react'
 import { TextField, Stack } from '@mui/material'
 
-const PinInput = ({ value, onChange, error, disabled, autoFocus = false }) => {
-  const [pin, setPin] = useState(['', '', '', '', '', ''])
-  const inputRefs = useRef([])
+interface PinInputProps {
+  value?: string
+  onChange: (pin: string) => void
+  error?: boolean
+  disabled?: boolean
+  autoFocus?: boolean
+}
+
+const PinInput = ({
+  value,
+  onChange,
+  error,
+  disabled,
+  autoFocus = false,
+}: PinInputProps) => {
+  const [pin, setPin] = useState<string[]>(['', '', '', '', '', ''])
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   // Initialize pin from value prop
   useEffect(() => {
@@ -35,11 +49,11 @@ const PinInput = ({ value, onChange, error, disabled, autoFocus = false }) => {
   // Focus first input on mount if autoFocus
   useEffect(() => {
     if (autoFocus && inputRefs.current[0]) {
-      inputRefs.current[0].focus()
+      inputRefs.current[0]?.focus()
     }
   }, [autoFocus])
 
-  const handleChange = (index, newValue) => {
+  const handleChange = (index: number, newValue: string) => {
     // Only allow alphanumeric characters
     const filteredValue = newValue.toUpperCase().replace(/[^A-Z0-9]/g, '')
 
@@ -64,7 +78,7 @@ const PinInput = ({ value, onChange, error, disabled, autoFocus = false }) => {
           ? nextEmptyIndex
           : Math.min(index + pasteData.length, 5)
       if (inputRefs.current[focusIndex]) {
-        inputRefs.current[focusIndex].focus()
+        inputRefs.current[focusIndex]?.focus()
       }
       return
     }
@@ -81,7 +95,10 @@ const PinInput = ({ value, onChange, error, disabled, autoFocus = false }) => {
     }
   }
 
-  const handleKeyDown = (index, e) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLDivElement>,
+  ) => {
     // Handle backspace
     if (e.key === 'Backspace') {
       if (!pin[index] && index > 0) {
@@ -111,7 +128,10 @@ const PinInput = ({ value, onChange, error, disabled, autoFocus = false }) => {
     }
   }
 
-  const handlePaste = (index, e) => {
+  const handlePaste = (
+    index: number,
+    e: React.ClipboardEvent<HTMLDivElement>,
+  ) => {
     e.preventDefault()
     const pastedData = e.clipboardData
       .getData('text')
@@ -138,7 +158,7 @@ const PinInput = ({ value, onChange, error, disabled, autoFocus = false }) => {
           ? nextEmptyIndex
           : Math.min(index + pasteLength, 5)
       if (inputRefs.current[focusIndex]) {
-        inputRefs.current[focusIndex].focus()
+        inputRefs.current[focusIndex]?.focus()
       }
     }
   }

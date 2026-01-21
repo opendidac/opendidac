@@ -16,18 +16,31 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
 import { Box, Button, Container, Stack, Typography, Alert } from '@mui/material'
 import PinInput from '@/components/input/PinInput'
+
+interface JoinByPinResponse {
+  evaluationId: string
+  label: string
+  phase: string
+  status: string
+  groupScope: string
+  groupLabel: string
+}
+
+interface ErrorResponse {
+  message: string
+}
 
 const PagePin = () => {
   const router = useRouter()
   const { data: session, status } = useSession()
-  const [pin, setPin] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [pin, setPin] = useState<string>('')
+  const [error, setError] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(false)
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -54,16 +67,23 @@ const PagePin = () => {
         body: JSON.stringify({ pin: pin.toUpperCase().trim() }),
       })
 
-      const data = await response.json()
+      const data: JoinByPinResponse | ErrorResponse = await response.json()
 
       if (!response.ok) {
-        setError(data.message || 'Invalid PIN')
+        const errorData = data as ErrorResponse
+        setError(errorData.message || 'Invalid PIN')
         setLoading(false)
         return
       }
 
-      // Redirect to the evaluation page
-      router.push(`/users/evaluations/${data.evaluationId}`)
+      // Type guard to ensure we have the success response
+      if ('evaluationId' in data) {
+        // Redirect to the evaluation page
+        router.push(`/users/evaluations/${data.evaluationId}`)
+      } else {
+        setError('Invalid response from server')
+        setLoading(false)
+      }
     } catch (err) {
       setError('Error connecting to server. Please try again.')
       setLoading(false)

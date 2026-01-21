@@ -16,7 +16,8 @@
 
 import { NextApiRequest, NextApiResponse } from 'next'
 import { Role } from '@prisma/client'
-import { withApiContext, IApiContext } from '@/middleware/withApiContext'
+import { withApiContext } from '@/middleware/withApiContext'
+import type { IApiContext } from '@/core/types/api'
 import {
   withAuthorization,
   withGroupScope,
