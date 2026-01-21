@@ -50,7 +50,8 @@ const post = async (
   }
 
   try {
-    // Find evaluation by PIN (uniqueness is enforced manually, not at DB level)
+    // Find evaluation by PIN (uniqueness is enforced by database unique constraint)
+    // Using findFirst with unique constraint ensures only one result
     const evaluation = await prisma.evaluation.findFirst({
       where: { pin: normalizedPin },
       select: {

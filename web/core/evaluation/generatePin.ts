@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 
 /**
  * Generates a random 6-character alphanumeric PIN
@@ -35,34 +35,66 @@ const generateRandomPin = (): string => {
 }
 
 /**
- * Generates a unique PIN for an evaluation
- * Manually checks for uniqueness and retries up to maxAttempts times if a collision occurs
+ * Generates a random PIN (does not check uniqueness)
+ * Uniqueness is enforced by database constraint and retries in calling code
  *
- * @param prisma - Prisma client instance (can be a transaction client)
- * @param maxAttempts - Maximum number of attempts to generate a unique PIN
- * @returns A unique 6-character PIN
- * @throws Error if unable to generate a unique PIN after maxAttempts
+ * @returns A random 6-character PIN
  */
-export async function generateUniqueEvaluationPin(
+export function generateRandomEvaluationPin(): string {
+  return generateRandomPin()
+}
+
+/**
+ * Assigns a unique PIN to an evaluation by UPDATE
+ * Retries on unique constraint violations until successful
+ * This ensures race-safety: create evaluation first, then assign PIN
+ *
+ * @param prisma - Prisma client instance
+ * @param evaluationId - ID of the evaluation to assign PIN to
+ * @param maxAttempts - Maximum number of attempts to assign a unique PIN
+ * @returns The assigned PIN
+ * @throws Error if unable to assign a unique PIN after maxAttempts
+ */
+export async function assignPinToEvaluation(
   prisma: PrismaClient | any,
+  evaluationId: string,
   maxAttempts: number = 100,
 ): Promise<string> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const pin = generateRandomPin()
 
-    // Manually check if PIN already exists (no database unique constraint)
-    const existing = await prisma.evaluation.findFirst({
-      where: { pin },
-      select: { id: true },
-    })
+    try {
+      // Attempt to update the evaluation with the new PIN
+      // Database unique constraint will catch any race conditions
+      await prisma.evaluation.update({
+        where: { id: evaluationId },
+        data: { pin },
+      })
 
-    if (!existing) {
       return pin
+    } catch (error) {
+      // Handle unique constraint violation (P2002) - another concurrent operation
+      // may have assigned the same PIN
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        const target = error.meta?.target
+        const isPinViolation = Array.isArray(target) && target.includes('pin')
+        if (isPinViolation) {
+          // Unique constraint violation on pin - retry with a new PIN
+          // This ensures race-safety: if two concurrent operations pick the same PIN,
+          // one will succeed and the other will retry with a different PIN
+          continue
+        }
+      }
+      // Re-throw non-PIN-related errors
+      throw error
     }
   }
 
   throw new Error(
-    `Failed to generate a unique PIN after ${maxAttempts} attempts. ` +
+    `Failed to assign a unique PIN after ${maxAttempts} attempts. ` +
       'This is very unlikely and may indicate a system issue.',
   )
 }
@@ -70,21 +102,18 @@ export async function generateUniqueEvaluationPin(
 /**
  * Regenerates a PIN for an existing evaluation
  * Useful if a professor wants to change the PIN
+ * Uses the same race-safe approach as assignPinToEvaluation
  *
  * @param prisma - Prisma client instance
  * @param evaluationId - ID of the evaluation to update
+ * @param maxAttempts - Maximum number of attempts to assign a unique PIN
  * @returns The new PIN
+ * @throws Error if unable to assign a unique PIN after maxAttempts
  */
 export async function regenerateEvaluationPin(
   prisma: PrismaClient | any,
   evaluationId: string,
+  maxAttempts: number = 100,
 ): Promise<string> {
-  const newPin = await generateUniqueEvaluationPin(prisma)
-
-  await prisma.evaluation.update({
-    where: { id: evaluationId },
-    data: { pin: newPin },
-  })
-
-  return newPin
+  return assignPinToEvaluation(prisma, evaluationId, maxAttempts)
 }

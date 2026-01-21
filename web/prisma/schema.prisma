@@ -586,8 +586,8 @@ model Evaluation {
   updatedAt  DateTime         @updatedAt
 
   // 6-character alphanumeric PIN for student joining
-  // Uniqueness is enforced manually in application code
-  pin        String?
+  // Unique constraint allows multiple nulls but enforces uniqueness on non-null values
+  pin        String? @unique
 
   durationActive Boolean @default(false)
   durationHours Int? @default(0)

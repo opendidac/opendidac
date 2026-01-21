@@ -27,7 +27,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import { getUser } from '@/core/auth/auth'
-import { generateUniqueEvaluationPin } from '@/core/evaluation/generatePin'
+import { assignPinToEvaluation } from '@/core/evaluation/generatePin'
 
 const get = async (req, res, ctx) => {
   const { prisma } = ctx
@@ -138,18 +138,22 @@ const post = async (req, res, ctx) => {
 
   try {
     let evaluation = undefined
+
     await prisma.$transaction(async (prisma) => {
-      // Generate a unique PIN for this evaluation
-      const pin = await generateUniqueEvaluationPin(prisma)
-
-      console.log('PIN', pin)
-
+      // Create evaluation first without PIN (pin = null)
       evaluation = await prisma.evaluation.create({
         data: {
           ...data,
-          pin,
+          pin: null, // PIN will be assigned within this transaction
         },
       })
+
+      // Assign PIN within the same transaction
+      // This will retry on unique constraint violations until successful
+      const pin = await assignPinToEvaluation(prisma, evaluation.id)
+
+      // Update the evaluation object with the assigned PIN for the response
+      evaluation.pin = pin
 
       if (presetType === 'from_existing') {
         // Attach all of the SOURCE questions from the template evaluation to the new evaluation
@@ -229,9 +233,19 @@ const post = async (req, res, ctx) => {
   } catch (e) {
     console.log(e)
     switch (e.code) {
-      case 'P2002':
-        res.status(409).json({ message: 'evaluation label already exists' })
+      case 'P2002': {
+        // Check if it's PIN or label conflict
+        const target = e.meta?.target
+        const isPinViolation = Array.isArray(target) && target.includes('pin')
+        if (isPinViolation) {
+          res
+            .status(500)
+            .json({ message: 'Error generating unique PIN. Please try again.' })
+        } else {
+          res.status(409).json({ message: 'evaluation label already exists' })
+        }
         break
+      }
       default:
         res.status(500).json({ message: 'Error while creating a evaluation' })
         break
