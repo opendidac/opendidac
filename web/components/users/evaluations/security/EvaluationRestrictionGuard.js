@@ -15,15 +15,11 @@
  */
 
 import React from 'react'
-import { useRouter } from 'next/router'
 import Link from 'next/link'
-import useSWR from 'swr'
 import Overlay from '@/components/ui/Overlay'
 import AlertFeedback from '@/components/feedback/AlertFeedback'
 import { Stack, Typography, Button, Box, Divider } from '@mui/material'
 import DownloadIcon from '@mui/icons-material/Download'
-import JoinClipboard from '@/components/evaluations/JoinClipboard'
-import { fetcher } from '@/core/database'
 
 /**
  * Helper functions to check error types
@@ -41,16 +37,7 @@ export const isEvaluationPurgedError = (error) =>
  * Renders the appropriate restriction dialog if there's an error,
  * otherwise renders children
  */
-export const EvaluationRestrictionGuard = ({
-  error,
-  children,
-  evaluationId,
-}) => {
-  const router = useRouter()
-
-  // Get evaluationId from prop or router
-  const currentEvaluationId = evaluationId || router?.query?.evaluationId
-
+export const EvaluationRestrictionGuard = ({ error, children }) => {
   if (!error) {
     return children
   }
@@ -88,12 +75,7 @@ export const EvaluationRestrictionGuard = ({
   }
 
   if (isDesktopAppRequiredError(error)) {
-    return (
-      <DesktopAppRequiredMessage
-        evaluationId={currentEvaluationId}
-        router={router}
-      />
-    )
+    return <DesktopAppRequiredMessage />
   }
 
   if (isTooLateToJoinError(error) || isEvaluationPurgedError(error)) {
@@ -118,21 +100,7 @@ export const EvaluationRestrictionGuard = ({
 /**
  * Component for displaying desktop app required message with PIN instructions
  */
-const DesktopAppRequiredMessage = ({ evaluationId, router }) => {
-  const { groupScope } = router?.query || {}
-
-  // Try to fetch evaluation data to get PIN and groupScope
-  // This may not always work if groupScope is not in URL (e.g., student pages)
-  const { data: evaluation } = useSWR(
-    evaluationId && groupScope
-      ? `/api/${groupScope}/evaluations/${evaluationId}`
-      : null,
-    fetcher,
-  )
-
-  const pin = evaluation?.pin
-  const evaluationGroupScope = evaluation?.group?.scope || groupScope
-
+const DesktopAppRequiredMessage = () => {
   return (
     <Overlay>
       <AlertFeedback severity="info">
@@ -187,14 +155,6 @@ const DesktopAppRequiredMessage = ({ evaluationId, router }) => {
                   <b>6-character PIN</b> provided by your professor to join the
                   evaluation.
                 </Typography>
-                {evaluationId && evaluationGroupScope && (
-                  <JoinClipboard
-                    groupScope={evaluationGroupScope}
-                    evaluationId={evaluationId}
-                    desktopAppRequired={true}
-                    pin={pin}
-                  />
-                )}
               </Box>
             </Stack>
           </Stack>
