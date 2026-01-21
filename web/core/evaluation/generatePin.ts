@@ -25,19 +25,19 @@ const generateRandomPin = (): string => {
   // Character set: 2-9, A-Z excluding O and I
   const charset = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
   let pin = ''
-  
+
   for (let i = 0; i < 6; i++) {
     const randomIndex = Math.floor(Math.random() * charset.length)
     pin += charset[randomIndex]
   }
-  
+
   return pin
 }
 
 /**
  * Generates a unique PIN for an evaluation
  * Manually checks for uniqueness and retries up to maxAttempts times if a collision occurs
- * 
+ *
  * @param prisma - Prisma client instance (can be a transaction client)
  * @param maxAttempts - Maximum number of attempts to generate a unique PIN
  * @returns A unique 6-character PIN
@@ -45,46 +45,46 @@ const generateRandomPin = (): string => {
  */
 export async function generateUniqueEvaluationPin(
   prisma: PrismaClient | any,
-  maxAttempts: number = 100
+  maxAttempts: number = 100,
 ): Promise<string> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const pin = generateRandomPin()
-    
+
     // Manually check if PIN already exists (no database unique constraint)
     const existing = await prisma.evaluation.findFirst({
       where: { pin },
-      select: { id: true }
+      select: { id: true },
     })
-    
+
     if (!existing) {
       return pin
     }
   }
-  
+
   throw new Error(
     `Failed to generate a unique PIN after ${maxAttempts} attempts. ` +
-    'This is very unlikely and may indicate a system issue.'
+      'This is very unlikely and may indicate a system issue.',
   )
 }
 
 /**
  * Regenerates a PIN for an existing evaluation
  * Useful if a professor wants to change the PIN
- * 
+ *
  * @param prisma - Prisma client instance
  * @param evaluationId - ID of the evaluation to update
  * @returns The new PIN
  */
 export async function regenerateEvaluationPin(
   prisma: PrismaClient | any,
-  evaluationId: string
+  evaluationId: string,
 ): Promise<string> {
   const newPin = await generateUniqueEvaluationPin(prisma)
-  
+
   await prisma.evaluation.update({
     where: { id: evaluationId },
-    data: { pin: newPin }
+    data: { pin: newPin },
   })
-  
+
   return newPin
 }

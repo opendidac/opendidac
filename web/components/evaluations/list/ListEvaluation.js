@@ -131,7 +131,9 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
                             const content = evaluation.desktopAppRequired
                               ? evaluation.pin
                               : getStudentEntryLink(evaluation.id)
-                            await navigator.clipboard.writeText(prefix + content)
+                            await navigator.clipboard.writeText(
+                              prefix + content,
+                            )
                           })()
                         }}
                       >

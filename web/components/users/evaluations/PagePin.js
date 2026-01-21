@@ -17,14 +17,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import {
-  Box,
-  Button,
-  Container,
-  Stack,
-  Typography,
-  Alert,
-} from '@mui/material'
+import { Box, Button, Container, Stack, Typography, Alert } from '@mui/material'
 import PinInput from '@/components/input/PinInput'
 
 const PagePin = () => {

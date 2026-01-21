@@ -27,7 +27,7 @@ import { IApiContext } from '@/middleware/withApiContext'
 const post = async (
   req: NextApiRequest,
   res: NextApiResponse,
-  ctx: IApiContext
+  ctx: IApiContext,
 ) => {
   const { prisma } = ctx
   const { pin } = req.body
@@ -62,14 +62,16 @@ const post = async (
         group: {
           select: {
             scope: true,
-            label: true
-          }
-        }
-      }
+            label: true,
+          },
+        },
+      },
     })
 
     if (!evaluation) {
-      return res.status(404).json({ message: 'No evaluation found with this PIN' })
+      return res
+        .status(404)
+        .json({ message: 'No evaluation found with this PIN' })
     }
 
     // Return evaluation details so the frontend can redirect to the join page
@@ -79,7 +81,7 @@ const post = async (
       phase: evaluation.phase,
       status: evaluation.status,
       groupScope: evaluation.group.scope,
-      groupLabel: evaluation.group.label
+      groupLabel: evaluation.group.label,
     })
   } catch (error) {
     console.error('Error finding evaluation by PIN:', error)
@@ -88,5 +90,5 @@ const post = async (
 }
 
 export default withApiContext({
-  POST: post
+  POST: post,
 })

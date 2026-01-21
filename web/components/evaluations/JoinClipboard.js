@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
-import { Paper, Stack, Typography, Box, Button, IconButton, Tooltip } from '@mui/material'
+import {
+  Paper,
+  Stack,
+  Typography,
+  Box,
+  Button,
+  IconButton,
+  Tooltip,
+} from '@mui/material'
 import { useState } from 'react'
 import { useSnackbar } from '@/context/SnackbarContext'
 import StatusDisplay from '@/components/feedback/StatusDisplay'
@@ -48,7 +56,7 @@ const JoinClipboard = ({
             'Content-Type': 'application/json',
             Accept: 'application/json',
           },
-        }
+        },
       )
 
       const data = await response.json()
@@ -85,55 +93,50 @@ const JoinClipboard = ({
 
   return (
     <Paper variant="outlined">
-        <Stack direction="row" spacing={2} alignItems="center" flex={1}>
-          <Box
-            sx={{
-              backgroundColor: 'grey.300',
-              px: 1,
-              py: 0.5,
-              borderRadius: 1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-            }}
-          >
-            <Typography variant="caption" fontWeight="medium">
-              {prefix}
-            </Typography>
-            {desktopAppRequired && (
-              <Tooltip title="Regenerate PIN">
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setDialogOpen(true)
-                  }}
-                  sx={{ 
-                    padding: 0.25,
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    },
-                  }}
-                >
-                  <StatusDisplay status={refreshStatus} />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
-          <Stack flex={1}>
-            <Typography variant="body2" size="small">
-              {textToDisplay}
-            </Typography>
-        </Stack> 
-        <Button
-          onClick={onClick}
-          variant="text"
-          color="primary"
-          size="small"
+      <Stack direction="row" spacing={2} alignItems="center" flex={1}>
+        <Box
+          sx={{
+            backgroundColor: 'grey.300',
+            px: 1,
+            py: 0.5,
+            borderRadius: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+          }}
         >
+          <Typography variant="caption" fontWeight="medium">
+            {prefix}
+          </Typography>
+          {desktopAppRequired && (
+            <Tooltip title="Regenerate PIN">
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setDialogOpen(true)
+                }}
+                sx={{
+                  padding: 0.25,
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  },
+                }}
+              >
+                <StatusDisplay status={refreshStatus} />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+        <Stack flex={1}>
+          <Typography variant="body2" size="small">
+            {textToDisplay}
+          </Typography>
+        </Stack>
+        <Button onClick={onClick} variant="text" color="primary" size="small">
           Copy
         </Button>
-        </Stack>
+      </Stack>
       <DialogFeedback
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
@@ -149,10 +152,12 @@ const JoinClipboard = ({
             </Typography>
             <Typography variant="body2">
               The current PIN will be replaced with a new one. Students who have
-              already received the current PIN will need to use the new PIN to join.
+              already received the current PIN will need to use the new PIN to
+              join.
             </Typography>
             <Typography variant="body2">
-              This wont affect the students who have already joined the evaluation.
+              This wont affect the students who have already joined the
+              evaluation.
             </Typography>
             {pin && (
               <Typography variant="body2" color="text.secondary">

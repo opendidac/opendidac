@@ -143,12 +143,12 @@ const post = async (req, res, ctx) => {
       const pin = await generateUniqueEvaluationPin(prisma)
 
       console.log('PIN', pin)
-      
-      evaluation = await prisma.evaluation.create({ 
+
+      evaluation = await prisma.evaluation.create({
         data: {
           ...data,
-          pin
-        }
+          pin,
+        },
       })
 
       if (presetType === 'from_existing') {

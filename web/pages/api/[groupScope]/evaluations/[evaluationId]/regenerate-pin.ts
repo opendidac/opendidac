@@ -17,7 +17,10 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { Role } from '@prisma/client'
 import { withApiContext, IApiContext } from '@/middleware/withApiContext'
-import { withAuthorization, withGroupScope } from '@/middleware/withAuthorization'
+import {
+  withAuthorization,
+  withGroupScope,
+} from '@/middleware/withAuthorization'
 import { regenerateEvaluationPin } from '@/core/evaluation/generatePin'
 
 /**
@@ -28,7 +31,7 @@ import { regenerateEvaluationPin } from '@/core/evaluation/generatePin'
 const post = async (
   req: NextApiRequest,
   res: NextApiResponse,
-  ctx: IApiContext
+  ctx: IApiContext,
 ) => {
   const { prisma } = ctx
   const { evaluationId } = req.query
@@ -41,7 +44,7 @@ const post = async (
     // Check if evaluation exists
     const evaluation = await prisma.evaluation.findUnique({
       where: { id: evaluationId },
-      select: { id: true }
+      select: { id: true },
     })
 
     if (!evaluation) {
@@ -59,5 +62,5 @@ const post = async (
 }
 
 export default withApiContext({
-  POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] }))
+  POST: withGroupScope(withAuthorization(post, { roles: [Role.PROFESSOR] })),
 })

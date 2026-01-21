@@ -15,7 +15,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react'
-import { TextField, Stack, Box } from '@mui/material'
+import { TextField, Stack } from '@mui/material'
 
 const PinInput = ({ value, onChange, error, disabled, autoFocus = false }) => {
   const [pin, setPin] = useState(['', '', '', '', '', ''])
@@ -42,22 +42,27 @@ const PinInput = ({ value, onChange, error, disabled, autoFocus = false }) => {
   const handleChange = (index, newValue) => {
     // Only allow alphanumeric characters
     const filteredValue = newValue.toUpperCase().replace(/[^A-Z0-9]/g, '')
-    
+
     if (filteredValue.length > 1) {
       // Handle paste: fill multiple fields
       const pasteData = filteredValue.slice(0, 6)
       const newPin = [...pin]
-      
+
       for (let i = 0; i < pasteData.length && index + i < 6; i++) {
         newPin[index + i] = pasteData[i]
       }
-      
+
       setPin(newPin)
       onChange(newPin.join(''))
-      
+
       // Focus the next empty field or the last field
-      const nextEmptyIndex = newPin.findIndex((val, idx) => idx >= index && val === '')
-      const focusIndex = nextEmptyIndex !== -1 ? nextEmptyIndex : Math.min(index + pasteData.length, 5)
+      const nextEmptyIndex = newPin.findIndex(
+        (val, idx) => idx >= index && val === '',
+      )
+      const focusIndex =
+        nextEmptyIndex !== -1
+          ? nextEmptyIndex
+          : Math.min(index + pasteData.length, 5)
       if (inputRefs.current[focusIndex]) {
         inputRefs.current[focusIndex].focus()
       }
@@ -108,22 +113,30 @@ const PinInput = ({ value, onChange, error, disabled, autoFocus = false }) => {
 
   const handlePaste = (index, e) => {
     e.preventDefault()
-    const pastedData = e.clipboardData.getData('text').toUpperCase().replace(/[^A-Z0-9]/g, '')
-    
+    const pastedData = e.clipboardData
+      .getData('text')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '')
+
     if (pastedData.length > 0) {
       const newPin = [...pin]
       const pasteLength = Math.min(pastedData.length, 6 - index)
-      
+
       for (let i = 0; i < pasteLength; i++) {
         newPin[index + i] = pastedData[i]
       }
-      
+
       setPin(newPin)
       onChange(newPin.join(''))
-      
+
       // Focus the next empty field or the last field
-      const nextEmptyIndex = newPin.findIndex((val, idx) => idx >= index && val === '')
-      const focusIndex = nextEmptyIndex !== -1 ? nextEmptyIndex : Math.min(index + pasteLength, 5)
+      const nextEmptyIndex = newPin.findIndex(
+        (val, idx) => idx >= index && val === '',
+      )
+      const focusIndex =
+        nextEmptyIndex !== -1
+          ? nextEmptyIndex
+          : Math.min(index + pasteLength, 5)
       if (inputRefs.current[focusIndex]) {
         inputRefs.current[focusIndex].focus()
       }

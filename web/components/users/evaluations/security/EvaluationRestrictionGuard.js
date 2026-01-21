@@ -120,7 +120,7 @@ export const EvaluationRestrictionGuard = ({
  */
 const DesktopAppRequiredMessage = ({ evaluationId, router }) => {
   const { groupScope } = router?.query || {}
-  
+
   // Try to fetch evaluation data to get PIN and groupScope
   // This may not always work if groupScope is not in URL (e.g., student pages)
   const { data: evaluation } = useSWR(
@@ -158,16 +158,12 @@ const DesktopAppRequiredMessage = ({ evaluationId, router }) => {
 
             <Stack spacing={1.5}>
               <Box>
-                <Typography
-                  variant="subtitle2"
-                  fontWeight="bold"
-                  gutterBottom
-                >
+                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                   Step 1: Install the Desktop Application
                 </Typography>
                 <Typography variant="body2" color="text.secondary" paragraph>
-                  <b>If you don&apos;t have OpenDidac Desktop yet</b>,
-                  download and install it on your computer first.
+                  <b>If you don&apos;t have OpenDidac Desktop yet</b>, download
+                  and install it on your computer first.
                 </Typography>
                 <Button
                   component={Link}
@@ -183,11 +179,7 @@ const DesktopAppRequiredMessage = ({ evaluationId, router }) => {
               </Box>
 
               <Box spacing={1}>
-                <Typography
-                  variant="subtitle2"
-                  fontWeight="bold"
-                  gutterBottom
-                >
+                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                   Step 2: Join using the PIN
                 </Typography>
                 <Typography variant="body2" color="text.secondary" paragraph>
