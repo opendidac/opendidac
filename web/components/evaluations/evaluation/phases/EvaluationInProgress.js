@@ -77,17 +77,19 @@ const EvaluationInProgress = ({
         title="Student Progress"
         action={
           <Stack direction="row" spacing={2} alignItems="center">
-            <Button
-              component={Link}
-              href="/downloads"
-              variant="text"
-              size="small"
-              target="_blank"
-              rel="noopener noreferrer"
-              startIcon={<DownloadIcon />}
-            >
-              Download Desktop App
-            </Button>
+            {evaluation.desktopAppRequired && (
+              <Button
+                component={Link}
+                href="/downloads"
+                variant="text"
+                size="small"
+                target="_blank"
+                rel="noopener noreferrer"
+                startIcon={<DownloadIcon />}
+              >
+                Download Desktop App
+              </Button>
+            )}
             <JoinClipboard
               groupScope={groupScope}
               evaluationId={evaluationId}
