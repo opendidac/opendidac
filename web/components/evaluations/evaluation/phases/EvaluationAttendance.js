@@ -37,8 +37,11 @@ const EvaluationAttendance = ({
         title="Attendance"
         action={
           <JoinClipboard
+            groupScope={groupScope}
             evaluationId={evaluationId}
             desktopAppRequired={evaluation.desktopAppRequired || false}
+            pin={evaluation.pin}
+            onPinUpdated={() => onAttendanceChanged()}
           />
         }
       />

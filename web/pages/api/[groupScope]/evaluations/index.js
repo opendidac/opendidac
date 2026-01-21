@@ -27,6 +27,7 @@ import {
 } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import { getUser } from '@/core/auth/auth'
+import { generateUniqueEvaluationPin } from '@/core/evaluation/generatePin'
 
 const get = async (req, res, ctx) => {
   const { prisma } = ctx
@@ -42,6 +43,7 @@ const get = async (req, res, ctx) => {
     select: {
       id: true,
       label: true,
+      pin: true,
       phase: true,
       status: true,
       archivalPhase: true,
@@ -137,7 +139,17 @@ const post = async (req, res, ctx) => {
   try {
     let evaluation = undefined
     await prisma.$transaction(async (prisma) => {
-      evaluation = await prisma.evaluation.create({ data })
+      // Generate a unique PIN for this evaluation
+      const pin = await generateUniqueEvaluationPin(prisma)
+
+      console.log('PIN', pin)
+      
+      evaluation = await prisma.evaluation.create({ 
+        data: {
+          ...data,
+          pin
+        }
+      })
 
       if (presetType === 'from_existing') {
         // Attach all of the SOURCE questions from the template evaluation to the new evaluation

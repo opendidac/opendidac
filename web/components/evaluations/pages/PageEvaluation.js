@@ -277,6 +277,7 @@ const EvaluationPage = () => {
                           attendance={attendance}
                           progress={progress}
                           onDurationChanged={() => mutate()}
+                          onPinUpdated={() => mutate()}
                         />
                       )}
 

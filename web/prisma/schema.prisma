@@ -585,6 +585,10 @@ model Evaluation {
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
+  // 6-character alphanumeric PIN for student joining
+  // Uniqueness is enforced manually in application code
+  pin        String?
+
   durationActive Boolean @default(false)
   durationHours Int? @default(0)
   durationMins  Int? @default(0)

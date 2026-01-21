@@ -15,10 +15,8 @@
  */
 
 import { useSnackbar } from '@/context/SnackbarContext'
-import { Stack, Typography, Button } from '@mui/material'
+import { Stack, Typography } from '@mui/material'
 import { useCallback } from 'react'
-import Link from 'next/link'
-import DownloadIcon from '@mui/icons-material/Download'
 import EvaluationTitleBar from '../layout/EvaluationTitleBar'
 import JoinClipboard from '../../JoinClipboard'
 import StudentProgressGrid from './progress/StudentProgressGrid'
@@ -32,6 +30,7 @@ const EvaluationInProgress = ({
   attendance,
   progress,
   onDurationChanged,
+  onPinUpdated,
 }) => {
   const evaluationId = evaluation.id
 
@@ -75,25 +74,13 @@ const EvaluationInProgress = ({
       <EvaluationTitleBar
         title="Student Progress"
         action={
-          <Stack direction="row" spacing={2} alignItems="center">
-            {evaluation.desktopAppRequired && (
-              <Button
-                component={Link}
-                href="/downloads"
-                variant="text"
-                size="small"
-                target="_blank"
-                rel="noopener noreferrer"
-                startIcon={<DownloadIcon />}
-              >
-                Download Desktop App
-              </Button>
-            )}
-            <JoinClipboard
-              evaluationId={evaluationId}
-              desktopAppRequired={evaluation.desktopAppRequired || false}
-            />
-          </Stack>
+          <JoinClipboard
+            groupScope={groupScope}
+            evaluationId={evaluationId}
+            desktopAppRequired={evaluation.desktopAppRequired || false}
+            pin={evaluation.pin}
+            onPinUpdated={onPinUpdated}
+          />
         }
       />
 
