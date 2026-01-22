@@ -156,7 +156,7 @@ const JoinClipboard = ({
               join.
             </Typography>
             <Typography variant="body2">
-              This wont affect the students who have already joined the
+              This will not affect the students who have already joined the
               evaluation.
             </Typography>
             {pin && (
