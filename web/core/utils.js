@@ -92,7 +92,13 @@ export const fetcherWithTimeout = (timeout) => {
 /*
 this link send to users to the PageDispatch which decides (using api evaluation/id/dispatch endpoint) where the users should be directed
 * */
-export const getStudentEntryLink = (evaluationId) => {
+export const getStudentEntryLink = (
+  evaluationId,
+  desktopAppRequired = false,
+) => {
+  if (desktopAppRequired) {
+    return `opendidac://users/evaluations/${evaluationId}`
+  }
   return `${window && window.location.origin}/users/evaluations/${evaluationId}`
 }
 

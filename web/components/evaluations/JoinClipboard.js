@@ -40,10 +40,8 @@ const JoinClipboard = ({
   const [dialogOpen, setDialogOpen] = useState(false)
   const { show: showSnackbar } = useSnackbar()
 
-  const textToDisplay = desktopAppRequired
-    ? pin || 'Missing PIN'
-    : getStudentEntryLink(evaluationId)
-  const prefix = desktopAppRequired ? 'PIN' : 'URL'
+  const desktopAppLink = getStudentEntryLink(evaluationId, true)
+  const webLink = getStudentEntryLink(evaluationId, false)
 
   const regeneratePin = async () => {
     setRefreshStatus('LOADING')
@@ -82,60 +80,132 @@ const JoinClipboard = ({
     }
   }
 
-  const onClick = async () => {
-    // Only copy if there's actual content (PIN or URL)
-    if (desktopAppRequired && pin) {
+  const copyPin = async () => {
+    if (pin) {
       await navigator.clipboard.writeText(pin)
-    } else if (!desktopAppRequired) {
-      await navigator.clipboard.writeText(getStudentEntryLink(evaluationId))
+      showSnackbar('PIN copied to clipboard', 'success')
     }
+  }
+
+  const copyUrl = async () => {
+    const urlToCopy = desktopAppRequired ? desktopAppLink : webLink
+    await navigator.clipboard.writeText(urlToCopy)
+    showSnackbar('URL copied to clipboard', 'success')
   }
 
   return (
     <Paper variant="outlined">
-      <Stack direction="row" spacing={2} alignItems="center" flex={1}>
-        <Box
-          sx={{
-            backgroundColor: 'grey.300',
-            px: 1,
-            py: 0.5,
-            borderRadius: 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.5,
-          }}
-        >
-          <Typography variant="caption" fontWeight="medium">
-            {prefix}
-          </Typography>
-          {desktopAppRequired && (
-            <Tooltip title="Regenerate PIN">
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setDialogOpen(true)
-                }}
+      <Stack spacing={2}>
+        {desktopAppRequired ? (
+          <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
+            {/* Desktop App URL Section */}
+            <Stack direction="row" spacing={2} alignItems="center" flex={1}>
+              <Box
                 sx={{
-                  padding: 0.25,
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                  },
+                  backgroundColor: 'grey.300',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
                 }}
               >
-                <StatusDisplay status={refreshStatus} />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Box>
-        <Stack flex={1}>
-          <Typography variant="body2" size="small">
-            {textToDisplay}
-          </Typography>
-        </Stack>
-        <Button onClick={onClick} variant="text" color="primary" size="small">
-          Copy
-        </Button>
+                <Typography variant="caption" fontWeight="medium">
+                  URL
+                </Typography>
+              </Box>
+              <Stack flex={1}>
+                <Typography variant="body2" size="small">
+                  {desktopAppLink}
+                </Typography>
+              </Stack>
+              <Button
+                onClick={copyUrl}
+                variant="text"
+                color="primary"
+                size="small"
+              >
+                Copy
+              </Button>
+            </Stack>
+            {/* PIN Section */}
+            <Stack direction="row" spacing={2} alignItems="center" flex={1}>
+              <Box
+                sx={{
+                  backgroundColor: 'grey.300',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                }}
+              >
+                <Typography variant="caption" fontWeight="medium">
+                  PIN
+                </Typography>
+                <Tooltip title="Regenerate PIN">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setDialogOpen(true)
+                    }}
+                    sx={{
+                      padding: 0.25,
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      },
+                    }}
+                  >
+                    <StatusDisplay status={refreshStatus} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <Stack flex={1}>
+                <Typography variant="body2" size="small">
+                  {pin || 'Missing PIN'}
+                </Typography>
+              </Stack>
+              <Button
+                onClick={copyPin}
+                variant="text"
+                color="primary"
+                size="small"
+                disabled={!pin}
+              >
+                Copy
+              </Button>
+            </Stack>
+          </Stack>
+        ) : (
+          /* Regular URL Section */
+          <Stack direction="row" spacing={2} alignItems="center" flex={1}>
+            <Box
+              sx={{
+                backgroundColor: 'grey.300',
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+              }}
+            >
+              <Typography variant="caption" fontWeight="medium">
+                URL
+              </Typography>
+            </Box>
+            <Stack flex={1}>
+              <Typography variant="body2" size="small">
+                {webLink}
+              </Typography>
+            </Stack>
+            <Button
+              onClick={copyUrl}
+              variant="text"
+              color="primary"
+              size="small"
+            >
+              Copy
+            </Button>
+          </Stack>
+        )}
       </Stack>
       <DialogFeedback
         open={dialogOpen}
