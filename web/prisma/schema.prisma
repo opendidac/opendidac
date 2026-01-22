@@ -585,6 +585,10 @@ model Evaluation {
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
+  // 6-character alphanumeric PIN for student joining
+  // Unique constraint allows multiple nulls but enforces uniqueness on non-null values
+  pin        String? @unique
+
   durationActive Boolean @default(false)
   durationHours Int? @default(0)
   durationMins  Int? @default(0)

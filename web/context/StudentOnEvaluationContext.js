@@ -244,7 +244,7 @@ export const StudentOnEvaluationProvider = ({ children }) => {
         mutate,
       }}
     >
-      <EvaluationRestrictionGuard error={error} evaluationId={evaluationId}>
+      <EvaluationRestrictionGuard error={error}>
         <StudentPhaseRedirect phase={evaluation?.evaluation?.phase}>
           <ConsoleLog>test</ConsoleLog>
           {hasStudentFinished() ? <EvaluationCompletedDialog /> : children}

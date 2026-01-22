@@ -43,7 +43,8 @@ const OS_DOWNLOADS = [
       'Run the installer',
       'If Windows Defender displays "Windows protected your PC", click on "More info" and then "Run anyway"',
       'The setup will install and run the application automatically.',
-      'You can use the desktop app link, in your browser, provided by your professor to access the evaluation',
+      'When the app opens, you will be prompted to enter a 6-character PIN',
+      'Enter the PIN provided by your professor to join the evaluation',
     ],
   },
   {
@@ -67,7 +68,8 @@ const OS_DOWNLOADS = [
       '  xattr -d com.apple.quarantine "/Applications/OpenDidac Desktop.app"',
       'If you see a security warning, go to System Preferences > Security & Privacy and click "Open Anyway"',
       'Launch OpenDidac Desktop from your Applications folder',
-      'You can use the desktop app link, in your browser, provided by your professor to access the evaluation',
+      'When the app opens, you will be prompted to enter a 6-character PIN',
+      'Enter the PIN provided by your professor to join the evaluation',
     ],
   },
   {
@@ -86,7 +88,8 @@ const OS_DOWNLOADS = [
       'Download the appropriate package for your distribution (.deb or .rpm)',
       'Install using your package manager',
       'Run the application from your applications menu',
-      'You can use the desktop app link, in your browser, provided by your professor to access the evaluation',
+      'When the app opens, you will be prompted to enter a 6-character PIN',
+      'Enter the PIN provided by your professor to join the evaluation',
     ],
   },
 ]

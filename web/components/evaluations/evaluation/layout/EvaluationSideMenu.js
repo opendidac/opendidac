@@ -134,32 +134,40 @@ const EvaluationSideMenu = ({
         label="Attendance"
         details={
           <>
-            <Tooltip
-              title="Copy invitation link to clipboard"
-              key="add-link-to-clipboard"
-            >
-              <IconButton
-                onClick={(ev) => {
-                  ev.preventDefault()
-                  ev.stopPropagation()
-                  ;(async () => {
-                    await navigator.clipboard.writeText(
-                      getStudentEntryLink(
-                        evaluation.id,
-                        evaluation.desktopAppRequired || false,
-                      ),
-                    )
-                  })()
-                }}
+            {(!evaluation.desktopAppRequired ||
+              (evaluation.desktopAppRequired && evaluation.pin)) && (
+              <Tooltip
+                title={
+                  evaluation.desktopAppRequired
+                    ? 'Copy PIN to clipboard'
+                    : 'Copy invitation link to clipboard'
+                }
+                key="add-link-to-clipboard"
               >
-                <Image
-                  alt="Copy link"
-                  src="/svg/icons/link.svg"
-                  width="18"
-                  height="18"
-                />
-              </IconButton>
-            </Tooltip>
+                <IconButton
+                  onClick={(ev) => {
+                    ev.preventDefault()
+                    ev.stopPropagation()
+                    ;(async () => {
+                      const prefix = evaluation.desktopAppRequired
+                        ? 'PIN: '
+                        : 'URL: '
+                      const content = evaluation.desktopAppRequired
+                        ? evaluation.pin
+                        : getStudentEntryLink(evaluation.id)
+                      await navigator.clipboard.writeText(prefix + content)
+                    })()
+                  }}
+                >
+                  <Image
+                    alt="Copy link"
+                    src="/svg/icons/link.svg"
+                    width="18"
+                    height="18"
+                  />
+                </IconButton>
+              </Tooltip>
+            )}
             {attendance?.registered?.length || 0} registered
           </>
         }

@@ -15,7 +15,9 @@
  */
 
 import { useSnackbar } from '@/context/SnackbarContext'
-import { Stack, Typography } from '@mui/material'
+import { Stack, Typography, Button } from '@mui/material'
+import Link from 'next/link'
+import DownloadIcon from '@mui/icons-material/Download'
 import EvaluationTitleBar from '../layout/EvaluationTitleBar'
 import JoinClipboard from '../../JoinClipboard'
 import StudentsInEvaluation from './attendance/StudentsInEvaluation'
@@ -36,10 +38,28 @@ const EvaluationAttendance = ({
       <EvaluationTitleBar
         title="Attendance"
         action={
-          <JoinClipboard
-            evaluationId={evaluationId}
-            desktopAppRequired={evaluation.desktopAppRequired || false}
-          />
+          <Stack direction="row" spacing={2} alignItems="center">
+            {evaluation.desktopAppRequired && (
+              <Button
+                component={Link}
+                href="/downloads"
+                variant="text"
+                size="small"
+                target="_blank"
+                rel="noopener noreferrer"
+                startIcon={<DownloadIcon />}
+              >
+                Download Desktop App
+              </Button>
+            )}
+            <JoinClipboard
+              groupScope={groupScope}
+              evaluationId={evaluationId}
+              desktopAppRequired={evaluation.desktopAppRequired || false}
+              pin={evaluation.pin}
+              onPinUpdated={() => onAttendanceChanged()}
+            />
+          </Stack>
         }
       />
       <Stack spacing={1} direction={'row'} width={'100%'}>
