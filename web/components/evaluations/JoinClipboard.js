@@ -27,7 +27,6 @@ import { useState } from 'react'
 import { useSnackbar } from '@/context/SnackbarContext'
 import StatusDisplay from '@/components/feedback/StatusDisplay'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
-import { getStudentEntryLink } from '@/core/utils'
 
 const JoinClipboard = ({
   groupScope,
@@ -40,8 +39,8 @@ const JoinClipboard = ({
   const [dialogOpen, setDialogOpen] = useState(false)
   const { show: showSnackbar } = useSnackbar()
 
-  const desktopAppLink = getStudentEntryLink(evaluationId, true)
-  const webLink = getStudentEntryLink(evaluationId, false)
+  const desktopAppLink = `opendidac://users/evaluations/${evaluationId}`
+  const webLink = `${window && window.location.origin}/users/evaluations/${evaluationId}`
 
   const regeneratePin = async () => {
     setRefreshStatus('LOADING')
