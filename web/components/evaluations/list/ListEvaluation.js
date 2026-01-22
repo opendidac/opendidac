@@ -125,15 +125,26 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
                           ev.preventDefault()
                           ev.stopPropagation()
                           ;(async () => {
-                            const prefix = evaluation.desktopAppRequired
-                              ? 'PIN: '
-                              : 'URL: '
-                            const content = evaluation.desktopAppRequired
-                              ? evaluation.pin
-                              : getStudentEntryLink(evaluation.id)
-                            await navigator.clipboard.writeText(
-                              prefix + content,
-                            )
+                            if (evaluation.desktopAppRequired) {
+                              // Copy PIN and opendidac:// URL when desktop app is required
+                              const pinText = evaluation.pin
+                                ? `PIN: ${evaluation.pin}`
+                                : ''
+                              const urlText = getStudentEntryLink(
+                                evaluation.id,
+                                true,
+                              )
+                              await navigator.clipboard.writeText(
+                                pinText
+                                  ? `${pinText}\nURL: ${urlText}`
+                                  : `URL: ${urlText}`,
+                              )
+                            } else {
+                              // Copy regular web URL
+                              await navigator.clipboard.writeText(
+                                `URL: ${getStudentEntryLink(evaluation.id)}`,
+                              )
+                            }
                           })()
                         }}
                       >
