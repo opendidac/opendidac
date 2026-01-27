@@ -46,12 +46,12 @@ import {
   ComplianceBanner,
   useCompositionCompliance,
 } from './composition/CompositionCompliance'
-import useCtrlState from '@/hooks/useCtrlState'
 import CheckboxLabel from '@/components/input/CheckboxLabel'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import { useSnackbar } from '@/context/SnackbarContext'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
 import { computeCoefficient } from '@/core/grading/coefficient'
+import { useCtrlState } from '@/hooks/useCtrlState'
 
 const EvaluationComposition = ({
   groupScope,
@@ -136,10 +136,11 @@ const CompositionGrid = ({
   readOnly,
   onCompositionChanged,
 }) => {
-  const [questions, setQuestions] = useCtrlState(
-    composition ?? [],
-    `${evaluationId}-composition`,
-  )
+  const [questions, setQuestions] = useState(composition ?? [])
+
+  useEffect(() => {
+    setQuestions(composition ?? [])
+  }, [composition])
 
   const { show: showSnackbar } = useSnackbar()
 
@@ -345,8 +346,12 @@ const CompositionItem = ({
 
   const key = `${evaluationId}-${questionId}`
 
-  const [points, setPoints] = useCtrlState(evaluationToQuestion.points, key)
-  const [gradingPts, setGradingPts] = useCtrlState(
+  const { state: points, setStateControlled: setPoints } = useCtrlState(
+    evaluationToQuestion.points,
+    key,
+  )
+
+  const { state: gradingPts, setStateControlled: setGradingPts } = useCtrlState(
     evaluationToQuestion.gradingPoints,
     key,
   )

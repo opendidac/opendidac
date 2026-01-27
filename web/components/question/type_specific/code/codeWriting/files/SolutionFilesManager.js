@@ -77,9 +77,11 @@ const SolutionFilesManager = ({
       setLockCodeCheck(true)
       await update('solution', groupScope, questionId, file)
       setLockCodeCheck(false)
+      mutate()
+      console.log('mutate solution')
       onUpdate && onUpdate()
     },
-    [groupScope, questionId, onUpdate],
+    [groupScope, questionId, mutate, onUpdate],
   )
 
   const debouncedOnFileChange = useDebouncedCallback(onFileUpdate, 500)

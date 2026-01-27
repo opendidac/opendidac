@@ -15,10 +15,11 @@
  */
 
 import useSWR from 'swr'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Stack, TextField, Button, Typography, Tooltip } from '@mui/material'
 import MarkdownEditor from '../input/markdown/MarkdownEditor'
+import { useCtrlState } from '@/hooks/useCtrlState'
 
 import LayoutSplitScreen from '../layout/LayoutSplitScreen'
 import QuestionTypeSpecific from './QuestionTypeSpecific'
@@ -57,13 +58,19 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
   const [deleteQuestionDialogOpen, setDeleteQuestionDialogOpen] =
     useState(false)
 
-  const [title, setTitle] = useState(question?.title || '')
+  const { state: title, setStateControlled: setTitle } = useCtrlState(
+    question?.title || '',
+    question &&
+      questionId &&
+      `question-${questionId}-title-${question ? 'loaded' : 'loading'}`,
+  )
 
-  useEffect(() => {
-    if (question) {
-      setTitle(question.title)
-    }
-  }, [question])
+  const { state: content, setState: setContent } = useCtrlState(
+    question?.content || '',
+    question &&
+      questionId &&
+      `question-${questionId}-content-${question ? 'loaded' : 'loading'}`,
+  )
 
   const saveQuestion = useCallback(
     async (question) => {
@@ -159,14 +166,21 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
     500,
   )
 
+  // Flush pending debounced saves on unmount
+  useEffect(() => {
+    return () => {
+      debounceChange.flush()
+    }
+  }, [debounceChange])
+
   const onPropertyChange = useCallback(
-    async (property, value) => {
+    async (question, property, value) => {
       // instantly update the question object in memory
       question[property] = value
       // debounce the change to the api
       await debounceChange()
     },
-    [question, debounceChange],
+    [debounceChange],
   )
 
   return (
@@ -179,7 +193,7 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
                 <ScratchPad
                   content={question.scratchpad}
                   onChange={(content) =>
-                    onPropertyChange('scratchpad', content)
+                    onPropertyChange(question, 'scratchpad', content)
                   }
                 />
               }
@@ -194,8 +208,9 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
                     focused
                     value={title}
                     onChange={(e) => {
-                      setTitle(e.target.value)
-                      onPropertyChange('title', e.target.value)
+                      const value = e.target.value
+                      setTitle(value)
+                      onPropertyChange(question, 'title', value)
                     }}
                   />
                 </Stack>
@@ -210,8 +225,11 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
                   groupScope={groupScope}
                   withUpload
                   title="Problem Statement"
-                  rawContent={question.content}
-                  onChange={(content) => onPropertyChange('content', content)}
+                  rawContent={content}
+                  onChange={(newContent) => {
+                    setContent(newContent)
+                    onPropertyChange(question, 'content', newContent)
+                  }}
                 />
 
                 <Stack
@@ -290,7 +308,7 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
                   mutate()
                 }}
                 onTypeSpecificChange={(type, value) => {
-                  onPropertyChange(type, value)
+                  onPropertyChange(question, type, value)
                 }}
               />
             </Stack>
