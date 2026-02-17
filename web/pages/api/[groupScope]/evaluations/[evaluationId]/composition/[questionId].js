@@ -22,6 +22,7 @@ import {
 import { withApiContext } from '@/middleware/withApiContext'
 import { withEvaluationUpdate } from '@/middleware/withUpdate'
 import { withEvaluation } from '@/middleware/withEvaluation'
+import { withPurgeGuard } from '@/middleware/withPurged'
 
 const put = async (req, res, ctx) => {
   const { prisma, evaluation } = ctx
@@ -29,21 +30,38 @@ const put = async (req, res, ctx) => {
   const { evaluationId, questionId } = req.query
   const body = req.body
 
-  // Check if evaluation is still in COMPOSITION phase
-  // Once it moves to REGISTRATION, questions are frozen (copied)
-  if (evaluation.phase !== EvaluationPhase.COMPOSITION) {
-    res.status(403).json({
-      message:
-        'Cannot update composition: evaluation has moved beyond composition phase',
-    })
-    return
-  }
+  // Fields that can only be updated during COMPOSITION phase
+  const compositionOnlyFields = ['points', 'title']
+  // Fields that can be updated at any phase
+  const alwaysAllowedFields = ['gradingPoints']
 
-  const allowedFields = ['points', 'title', 'gradingPoints']
+  const isCompositionPhase = evaluation.phase === EvaluationPhase.COMPOSITION
+
+  // Determine which fields are allowed based on phase
+  const allowedFields = isCompositionPhase
+    ? [...compositionOnlyFields, ...alwaysAllowedFields]
+    : alwaysAllowedFields
 
   const data = Object.fromEntries(
     Object.entries(body).filter(([key]) => allowedFields.includes(key)),
   )
+
+  // Check if trying to update composition-only fields outside composition phase
+  const hasCompositionOnlyFields = compositionOnlyFields.some(
+    (field) => field in body,
+  )
+  if (!isCompositionPhase && hasCompositionOnlyFields) {
+    res.status(403).json({
+      message:
+        'Cannot update points or title: evaluation has moved beyond composition phase',
+    })
+    return
+  }
+
+  if (Object.keys(data).length === 0) {
+    res.status(400).json({ message: 'No valid fields to update' })
+    return
+  }
 
   await prisma.evaluationToQuestion.update({
     where: {
@@ -115,7 +133,7 @@ const del = async (req, res, ctx) => {
 
 export default withApiContext({
   PUT: withGroupScope(
-    withAuthorization(withEvaluation(withEvaluationUpdate(put)), {
+    withAuthorization(withEvaluation(withPurgeGuard(withEvaluationUpdate(put))), {
       roles: [Role.PROFESSOR],
     }),
   ),
