@@ -649,7 +649,7 @@ const CompositionItem = ({
               value={gradingPts}
               variant="standard"
               rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
-              disabled={!canEditGrading}
+              disabled={!canEditGrading || !showCoef}
               min={!canEditFully && points !== 0 ? 0.01 : 0}
               onChange={onGradingPointsChanged}
             />
