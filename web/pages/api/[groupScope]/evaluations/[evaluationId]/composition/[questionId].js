@@ -133,9 +133,12 @@ const del = async (req, res, ctx) => {
 
 export default withApiContext({
   PUT: withGroupScope(
-    withAuthorization(withEvaluation(withPurgeGuard(withEvaluationUpdate(put))), {
-      roles: [Role.PROFESSOR],
-    }),
+    withAuthorization(
+      withEvaluation(withPurgeGuard(withEvaluationUpdate(put))),
+      {
+        roles: [Role.PROFESSOR],
+      },
+    ),
   ),
   DELETE: withGroupScope(
     withAuthorization(withEvaluation(withEvaluationUpdate(del)), {
