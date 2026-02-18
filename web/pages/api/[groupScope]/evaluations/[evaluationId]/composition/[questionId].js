@@ -141,8 +141,11 @@ export default withApiContext({
     ),
   ),
   DELETE: withGroupScope(
-    withAuthorization(withEvaluation(withEvaluationUpdate(del)), {
-      roles: [Role.PROFESSOR],
-    }),
+    withAuthorization(
+      withEvaluation(withPurgeGuard(withEvaluationUpdate(del))),
+      {
+        roles: [Role.PROFESSOR],
+      },
+    ),
   ),
 })
