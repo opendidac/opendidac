@@ -38,23 +38,47 @@ export const useClipboardProtection = ({
   onViolation,
 }: UseClipboardProtectionOptions): void => {
   // Mark outgoing data (copy/cut/dragstart) with evaluation ID
+  // Returns true if we handled text/plain ourselves (need to preventDefault)
   const markDataTransfer = useCallback(
-    (dataTransfer: DataTransfer) => {
+    (dataTransfer: DataTransfer): boolean => {
       if (!evaluationId) return false
 
-      const selection = window.getSelection()?.toString()
-      if (selection) {
-        dataTransfer.setData('text/plain', selection)
-        dataTransfer.setData(
-          CLIPBOARD_MARKER,
-          JSON.stringify({
-            evaluationId,
-            timestamp: Date.now(),
-          } satisfies ClipboardMarker),
-        )
-        return true
+      // Check if an editor (Monaco) already populated clipboardData
+      const hasContent = dataTransfer.types.includes('text/plain')
+
+      if (!hasContent) {
+        // Regular text selection - get it ourselves
+        const selection = window.getSelection()?.toString()
+        if (selection) {
+          dataTransfer.setData('text/plain', selection)
+        } else {
+          // Check for input/textarea selection
+          const active = document.activeElement
+          if (
+            active instanceof HTMLInputElement ||
+            active instanceof HTMLTextAreaElement
+          ) {
+            const text = active.value.substring(
+              active.selectionStart ?? 0,
+              active.selectionEnd ?? 0,
+            )
+            if (text) {
+              dataTransfer.setData('text/plain', text)
+            }
+          }
+        }
       }
-      return false
+
+      dataTransfer.setData(
+        CLIPBOARD_MARKER,
+        JSON.stringify({
+          evaluationId,
+          timestamp: Date.now(),
+        } satisfies ClipboardMarker),
+      )
+
+      // If we set text/plain ourselves, we need to preventDefault
+      return !hasContent
     },
     [evaluationId],
   )
@@ -87,7 +111,8 @@ export const useClipboardProtection = ({
   const handleCopy = useCallback(
     (e: ClipboardEvent) => {
       if (!e.clipboardData) return
-      if (markDataTransfer(e.clipboardData)) {
+      const needsPreventDefault = markDataTransfer(e.clipboardData)
+      if (needsPreventDefault) {
         e.preventDefault()
       }
     },
@@ -140,18 +165,19 @@ export const useClipboardProtection = ({
     // Don't register listeners until evaluationId is available
     if (!evaluationId) return
 
-    // Capture phase ensures we intercept before Monaco/other editors
-    document.addEventListener('copy', handleCopy, true)
-    document.addEventListener('cut', handleCopy, true)
+    // Bubble phase for copy/cut/dragstart: let Monaco handle text first, then add marker
+    document.addEventListener('copy', handleCopy, false)
+    document.addEventListener('cut', handleCopy, false)
+    document.addEventListener('dragstart', handleDragStart, false)
+    // Capture phase for paste/drop: intercept before Monaco to block if needed
     document.addEventListener('paste', handlePaste, true)
-    document.addEventListener('dragstart', handleDragStart, true)
     document.addEventListener('drop', handleDrop, true)
 
     return () => {
-      document.removeEventListener('copy', handleCopy, true)
-      document.removeEventListener('cut', handleCopy, true)
+      document.removeEventListener('copy', handleCopy, false)
+      document.removeEventListener('cut', handleCopy, false)
+      document.removeEventListener('dragstart', handleDragStart, false)
       document.removeEventListener('paste', handlePaste, true)
-      document.removeEventListener('dragstart', handleDragStart, true)
       document.removeEventListener('drop', handleDrop, true)
     }
   }, [evaluationId, handleCopy, handlePaste, handleDragStart, handleDrop])
