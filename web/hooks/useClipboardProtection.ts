@@ -37,59 +37,95 @@ export const useClipboardProtection = ({
   evaluationId,
   onViolation,
 }: UseClipboardProtectionOptions): void => {
-  const handleCopy = useCallback(
-    (e: ClipboardEvent) => {
-      if (!evaluationId || !e.clipboardData) return
+  // Mark outgoing data (copy/cut/dragstart) with evaluation ID
+  const markDataTransfer = useCallback(
+    (dataTransfer: DataTransfer) => {
+      if (!evaluationId) return false
 
       const selection = window.getSelection()?.toString()
       if (selection) {
-        e.clipboardData.setData('text/plain', selection)
-        e.clipboardData.setData(
+        dataTransfer.setData('text/plain', selection)
+        dataTransfer.setData(
           CLIPBOARD_MARKER,
           JSON.stringify({
             evaluationId,
             timestamp: Date.now(),
           } satisfies ClipboardMarker),
         )
-        e.preventDefault()
+        return true
       }
+      return false
     },
     [evaluationId],
   )
 
-  const handlePaste = useCallback(
-    (e: ClipboardEvent) => {
-      // Guard is redundant (useEffect won't register without this), but keeps TypeScript happy
-      if (!evaluationId) return
-      if (!e.clipboardData) return
+  // Validate incoming data (paste/drop) - returns violation reason or null if valid
+  const validateDataTransfer = useCallback(
+    (
+      dataTransfer: DataTransfer,
+      externalReason: ViolationReason,
+      crossEvalReason: ViolationReason,
+    ): ViolationReason | null => {
+      if (!evaluationId) return null
 
-      const markerData = e.clipboardData.getData(CLIPBOARD_MARKER)
+      const markerData = dataTransfer.getData(CLIPBOARD_MARKER)
 
-      if (!markerData) {
-        e.preventDefault()
-        e.stopPropagation()
-        onViolation?.('external')
-        return
-      }
+      if (!markerData) return externalReason
 
       try {
         const marker: ClipboardMarker = JSON.parse(markerData)
-        if (marker.evaluationId !== evaluationId) {
-          e.preventDefault()
-          e.stopPropagation()
-          onViolation?.('cross-evaluation')
-          return
-        }
+        if (marker.evaluationId !== evaluationId) return crossEvalReason
       } catch {
-        e.preventDefault()
-        e.stopPropagation()
-        onViolation?.('invalid')
-        return
+        return externalReason
       }
 
-      // Valid: same evaluation, allow paste
+      return null
     },
-    [evaluationId, onViolation],
+    [evaluationId],
+  )
+
+  const handleCopy = useCallback(
+    (e: ClipboardEvent) => {
+      if (!e.clipboardData) return
+      if (markDataTransfer(e.clipboardData)) {
+        e.preventDefault()
+      }
+    },
+    [markDataTransfer],
+  )
+
+  const handlePaste = useCallback(
+    (e: ClipboardEvent) => {
+      if (!e.clipboardData) return
+      const violation = validateDataTransfer(e.clipboardData, 'external', 'cross-evaluation')
+      if (violation) {
+        e.preventDefault()
+        e.stopPropagation()
+        onViolation?.(violation)
+      }
+    },
+    [validateDataTransfer, onViolation],
+  )
+
+  const handleDragStart = useCallback(
+    (e: DragEvent) => {
+      if (!e.dataTransfer) return
+      markDataTransfer(e.dataTransfer)
+    },
+    [markDataTransfer],
+  )
+
+  const handleDrop = useCallback(
+    (e: DragEvent) => {
+      if (!e.dataTransfer) return
+      const violation = validateDataTransfer(e.dataTransfer, 'drag-external', 'drag-cross-evaluation')
+      if (violation) {
+        e.preventDefault()
+        e.stopPropagation()
+        onViolation?.(violation)
+      }
+    },
+    [validateDataTransfer, onViolation],
   )
 
   useEffect(() => {
@@ -100,11 +136,15 @@ export const useClipboardProtection = ({
     document.addEventListener('copy', handleCopy, true)
     document.addEventListener('cut', handleCopy, true)
     document.addEventListener('paste', handlePaste, true)
+    document.addEventListener('dragstart', handleDragStart, true)
+    document.addEventListener('drop', handleDrop, true)
 
     return () => {
       document.removeEventListener('copy', handleCopy, true)
       document.removeEventListener('cut', handleCopy, true)
       document.removeEventListener('paste', handlePaste, true)
+      document.removeEventListener('dragstart', handleDragStart, true)
+      document.removeEventListener('drop', handleDrop, true)
     }
-  }, [evaluationId, handleCopy, handlePaste])
+  }, [evaluationId, handleCopy, handlePaste, handleDragStart, handleDrop])
 }
