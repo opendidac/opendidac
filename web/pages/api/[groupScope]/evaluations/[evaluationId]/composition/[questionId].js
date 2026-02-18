@@ -47,8 +47,8 @@ const put = async (req, res, ctx) => {
   )
 
   // Check if trying to update composition-only fields outside composition phase
-  const hasCompositionOnlyFields = compositionOnlyFields.some(
-    (field) => Object.prototype.hasOwnProperty.call(body, field),
+  const hasCompositionOnlyFields = compositionOnlyFields.some((field) =>
+    Object.prototype.hasOwnProperty.call(body, field),
   )
   if (!isCompositionPhase && hasCompositionOnlyFields) {
     res.status(403).json({
