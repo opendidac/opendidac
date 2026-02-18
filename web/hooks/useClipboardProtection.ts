@@ -97,7 +97,11 @@ export const useClipboardProtection = ({
   const handlePaste = useCallback(
     (e: ClipboardEvent) => {
       if (!e.clipboardData) return
-      const violation = validateDataTransfer(e.clipboardData, 'external', 'cross-evaluation')
+      const violation = validateDataTransfer(
+        e.clipboardData,
+        'external',
+        'cross-evaluation',
+      )
       if (violation) {
         e.preventDefault()
         e.stopPropagation()
@@ -118,7 +122,11 @@ export const useClipboardProtection = ({
   const handleDrop = useCallback(
     (e: DragEvent) => {
       if (!e.dataTransfer) return
-      const violation = validateDataTransfer(e.dataTransfer, 'drag-external', 'drag-cross-evaluation')
+      const violation = validateDataTransfer(
+        e.dataTransfer,
+        'drag-external',
+        'drag-cross-evaluation',
+      )
       if (violation) {
         e.preventDefault()
         e.stopPropagation()
