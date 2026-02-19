@@ -67,12 +67,6 @@ const get = async (
 
   const evaluationCtx = ctx as IApiContextWithEvaluation
 
-  if (!evaluationCtx.evaluation.consultationEnabled) {
-    return res.status(403).json({
-      message: 'Consultation is disabled for this evaluation.',
-    })
-  }
-
   // Get current user
   const user = await getUser(req, res)
   if (!user || !user.email) {
@@ -112,6 +106,12 @@ const get = async (
 
   if (!userOnEvaluation) {
     return res.status(404).json({ message: 'Student not found in evaluation' })
+  }
+
+  if (!evaluationCtx.evaluation.consultationEnabled) {
+    return res.status(403).json({
+      message: 'Consultation is disabled for this evaluation.',
+    })
   }
 
   const student = userOnEvaluation.user
