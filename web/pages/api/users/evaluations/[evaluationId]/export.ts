@@ -108,6 +108,12 @@ const get = async (
     return res.status(404).json({ message: 'Student not found in evaluation' })
   }
 
+  if (!evaluationCtx.evaluation.consultationEnabled) {
+    return res.status(403).json({
+      message: 'Consultation is disabled for this evaluation.',
+    })
+  }
+
   const student = userOnEvaluation.user
 
   // Map all questions using shared mapper
