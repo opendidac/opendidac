@@ -39,7 +39,6 @@ const JoinClipboard = ({
   const [dialogOpen, setDialogOpen] = useState(false)
   const { show: showSnackbar } = useSnackbar()
 
-  const desktopAppLink = `opendidac://users/evaluations/${evaluationId}`
   const webLink = `${window && window.location.origin}/users/evaluations/${evaluationId}`
 
   const regeneratePin = async () => {
@@ -87,8 +86,7 @@ const JoinClipboard = ({
   }
 
   const copyUrl = async () => {
-    const urlToCopy = desktopAppRequired ? desktopAppLink : webLink
-    await navigator.clipboard.writeText(urlToCopy)
+    await navigator.clipboard.writeText(webLink)
     showSnackbar('URL copied to clipboard', 'success')
   }
 
@@ -96,84 +94,54 @@ const JoinClipboard = ({
     <Paper variant="outlined">
       <Stack spacing={2}>
         {desktopAppRequired ? (
-          <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
-            {/* Desktop App URL Section */}
-            <Stack direction="row" spacing={2} alignItems="center" flex={1}>
-              <Box
-                sx={{
-                  backgroundColor: 'grey.300',
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 1,
-                }}
-              >
-                <Typography variant="caption" fontWeight="medium">
-                  URL
-                </Typography>
-              </Box>
-              <Stack flex={1}>
-                <Typography variant="body2" size="small">
-                  {desktopAppLink}
-                </Typography>
-              </Stack>
-              <Button
-                onClick={copyUrl}
-                variant="text"
-                color="primary"
-                size="small"
-              >
-                Copy
-              </Button>
+          /* PIN Section - Only PIN when desktop app is required */
+          <Stack direction="row" spacing={2} alignItems="center" flex={1}>
+            <Box
+              sx={{
+                backgroundColor: 'grey.300',
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+              }}
+            >
+              <Typography variant="caption" fontWeight="medium">
+                PIN
+              </Typography>
+              <Tooltip title="Regenerate PIN">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setDialogOpen(true)
+                  }}
+                  sx={{
+                    padding: 0.25,
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                  }}
+                >
+                  <StatusDisplay status={refreshStatus} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <Stack flex={1}>
+              <Typography variant="body2" size="small">
+                {pin || 'Missing PIN'}
+              </Typography>
             </Stack>
-            {/* PIN Section */}
-            <Stack direction="row" spacing={2} alignItems="center" flex={1}>
-              <Box
-                sx={{
-                  backgroundColor: 'grey.300',
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                }}
-              >
-                <Typography variant="caption" fontWeight="medium">
-                  PIN
-                </Typography>
-                <Tooltip title="Regenerate PIN">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setDialogOpen(true)
-                    }}
-                    sx={{
-                      padding: 0.25,
-                      '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                      },
-                    }}
-                  >
-                    <StatusDisplay status={refreshStatus} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <Stack flex={1}>
-                <Typography variant="body2" size="small">
-                  {pin || 'Missing PIN'}
-                </Typography>
-              </Stack>
-              <Button
-                onClick={copyPin}
-                variant="text"
-                color="primary"
-                size="small"
-                disabled={!pin}
-              >
-                Copy
-              </Button>
-            </Stack>
+            <Button
+              onClick={copyPin}
+              variant="text"
+              color="primary"
+              size="small"
+              disabled={!pin}
+            >
+              Copy
+            </Button>
           </Stack>
         ) : (
           /* Regular URL Section */
