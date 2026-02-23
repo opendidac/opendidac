@@ -124,6 +124,20 @@ export const useClipboardProtection = ({
     [markDataTransfer],
   )
 
+  const handleCut = useCallback(
+    (e: ClipboardEvent) => {
+      if (!e.clipboardData) return
+      const needsPreventDefault = markDataTransfer(e.clipboardData)
+      if (needsPreventDefault) {
+        e.preventDefault()
+        // Manually delete the selected content since we prevented default
+        // execCommand is deprecated but works for all editable contexts
+        document.execCommand('delete')
+      }
+    },
+    [markDataTransfer],
+  )
+
   const handlePaste = useCallback(
     (e: ClipboardEvent) => {
       if (!e.clipboardData) return
@@ -172,7 +186,7 @@ export const useClipboardProtection = ({
 
     // Bubble phase for copy/cut/dragstart: let Monaco handle text first, then add marker
     document.addEventListener('copy', handleCopy, false)
-    document.addEventListener('cut', handleCopy, false)
+    document.addEventListener('cut', handleCut, false)
     document.addEventListener('dragstart', handleDragStart, false)
 
     // Only validate paste/drop in student mode (not admin)
@@ -184,7 +198,7 @@ export const useClipboardProtection = ({
 
     return () => {
       document.removeEventListener('copy', handleCopy, false)
-      document.removeEventListener('cut', handleCopy, false)
+      document.removeEventListener('cut', handleCut, false)
       document.removeEventListener('dragstart', handleDragStart, false)
       if (!isAdmin) {
         document.removeEventListener('paste', handlePaste, true)
@@ -195,6 +209,7 @@ export const useClipboardProtection = ({
     isAdmin,
     evaluationId,
     handleCopy,
+    handleCut,
     handlePaste,
     handleDragStart,
     handleDrop,
