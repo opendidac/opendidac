@@ -25,6 +25,7 @@ import { getUser } from '@/core/auth/auth'
 
 import { loadHandlebars } from '@/core/evaluation/export/engine/handlebars'
 import { generatePDF } from '@/core/evaluation/export/engine/pdf'
+import { inlineAssetImagesInHtml } from '@/core/evaluation/export/engine/inlineAssetImages'
 
 import {
   StudentSubmission,
@@ -149,7 +150,11 @@ const get = async (
 
   // Render HTML
   const hbs = loadHandlebars()
-  const html = hbs.compile(studentMainTemplate)(context)
+  let html = hbs.compile(studentMainTemplate)(context)
+
+  if (OUTPUT_FORMAT === 'pdf') {
+    html = await inlineAssetImagesInHtml(html)
+  }
 
   if (OUTPUT_FORMAT === 'html') {
     res.setHeader('Content-Type', 'text/html')

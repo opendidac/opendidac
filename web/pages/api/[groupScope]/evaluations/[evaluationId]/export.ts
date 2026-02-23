@@ -25,6 +25,7 @@ import type { IApiContext } from '@/core/types/api'
 
 import { loadHandlebars } from '@/core/evaluation/export/engine/handlebars'
 import { generatePDF } from '@/core/evaluation/export/engine/pdf'
+import { inlineAssetImagesInHtml } from '@/core/evaluation/export/engine/inlineAssetImages'
 
 import {
   QuestionPayloadProfessor,
@@ -137,7 +138,11 @@ const get = async (
 
   // Render HTML
   const hbs = loadHandlebars()
-  const html = hbs.compile(mainTemplate)(context)
+  let html = hbs.compile(mainTemplate)(context)
+
+  if (OUTPUT_FORMAT === 'pdf') {
+    html = await inlineAssetImagesInHtml(html)
+  }
 
   if (OUTPUT_FORMAT === 'html') {
     res.setHeader('Content-Type', 'text/html')
