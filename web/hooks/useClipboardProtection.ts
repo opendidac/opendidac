@@ -24,24 +24,28 @@ export type DragViolationReason = 'drag-external' | 'drag-cross-evaluation' // P
 export type ViolationReason = PasteViolationReason | DragViolationReason
 
 interface ClipboardMarker {
-  evaluationId: string
+  evaluationId?: string // Optional for admin markers
+  isAdmin?: boolean
   timestamp: number
 }
 
 interface UseClipboardProtectionOptions {
-  evaluationId: string | undefined
+  evaluationId?: string | undefined // Required for student mode, ignored for admin
+  isAdmin?: boolean // If true, marks with isAdmin flag (no validation)
   onViolation?: (reason: ViolationReason) => void
 }
 
 export const useClipboardProtection = ({
   evaluationId,
+  isAdmin = false,
   onViolation,
 }: UseClipboardProtectionOptions): void => {
-  // Mark outgoing data (copy/cut/dragstart) with evaluation ID
+  // Mark outgoing data (copy/cut/dragstart) with evaluation ID or admin flag
   // Returns true if we handled text/plain ourselves (need to preventDefault)
   const markDataTransfer = useCallback(
     (dataTransfer: DataTransfer): boolean => {
-      if (!evaluationId) return false
+      // Admin mode needs isAdmin flag, student mode needs evaluationId
+      if (!isAdmin && !evaluationId) return false
 
       // Check if an editor (Monaco) already populated clipboardData
       const hasContent = dataTransfer.types.includes('text/plain')
@@ -72,7 +76,7 @@ export const useClipboardProtection = ({
       dataTransfer.setData(
         CLIPBOARD_MARKER,
         JSON.stringify({
-          evaluationId,
+          ...(isAdmin ? { isAdmin: true } : { evaluationId }),
           timestamp: Date.now(),
         } satisfies ClipboardMarker),
       )
@@ -80,7 +84,7 @@ export const useClipboardProtection = ({
       // If we set text/plain ourselves, we need to preventDefault
       return !hasContent
     },
-    [evaluationId],
+    [isAdmin, evaluationId],
   )
 
   // Validate incoming data (paste/drop) - returns violation reason or null if valid
@@ -98,6 +102,7 @@ export const useClipboardProtection = ({
 
       try {
         const marker: ClipboardMarker = JSON.parse(markerData)
+        if (marker.isAdmin) return null // Admin content always allowed
         if (marker.evaluationId !== evaluationId) return crossEvalReason
       } catch {
         return externalReason
@@ -162,23 +167,29 @@ export const useClipboardProtection = ({
   )
 
   useEffect(() => {
-    // Don't register listeners until evaluationId is available
-    if (!evaluationId) return
+    // Admin mode only needs isAdmin flag, student mode needs evaluationId
+    if (!isAdmin && !evaluationId) return
 
     // Bubble phase for copy/cut/dragstart: let Monaco handle text first, then add marker
     document.addEventListener('copy', handleCopy, false)
     document.addEventListener('cut', handleCopy, false)
     document.addEventListener('dragstart', handleDragStart, false)
-    // Capture phase for paste/drop: intercept before Monaco to block if needed
-    document.addEventListener('paste', handlePaste, true)
-    document.addEventListener('drop', handleDrop, true)
+
+    // Only validate paste/drop in student mode (not admin)
+    if (!isAdmin) {
+      // Capture phase for paste/drop: intercept before Monaco to block if needed
+      document.addEventListener('paste', handlePaste, true)
+      document.addEventListener('drop', handleDrop, true)
+    }
 
     return () => {
       document.removeEventListener('copy', handleCopy, false)
       document.removeEventListener('cut', handleCopy, false)
       document.removeEventListener('dragstart', handleDragStart, false)
-      document.removeEventListener('paste', handlePaste, true)
-      document.removeEventListener('drop', handleDrop, true)
+      if (!isAdmin) {
+        document.removeEventListener('paste', handlePaste, true)
+        document.removeEventListener('drop', handleDrop, true)
+      }
     }
-  }, [evaluationId, handleCopy, handlePaste, handleDragStart, handleDrop])
+  }, [isAdmin, evaluationId, handleCopy, handlePaste, handleDragStart, handleDrop])
 }
