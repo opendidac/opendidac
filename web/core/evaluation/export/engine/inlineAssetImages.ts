@@ -21,7 +21,7 @@ import mime from 'mime'
 const IMG_TAG_REGEX = /<img\b[^>]*?\bsrc=(["'])(.*?)\1[^>]*>/gi
 const ASSETS_ROUTE_PREFIX = '/api/assets/'
 
-function resolveAssetPathFromSrc(src: string): string | null {
+const resolveAssetPathFromSrc = (src: string): string | null => {
   try {
     // works with absolute paths (in our case its always absolute)
     const url = new URL(src) 
@@ -51,7 +51,7 @@ function resolveAssetPathFromSrc(src: string): string | null {
   }
 }
 
-async function inlineImageTag(tag: string, src: string): Promise<string> {
+const inlineImageTag = async (tag: string, src: string): Promise<string> => {
   const assetPath = resolveAssetPathFromSrc(src)
   if (!assetPath) return tag
 
@@ -69,7 +69,9 @@ async function inlineImageTag(tag: string, src: string): Promise<string> {
  * Replace uploaded asset image URLs (`/api/assets/...`) by data-URIs so
  * Puppeteer can render images in PDF without session-bound HTTP requests.
  */
-export async function inlineAssetImagesInHtml(html: string): Promise<string> {
+export const inlineAssetImagesInHtml = async (
+  html: string,
+): Promise<string> => {
   const matches = Array.from(html.matchAll(IMG_TAG_REGEX))
   if (matches.length === 0) return html
 
