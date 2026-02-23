@@ -105,7 +105,8 @@ export const useClipboardProtection = ({
         if (marker.isAdmin) return null // Admin content always allowed
         if (marker.evaluationId !== evaluationId) return crossEvalReason
       } catch {
-        return externalReason
+        // Marker exists but is malformed - distinguish from truly external content
+        return 'invalid'
       }
 
       return null
