@@ -23,7 +23,8 @@ const ASSETS_ROUTE_PREFIX = '/api/assets/'
 
 function resolveAssetPathFromSrc(src: string): string | null {
   try {
-    const url = new URL(src)
+    // works with absolute paths (in our case its always absolute)
+    const url = new URL(src) 
     if (!url.pathname.startsWith(ASSETS_ROUTE_PREFIX)) return null
 
     const relativeAssetPath = decodeURIComponent(
