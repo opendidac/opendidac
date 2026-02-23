@@ -191,5 +191,12 @@ export const useClipboardProtection = ({
         document.removeEventListener('drop', handleDrop, true)
       }
     }
-  }, [isAdmin, evaluationId, handleCopy, handlePaste, handleDragStart, handleDrop])
+  }, [
+    isAdmin,
+    evaluationId,
+    handleCopy,
+    handlePaste,
+    handleDragStart,
+    handleDrop,
+  ])
 }
