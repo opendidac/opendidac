@@ -155,9 +155,9 @@ const MultipleChoiceOptionUpdate = ({
   const theme = useTheme()
 
   const {
-    state: text,
-    setState: setText,
-    get: getText,
+    renderedValue: text,
+    setValueUncontrolled: setText,
+    getValue: getText,
   } = useCtrlState(
     option?.text || '',
     `${questionId}-multiple-choice-option-text-${option.id}`,

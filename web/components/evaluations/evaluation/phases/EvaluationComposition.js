@@ -346,15 +346,13 @@ const CompositionItem = ({
 
   const key = `${evaluationId}-${questionId}`
 
-  const { state: points, setStateControlled: setPoints } = useCtrlState(
+  const { renderedValue: points, setValueControlled: setPoints } = useCtrlState(
     evaluationToQuestion.points,
     key,
   )
 
-  const { state: gradingPts, setStateControlled: setGradingPts } = useCtrlState(
-    evaluationToQuestion.gradingPoints,
-    key,
-  )
+  const { renderedValue: gradingPts, setValueControlled: setGradingPts } =
+    useCtrlState(evaluationToQuestion.gradingPoints, key)
   const coef = useMemo(
     () => computeCoefficient(gradingPts, points),
     [gradingPts, points],

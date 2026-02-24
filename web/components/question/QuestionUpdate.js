@@ -59,17 +59,18 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
   const [deleteQuestionDialogOpen, setDeleteQuestionDialogOpen] =
     useState(false)
 
-  const { state: title, setStateControlled: setTitle } = useCtrlState(
+  const { renderedValue: title, setValueControlled: setTitle } = useCtrlState(
     question?.title || '',
     question &&
       questionId &&
       `question-${questionId}-title-${question ? 'loaded' : 'loading'}`,
   )
 
-  const { state: content, setState: setContent } = useCtrlState(
-    question?.content || '',
-    `question-${questionId}-content-${question?.id ?? 'loading'}`,
-  )
+  const { renderedValue: content, setValueUncontrolled: setContent } =
+    useCtrlState(
+      question?.content || '',
+      `question-${questionId}-content-${question?.id ?? 'loading'}`,
+    )
 
   const saveQuestion = useCallback(
     async (question) => {

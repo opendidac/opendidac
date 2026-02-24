@@ -28,21 +28,21 @@ const WebEditor = ({
   onChange,
 }) => {
   const {
-    state: html,
-    setState: setHtml,
-    get: getHtml,
+    renderedValue: html,
+    setValueUncontrolled: setHtml,
+    getValue: getHtml,
   } = useCtrlState(initial?.html || '', `${id}-html`)
 
   const {
-    state: css,
-    setState: setCss,
-    get: getCss,
+    renderedValue: css,
+    setValueUncontrolled: setCss,
+    getValue: getCss,
   } = useCtrlState(initial?.css || '', `${id}-css`)
 
   const {
-    state: js,
-    setState: setJs,
-    get: getJs,
+    renderedValue: js,
+    setValueUncontrolled: setJs,
+    getValue: getJs,
   } = useCtrlState(initial?.js || '', `${id}-js`)
 
   const handleChange = (field, value) => {
@@ -106,7 +106,10 @@ const WebEditorInput = ({
 }) => {
   const theme = useTheme()
 
-  const { state: code, setState: setCode } = useCtrlState(initial || '', id)
+  const { renderedValue: code, setValueUncontrolled: setCode } = useCtrlState(
+    initial || '',
+    id,
+  )
 
   return (
     <Stack spacing={1} position={'relative'}>

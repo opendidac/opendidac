@@ -20,20 +20,20 @@ export function useCtrlState<T>(initialValue: T, key: React.Key) {
   const getInitial = useEffectEvent(() => initialValue)
 
   const ref = useRef<T>(initialValue)
-  const [state, _setState] = useState<T>(initialValue)
+  const [renderedValue, setRenderedValue] = useState<T>(initialValue)
 
   // Reset ONLY when key changes
   useEffect(() => {
     const next = getInitial()
     ref.current = next
-    _setState(next)
+    setRenderedValue(next)
     // for some reason, we still must ignore missing getInitial warning in dependencies.
     // Based on the official react documentation, they do not need to be in the dependencies.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
   // Monaco-safe: no rerender
-  const setState = (next: T | ((prev: T) => T)) => {
+  const setValueUncontrolled = (next: T | ((prev: T) => T)) => {
     const prev = ref.current
     const value =
       typeof next === 'function' ? (next as (prev: T) => T)(prev) : next
@@ -42,14 +42,19 @@ export function useCtrlState<T>(initialValue: T, key: React.Key) {
   }
 
   // Controlled inputs: force rerender
-  const setStateControlled = (next: T | ((prev: T) => T)) => {
+  const setValueControlled = (next: T | ((prev: T) => T)) => {
     const prev = ref.current
     const value =
       typeof next === 'function' ? (next as (prev: T) => T)(prev) : next
     if (value === prev) return
     ref.current = value
-    _setState(value)
+    setRenderedValue(value)
   }
 
-  return { state, setState, setStateControlled, get: () => ref.current }
+  return {
+    renderedValue,
+    setValueUncontrolled,
+    setValueControlled,
+    getValue: () => ref.current,
+  }
 }

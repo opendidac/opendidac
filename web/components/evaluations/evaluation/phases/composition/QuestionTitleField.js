@@ -25,10 +25,8 @@ const QuestionTitleField = ({
   readOnly = false,
   onChangeTitle,
 }) => {
-  const { state: localTitle, setStateControlled: setLocalTitle } = useCtrlState(
-    currentTitle,
-    id,
-  )
+  const { renderedValue: localTitle, setValueControlled: setLocalTitle } =
+    useCtrlState(currentTitle, id)
 
   const handleTitleChange = useCallback(
     (value) => {

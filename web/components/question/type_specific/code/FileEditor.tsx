@@ -46,15 +46,13 @@ const FileEditor: React.FC<FileEditorProps> = ({
 }) => {
   const theme: Theme = useTheme()
 
-  const { state: path, setStateControlled: setPath } = useCtrlState(
+  const { renderedValue: path, setValueControlled: setPath } = useCtrlState(
     file?.path ?? '',
     file?.id ?? 'no-file',
   )
 
-  const { state: content, setState: setContent } = useCtrlState(
-    file?.content ?? '',
-    file?.id ?? 'no-file',
-  )
+  const { renderedValue: content, setValueUncontrolled: setContent } =
+    useCtrlState(file?.content ?? '', file?.id ?? 'no-file')
 
   const language = useMemo(
     () => languageBasedOnPathExtension(path) || 'text',
