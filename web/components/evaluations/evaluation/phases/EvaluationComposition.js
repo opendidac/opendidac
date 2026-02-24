@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useDebouncedCallback } from 'use-debounce'
 import {
@@ -154,10 +154,11 @@ const CompositionGrid = ({
   onCompositionChanged,
 }) => {
   const canEditFully = editMode === EDIT_MODE.FULL
-  const [questions, setQuestions] = useCtrlState(
-    composition ?? [],
-    `${evaluationId}-composition`,
-  )
+  const {
+    renderedValue: questions,
+    setValueControlled: setQuestions,
+    getValue: getQuestions,
+  } = useCtrlState(composition ?? [], `${evaluationId}-composition`)
 
   const { show: showSnackbar } = useSnackbar()
 
@@ -165,28 +166,61 @@ const CompositionGrid = ({
     useCompositionCompliance(questions)
 
   useEffect(() => {
-    setQuestions(composition ?? [])
+    const incoming = composition ?? []
+    setQuestions((prev) => {
+      if (!prev?.length) return incoming
+
+      const prevByQuestionId = new Map(prev.map((q) => [q.questionId, q]))
+      const incomingByQuestionId = new Map(
+        incoming.map((q) => [q.questionId, q]),
+      )
+
+      // Keep local visual order while syncing fresh server objects.
+      const locallyOrdered = prev
+        .map((q) => incomingByQuestionId.get(q.questionId))
+        .filter(Boolean)
+
+      const locallyOrderedIds = new Set(locallyOrdered.map((q) => q.questionId))
+      const newFromServer = incoming.filter(
+        (q) => !locallyOrderedIds.has(q.questionId),
+      )
+
+      return [...locallyOrdered, ...newFromServer].map((serverQ, index) => {
+        const localQ = prevByQuestionId.get(serverQ.questionId)
+        return {
+          ...serverQ,
+          // Preserve in-flight local edits while debounced saves complete.
+          title: localQ?.title ?? serverQ.title,
+          points: localQ?.points ?? serverQ.points,
+          gradingPoints: localQ?.gradingPoints ?? serverQ.gradingPoints,
+          order: index,
+        }
+      })
+    })
   }, [composition, setQuestions])
 
   const saveReOrder = useCallback(
     async (ordered) => {
-      // Send only id + order (see Fix #2)
+      // Keep reorder isolated: persist only order fields.
+      const orderOnly = ordered.map((question) => ({
+        questionId: question.questionId,
+        order: question.order,
+      }))
       try {
         await fetch(
           `/api/${groupScope}/evaluations/${evaluationId}/composition/order`,
           {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ questions: ordered }),
+            body: JSON.stringify({ questions: orderOnly }),
           },
         )
         showSnackbar('Order saved', 'success')
       } catch (err) {
         showSnackbar(`Error while saving`, 'error')
       }
-      onCompositionChanged && onCompositionChanged()
     },
-    [onCompositionChanged, groupScope, evaluationId, showSnackbar],
+    [groupScope, evaluationId, showSnackbar],
   )
 
   // Optimistic updates to the questions state before the API call
@@ -209,7 +243,11 @@ const CompositionGrid = ({
       setQuestions((prev) => {
         const next = [...prev]
         const index = next.findIndex((q) => q.questionId === questionid)
-        next[index][property] = value
+        if (index < 0) return prev
+        next[index] = {
+          ...next[index],
+          [property]: value,
+        }
         return next
       })
     },
@@ -318,7 +356,7 @@ const CompositionGrid = ({
             editMode={editMode}
             indicator={getIndicator(eToQ.question.id)}
             onHandleDragEnd={async () => {
-              await saveReOrder(questions)
+              await saveReOrder(getQuestions())
             }}
             showCoef={useCoefs}
             onChangeCompositionItem={onChangeCompositionItem}
@@ -373,41 +411,34 @@ const CompositionItem = ({
 
   const { renderedValue: gradingPts, setValueControlled: setGradingPts } =
     useCtrlState(evaluationToQuestion.gradingPoints, key)
-  const coef = useMemo(
-    () => computeCoefficient(gradingPts, points),
-    [gradingPts, points],
-  )
 
   const saveCompositionItem = useCallback(
-    (questionId, property, value) => {
-      fetch(
-        `/api/${groupScope}/evaluations/${evaluationId}/composition/${questionId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
+    async (questionId, property, value) => {
+      try {
+        const response = await fetch(
+          `/api/${groupScope}/evaluations/${evaluationId}/composition/${questionId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              [property]: value,
+            }),
           },
-          body: JSON.stringify({
-            [property]: value,
-          }),
-        },
-      )
-        .then((value) => {
-          if (!value.ok) {
-            throw new Error(
-              `Error while saving details: ${JSON.stringify(value)}`,
-            )
-          } else {
-            showSnackbar(`Saved successfully`, 'success')
-          }
-        })
-        .catch((err) => {
-          console.error(err)
-          showSnackbar(`Error while saving`, 'error')
-        })
-      onCompositionChanged && onCompositionChanged()
+        )
+        if (!response.ok) {
+          throw new Error(
+            `Error while saving details: ${JSON.stringify(response)}`,
+          )
+        }
+        showSnackbar(`Saved successfully`, 'success')
+      } catch (err) {
+        console.error(err)
+        showSnackbar(`Error while saving`, 'error')
+      }
     },
-    [evaluationId, groupScope, onCompositionChanged, showSnackbar],
+    [evaluationId, groupScope, showSnackbar],
   )
 
   const saveDelete = useCallback(
@@ -446,25 +477,42 @@ const CompositionItem = ({
     1000,
   )
 
+  useEffect(() => {
+    // Ensure pending debounced edits are persisted when leaving the row.
+    return () => {
+      debounceSaveTitle.flush()
+      debounceSavePoints.flush()
+      debounceSaveGradingPts.flush()
+    }
+  }, [debounceSaveTitle, debounceSavePoints, debounceSaveGradingPts])
+
   const onPointsChanged = useCallback(
-    (newPoints) => {
+    (newPoints, options = {}) => {
+      const { syncGrading = false } = options
       if (canEditFully) {
         const roundedNewPoints = Math.round(newPoints * 100) / 100
         setPoints(roundedNewPoints)
         onChangeCompositionItem(questionId, 'points', roundedNewPoints)
         debounceSavePoints(questionId, roundedNewPoints)
+        if (syncGrading) {
+          setGradingPts(roundedNewPoints)
+          onChangeCompositionItem(questionId, 'gradingPoints', roundedNewPoints)
+          debounceSaveGradingPts(questionId, roundedNewPoints)
+        }
       }
     },
     [
       debounceSavePoints,
+      debounceSaveGradingPts,
       canEditFully,
       onChangeCompositionItem,
       questionId,
       setPoints,
+      setGradingPts,
     ],
   )
 
-  const onGradingPointsChanged = useCallback(
+  const persistGradingPoints = useCallback(
     (newGradingPoints) => {
       if (!canEditGrading) return
       const roundedGradingPoints = Math.round(newGradingPoints * 100) / 100
@@ -480,11 +528,6 @@ const CompositionItem = ({
         )
         debounceSaveGradingPts(questionId, roundedGradingPoints)
       }
-      if (canEditFully) {
-        // In composition, changing grading points propagates to points
-        const newPoints = roundedGradingPoints * coef
-        onPointsChanged(newPoints)
-      }
     },
     [
       setGradingPts,
@@ -494,42 +537,8 @@ const CompositionItem = ({
       onChangeCompositionItem,
       questionId,
       debounceSaveGradingPts,
-      coef,
-      onPointsChanged,
     ],
   )
-
-  const onCoefChanged = useCallback(
-    (newCoef) => {
-      // Coefficient can only change in composition phase
-      if (canEditFully) {
-        const newPoints = gradingPts * newCoef
-        onPointsChanged(newPoints)
-      }
-    },
-    [gradingPts, canEditFully, onPointsChanged],
-  )
-
-  useEffect(() => {
-    if (!showCoef) {
-      // Reset coef to 1
-      if (canEditFully) {
-        // In composition, keep grading points
-        onPointsChanged(gradingPts)
-      } else if (canEditGrading) {
-        // After composition points may no longer change ; change grading points
-        onGradingPointsChanged(points)
-      }
-    }
-  }, [
-    gradingPts,
-    showCoef,
-    onPointsChanged,
-    canEditFully,
-    canEditGrading,
-    onGradingPointsChanged,
-    points,
-  ])
 
   const handleDelete = useCallback(
     async (evalId, qId) => {
@@ -571,7 +580,10 @@ const CompositionItem = ({
           pr={1}
           draggable={!dragDisabled}
           onDragStart={(e) => {
-            // cancel the eventual debounced save
+            // Persist pending edits before reordering.
+            debounceSaveTitle.flush()
+            debounceSavePoints.flush()
+            debounceSaveGradingPts.flush()
             handleDragStart(e, order)
           }}
         >
@@ -641,63 +653,37 @@ const CompositionItem = ({
           </>
         )}
 
-        {!canEditGrading && !showCoef ? (
-          <Typography variant="body2">
-            {evaluationToQuestion.points} pts
-          </Typography>
-        ) : (
-          <Stack width={showCoef ? 100 : 60}>
-            <DecimalInput
-              value={gradingPts}
-              variant="standard"
-              rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
-              disabled={!canEditGrading || !showCoef}
-              min={!canEditFully && points !== 0 ? 0.01 : 0}
-              onChange={onGradingPointsChanged}
-            />
-          </Stack>
-        )}
-
-        {showCoef && (
-          <>
-            <Typography>&times;</Typography>
-            <Tooltip
-              disableHoverListener={canEditFully}
-              disableTouchListener={canEditFully}
-              disableFocusListener={canEditFully}
-              enterDelay={500}
-              title={
-                'Coefficient and number of points cannot change after composition phase.'
-              }
-              key={'points-tooltip'}
-            >
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Stack width={60} direction={'row'}>
-                  <DecimalInput
-                    value={coef}
-                    variant="standard"
-                    rightAdornement={'coef'}
-                    disabled={
-                      (gradingPts === 0 && points === 0) || !canEditFully
-                    }
-                    min={!canEditFully && points !== 0 ? 0.01 : 0}
-                    onChange={onCoefChanged}
-                  />
-                </Stack>
-                <Typography>=</Typography>
-                <Stack width={60} direction={'row'}>
-                  <DecimalInput
-                    value={points}
-                    variant="standard"
-                    rightAdornement={'pts'}
-                    disabled={gradingPts === 0 || !canEditFully}
-                    onChange={onPointsChanged}
-                  />
-                </Stack>
-              </Stack>
-            </Tooltip>
-          </>
-        )}
+        {!showCoef &&
+          (canEditFully ? (
+            <Stack width={60}>
+              <DecimalInput
+                value={points}
+                variant="standard"
+                rightAdornement={'pts'}
+                disabled={!canEditFully}
+                onChange={(value) =>
+                  onPointsChanged(value, { syncGrading: true })
+                }
+                onBlur={() => {
+                  debounceSavePoints.flush()
+                  debounceSaveGradingPts.flush()
+                }}
+              />
+            </Stack>
+          ) : (
+            <Typography variant="body2">{points} pts</Typography>
+          ))}
+        <CoefficientEditor
+          active={showCoef}
+          canEditFully={canEditFully}
+          canEditGrading={canEditGrading}
+          points={points}
+          gradingPts={gradingPts}
+          onPointsChanged={onPointsChanged}
+          onGradingPointsChanged={persistGradingPoints}
+          onBlurPoints={() => debounceSavePoints.flush()}
+          onBlurGradingPts={() => debounceSaveGradingPts.flush()}
+        />
       </Stack>
       {canEditFully && (
         <Tooltip title="Remove from collection">
@@ -719,6 +705,119 @@ const CompositionItem = ({
         </Tooltip>
       )}
     </Stack>
+  )
+}
+
+const CoefficientEditor = ({
+  active,
+  canEditFully,
+  canEditGrading,
+  points,
+  gradingPts,
+  onPointsChanged,
+  onGradingPointsChanged,
+  onBlurPoints,
+  onBlurGradingPts,
+}) => {
+  const coef = useMemo(
+    () => computeCoefficient(gradingPts, points),
+    [gradingPts, points],
+  )
+  const prevActiveRef = useRef(active)
+
+  useEffect(() => {
+    const switchedOffCoefs = prevActiveRef.current && !active
+    if (switchedOffCoefs) {
+      // Coefs off means effective coef=1, so keep points and grading aligned.
+      if (canEditFully) {
+        onPointsChanged(gradingPts, { syncGrading: true })
+      } else if (canEditGrading) {
+        onGradingPointsChanged(points)
+      }
+    }
+    prevActiveRef.current = active
+  }, [
+    active,
+    canEditFully,
+    canEditGrading,
+    gradingPts,
+    points,
+    onPointsChanged,
+    onGradingPointsChanged,
+  ])
+
+  const onCoefChanged = useCallback(
+    (newCoef) => {
+      if (!canEditFully) return
+      const newPoints = gradingPts * newCoef
+      onPointsChanged(newPoints)
+    },
+    [canEditFully, gradingPts, onPointsChanged],
+  )
+
+  const onGradingPtsChanged = useCallback(
+    (newGradingPoints) => {
+      onGradingPointsChanged(newGradingPoints)
+      if (canEditFully) {
+        // In composition + coef mode, grading points drive weighted points.
+        const roundedGradingPoints = Math.round(newGradingPoints * 100) / 100
+        onPointsChanged(roundedGradingPoints * coef)
+      }
+    },
+    [onGradingPointsChanged, canEditFully, onPointsChanged, coef],
+  )
+
+  if (!active) return null
+
+  return (
+    <>
+      <Stack width={100}>
+        <DecimalInput
+          value={gradingPts}
+          variant="standard"
+          rightAdornement={'grading pts'}
+          disabled={!canEditGrading}
+          min={!canEditFully && points !== 0 ? 0.01 : 0}
+          onChange={onGradingPtsChanged}
+          onBlur={onBlurGradingPts}
+        />
+      </Stack>
+      <Typography>&times;</Typography>
+      <Tooltip
+        disableHoverListener={canEditFully}
+        disableTouchListener={canEditFully}
+        disableFocusListener={canEditFully}
+        enterDelay={500}
+        title={
+          'Coefficient and number of points cannot change after composition phase.'
+        }
+        key={'points-tooltip'}
+      >
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack width={60} direction={'row'}>
+            <DecimalInput
+              value={coef}
+              variant="standard"
+              rightAdornement={'coef'}
+              disabled={(gradingPts === 0 && points === 0) || !canEditFully}
+              min={!canEditFully && points !== 0 ? 0.01 : 0}
+              onChange={onCoefChanged}
+            />
+          </Stack>
+          <Typography>=</Typography>
+          <Stack width={60} direction={'row'}>
+            <DecimalInput
+              value={points}
+              variant="standard"
+              rightAdornement={'pts'}
+              disabled={gradingPts === 0 || !canEditFully}
+              onChange={onPointsChanged}
+              onBlur={onBlurPoints}
+            />
+          </Stack>
+        </Stack>
+      </Tooltip>
+    </>
   )
 }
 
