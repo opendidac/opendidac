@@ -36,6 +36,8 @@ import {
   EvaluationCompletedDialog,
   EvaluationRestrictionGuard,
 } from '@/components/users/evaluations/security/EvaluationRestrictionGuard'
+import { useClipboardProtection } from '@/hooks/useClipboardProtection'
+import { useSnackbar } from '@/context/SnackbarContext'
 
 const getFilledStatus = (studentAnswerStatus) => {
   switch (studentAnswerStatus) {
@@ -55,8 +57,17 @@ const StudentOnEvaluationContext = createContext()
 export const useStudentOnEvaluation = () =>
   useContext(StudentOnEvaluationContext)
 
+const pasteViolationMessages = {
+  external: 'Cannot paste external content',
+  'cross-evaluation': 'Cannot paste content from another evaluation',
+  invalid: 'Paste blocked',
+  'drag-external': 'Cannot drop external content',
+  'drag-cross-evaluation': 'Cannot drop content from another evaluation',
+}
+
 export const StudentOnEvaluationProvider = ({ children }) => {
   const router = useRouter()
+  const { show: showSnackbar } = useSnackbar()
 
   const { evaluationId, pageIndex } = router.query
 
@@ -117,6 +128,19 @@ export const StudentOnEvaluationProvider = ({ children }) => {
   */
   const activeQuestion =
     validEvaluationToQuestions && validEvaluationToQuestions[pageIndex - 1]
+
+  // Clipboard protection: prevent pasting content from outside current evaluation
+  const handlePasteViolation = useCallback(
+    (reason) => {
+      showSnackbar(pasteViolationMessages[reason], 'warning')
+    },
+    [showSnackbar],
+  )
+
+  useClipboardProtection({
+    evaluationId,
+    onViolation: handlePasteViolation,
+  })
 
   // Check both /status and /take errors for restriction errors
   // /status uses withRestrictions, so it will catch restriction errors
@@ -244,7 +268,7 @@ export const StudentOnEvaluationProvider = ({ children }) => {
         mutate,
       }}
     >
-      <EvaluationRestrictionGuard error={error} evaluationId={evaluationId}>
+      <EvaluationRestrictionGuard error={error}>
         <StudentPhaseRedirect phase={evaluation?.evaluation?.phase}>
           <ConsoleLog>test</ConsoleLog>
           {hasStudentFinished() ? <EvaluationCompletedDialog /> : children}

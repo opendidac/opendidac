@@ -109,34 +109,47 @@ const ListEvaluation = ({ groupScope, evaluations, onStart, onDelete }) => {
             linkHref: `/${groupScope}/evaluations/${evaluation.id}`,
             actions: [
               <React.Fragment key="actions">
-                {phaseGT(evaluation.phase, EvaluationPhase.COMPOSITION) && (
-                  <Tooltip
-                    title="Copy student link to clipboard"
-                    key="add-link-to-clipboard"
-                  >
-                    <IconButton
-                      onClick={(ev) => {
-                        ev.preventDefault()
-                        ev.stopPropagation()
-                        ;(async () => {
-                          await navigator.clipboard.writeText(
-                            getStudentEntryLink(
-                              evaluation.id,
-                              evaluation.desktopAppRequired || false,
-                            ),
-                          )
-                        })()
-                      }}
+                {phaseGT(evaluation.phase, EvaluationPhase.COMPOSITION) &&
+                  (!evaluation.desktopAppRequired ||
+                    (evaluation.desktopAppRequired && evaluation.pin)) && (
+                    <Tooltip
+                      title={
+                        evaluation.desktopAppRequired
+                          ? 'Copy PIN to clipboard'
+                          : 'Copy student link to clipboard'
+                      }
+                      key="add-link-to-clipboard"
                     >
-                      <Image
-                        alt="Copy link"
-                        src="/svg/icons/link.svg"
-                        width="18"
-                        height="18"
-                      />
-                    </IconButton>
-                  </Tooltip>
-                )}
+                      <IconButton
+                        onClick={(ev) => {
+                          ev.preventDefault()
+                          ev.stopPropagation()
+                          ;(async () => {
+                            if (evaluation.desktopAppRequired) {
+                              // Copy PIN only when desktop app is required
+                              if (evaluation.pin) {
+                                await navigator.clipboard.writeText(
+                                  evaluation.pin,
+                                )
+                              }
+                            } else {
+                              // Copy regular web URL
+                              await navigator.clipboard.writeText(
+                                getStudentEntryLink(evaluation.id),
+                              )
+                            }
+                          })()
+                        }}
+                      >
+                        <Image
+                          alt="Copy link"
+                          src="/svg/icons/link.svg"
+                          width="18"
+                          height="18"
+                        />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 <Link
                   href={`/${groupScope}/evaluations/${evaluation.id}/analytics`}
                   passHref

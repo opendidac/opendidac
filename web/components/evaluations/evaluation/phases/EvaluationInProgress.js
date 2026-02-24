@@ -32,6 +32,7 @@ const EvaluationInProgress = ({
   attendance,
   progress,
   onDurationChanged,
+  onPinUpdated,
 }) => {
   const evaluationId = evaluation.id
 
@@ -90,8 +91,11 @@ const EvaluationInProgress = ({
               </Button>
             )}
             <JoinClipboard
+              groupScope={groupScope}
               evaluationId={evaluationId}
               desktopAppRequired={evaluation.desktopAppRequired || false}
+              pin={evaluation.pin}
+              onPinUpdated={onPinUpdated}
             />
           </Stack>
         }

@@ -72,7 +72,9 @@ const TagsSelector = ({
   const { selectedItems, visibleNonSelected, hasMore } = useMemo(() => {
     const list = tagData ?? []
     const selectedSet = new Set(tags)
-    const selectedItems = list.filter(({ label }) => selectedSet.has(label))
+
+    // Selected tags come directly from the filter state, not the backend
+    const selectedItems = tags.map((label) => ({ label }))
     const nonSelected = list.filter(({ label }) => !selectedSet.has(label))
 
     const filteredNonSelected = expanded

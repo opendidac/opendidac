@@ -56,6 +56,6 @@ const get = async (req, res, ctx) => {
 
 export default withApiContext({
   GET: withAuthorization(get, {
-    roles: [Role.PROFESSOR, Role.SUPER_ADMIN, Role.STUDENT],
+    roles: [Role.PROFESSOR, Role.ARCHIVIST, Role.SUPER_ADMIN, Role.STUDENT],
   }),
 })

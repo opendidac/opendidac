@@ -32,6 +32,7 @@ import { TagsProvider } from '../context/TagContext'
 import { GroupProvider } from '../context/GroupContext'
 import ConnectionManager from '@/components/layout/ConnectionManager'
 import { PinnedFilterProvider } from '@/context/PinnedFilterContext'
+import { AdminClipboardProvider } from '@/components/clipboard/AdminClipboardProvider'
 
 export const themeOptions = {
   palette: {
@@ -108,13 +109,15 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
           <Meta />
           {requireAuth ? (
             <Authentication>
-              <TagsProvider>
-                <PinnedFilterProvider>
-                  <GroupProvider>
-                    <Component {...pageProps} />
-                  </GroupProvider>
-                </PinnedFilterProvider>
-              </TagsProvider>
+              <AdminClipboardProvider>
+                <TagsProvider>
+                  <PinnedFilterProvider>
+                    <GroupProvider>
+                      <Component {...pageProps} />
+                    </GroupProvider>
+                  </PinnedFilterProvider>
+                </TagsProvider>
+              </AdminClipboardProvider>
             </Authentication>
           ) : (
             <Component {...pageProps} />
