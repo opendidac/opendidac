@@ -68,9 +68,7 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
 
   const { state: content, setState: setContent } = useCtrlState(
     question?.content || '',
-    question &&
-      questionId &&
-      `question-${questionId}-content-${question ? 'loaded' : 'loading'}`,
+    `question-${questionId}-content-${question?.id ?? 'loading'}`,
   )
 
   const saveQuestion = useCallback(
