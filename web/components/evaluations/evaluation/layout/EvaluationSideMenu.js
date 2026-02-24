@@ -150,20 +150,14 @@ const EvaluationSideMenu = ({
                     ev.stopPropagation()
                     ;(async () => {
                       if (evaluation.desktopAppRequired) {
-                        // Copy PIN and opendidac:// URL when desktop app is required
-                        const pinText = evaluation.pin
-                          ? `PIN: ${evaluation.pin}`
-                          : ''
-                        const urlText = getStudentEntryLink(evaluation.id, true)
-                        await navigator.clipboard.writeText(
-                          pinText
-                            ? `${pinText}\nURL: ${urlText}`
-                            : `URL: ${urlText}`,
-                        )
+                        // Copy PIN only when desktop app is required
+                        if (evaluation.pin) {
+                          await navigator.clipboard.writeText(evaluation.pin)
+                        }
                       } else {
                         // Copy regular web URL
                         await navigator.clipboard.writeText(
-                          `URL: ${getStudentEntryLink(evaluation.id)}`,
+                          getStudentEntryLink(evaluation.id),
                         )
                       }
                     })()
