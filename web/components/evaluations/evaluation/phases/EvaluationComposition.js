@@ -53,6 +53,16 @@ import { useSnackbar } from '@/context/SnackbarContext'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
 import { computeCoefficient } from '@/core/grading/coefficient'
 
+// Edit modes for composition items:
+// - 'full': all fields editable (COMPOSITION phase, not purged)
+// - 'gradingOnly': only grading points editable (beyond COMPOSITION, not purged)
+// - 'none': nothing editable (purged)
+const EDIT_MODE = {
+  FULL: 'full',
+  GRADING_ONLY: 'gradingOnly',
+  NONE: 'none',
+}
+
 const EvaluationComposition = ({
   groupScope,
   evaluation,
@@ -61,10 +71,17 @@ const EvaluationComposition = ({
 }) => {
   const evaluationId = evaluation.id
 
-  const readOnly = phaseGreaterThan(
+  const isPurged = Boolean(evaluation.purgedAt)
+  const isBeyondComposition = phaseGreaterThan(
     evaluation.phase,
     EvaluationPhase.COMPOSITION,
   )
+
+  const editMode = isPurged
+    ? EDIT_MODE.NONE
+    : isBeyondComposition
+      ? EDIT_MODE.GRADING_ONLY
+      : EDIT_MODE.FULL
 
   const [showIncludeDrawer, setShowIncludeDrawer] = useState(false)
 
@@ -96,7 +113,7 @@ const EvaluationComposition = ({
           <Button
             variant="text"
             color="primary"
-            disabled={readOnly}
+            disabled={editMode !== EDIT_MODE.FULL}
             onClick={() => {
               setShowIncludeDrawer(true)
             }}
@@ -110,7 +127,7 @@ const EvaluationComposition = ({
           groupScope={groupScope}
           evaluationId={evaluationId}
           composition={composition}
-          readOnly={readOnly}
+          editMode={editMode}
           onCompositionChanged={onCompositionChanged}
         />
       </ScrollContainer>
@@ -133,9 +150,10 @@ const CompositionGrid = ({
   groupScope,
   evaluationId,
   composition,
-  readOnly,
+  editMode,
   onCompositionChanged,
 }) => {
+  const canEditFully = editMode === EDIT_MODE.FULL
   const [questions, setQuestions] = useCtrlState(
     composition ?? [],
     `${evaluationId}-composition`,
@@ -222,19 +240,19 @@ const CompositionGrid = ({
       />
       <Stack direction="row">
         <Box flexGrow={1}>
-          {readOnly ? (
-            <Alert severity="info">
-              <Typography variant="body2">
-                This evaluation is locked for composition. The full list of
-                questions has been copied to the evaluation.
-              </Typography>
-            </Alert>
-          ) : (
+          {canEditFully ? (
             <Alert severity="info">
               <Typography variant="body2">
                 Once you move beyond this phase, the composition will be locked.
                 At that stage, the full list of questions will be copied to the
                 evaluation.
+              </Typography>
+            </Alert>
+          ) : (
+            <Alert severity="info">
+              <Typography variant="body2">
+                This evaluation is locked for composition. The full list of
+                questions has been copied to the evaluation.
               </Typography>
             </Alert>
           )}
@@ -291,13 +309,13 @@ const CompositionGrid = ({
           />
         </Stack>
       </Stack>
-      <ReorderableList disabled={readOnly} onChangeOrder={onChangeOrder}>
+      <ReorderableList disabled={!canEditFully} onChangeOrder={onChangeOrder}>
         {questions.map((eToQ) => (
           <CompositionItem
             key={eToQ.id}
             groupScope={groupScope}
             evaluationToQuestion={eToQ}
-            inComposition={!readOnly}
+            editMode={editMode}
             indicator={getIndicator(eToQ.question.id)}
             onHandleDragEnd={async () => {
               await saveReOrder(questions)
@@ -318,12 +336,15 @@ const CompositionItem = ({
   evaluationToQuestion,
   indicator,
   onHandleDragEnd,
-  inComposition = true,
+  editMode,
   showCoef,
   onChangeCompositionItem,
   onDeleteCompositionItem,
   onCompositionChanged,
 }) => {
+  const canEditFully = editMode === EDIT_MODE.FULL
+  const canEditGrading = editMode !== EDIT_MODE.NONE
+
   const router = useRouter()
   const {
     handleDragStart,
@@ -425,7 +446,7 @@ const CompositionItem = ({
 
   const onPointsChanged = useCallback(
     (newPoints) => {
-      if (inComposition) {
+      if (canEditFully) {
         const roundedNewPoints = Math.round(newPoints * 100) / 100
         setPoints(roundedNewPoints)
         onChangeCompositionItem(questionId, 'points', roundedNewPoints)
@@ -434,7 +455,7 @@ const CompositionItem = ({
     },
     [
       debounceSavePoints,
-      inComposition,
+      canEditFully,
       onChangeCompositionItem,
       questionId,
       setPoints,
@@ -443,12 +464,13 @@ const CompositionItem = ({
 
   const onGradingPointsChanged = useCallback(
     (newGradingPoints) => {
+      if (!canEditGrading) return
       const roundedGradingPoints = Math.round(newGradingPoints * 100) / 100
       setGradingPts(roundedGradingPoints)
       const allowedAfterComposition = !(
         roundedGradingPoints === 0 && points !== 0
       )
-      if (inComposition || allowedAfterComposition) {
+      if (canEditFully || allowedAfterComposition) {
         onChangeCompositionItem(
           questionId,
           'gradingPoints',
@@ -456,7 +478,7 @@ const CompositionItem = ({
         )
         debounceSaveGradingPts(questionId, roundedGradingPoints)
       }
-      if (inComposition) {
+      if (canEditFully) {
         // In composition, changing grading points propagates to points
         const newPoints = roundedGradingPoints * coef
         onPointsChanged(newPoints)
@@ -465,7 +487,8 @@ const CompositionItem = ({
     [
       setGradingPts,
       points,
-      inComposition,
+      canEditFully,
+      canEditGrading,
       onChangeCompositionItem,
       questionId,
       debounceSaveGradingPts,
@@ -477,21 +500,21 @@ const CompositionItem = ({
   const onCoefChanged = useCallback(
     (newCoef) => {
       // Coefficient can only change in composition phase
-      if (inComposition) {
+      if (canEditFully) {
         const newPoints = gradingPts * newCoef
         onPointsChanged(newPoints)
       }
     },
-    [gradingPts, inComposition, onPointsChanged],
+    [gradingPts, canEditFully, onPointsChanged],
   )
 
   useEffect(() => {
     if (!showCoef) {
       // Reset coef to 1
-      if (inComposition) {
+      if (canEditFully) {
         // In composition, keep grading points
         onPointsChanged(gradingPts)
-      } else {
+      } else if (canEditGrading) {
         // After composition points may no longer change ; change grading points
         onGradingPointsChanged(points)
       }
@@ -500,7 +523,8 @@ const CompositionItem = ({
     gradingPts,
     showCoef,
     onPointsChanged,
-    inComposition,
+    canEditFully,
+    canEditGrading,
     onGradingPointsChanged,
     points,
   ])
@@ -524,16 +548,16 @@ const CompositionItem = ({
       borderBottom={`1px solid ${theme.palette.divider}`}
       sx={getDragStyles(order)}
       onDragOver={(e) => {
-        if (!inComposition) return
+        if (!canEditFully) return
         handleDragOver(e, order)
       }}
       onDragEnd={(e) => {
-        if (!inComposition) return
+        if (!canEditFully) return
         handleDragEnd(e, order)
         onHandleDragEnd && onHandleDragEnd()
       }}
     >
-      {inComposition && (
+      {canEditFully && (
         <Stack
           justifyContent={'center'}
           sx={{
@@ -574,7 +598,7 @@ const CompositionItem = ({
           id={`${key}-title`}
           currentTitle={title}
           originalTitle={originalTitle}
-          readOnly={!inComposition}
+          readOnly={!canEditFully}
           onChangeTitle={(title) => {
             onChangeCompositionItem(questionId, 'title', title)
             debounceSaveTitle(questionId, title)
@@ -589,15 +613,15 @@ const CompositionItem = ({
         spacing={1}
         alignItems={'center'}
       >
-        {inComposition && (
+        {canEditFully && (
           <>
             <Tooltip title="Update in new page">
               <IconButton
-                disabled={!inComposition}
+                disabled={!canEditFully}
                 onClick={async (ev) => {
                   ev.preventDefault()
                   ev.stopPropagation()
-                  if (!inComposition) return
+                  if (!canEditFully) return
                   const currentPath = router.asPath // Capture current relative URL
                   await router.push(
                     `/${groupScope}/questions/${evaluationToQuestion?.question.id}?from=${encodeURIComponent(currentPath)}`,
@@ -615,7 +639,7 @@ const CompositionItem = ({
           </>
         )}
 
-        {!inComposition && !showCoef ? (
+        {!canEditGrading && !showCoef ? (
           <Typography variant="body2">
             {evaluationToQuestion.points} pts
           </Typography>
@@ -625,7 +649,8 @@ const CompositionItem = ({
               value={gradingPts}
               variant="standard"
               rightAdornement={`${showCoef ? 'grading ' : ''}pts`}
-              min={!inComposition && points !== 0 ? 0.01 : 0}
+              disabled={!canEditGrading || !showCoef}
+              min={!canEditFully && points !== 0 ? 0.01 : 0}
               onChange={onGradingPointsChanged}
             />
           </Stack>
@@ -635,9 +660,9 @@ const CompositionItem = ({
           <>
             <Typography>&times;</Typography>
             <Tooltip
-              disableHoverListener={inComposition}
-              disableTouchListener={inComposition}
-              disableFocusListener={inComposition}
+              disableHoverListener={canEditFully}
+              disableTouchListener={canEditFully}
+              disableFocusListener={canEditFully}
               enterDelay={500}
               title={
                 'Coefficient and number of points cannot change after composition phase.'
@@ -651,9 +676,9 @@ const CompositionItem = ({
                     variant="standard"
                     rightAdornement={'coef'}
                     disabled={
-                      (gradingPts === 0 && points === 0) || !inComposition
+                      (gradingPts === 0 && points === 0) || !canEditFully
                     }
-                    min={!inComposition && points !== 0 ? 0.01 : 0}
+                    min={!canEditFully && points !== 0 ? 0.01 : 0}
                     onChange={onCoefChanged}
                   />
                 </Stack>
@@ -663,7 +688,7 @@ const CompositionItem = ({
                     value={points}
                     variant="standard"
                     rightAdornement={'pts'}
-                    disabled={gradingPts === 0 || !inComposition}
+                    disabled={gradingPts === 0 || !canEditFully}
                     onChange={onPointsChanged}
                   />
                 </Stack>
@@ -672,7 +697,7 @@ const CompositionItem = ({
           </>
         )}
       </Stack>
-      {inComposition && (
+      {canEditFully && (
         <Tooltip title="Remove from collection">
           <IconButton
             key="delete-collection"
