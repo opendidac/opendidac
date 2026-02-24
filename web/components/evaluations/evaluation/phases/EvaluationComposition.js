@@ -46,12 +46,12 @@ import {
   ComplianceBanner,
   useCompositionCompliance,
 } from './composition/CompositionCompliance'
-import useCtrlState from '@/hooks/useCtrlState'
 import CheckboxLabel from '@/components/input/CheckboxLabel'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import { useSnackbar } from '@/context/SnackbarContext'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
 import { computeCoefficient } from '@/core/grading/coefficient'
+import { useCtrlState } from '@/hooks/useCtrlState'
 
 // Edit modes for composition items:
 // - 'full': all fields editable (COMPOSITION phase, not purged)
@@ -366,11 +366,13 @@ const CompositionItem = ({
 
   const key = `${evaluationId}-${questionId}`
 
-  const [points, setPoints] = useCtrlState(evaluationToQuestion.points, key)
-  const [gradingPts, setGradingPts] = useCtrlState(
-    evaluationToQuestion.gradingPoints,
+  const { renderedValue: points, setValueControlled: setPoints } = useCtrlState(
+    evaluationToQuestion.points,
     key,
   )
+
+  const { renderedValue: gradingPts, setValueControlled: setGradingPts } =
+    useCtrlState(evaluationToQuestion.gradingPoints, key)
   const coef = useMemo(
     () => computeCoefficient(gradingPts, points),
     [gradingPts, points],
