@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useEffect, useRef, useState, useEffectEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, useEffectEvent } from 'react'
 
 export function useCtrlState<T>(initialValue: T, key: React.Key) {
   const getInitial = useEffectEvent(() => initialValue)
@@ -33,28 +33,30 @@ export function useCtrlState<T>(initialValue: T, key: React.Key) {
   }, [key])
 
   // Monaco-safe: no rerender
-  const setValueUncontrolled = (next: T | ((prev: T) => T)) => {
+  const setValueUncontrolled = useCallback((next: T | ((prev: T) => T)) => {
     const prev = ref.current
     const value =
       typeof next === 'function' ? (next as (prev: T) => T)(prev) : next
     if (value === prev) return
     ref.current = value
-  }
+  }, [])
 
   // Controlled inputs: force rerender
-  const setValueControlled = (next: T | ((prev: T) => T)) => {
+  const setValueControlled = useCallback((next: T | ((prev: T) => T)) => {
     const prev = ref.current
     const value =
       typeof next === 'function' ? (next as (prev: T) => T)(prev) : next
     if (value === prev) return
     ref.current = value
     setRenderedValue(value)
-  }
+  }, [])
+
+  const getValue = useCallback(() => ref.current, [])
 
   return {
     renderedValue,
     setValueUncontrolled,
     setValueControlled,
-    getValue: () => ref.current,
+    getValue,
   }
 }
