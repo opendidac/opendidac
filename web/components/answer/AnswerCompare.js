@@ -72,7 +72,11 @@ const AnswerCompare = ({
             />
           )) ||
           (questionType === QuestionType.web && (
-            <CompareWeb solution={solution} answer={answer} />
+            <CompareWeb
+              key={`compare-web-${question?.id}-${student?.id}`}
+              solution={solution}
+              answer={answer}
+            />
           )) ||
           (questionType === QuestionType.exactMatch && (
             <CompareExactMatch solution={solution} answer={answer} />

@@ -218,6 +218,7 @@ const PageConsult = () => {
                         </Box>
                       ) : (
                         <AnswerConsult
+                          key={`answer-consult-${selected.question.id}`}
                           id={`answer-viewer-${selected.question.id}`}
                           question={selected.question}
                           answer={
