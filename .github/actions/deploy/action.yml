@@ -47,14 +47,14 @@ runs:
     
     - name: Move checked-out code to production folder
       run: |
-        rsync -av --progress $GITHUB_WORKSPACE/ /home/heiguser/eval/ --exclude .git
+        rsync -av --progress $GITHUB_WORKSPACE/ $HOME/eval/ --exclude .git
       shell: bash
 
     - name: Generate environment files
       env:
         TERMS_OF_SERVICE: ${{ inputs.TERMS_OF_SERVICE }}
       run: |
-        cd /home/heiguser/eval
+        cd $HOME/eval
         # It is important to poivide DATABASE_URL in the web/.env file, it is used by prisma.
         echo "DATABASE_URL=postgresql://${{ inputs.POSTGRES_USER }}:${{ inputs.POSTGRES_PASSWORD }}@db:5432/${{ inputs.POSTGRES_DB }}" > web/.env
         
@@ -87,7 +87,7 @@ runs:
     - name: SSL certificates for https
       run: |
         # The SSL certificate keys are provided by the infrastructure team
-        cd /home/heiguser/eval
+        cd $HOME/eval
         mkdir -p deploy/ssl
         echo "${{ inputs.SSL_FULLCHAIN }}" > deploy/ssl/fullchain.pem
         echo "${{ inputs.SSL_PRIVKEY }}" > deploy/ssl/privkey.pem
@@ -96,26 +96,26 @@ runs:
     - name: Build Custom Docker images
       run: |
         # SQL Fluff is out custom images used for linting DB question queries, it is not published on Docker Hub
-        cd /home/heiguser/eval
+        cd $HOME/eval
         docker build -t database-sqlfluff ./deploy/docker-images/database-sqlfluff
       shell: bash
 
     - name: Build Docker Compose Images
       run: |
-        cd /home/heiguser/eval/deploy
+        cd $HOME/eval/deploy
         docker compose build
       shell: bash
 
     - name: Start Docker Compose Services
       run: |
-        cd /home/heiguser/eval/deploy
+        cd $HOME/eval/deploy
         docker compose up -d
       shell: bash
 
     - name: Create Database Dump
       run: |
-        mkdir -p /home/heiguser/db_dumps
-        cd /home/heiguser/db_dumps
+        mkdir -p $HOME/db_dumps
+        cd $HOME/db_dumps
         backup_date=$(date +"%Y-%m-%d_%H-%M-%S")
         backup_filename="pg_workflow_backup_$backup_date.sql"
 
@@ -146,6 +146,6 @@ runs:
 
     - name: Restart Nginx container - To reload the SSL certificates
       run: |
-        cd /home/heiguser/eval/deploy
+        cd $HOME/eval/deploy
         docker compose restart nginx
       shell: bash
