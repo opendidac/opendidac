@@ -31,7 +31,7 @@ export async function generatePDF(html: string, header: string) {
   const page = await browser.newPage()
   page.setDefaultTimeout(1800000)
 
-  await page.setContent(html, { waitUntil: 'networkidle0', timeout: 1800000 })
+  await page.setContent(html, { waitUntil: 'load', timeout: 1800000 })
   await page.emulateMediaType('screen')
 
   await page.evaluate(() => {
