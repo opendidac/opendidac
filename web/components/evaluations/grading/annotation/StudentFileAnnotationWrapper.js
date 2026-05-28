@@ -23,7 +23,8 @@ import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 import ResizePanel from '@/components/layout/utils/ResizePanel'
 import { useTheme } from '@emotion/react'
 import { Box, Button, Stack, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
+import { useCtrlState } from '@/hooks/useCtrlState'
 
 const { useAnnotation } = require('@/context/AnnotationContext')
 
@@ -117,8 +118,39 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
     setViewMode(defaultViewMode)
   }, [original, defaultViewMode])
 
+  const [discardVersion, setDiscardVersion] = useState(0)
+
+  const {
+    renderedValue: editorInitialContent,
+    setValueUncontrolled,
+    setValueControlled,
+  } = useCtrlState(
+    annotation?.content ?? original.content,
+    `${original.path}:${discardVersion}`,
+  )
+
+  // Sync editor when annotation is loaded from the server (page refresh with
+  // existing annotation). setValueControlled bails out if ref.current already
+  // equals annotation.content — that is the user-created case, where
+  // setValueUncontrolled already tracked the typed content, so no cursor jump.
+  const captureAnnotation = useEffectEvent(() => {
+    if (annotation?.content) {
+      setValueControlled(annotation.content)
+    }
+  })
+  useEffect(() => {
+    captureAnnotation()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!hasAnnotation])
+
   const onChange = (content) => {
+    setValueUncontrolled(content)
     change(content)
+  }
+
+  const handleDiscard = () => {
+    setDiscardVersion((v) => v + 1)
+    discard()
   }
 
   const file = {
@@ -148,7 +180,7 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
           viewMode={viewMode}
           setViewMode={setViewMode}
           state={state}
-          onDiscard={discard}
+          onDiscard={handleDiscard}
         />
         {!readOnly && state === 'NOT_ANNOTATED' && <HoverInfoMessage />}
       </Stack>
@@ -156,7 +188,8 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
         leftPanel={
           viewMode === 'ANNOTATED' || viewMode === 'ORIGINAL' ? (
             <InlineMonacoEditor
-              code={file.content}
+              key={discardVersion}
+              code={editorInitialContent}
               readOnly={readOnly}
               onChange={onChange}
               language={language}
