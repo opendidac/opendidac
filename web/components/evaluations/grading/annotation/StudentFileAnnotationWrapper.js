@@ -136,6 +136,11 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
     change(content)
   }
 
+  const onDiscard = () => {
+    discard()
+    setEditorInitialContent(original.content)
+  }
+
   const file = {
     ...original,
     content: hasAnnotation ? annotation.content : original.content,
@@ -163,7 +168,7 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
           viewMode={viewMode}
           setViewMode={setViewMode}
           state={state}
-          onDiscard={discard}
+          onDiscard={onDiscard}
         />
         {!readOnly && state === 'NOT_ANNOTATED' && <HoverInfoMessage />}
       </Stack>
