@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useEffectEvent } from 'react'
 import useSWR from 'swr'
 import { QuestionType, StudentAnswerStatus } from '@prisma/client'
 import { useDebouncedCallback } from 'use-debounce'
@@ -80,20 +80,23 @@ const AnswerEditor = ({
   } = useSWR(
     `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers`,
     evaluationId && questionId ? fetcher : null,
-    // Stale on purpose: revalidation would overwrite answer.*.content
-    // under the controlled editors (MarkdownEditor, FileEditor, etc.),
-    // resetting cursor and dropping any unflushed edits. Submit / Unsubmit
-    // below call mutate() explicitly when a refresh is safe.
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      revalidateIfStale: false,
-      revalidateOnMount: true,
-    },
+    { revalidateOnFocus: false },
   )
 
-  const studentAnswer = questionAnswer?.studentAnswer
-  const question = questionAnswer?.question
+  // Snapshot what we hand to the editors. The SWR cache can revalidate
+  // and mutate freely; the editors only see a new answer when the
+  // (evaluationId, questionId) pair changes, so the cursor / derived
+  // state never resets mid-session.
+  const [snapshot, setSnapshot] = useState(null)
+  const captureLatest = useEffectEvent(() => {
+    if (questionAnswer) setSnapshot(questionAnswer)
+  })
+  useEffect(() => {
+    captureLatest()
+  }, [evaluationId, questionId, captureLatest])
+
+  const studentAnswer = snapshot?.studentAnswer
+  const question = snapshot?.question
 
   const [status, setStatus] = useState(initial)
 
@@ -112,11 +115,12 @@ const AnswerEditor = ({
         return
       }
       setStatus(data.status)
+      mutate()
       if (onAnswer) {
         onAnswer(question, data)
       }
     },
-    [onAnswer, question, showSnackbar],
+    [mutate, onAnswer, question, showSnackbar],
   )
 
   const onSubmitClick = useCallback(async () => {
@@ -176,7 +180,7 @@ const AnswerEditor = ({
   const isReadOnly = status === StudentAnswerStatus.SUBMITTED
 
   return (
-    <Loading errors={!studentAnswer ? [error] : []} loading={!studentAnswer}>
+    <Loading errors={!snapshot ? [error] : []} loading={!snapshot}>
       <Stack height={'100%'} position={'relative'}>
         {isReadOnly && (
           <SubmittedOverlay onUnsubmit={() => onUnsubmitClick()} />

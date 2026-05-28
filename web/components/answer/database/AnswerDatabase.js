@@ -15,7 +15,14 @@
  */
 
 import useSWR from 'swr'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import { Button, Stack } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
@@ -38,21 +45,24 @@ const AnswerDatabase = ({ evaluationId, question, onAnswerChanged }) => {
   const { data: questionAnswer, error } = useSWR(
     `/api/users/evaluations/${evaluationId}/questions/${question.id}/answers`,
     question?.id ? fetcher : null,
-    // Stale on purpose: revalidation would overwrite answer.*.content
-    // under the controlled editors (MarkdownEditor, FileEditor, etc.),
-    // resetting cursor and dropping any unflushed edits. AnswerEditor's
-    // Submit / Unsubmit flow calls mutate() explicitly when a refresh
-    // is safe.
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      revalidateIfStale: false,
-      revalidateOnMount: true,
-    },
+    { revalidateOnFocus: false },
   )
 
-  const studentAnswer = questionAnswer?.studentAnswer
   const questionId = question?.id
+
+  // Snapshot what we hand to the editors. The SWR cache can revalidate
+  // and mutate freely; the editors only see a new answer when the
+  // (evaluationId, questionId) pair changes, so the cursor / derived
+  // state never resets mid-session.
+  const [snapshot, setSnapshot] = useState(null)
+  const captureLatest = useEffectEvent(() => {
+    if (questionAnswer) setSnapshot(questionAnswer)
+  })
+  useEffect(() => {
+    captureLatest()
+  }, [evaluationId, questionId, captureLatest])
+
+  const studentAnswer = snapshot?.studentAnswer
 
   const ref = useRef()
 
@@ -182,7 +192,7 @@ const AnswerDatabase = ({ evaluationId, question, onAnswerChanged }) => {
   )
 
   return (
-    <Loading errors={[error]} loading={!studentAnswer}>
+    <Loading errors={!snapshot ? [error] : []} loading={!snapshot}>
       {queries && queries.length > 0 && (
         <>
           <BottomCollapsiblePanel
