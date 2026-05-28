@@ -40,7 +40,7 @@ function sseControl(res, { retry, comment } = {}) {
   return true
 }
 
-function startSSEHeartbeat(res, intervalMs = 60000) {
+function startSSEHeartbeat(res, intervalMs = 5000) {
   const id = setInterval(() => {
     try {
       res.write(`: ping\n\n`)

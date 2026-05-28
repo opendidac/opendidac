@@ -210,7 +210,10 @@ export default function ConnectionManager() {
       return
     }
 
-    // Baseline browser connectivity
+    // navigator.onLine is the fast trigger (instant when the browser goes
+    // offline); SSE's es.onerror is the authoritative trigger (catches
+    // server-side failures the OS can't see). We keep both, debounced, so
+    // students see the overlay BEFORE any fetch surfaces "Failed to fetch".
     if (navigator.onLine) setOnline()
     else setOffline()
 
