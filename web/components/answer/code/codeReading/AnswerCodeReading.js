@@ -57,21 +57,25 @@ const AnswerCodeReading = ({
           }),
         )
       }
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-reading/${snippetId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-reading/${snippetId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ output: newOutput }),
           },
-          body: JSON.stringify({ output: newOutput }),
-        },
-      )
-      const ok = response.ok
-      const data = await response.json()
-
-      setLockCodeReadingCheck(false)
-      onAnswerChange && onAnswerChange(ok, data)
+        )
+        const ok = response.ok
+        const data = await response.json()
+        onAnswerChange && onAnswerChange(ok, data)
+      } catch {
+        // Network error — ConnectionManager overlay handles user feedback.
+      } finally {
+        setLockCodeReadingCheck(false)
+      }
     },
     [evaluationId, questionId, onAnswerChange, outputs, studentOutputTest],
   )
@@ -86,25 +90,36 @@ const AnswerCodeReading = ({
       })),
     )
 
-    const results = await fetch(
-      `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-reading/check`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      },
-    ).then((res) => res.json())
+    try {
+      const results = await fetch(
+        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-reading/check`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ).then((res) => res.json())
 
-    const newOutputs = outputs.map((output) => {
-      const result = results.find(
-        (r) => r.codeReadingSnippet.order === output.codeReadingSnippet.order,
+      const newOutputs = outputs.map((output) => {
+        const result = results.find(
+          (r) => r.codeReadingSnippet.order === output.codeReadingSnippet.order,
+        )
+        return {
+          ...output,
+          status: result.status,
+        }
+      })
+      setOutputs(newOutputs)
+    } catch {
+      // Network error — restore neutral status so the LOADING spinner clears.
+      setOutputs(
+        outputs.map((output) => ({
+          ...output,
+          status: StudentAnswerCodeReadingOutputStatus.NEUTRAL,
+        })),
       )
-      return {
-        ...output,
-        status: result.status,
-      }
-    })
-    setOutputs(newOutputs)
-    setLockCodeReadingCheck(false)
+    } finally {
+      setLockCodeReadingCheck(false)
+    }
   }, [evaluationId, questionId, outputs, setOutputs])
 
   const debouncedOnOutputChange = useDebouncedCallback(onOutputChange, 500)

@@ -112,47 +112,56 @@ const AnswerEditor = ({
 
   const onSubmitClick = useCallback(async () => {
     setSubmitLock(true)
-    const response = await fetch(
-      `/api/users/evaluations/${evaluationId}/questions/${question.id}/answers/submit`,
-      {
-        method: 'PUT',
-      },
-    )
+    try {
+      const response = await fetch(
+        `/api/users/evaluations/${evaluationId}/questions/${question.id}/answers/submit`,
+        {
+          method: 'PUT',
+        },
+      )
 
-    const ok = response.ok
-    const data = await response.json()
+      const ok = response.ok
+      const data = await response.json()
 
-    if (!ok) {
-      showSnackbar(data.message, 'error')
-    } else {
-      setStatus(StudentAnswerStatus.SUBMITTED)
-      onSubmit && onSubmit(question)
-      await mutate()
+      if (!ok) {
+        showSnackbar(data.message, 'error')
+      } else {
+        setStatus(StudentAnswerStatus.SUBMITTED)
+        onSubmit && onSubmit(question)
+        await mutate()
+      }
+    } catch {
+      // Network error — ConnectionManager overlay handles user feedback.
+    } finally {
+      setSubmitLock(false)
     }
-
-    setSubmitLock(false)
   }, [onSubmit, question, evaluationId, mutate, showSnackbar])
 
   const onUnsubmitClick = useCallback(async () => {
     setSubmitLock(true)
-    const response = await fetch(
-      `/api/users/evaluations/${evaluationId}/questions/${question.id}/answers/submit`,
-      {
-        method: 'DELETE',
-      },
-    )
+    try {
+      const response = await fetch(
+        `/api/users/evaluations/${evaluationId}/questions/${question.id}/answers/submit`,
+        {
+          method: 'DELETE',
+        },
+      )
 
-    const ok = response.ok
-    const data = await response.json()
+      const ok = response.ok
+      const data = await response.json()
 
-    if (!ok) {
-      showSnackbar(data.message, 'error')
-    } else {
-      setStatus(StudentAnswerStatus.IN_PROGRESS)
-      onUnsubmit && onUnsubmit(question)
-      await mutate()
+      if (!ok) {
+        showSnackbar(data.message, 'error')
+      } else {
+        setStatus(StudentAnswerStatus.IN_PROGRESS)
+        onUnsubmit && onUnsubmit(question)
+        await mutate()
+      }
+    } catch {
+      // Network error — ConnectionManager overlay handles user feedback.
+    } finally {
+      setSubmitLock(false)
     }
-    setSubmitLock(false)
   }, [onUnsubmit, question, evaluationId, mutate, showSnackbar])
 
   const isReadOnly = status === StudentAnswerStatus.SUBMITTED
@@ -285,19 +294,23 @@ const AnswerTrueFalse = ({
             : undefined,
       }
 
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(answer),
-        },
-      )
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers`,
+          {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(answer),
+          },
+        )
 
-      const ok = response.ok
-      const data = await response.json()
+        const ok = response.ok
+        const data = await response.json()
 
-      onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChange && onAnswerChange(ok, data)
+      } catch {
+        // Network error — ConnectionManager overlay handles user feedback.
+      }
     },
     [evaluationId, questionId, onAnswerChange],
   )
@@ -318,26 +331,30 @@ const AnswerEssay = ({ answer, evaluationId, questionId, onAnswerChange }) => {
   const onEssayChange = useCallback(
     async (content) => {
       if (answer.essay.content === content) return
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            answer: content
-              ? {
-                  content: content,
-                }
-              : undefined,
-          }),
-        },
-      )
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers`,
+          {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              answer: content
+                ? {
+                    content: content,
+                  }
+                : undefined,
+            }),
+          },
+        )
 
-      const ok = response.ok
-      const data = await response.json()
+        const ok = response.ok
+        const data = await response.json()
 
-      onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChange && onAnswerChange(ok, data)
+      } catch {
+        // Network error — ConnectionManager overlay handles user feedback.
+      }
     },
     [evaluationId, questionId, answer, onAnswerChange],
   )
@@ -377,19 +394,23 @@ const AnswerWeb = ({ answer, evaluationId, questionId, onAnswerChange }) => {
           : undefined,
       }
 
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(answer),
-        },
-      )
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers`,
+          {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(answer),
+          },
+        )
 
-      const ok = response.ok
-      const data = await response.json()
+        const ok = response.ok
+        const data = await response.json()
 
-      onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChange && onAnswerChange(ok, data)
+      } catch {
+        // Network error — ConnectionManager overlay handles user feedback.
+      }
     },
     [evaluationId, questionId, onAnswerChange],
   )

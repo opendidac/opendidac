@@ -94,45 +94,64 @@ const AnswerDatabase = ({ evaluationId, question, onAnswerChange }) => {
       })) || [],
     )
 
-    const studentAnswerQueries = await fetch(
-      `/api/sandbox/evaluations/${evaluationId}/questions/${questionId}/student/database`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+    try {
+      const studentAnswerQueries = await fetch(
+        `/api/sandbox/evaluations/${evaluationId}/questions/${questionId}/student/database`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
         },
-      },
-    ).then((res) => res.json())
+      ).then((res) => res.json())
 
-    setStudentOutputs(studentAnswerQueries.map((q) => q.studentOutput))
-    setQueries(
-      queries.map((q, index) => ({
-        ...q,
-        lintResult: studentAnswerQueries[index].query.lintResult,
-      })) || [],
-    )
-    setSaving(false)
+      setStudentOutputs(studentAnswerQueries.map((q) => q.studentOutput))
+      setQueries(
+        queries.map((q, index) => ({
+          ...q,
+          lintResult: studentAnswerQueries[index].query.lintResult,
+        })) || [],
+      )
+    } catch {
+      // Network error — clear the RUNNING status so the UI doesn't stay
+      // spinning. Overlay handles user feedback.
+      setStudentOutputs(
+        queries.map((q, index) => ({
+          ...studentOutputs[index],
+          output: {
+            ...studentOutputs[index]?.output,
+            status: null,
+          },
+        })) || [],
+      )
+    } finally {
+      setSaving(false)
+    }
   }, [evaluationId, questionId, queries, studentOutputs])
 
   const onQueryChange = useCallback(
     async (query) => {
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/database/${query.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/database/${query.id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content: query.content }),
           },
-          body: JSON.stringify({ content: query.content }),
-        },
-      )
+        )
 
-      const ok = response.ok
-      const data = await response.json()
-
-      setSaveLock(false)
-      onAnswerChange && onAnswerChange(ok, data)
+        const ok = response.ok
+        const data = await response.json()
+        onAnswerChange && onAnswerChange(ok, data)
+      } catch {
+        // Network error — ConnectionManager overlay handles user feedback.
+      } finally {
+        setSaveLock(false)
+      }
     },
     [evaluationId, questionId, onAnswerChange],
   )

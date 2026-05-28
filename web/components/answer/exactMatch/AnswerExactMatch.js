@@ -52,21 +52,25 @@ const AnswerExactMatch = ({
       newAnswers[index] = { ...field, value: value }
       setStudentAnswers(newAnswers)
 
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/exact-match/fields`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/exact-match/fields`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({ fieldId, value }),
           },
-          body: JSON.stringify({ fieldId, value }),
-        },
-      )
+        )
 
-      const ok = response.ok
-      const data = await response.json()
-      onAnswerChange(ok, data)
+        const ok = response.ok
+        const data = await response.json()
+        onAnswerChange(ok, data)
+      } catch {
+        // Network error — ConnectionManager overlay handles user feedback.
+      }
     },
     [evaluationId, onAnswerChange, questionId, studentAnswers],
   )

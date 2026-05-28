@@ -35,20 +35,25 @@ const AnswerCodeWriting = ({
   const onFileChange = useCallback(
     async (file) => {
       setLockCodeCheck(true)
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-writing/${file.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-writing/${file.id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ file }),
           },
-          body: JSON.stringify({ file }),
-        },
-      )
-      const ok = response.ok
-      const data = await response.json()
-      setLockCodeCheck(false)
-      onAnswerChange && onAnswerChange(ok, data)
+        )
+        const ok = response.ok
+        const data = await response.json()
+        onAnswerChange && onAnswerChange(ok, data)
+      } catch {
+        // Network error — ConnectionManager overlay handles user feedback.
+      } finally {
+        setLockCodeCheck(false)
+      }
     },
     [evaluationId, questionId, onAnswerChange],
   )

@@ -91,20 +91,27 @@ const AnswerMultipleChoice = ({
       }
 
       const method = option.isCorrect ? 'POST' : 'DELETE'
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/multi-choice/options`,
-        {
-          method: method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ option: option }),
-        },
-      )
-      const ok = response.ok
-      const data = await response.json()
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/multi-choice/options`,
+          {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ option: option }),
+          },
+        )
+        const ok = response.ok
+        const data = await response.json()
 
-      setOptions([...options])
+        setOptions([...options])
 
-      onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChange && onAnswerChange(ok, data)
+      } catch {
+        // Network error — ConnectionManager overlay handles user feedback.
+        // Revert the optimistic toggle so the UI matches server state.
+        option.isCorrect = !option.isCorrect
+        setOptions([...options])
+      }
     },
     [evaluationId, questionId, onAnswerChange, options, radio, limit],
   )
@@ -119,7 +126,9 @@ const AnswerMultipleChoice = ({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ comment: value }),
           },
-        )
+        ).catch(() => {
+          // Network error — overlay handles user feedback.
+        })
       },
       [evaluationId, questionId],
     ),
