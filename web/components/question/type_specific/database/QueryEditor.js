@@ -15,7 +15,7 @@
  */
 
 import { Chip, Stack, Typography } from '@mui/material'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useEffectEvent, useState } from 'react'
 import InlineMonacoEditor from '../../../input/InlineMonacoEditor'
 
 const QueryEditor = ({
@@ -27,9 +27,13 @@ const QueryEditor = ({
 }) => {
   const [content, setContent] = useState(query.content)
 
-  useEffect(() => {
+  const captureContent = useEffectEvent(() => {
     setContent(query.content)
-  }, [query])
+  })
+  useEffect(() => {
+    captureContent()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query.id])
 
   return (
     <Stack>
