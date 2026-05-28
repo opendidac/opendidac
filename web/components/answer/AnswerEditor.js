@@ -94,7 +94,7 @@ const AnswerEditor = ({
   useEffect(() => {
     captureLatest()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [evaluationId, questionId])
+  }, [evaluationId, questionId, !!questionAnswer])
 
   const studentAnswer = snapshot?.studentAnswer
   const question = snapshot?.question

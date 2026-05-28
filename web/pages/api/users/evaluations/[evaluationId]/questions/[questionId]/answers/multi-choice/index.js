@@ -62,7 +62,19 @@ const put = async (req, res, ctx) => {
     },
   })
 
-  res.status(200).json({ message: 'Comment updated' })
+  const updatedStudentAnswer = await prisma.studentAnswer.findUnique({
+    where: {
+      userEmail_questionId: {
+        userEmail: studentEmail,
+        questionId: questionId,
+      },
+    },
+    select: {
+      status: true,
+    },
+  })
+
+  res.status(200).json(updatedStudentAnswer)
 }
 
 export default withApiContext({
