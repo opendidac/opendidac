@@ -26,7 +26,7 @@ services:
       - app-network
 
   nginx:
-    image: nginx
+    image: nginx:1.30
     restart: unless-stopped
     ports:
       - "443:443"
