@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { useEffect, useEffectEvent, useState } from 'react'
 import useSWR from 'swr'
 import { CodeQuestionType } from '@prisma/client'
 
@@ -27,23 +28,25 @@ const AnswerCode = ({ evaluationId, questionId, onAnswerChanged }) => {
   const { data: questionAnswer, error } = useSWR(
     `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers`,
     questionId ? fetcher : null,
-    // Stale on purpose: revalidation would overwrite answer.*.content
-    // under the controlled editors (MarkdownEditor, FileEditor, etc.),
-    // resetting cursor and dropping any unflushed edits. AnswerEditor's
-    // Submit / Unsubmit flow calls mutate() explicitly when a refresh
-    // is safe.
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      revalidateIfStale: false,
-      revalidateOnMount: true,
-    },
+    { revalidateOnFocus: false },
   )
 
-  const { question, studentAnswer } = questionAnswer || {}
+  // Snapshot what we hand to the editors. The SWR cache can revalidate
+  // and mutate freely; the editors only see a new answer when the
+  // (evaluationId, questionId) pair changes, so the cursor / derived
+  // state never resets mid-session.
+  const [snapshot, setSnapshot] = useState(null)
+  const captureLatest = useEffectEvent(() => {
+    if (questionAnswer) setSnapshot(questionAnswer)
+  })
+  useEffect(() => {
+    captureLatest()
+  }, [evaluationId, questionId, captureLatest])
+
+  const { question, studentAnswer } = snapshot || {}
 
   return (
-    <Loading errors={!questionAnswer ? [error] : []} loading={!questionAnswer}>
+    <Loading errors={!snapshot ? [error] : []} loading={!snapshot}>
       {studentAnswer?.code?.codeType === CodeQuestionType.codeWriting && (
         <AnswerCodeWriting
           evaluationId={evaluationId}
