@@ -114,7 +114,15 @@ const AnswerMultipleChoice = ({
         showSnackbar('Failed to save — check your connection', 'error')
       }
     },
-    [evaluationId, questionId, onAnswerChanged, options, radio, limit, showSnackbar],
+    [
+      evaluationId,
+      questionId,
+      onAnswerChanged,
+      options,
+      radio,
+      limit,
+      showSnackbar,
+    ],
   )
 
   const saveComment = useDebouncedCallback(
@@ -128,7 +136,10 @@ const AnswerMultipleChoice = ({
             body: JSON.stringify({ comment: value }),
           },
         ).catch(() => {
-          showSnackbar('Failed to save comment — check your connection', 'error')
+          showSnackbar(
+            'Failed to save comment — check your connection',
+            'error',
+          )
         })
       },
       [evaluationId, questionId, showSnackbar],
