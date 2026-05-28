@@ -117,6 +117,18 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
     setViewMode(defaultViewMode)
   }, [original, defaultViewMode])
 
+  // Stable initial content for the editable editor — only reset when the file
+  // changes, not on every annotation context update. This breaks the feedback
+  // loop: user types → change() → annotation.content updates → code prop would
+  // change → Monaco setValue → cursor jumps.
+  const [editorInitialContent, setEditorInitialContent] = useState(
+    hasAnnotation ? annotation.content : original.content,
+  )
+  useEffect(() => {
+    setEditorInitialContent(hasAnnotation ? annotation.content : original.content)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [original.path])
+
   const onChange = (content) => {
     change(content)
   }
@@ -156,7 +168,7 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
         leftPanel={
           viewMode === 'ANNOTATED' || viewMode === 'ORIGINAL' ? (
             <InlineMonacoEditor
-              code={file.content}
+              code={editorInitialContent}
               readOnly={readOnly}
               onChange={onChange}
               language={language}
