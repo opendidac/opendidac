@@ -23,24 +23,33 @@ import Loading from '@/components/feedback/Loading'
 import AnswerCodeReading from './codeReading/AnswerCodeReading'
 import AnswerCodeWriting from './codeWriting/AnswerCodeWriting'
 
-const AnswerCode = ({ evaluationId, questionId, onAnswerChange }) => {
+const AnswerCode = ({ evaluationId, questionId, onAnswerChanged }) => {
   const { data: questionAnswer, error } = useSWR(
     `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers`,
     questionId ? fetcher : null,
-    { revalidateOnFocus: false },
+    // Stale on purpose: revalidation would overwrite answer.*.content
+    // under the controlled editors (MarkdownEditor, FileEditor, etc.),
+    // resetting cursor and dropping any unflushed edits. AnswerEditor's
+    // Submit / Unsubmit flow calls mutate() explicitly when a refresh
+    // is safe.
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateIfStale: false,
+    },
   )
 
   const { question, studentAnswer } = questionAnswer || {}
 
   return (
-    <Loading errors={[error]} loading={!questionAnswer}>
+    <Loading errors={!questionAnswer ? [error] : []} loading={!questionAnswer}>
       {studentAnswer?.code?.codeType === CodeQuestionType.codeWriting && (
         <AnswerCodeWriting
           evaluationId={evaluationId}
           questionId={questionId}
           question={question}
           answer={studentAnswer}
-          onAnswerChange={onAnswerChange}
+          onAnswerChanged={onAnswerChanged}
         />
       )}
       {studentAnswer?.code?.codeType === CodeQuestionType.codeReading && (
@@ -49,7 +58,7 @@ const AnswerCode = ({ evaluationId, questionId, onAnswerChange }) => {
           questionId={questionId}
           question={question}
           answer={studentAnswer}
-          onAnswerChange={onAnswerChange}
+          onAnswerChanged={onAnswerChanged}
         />
       )}
     </Loading>

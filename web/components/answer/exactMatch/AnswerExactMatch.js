@@ -19,14 +19,16 @@ import { Stack } from '@mui/system'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import AnswerField from '@/components/answer/exactMatch/AnswerField'
 import { Divider } from '@mui/material'
+import { useSnackbar } from '@/context/SnackbarContext'
 
 const AnswerExactMatch = ({
   answer,
   question,
   evaluationId,
   questionId,
-  onAnswerChange,
+  onAnswerChanged,
 }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
   const { exactMatch: savedAnswers } = answer
   const [studentAnswers, setStudentAnswers] = useState(savedAnswers.fields)
 
@@ -52,23 +54,27 @@ const AnswerExactMatch = ({
       newAnswers[index] = { ...field, value: value }
       setStudentAnswers(newAnswers)
 
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/exact-match/fields`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/exact-match/fields`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({ fieldId, value }),
           },
-          body: JSON.stringify({ fieldId, value }),
-        },
-      )
+        )
 
-      const ok = response.ok
-      const data = await response.json()
-      onAnswerChange(ok, data)
+        const ok = response.ok
+        const data = await response.json()
+        onAnswerChanged(ok, data)
+      } catch {
+        showSnackbar('Failed to save — check your connection', 'error')
+      }
     },
-    [evaluationId, onAnswerChange, questionId, studentAnswers],
+    [evaluationId, onAnswerChanged, questionId, studentAnswers, showSnackbar],
   )
 
   const { exactMatch } = question

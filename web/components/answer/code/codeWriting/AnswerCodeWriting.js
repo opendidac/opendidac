@@ -22,35 +22,42 @@ import StudentPermissionIcon from '@/components/feedback/StudentPermissionIcon'
 import { StudentPermission } from '@prisma/client'
 
 import { useDebouncedCallback } from 'use-debounce'
+import { useSnackbar } from '@/context/SnackbarContext'
 
 const AnswerCodeWriting = ({
   evaluationId,
   questionId,
   question,
   answer,
-  onAnswerChange,
+  onAnswerChanged,
 }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
   const [lockCodeCheck, setLockCodeCheck] = useState(false)
 
   const onFileChange = useCallback(
     async (file) => {
       setLockCodeCheck(true)
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-writing/${file.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-writing/${file.id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ file }),
           },
-          body: JSON.stringify({ file }),
-        },
-      )
-      const ok = response.ok
-      const data = await response.json()
-      setLockCodeCheck(false)
-      onAnswerChange && onAnswerChange(ok, data)
+        )
+        const ok = response.ok
+        const data = await response.json()
+        onAnswerChanged && onAnswerChanged(ok, data)
+      } catch {
+        showSnackbar('Failed to save — check your connection', 'error')
+      } finally {
+        setLockCodeCheck(false)
+      }
     },
-    [evaluationId, questionId, onAnswerChange],
+    [evaluationId, questionId, onAnswerChanged, showSnackbar],
   )
 
   const debouncedOnChange = useDebouncedCallback(onFileChange, 500)
@@ -71,7 +78,10 @@ const AnswerCodeWriting = ({
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                 },
-              )
+              ).catch(() => {
+                showSnackbar('Failed to run code check — check your connection', 'error')
+                return null
+              })
             }
           />
         }

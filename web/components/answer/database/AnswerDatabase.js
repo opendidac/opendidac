@@ -21,6 +21,7 @@ import { Button, Stack } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
 
 import { fetcher } from '@/core/utils'
+import { useSnackbar } from '@/context/SnackbarContext'
 import Loading from '@/components/feedback/Loading'
 import BottomCollapsiblePanel from '@/components/layout/utils/BottomCollapsiblePanel'
 import ScrollContainer from '@/components/layout/ScrollContainer'
@@ -31,11 +32,22 @@ import StudentOutputDisplay from './StudentOutputDisplay'
 import StudentQueryConsole from './StudentQueryConsole'
 import BottomPanelHeader from '@/components/layout/utils/BottomPanelHeader'
 
-const AnswerDatabase = ({ evaluationId, question, onAnswerChange }) => {
+const AnswerDatabase = ({ evaluationId, question, onAnswerChanged }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
+
   const { data: questionAnswer, error } = useSWR(
     `/api/users/evaluations/${evaluationId}/questions/${question.id}/answers`,
     question?.id ? fetcher : null,
-    { revalidateOnFocus: false },
+    // Stale on purpose: revalidation would overwrite answer.*.content
+    // under the controlled editors (MarkdownEditor, FileEditor, etc.),
+    // resetting cursor and dropping any unflushed edits. AnswerEditor's
+    // Submit / Unsubmit flow calls mutate() explicitly when a refresh
+    // is safe.
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateIfStale: false,
+    },
   )
 
   const studentAnswer = questionAnswer?.studentAnswer
@@ -94,47 +106,65 @@ const AnswerDatabase = ({ evaluationId, question, onAnswerChange }) => {
       })) || [],
     )
 
-    const studentAnswerQueries = await fetch(
-      `/api/sandbox/evaluations/${evaluationId}/questions/${questionId}/student/database`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+    try {
+      const studentAnswerQueries = await fetch(
+        `/api/sandbox/evaluations/${evaluationId}/questions/${questionId}/student/database`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
         },
-      },
-    ).then((res) => res.json())
+      ).then((res) => res.json())
 
-    setStudentOutputs(studentAnswerQueries.map((q) => q.studentOutput))
-    setQueries(
-      queries.map((q, index) => ({
-        ...q,
-        lintResult: studentAnswerQueries[index].query.lintResult,
-      })) || [],
-    )
-    setSaving(false)
-  }, [evaluationId, questionId, queries, studentOutputs])
+      setStudentOutputs(studentAnswerQueries.map((q) => q.studentOutput))
+      setQueries(
+        queries.map((q, index) => ({
+          ...q,
+          lintResult: studentAnswerQueries[index].query.lintResult,
+        })) || [],
+      )
+    } catch {
+      setStudentOutputs(
+        queries.map((q, index) => ({
+          ...studentOutputs[index],
+          output: {
+            ...studentOutputs[index]?.output,
+            status: null,
+          },
+        })) || [],
+      )
+      showSnackbar('Failed to run queries — check your connection', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }, [evaluationId, questionId, queries, studentOutputs, showSnackbar])
 
   const onQueryChange = useCallback(
     async (query) => {
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/database/${query.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/database/${query.id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content: query.content }),
           },
-          body: JSON.stringify({ content: query.content }),
-        },
-      )
+        )
 
-      const ok = response.ok
-      const data = await response.json()
-
-      setSaveLock(false)
-      onAnswerChange && onAnswerChange(ok, data)
+        const ok = response.ok
+        const data = await response.json()
+        onAnswerChanged && onAnswerChanged(ok, data)
+      } catch {
+        showSnackbar('Failed to save — check your connection', 'error')
+      } finally {
+        setSaveLock(false)
+      }
     },
-    [evaluationId, questionId, onAnswerChange],
+    [evaluationId, questionId, onAnswerChanged, showSnackbar],
   )
 
   const debouncedOnChange = useDebouncedCallback(onQueryChange, 500)

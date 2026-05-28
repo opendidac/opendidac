@@ -23,15 +23,17 @@ import SnippetStatuBar from '@/components/question/type_specific/code/codeReadin
 import AnswerCodeReadingOutput from './AnswerCodeReadingOutput'
 import AnswerCodeReadingOutputStatus from './AnswerCodeReadingOutputStatus'
 import { StudentAnswerCodeReadingOutputStatus } from '@prisma/client'
+import { useSnackbar } from '@/context/SnackbarContext'
 
 const AnswerCodeReading = ({
   evaluationId,
   questionId,
   question,
   answer,
-  onAnswerChange,
+  onAnswerChanged,
 }) => {
   const theme = useTheme()
+  const { showTopCenter: showSnackbar } = useSnackbar()
 
   const studentOutputTest = question?.code?.codeReading?.studentOutputTest
 
@@ -57,23 +59,27 @@ const AnswerCodeReading = ({
           }),
         )
       }
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-reading/${snippetId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-reading/${snippetId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ output: newOutput }),
           },
-          body: JSON.stringify({ output: newOutput }),
-        },
-      )
-      const ok = response.ok
-      const data = await response.json()
-
-      setLockCodeReadingCheck(false)
-      onAnswerChange && onAnswerChange(ok, data)
+        )
+        const ok = response.ok
+        const data = await response.json()
+        onAnswerChanged && onAnswerChanged(ok, data)
+      } catch {
+        showSnackbar('Failed to save — check your connection', 'error')
+      } finally {
+        setLockCodeReadingCheck(false)
+      }
     },
-    [evaluationId, questionId, onAnswerChange, outputs, studentOutputTest],
+    [evaluationId, questionId, onAnswerChanged, outputs, studentOutputTest, showSnackbar],
   )
 
   const onOutputCheck = useCallback(async () => {
@@ -86,26 +92,37 @@ const AnswerCodeReading = ({
       })),
     )
 
-    const results = await fetch(
-      `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-reading/check`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      },
-    ).then((res) => res.json())
+    try {
+      const results = await fetch(
+        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/code/code-reading/check`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ).then((res) => res.json())
 
-    const newOutputs = outputs.map((output) => {
-      const result = results.find(
-        (r) => r.codeReadingSnippet.order === output.codeReadingSnippet.order,
+      const newOutputs = outputs.map((output) => {
+        const result = results.find(
+          (r) => r.codeReadingSnippet.order === output.codeReadingSnippet.order,
+        )
+        return {
+          ...output,
+          status: result.status,
+        }
+      })
+      setOutputs(newOutputs)
+    } catch {
+      setOutputs(
+        outputs.map((output) => ({
+          ...output,
+          status: StudentAnswerCodeReadingOutputStatus.NEUTRAL,
+        })),
       )
-      return {
-        ...output,
-        status: result.status,
-      }
-    })
-    setOutputs(newOutputs)
-    setLockCodeReadingCheck(false)
-  }, [evaluationId, questionId, outputs, setOutputs])
+      showSnackbar('Failed to run check — check your connection', 'error')
+    } finally {
+      setLockCodeReadingCheck(false)
+    }
+  }, [evaluationId, questionId, outputs, setOutputs, showSnackbar])
 
   const debouncedOnOutputChange = useDebouncedCallback(onOutputChange, 500)
 

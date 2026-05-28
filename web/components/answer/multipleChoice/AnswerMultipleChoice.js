@@ -20,14 +20,16 @@ import { TextField, Typography, Stack } from '@mui/material'
 import StatusDisplay from '@/components/feedback/StatusDisplay'
 import ScrollContainer from '@/components/layout/ScrollContainer'
 import { useDebouncedCallback } from 'use-debounce'
+import { useSnackbar } from '@/context/SnackbarContext'
 
 const AnswerMultipleChoice = ({
   answer,
   question,
   evaluationId,
   questionId,
-  onAnswerChange,
+  onAnswerChanged,
 }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
   const [options, setOptions] = useState(undefined)
   const [comment, setComment] = useState(answer?.multipleChoice?.comment || '')
 
@@ -91,22 +93,28 @@ const AnswerMultipleChoice = ({
       }
 
       const method = option.isCorrect ? 'POST' : 'DELETE'
-      const response = await fetch(
-        `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/multi-choice/options`,
-        {
-          method: method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ option: option }),
-        },
-      )
-      const ok = response.ok
-      const data = await response.json()
+      try {
+        const response = await fetch(
+          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/multi-choice/options`,
+          {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ option: option }),
+          },
+        )
+        const ok = response.ok
+        const data = await response.json()
 
-      setOptions([...options])
+        setOptions([...options])
 
-      onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChanged && onAnswerChanged(ok, data)
+      } catch {
+        option.isCorrect = !option.isCorrect
+        setOptions([...options])
+        showSnackbar('Failed to save — check your connection', 'error')
+      }
     },
-    [evaluationId, questionId, onAnswerChange, options, radio, limit],
+    [evaluationId, questionId, onAnswerChanged, options, radio, limit, showSnackbar],
   )
 
   const saveComment = useDebouncedCallback(
@@ -119,9 +127,11 @@ const AnswerMultipleChoice = ({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ comment: value }),
           },
-        )
+        ).catch(() => {
+          showSnackbar('Failed to save comment — check your connection', 'error')
+        })
       },
-      [evaluationId, questionId],
+      [evaluationId, questionId, showSnackbar],
     ),
     500,
   )
