@@ -23,7 +23,7 @@ import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 import ResizePanel from '@/components/layout/utils/ResizePanel'
 import { useTheme } from '@emotion/react'
 import { Box, Button, Stack, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 
 const { useAnnotation } = require('@/context/AnnotationContext')
 
@@ -124,8 +124,11 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
   const [editorInitialContent, setEditorInitialContent] = useState(
     hasAnnotation ? annotation.content : original.content,
   )
-  useEffect(() => {
+  const captureEditorContent = useEffectEvent(() => {
     setEditorInitialContent(hasAnnotation ? annotation.content : original.content)
+  })
+  useEffect(() => {
+    captureEditorContent()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [original.path])
 
