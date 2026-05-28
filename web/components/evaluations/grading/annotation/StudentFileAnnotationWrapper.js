@@ -130,15 +130,10 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
   useEffect(() => {
     captureEditorContent()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [original.path])
+  }, [original.path, !!hasAnnotation])
 
   const onChange = (content) => {
     change(content)
-  }
-
-  const onDiscard = () => {
-    discard()
-    setEditorInitialContent(original.content)
   }
 
   const file = {
@@ -168,7 +163,7 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
           viewMode={viewMode}
           setViewMode={setViewMode}
           state={state}
-          onDiscard={onDiscard}
+          onDiscard={discard}
         />
         {!readOnly && state === 'NOT_ANNOTATED' && <HoverInfoMessage />}
       </Stack>
