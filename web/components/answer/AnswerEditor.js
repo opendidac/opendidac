@@ -88,6 +88,7 @@ const AnswerEditor = ({
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       revalidateIfStale: false,
+      revalidateOnMount: true,
     },
   )
 

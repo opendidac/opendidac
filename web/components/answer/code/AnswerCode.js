@@ -36,6 +36,7 @@ const AnswerCode = ({ evaluationId, questionId, onAnswerChanged }) => {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       revalidateIfStale: false,
+      revalidateOnMount: true,
     },
   )
 

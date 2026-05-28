@@ -47,6 +47,7 @@ const AnswerDatabase = ({ evaluationId, question, onAnswerChanged }) => {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       revalidateIfStale: false,
+      revalidateOnMount: true,
     },
   )
 
