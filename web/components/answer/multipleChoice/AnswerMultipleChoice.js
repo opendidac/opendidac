@@ -127,22 +127,27 @@ const AnswerMultipleChoice = ({
 
   const saveComment = useDebouncedCallback(
     useCallback(
-      (value) => {
-        fetch(
-          `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/multi-choice`,
-          {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comment: value }),
-          },
-        ).catch(() => {
+      async (value) => {
+        try {
+          const response = await fetch(
+            `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/multi-choice`,
+            {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ comment: value }),
+            },
+          )
+          const ok = response.ok
+          const data = await response.json()
+          onAnswerChanged && onAnswerChanged(ok, data)
+        } catch {
           showSnackbar(
             'Failed to save comment — check your connection',
             'error',
           )
-        })
+        }
       },
-      [evaluationId, questionId, showSnackbar],
+      [evaluationId, questionId, onAnswerChanged, showSnackbar],
     ),
     500,
   )

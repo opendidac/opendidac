@@ -61,7 +61,7 @@ const AnswerDatabase = ({ evaluationId, question, onAnswerChanged }) => {
   useEffect(() => {
     captureLatest()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [evaluationId, questionId])
+  }, [evaluationId, questionId, !!questionAnswer])
 
   const studentAnswer = snapshot?.studentAnswer
 

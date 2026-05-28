@@ -42,7 +42,7 @@ const AnswerCode = ({ evaluationId, questionId, onAnswerChanged }) => {
   useEffect(() => {
     captureLatest()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [evaluationId, questionId])
+  }, [evaluationId, questionId, !!questionAnswer])
 
   const { question, studentAnswer } = snapshot || {}
 
