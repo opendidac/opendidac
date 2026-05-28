@@ -20,14 +20,16 @@ import { TextField, Typography, Stack } from '@mui/material'
 import StatusDisplay from '@/components/feedback/StatusDisplay'
 import ScrollContainer from '@/components/layout/ScrollContainer'
 import { useDebouncedCallback } from 'use-debounce'
+import { useSnackbar } from '@/context/SnackbarContext'
 
 const AnswerMultipleChoice = ({
   answer,
   question,
   evaluationId,
   questionId,
-  onAnswerChange,
+  onAnswerChanged,
 }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
   const [options, setOptions] = useState(undefined)
   const [comment, setComment] = useState(answer?.multipleChoice?.comment || '')
 
@@ -105,15 +107,14 @@ const AnswerMultipleChoice = ({
 
         setOptions([...options])
 
-        onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChanged && onAnswerChanged(ok, data)
       } catch {
-        // Network error — ConnectionManager overlay handles user feedback.
-        // Revert the optimistic toggle so the UI matches server state.
         option.isCorrect = !option.isCorrect
         setOptions([...options])
+        showSnackbar('Failed to save — check your connection', 'error')
       }
     },
-    [evaluationId, questionId, onAnswerChange, options, radio, limit],
+    [evaluationId, questionId, onAnswerChanged, options, radio, limit, showSnackbar],
   )
 
   const saveComment = useDebouncedCallback(
@@ -127,10 +128,10 @@ const AnswerMultipleChoice = ({
             body: JSON.stringify({ comment: value }),
           },
         ).catch(() => {
-          // Network error — overlay handles user feedback.
+          showSnackbar('Failed to save comment — check your connection', 'error')
         })
       },
-      [evaluationId, questionId],
+      [evaluationId, questionId, showSnackbar],
     ),
     500,
   )

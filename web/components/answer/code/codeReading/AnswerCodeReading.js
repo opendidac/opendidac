@@ -23,15 +23,17 @@ import SnippetStatuBar from '@/components/question/type_specific/code/codeReadin
 import AnswerCodeReadingOutput from './AnswerCodeReadingOutput'
 import AnswerCodeReadingOutputStatus from './AnswerCodeReadingOutputStatus'
 import { StudentAnswerCodeReadingOutputStatus } from '@prisma/client'
+import { useSnackbar } from '@/context/SnackbarContext'
 
 const AnswerCodeReading = ({
   evaluationId,
   questionId,
   question,
   answer,
-  onAnswerChange,
+  onAnswerChanged,
 }) => {
   const theme = useTheme()
+  const { showTopCenter: showSnackbar } = useSnackbar()
 
   const studentOutputTest = question?.code?.codeReading?.studentOutputTest
 
@@ -70,14 +72,14 @@ const AnswerCodeReading = ({
         )
         const ok = response.ok
         const data = await response.json()
-        onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChanged && onAnswerChanged(ok, data)
       } catch {
-        // Network error — ConnectionManager overlay handles user feedback.
+        showSnackbar('Failed to save — check your connection', 'error')
       } finally {
         setLockCodeReadingCheck(false)
       }
     },
-    [evaluationId, questionId, onAnswerChange, outputs, studentOutputTest],
+    [evaluationId, questionId, onAnswerChanged, outputs, studentOutputTest, showSnackbar],
   )
 
   const onOutputCheck = useCallback(async () => {
@@ -110,17 +112,17 @@ const AnswerCodeReading = ({
       })
       setOutputs(newOutputs)
     } catch {
-      // Network error — restore neutral status so the LOADING spinner clears.
       setOutputs(
         outputs.map((output) => ({
           ...output,
           status: StudentAnswerCodeReadingOutputStatus.NEUTRAL,
         })),
       )
+      showSnackbar('Failed to run check — check your connection', 'error')
     } finally {
       setLockCodeReadingCheck(false)
     }
-  }, [evaluationId, questionId, outputs, setOutputs])
+  }, [evaluationId, questionId, outputs, setOutputs, showSnackbar])
 
   const debouncedOnOutputChange = useDebouncedCallback(onOutputChange, 500)
 

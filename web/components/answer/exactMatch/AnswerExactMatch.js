@@ -19,14 +19,16 @@ import { Stack } from '@mui/system'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import AnswerField from '@/components/answer/exactMatch/AnswerField'
 import { Divider } from '@mui/material'
+import { useSnackbar } from '@/context/SnackbarContext'
 
 const AnswerExactMatch = ({
   answer,
   question,
   evaluationId,
   questionId,
-  onAnswerChange,
+  onAnswerChanged,
 }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
   const { exactMatch: savedAnswers } = answer
   const [studentAnswers, setStudentAnswers] = useState(savedAnswers.fields)
 
@@ -67,12 +69,12 @@ const AnswerExactMatch = ({
 
         const ok = response.ok
         const data = await response.json()
-        onAnswerChange(ok, data)
+        onAnswerChanged(ok, data)
       } catch {
-        // Network error — ConnectionManager overlay handles user feedback.
+        showSnackbar('Failed to save — check your connection', 'error')
       }
     },
-    [evaluationId, onAnswerChange, questionId, studentAnswers],
+    [evaluationId, onAnswerChanged, questionId, studentAnswers, showSnackbar],
   )
 
   const { exactMatch } = question

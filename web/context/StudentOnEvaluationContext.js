@@ -81,7 +81,7 @@ export const StudentOnEvaluationProvider = ({ children }) => {
     {
       refreshInterval: 1000,
       revalidateOnFocus: true,
-      onError: (err) => console.error('Error fetching evaluation status:', err),
+      onError: (err) => console.warn('Error fetching evaluation status:', err),
     },
   )
 
@@ -111,7 +111,7 @@ export const StudentOnEvaluationProvider = ({ children }) => {
     {
       revalidateOnFocus: true,
       onError: (err) =>
-        console.error('Error fetching evaluation questions:', err),
+        console.warn('Error fetching evaluation questions:', err),
     },
   )
 

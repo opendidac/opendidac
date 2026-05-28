@@ -69,7 +69,7 @@ const AnswerEditor = ({
 }) => {
   const router = useRouter()
 
-  const { showBottomRight: showSnackbar } = useSnackbar()
+  const { showTopCenter: showSnackbar } = useSnackbar()
 
   const { evaluationId } = router.query
 
@@ -80,7 +80,15 @@ const AnswerEditor = ({
   } = useSWR(
     `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers`,
     evaluationId && questionId ? fetcher : null,
-    { revalidateOnFocus: false },
+    // Stale on purpose: revalidation would overwrite answer.*.content
+    // under the controlled editors (MarkdownEditor, FileEditor, etc.),
+    // resetting cursor and dropping any unflushed edits. Submit / Unsubmit
+    // below call mutate() explicitly when a refresh is safe.
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateIfStale: false,
+    },
   )
 
   const studentAnswer = questionAnswer?.studentAnswer
@@ -96,7 +104,7 @@ const AnswerEditor = ({
 
   const [submitLock, setSubmitLock] = useState(false)
 
-  const onAnswerChange = useCallback(
+  const onAnswerChanged = useCallback(
     (ok, data) => {
       if (!ok) {
         showSnackbar(data.message, 'error')
@@ -131,7 +139,7 @@ const AnswerEditor = ({
         await mutate()
       }
     } catch {
-      // Network error — ConnectionManager overlay handles user feedback.
+      showSnackbar('Failed to submit — check your connection', 'error')
     } finally {
       setSubmitLock(false)
     }
@@ -158,7 +166,7 @@ const AnswerEditor = ({
         await mutate()
       }
     } catch {
-      // Network error — ConnectionManager overlay handles user feedback.
+      showSnackbar('Failed to unsubmit — check your connection', 'error')
     } finally {
       setSubmitLock(false)
     }
@@ -167,7 +175,7 @@ const AnswerEditor = ({
   const isReadOnly = status === StudentAnswerStatus.SUBMITTED
 
   return (
-    <Loading errors={[error]} loading={!studentAnswer}>
+    <Loading errors={!studentAnswer ? [error] : []} loading={!studentAnswer}>
       <Stack height={'100%'} position={'relative'}>
         {isReadOnly && (
           <SubmittedOverlay onUnsubmit={() => onUnsubmitClick()} />
@@ -178,7 +186,7 @@ const AnswerEditor = ({
               answer={studentAnswer}
               evaluationId={evaluationId}
               questionId={question.id}
-              onAnswerChange={onAnswerChange}
+              onAnswerChanged={onAnswerChanged}
             />
           )) ||
             (question.type === QuestionType.multipleChoice && (
@@ -187,7 +195,7 @@ const AnswerEditor = ({
                 question={question}
                 evaluationId={evaluationId}
                 questionId={question.id}
-                onAnswerChange={onAnswerChange}
+                onAnswerChanged={onAnswerChanged}
               />
             )) ||
             (question.type === QuestionType.essay && (
@@ -195,14 +203,14 @@ const AnswerEditor = ({
                 answer={studentAnswer}
                 evaluationId={evaluationId}
                 questionId={question.id}
-                onAnswerChange={onAnswerChange}
+                onAnswerChanged={onAnswerChanged}
               />
             )) ||
             (question.type === QuestionType.code && (
               <AnswerCode
                 evaluationId={evaluationId}
                 questionId={question.id}
-                onAnswerChange={onAnswerChange}
+                onAnswerChanged={onAnswerChanged}
               />
             )) ||
             (question.type === QuestionType.web && (
@@ -210,7 +218,7 @@ const AnswerEditor = ({
                 answer={studentAnswer}
                 evaluationId={evaluationId}
                 questionId={question.id}
-                onAnswerChange={onAnswerChange}
+                onAnswerChanged={onAnswerChanged}
               />
             )) ||
             (question.type === QuestionType.database && (
@@ -218,7 +226,7 @@ const AnswerEditor = ({
                 answer={studentAnswer}
                 question={question}
                 evaluationId={evaluationId}
-                onAnswerChange={onAnswerChange}
+                onAnswerChanged={onAnswerChanged}
               />
             )) ||
             (question.type === QuestionType.exactMatch && (
@@ -227,7 +235,7 @@ const AnswerEditor = ({
                 question={question}
                 evaluationId={evaluationId}
                 questionId={question.id}
-                onAnswerChange={onAnswerChange}
+                onAnswerChanged={onAnswerChanged}
               />
             )))}
         <SubmissionToolbar
@@ -281,8 +289,9 @@ const AnswerTrueFalse = ({
   answer,
   evaluationId,
   questionId,
-  onAnswerChange,
+  onAnswerChanged,
 }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
   const onTrueFalseChange = useCallback(
     async (isTrue) => {
       const answer = {
@@ -307,12 +316,12 @@ const AnswerTrueFalse = ({
         const ok = response.ok
         const data = await response.json()
 
-        onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChanged && onAnswerChanged(ok, data)
       } catch {
-        // Network error — ConnectionManager overlay handles user feedback.
+        showSnackbar('Failed to save — check your connection', 'error')
       }
     },
-    [evaluationId, questionId, onAnswerChange],
+    [evaluationId, questionId, onAnswerChanged, showSnackbar],
   )
 
   return (
@@ -327,7 +336,8 @@ const AnswerTrueFalse = ({
   )
 }
 
-const AnswerEssay = ({ answer, evaluationId, questionId, onAnswerChange }) => {
+const AnswerEssay = ({ answer, evaluationId, questionId, onAnswerChanged }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
   const onEssayChange = useCallback(
     async (content) => {
       if (answer.essay.content === content) return
@@ -351,12 +361,12 @@ const AnswerEssay = ({ answer, evaluationId, questionId, onAnswerChange }) => {
         const ok = response.ok
         const data = await response.json()
 
-        onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChanged && onAnswerChanged(ok, data)
       } catch {
-        // Network error — ConnectionManager overlay handles user feedback.
+        showSnackbar('Failed to save — check your connection', 'error')
       }
     },
-    [evaluationId, questionId, answer, onAnswerChange],
+    [evaluationId, questionId, answer, onAnswerChanged, showSnackbar],
   )
 
   const debouncedOnChange = useDebouncedCallback(onEssayChange, 500)
@@ -374,7 +384,8 @@ const AnswerEssay = ({ answer, evaluationId, questionId, onAnswerChange }) => {
   )
 }
 
-const AnswerWeb = ({ answer, evaluationId, questionId, onAnswerChange }) => {
+const AnswerWeb = ({ answer, evaluationId, questionId, onAnswerChanged }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
   const [web, setWeb] = useState(answer?.web)
 
   useEffect(() => {
@@ -407,12 +418,12 @@ const AnswerWeb = ({ answer, evaluationId, questionId, onAnswerChange }) => {
         const ok = response.ok
         const data = await response.json()
 
-        onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChanged && onAnswerChanged(ok, data)
       } catch {
-        // Network error — ConnectionManager overlay handles user feedback.
+        showSnackbar('Failed to save — check your connection', 'error')
       }
     },
-    [evaluationId, questionId, onAnswerChange],
+    [evaluationId, questionId, onAnswerChanged, showSnackbar],
   )
 
   const debouncedOnChange = useDebouncedCallback(onWebChange, 500)

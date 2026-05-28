@@ -30,6 +30,7 @@ import { LoadingButton } from '@mui/lab'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 import DropDown from '@/components/input/DropDown'
 import QueryOutput from '@/components/question/type_specific/database/QueryOutput'
+import { useSnackbar } from '@/context/SnackbarContext'
 
 const StudentQueryConsole = ({
   evaluationId,
@@ -38,6 +39,7 @@ const StudentQueryConsole = ({
   studentQueries,
   onClose,
 }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
   const [sql, setSql] = useState('')
   const [order, setOrder] = useState(0)
 
@@ -49,23 +51,29 @@ const StudentQueryConsole = ({
     setResult({
       status: DatabaseQueryOutputStatus.RUNNING,
     })
-    const response = await fetch(
-      `/api/sandbox/evaluations/${evaluationId}/questions/${questionId}/student/database/console`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+    try {
+      const response = await fetch(
+        `/api/sandbox/evaluations/${evaluationId}/questions/${questionId}/student/database/console`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            query: sql,
+            at: order,
+          }),
         },
-        body: JSON.stringify({
-          query: sql,
-          at: order,
-        }),
-      },
-    ).then((res) => res.json())
-    setResult(response)
-    setRunning(false)
-  }, [evaluationId, questionId, sql, order])
+      ).then((res) => res.json())
+      setResult(response)
+    } catch {
+      setResult(undefined)
+      showSnackbar('Failed to run query — check your connection', 'error')
+    } finally {
+      setRunning(false)
+    }
+  }, [evaluationId, questionId, sql, order, showSnackbar])
 
   return (
     <Dialog

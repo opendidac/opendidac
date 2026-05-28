@@ -72,13 +72,13 @@ const PageEvaluationTake = () => {
 
   return (
     <Authorization allowRoles={[Role.PROFESSOR, Role.STUDENT]}>
-      <Loading loading={!loaded} errors={[error]}>
+      <Loading loading={!loaded} errors={!loaded ? [error] : []}>
         {loaded && (
           <LayoutMain
             header={
               <Loading
                 loading={!loaded}
-                errors={[error]}
+                errors={!loaded ? [error] : []}
                 message={'Loading evaluation...'}
               >
                 <StudentMainMenu

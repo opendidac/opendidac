@@ -21,6 +21,7 @@ import { Button, Stack } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
 
 import { fetcher } from '@/core/utils'
+import { useSnackbar } from '@/context/SnackbarContext'
 import Loading from '@/components/feedback/Loading'
 import BottomCollapsiblePanel from '@/components/layout/utils/BottomCollapsiblePanel'
 import ScrollContainer from '@/components/layout/ScrollContainer'
@@ -31,11 +32,22 @@ import StudentOutputDisplay from './StudentOutputDisplay'
 import StudentQueryConsole from './StudentQueryConsole'
 import BottomPanelHeader from '@/components/layout/utils/BottomPanelHeader'
 
-const AnswerDatabase = ({ evaluationId, question, onAnswerChange }) => {
+const AnswerDatabase = ({ evaluationId, question, onAnswerChanged }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
+
   const { data: questionAnswer, error } = useSWR(
     `/api/users/evaluations/${evaluationId}/questions/${question.id}/answers`,
     question?.id ? fetcher : null,
-    { revalidateOnFocus: false },
+    // Stale on purpose: revalidation would overwrite answer.*.content
+    // under the controlled editors (MarkdownEditor, FileEditor, etc.),
+    // resetting cursor and dropping any unflushed edits. AnswerEditor's
+    // Submit / Unsubmit flow calls mutate() explicitly when a refresh
+    // is safe.
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateIfStale: false,
+    },
   )
 
   const studentAnswer = questionAnswer?.studentAnswer
@@ -114,8 +126,6 @@ const AnswerDatabase = ({ evaluationId, question, onAnswerChange }) => {
         })) || [],
       )
     } catch {
-      // Network error — clear the RUNNING status so the UI doesn't stay
-      // spinning. Overlay handles user feedback.
       setStudentOutputs(
         queries.map((q, index) => ({
           ...studentOutputs[index],
@@ -125,10 +135,11 @@ const AnswerDatabase = ({ evaluationId, question, onAnswerChange }) => {
           },
         })) || [],
       )
+      showSnackbar('Failed to run queries — check your connection', 'error')
     } finally {
       setSaving(false)
     }
-  }, [evaluationId, questionId, queries, studentOutputs])
+  }, [evaluationId, questionId, queries, studentOutputs, showSnackbar])
 
   const onQueryChange = useCallback(
     async (query) => {
@@ -146,14 +157,14 @@ const AnswerDatabase = ({ evaluationId, question, onAnswerChange }) => {
 
         const ok = response.ok
         const data = await response.json()
-        onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChanged && onAnswerChanged(ok, data)
       } catch {
-        // Network error — ConnectionManager overlay handles user feedback.
+        showSnackbar('Failed to save — check your connection', 'error')
       } finally {
         setSaveLock(false)
       }
     },
-    [evaluationId, questionId, onAnswerChange],
+    [evaluationId, questionId, onAnswerChanged, showSnackbar],
   )
 
   const debouncedOnChange = useDebouncedCallback(onQueryChange, 500)

@@ -22,14 +22,16 @@ import StudentPermissionIcon from '@/components/feedback/StudentPermissionIcon'
 import { StudentPermission } from '@prisma/client'
 
 import { useDebouncedCallback } from 'use-debounce'
+import { useSnackbar } from '@/context/SnackbarContext'
 
 const AnswerCodeWriting = ({
   evaluationId,
   questionId,
   question,
   answer,
-  onAnswerChange,
+  onAnswerChanged,
 }) => {
+  const { showTopCenter: showSnackbar } = useSnackbar()
   const [lockCodeCheck, setLockCodeCheck] = useState(false)
 
   const onFileChange = useCallback(
@@ -48,14 +50,14 @@ const AnswerCodeWriting = ({
         )
         const ok = response.ok
         const data = await response.json()
-        onAnswerChange && onAnswerChange(ok, data)
+        onAnswerChanged && onAnswerChanged(ok, data)
       } catch {
-        // Network error — ConnectionManager overlay handles user feedback.
+        showSnackbar('Failed to save — check your connection', 'error')
       } finally {
         setLockCodeCheck(false)
       }
     },
-    [evaluationId, questionId, onAnswerChange],
+    [evaluationId, questionId, onAnswerChanged, showSnackbar],
   )
 
   const debouncedOnChange = useDebouncedCallback(onFileChange, 500)
@@ -76,7 +78,10 @@ const AnswerCodeWriting = ({
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                 },
-              )
+              ).catch(() => {
+                showSnackbar('Failed to run code check — check your connection', 'error')
+                return null
+              })
             }
           />
         }
