@@ -79,7 +79,10 @@ const AnswerCodeWriting = ({
                   headers: { 'Content-Type': 'application/json' },
                 },
               ).catch(() => {
-                showSnackbar('Failed to run code check — check your connection', 'error')
+                showSnackbar(
+                  'Failed to run code check — check your connection',
+                  'error',
+                )
                 return null
               })
             }

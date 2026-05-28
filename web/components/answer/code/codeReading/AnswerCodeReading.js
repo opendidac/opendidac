@@ -79,7 +79,14 @@ const AnswerCodeReading = ({
         setLockCodeReadingCheck(false)
       }
     },
-    [evaluationId, questionId, onAnswerChanged, outputs, studentOutputTest, showSnackbar],
+    [
+      evaluationId,
+      questionId,
+      onAnswerChanged,
+      outputs,
+      studentOutputTest,
+      showSnackbar,
+    ],
   )
 
   const onOutputCheck = useCallback(async () => {
