@@ -23,7 +23,7 @@ import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 import ResizePanel from '@/components/layout/utils/ResizePanel'
 import { useTheme } from '@emotion/react'
 import { Box, Button, Stack, Typography } from '@mui/material'
-import { useEffect, useEffectEvent, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useCtrlState } from '@/hooks/useCtrlState'
 
 const { useAnnotation } = require('@/context/AnnotationContext')
@@ -124,15 +124,15 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
     renderedValue: editorInitialContent,
     setValueUncontrolled,
     setValueControlled,
+    syncRenderedValue,
   } = useCtrlState(
     annotation?.content ?? original.content,
     `${original.path}:${discardVersion}`,
   )
 
-  // Sync editor when annotation is loaded from the server (page refresh with
-  // existing annotation). setValueControlled bails out if ref.current already
-  // equals annotation.content — that is the user-created case, where
-  // setValueUncontrolled already tracked the typed content, so no cursor jump.
+  // Snapshot: pull server content into the editor only when the annotation ID
+  // or file changes. setValueControlled bails if ref.current already equals
+  // the value (user just typed it), so no cursor jump in the same session.
   const captureAnnotation = useEffectEvent(() => {
     if (annotation?.content) {
       setValueControlled(annotation.content)
@@ -141,7 +141,19 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
   useEffect(() => {
     captureAnnotation()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [!!hasAnnotation])
+  }, [annotation?.id, original.path])
+
+  // When leaving DIFF mode Monaco remounts — push ref.current into renderedValue
+  // so the editor initialises with the latest typed content. No cursor jump risk
+  // because Monaco is still unmounted at this point.
+  const prevViewMode = useRef(viewMode)
+  useEffect(() => {
+    const prev = prevViewMode.current
+    prevViewMode.current = viewMode
+    if (prev === 'DIFF' && viewMode !== 'DIFF') {
+      syncRenderedValue()
+    }
+  }, [viewMode, syncRenderedValue])
 
   const onChange = (content) => {
     setValueUncontrolled(content)
