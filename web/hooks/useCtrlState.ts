@@ -53,10 +53,17 @@ export function useCtrlState<T>(initialValue: T, key: React.Key) {
 
   const getValue = useCallback(() => ref.current, [])
 
+  // Force renderedValue to match ref.current without bail-out.
+  // Use when the editor remounts and needs to show the latest ref value.
+  const syncRenderedValue = useCallback(() => {
+    setRenderedValue(ref.current)
+  }, [])
+
   return {
     renderedValue,
     setValueUncontrolled,
     setValueControlled,
+    syncRenderedValue,
     getValue,
   }
 }

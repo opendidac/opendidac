@@ -132,7 +132,13 @@ export const AnnotationProvider = ({
     }
   }, [contextAnnotation, doFetch])
 
-  const debouncedUpdateAnnotation = useDebouncedCallback(updateAnnotation, 1000)
+  const debouncedUpdateAnnotation = useDebouncedCallback(
+    async (groupScope, annotation) => {
+      await updateAnnotation(groupScope, annotation)
+      mutate()
+    },
+    1000,
+  )
 
   const change = useCallback(
     async (content) => {
@@ -167,6 +173,7 @@ export const AnnotationProvider = ({
             updated,
           )
 
+          mutate()
           // Update the annotation with the new ID from the server
           setAnnotation((current) => {
             // Compare the current content with the server response
@@ -196,6 +203,7 @@ export const AnnotationProvider = ({
       entity,
       entityType,
       groupScope,
+      mutate,
       question,
       readOnly,
       setAnnotation,
