@@ -127,7 +127,7 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
     syncRenderedValue,
   } = useCtrlState(
     annotation?.content ?? original.content,
-    `${original.path}:${discardVersion}`,
+    `${original.id ?? original.path}:${discardVersion}`,
   )
 
   // Snapshot: pull server content into the editor only when the annotation ID
