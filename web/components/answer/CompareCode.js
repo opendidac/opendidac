@@ -108,7 +108,7 @@ const CompareCodeWriting = ({
                         (answerToFile.studentPermission ===
                           StudentPermission.UPDATE && (
                           <AnnotationProvider
-                            key={index}
+                            key={answerToFile.file.id ?? index}
                             annotation={answerToFile.file.annotation}
                             readOnly={readOnly}
                             student={student}
