@@ -78,7 +78,7 @@ const ConsultCodeWriting = ({ answer }) => {
             <ScrollContainer mt={1} px={1} spacing={1}>
               {files.map((answerToFile, index) => (
                 <AnnotationProvider
-                  key={index}
+                  key={answerToFile.file.id ?? index}
                   readOnly
                   annotation={answerToFile.file.annotation}
                   entityType={AnnotationEntityType.CODE_WRITING_FILE}
