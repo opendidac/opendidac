@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>OpenDidac a changé d'adresse</title>
+  <style>
+    :root { --red: #e1251b; --ink: #1a1a1a; --muted: #5c6066; --line: #e6e8eb; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f4f5f7;
+      color: var(--ink);
+      line-height: 1.55;
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      max-width: 620px;
+      width: 100%;
+      border-radius: 14px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.08);
+      overflow: hidden;
+    }
+    .bar { height: 6px; background: var(--red); }
+    .inner { padding: 40px 44px; }
+    h1 { font-size: 1.6rem; margin: 0 0 6px; }
+    .lead { color: var(--muted); margin: 0 0 28px; }
+    .url-btn {
+      display: inline-block;
+      background: var(--red);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 14px 24px;
+      border-radius: 9px;
+      font-size: 1.05rem;
+    }
+    .url-btn:hover { background: #c41f16; }
+    .url-line { margin: 0 0 28px; }
+    .note {
+      border: 1px solid var(--line);
+      background: #fbfbfc;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin: 24px 0 0;
+    }
+    .note h2 { font-size: 1rem; margin: 0 0 8px; color: var(--red); }
+    .note p { margin: 0 0 6px; font-size: .94rem; color: #2b2f33; }
+    code {
+      background: #eef0f2;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: .9em;
+    }
+    .foot {
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      font-size: .85rem;
+      color: var(--muted);
+    }
+    a { color: var(--red); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="bar"></div>
+    <div class="inner">
+      <h1>OpenDidac a changé d'adresse</h1>
+      <p class="lead">Cette adresse n'est plus utilisée. La plateforme a rejoint l'infrastructure du Système d'Information (SI) de la HEIG-VD.</p>
+
+      <p class="url-line">
+        <a class="url-btn" href="https://opendidac.heig-vd.in/">Accéder à OpenDidac &rarr;</a>
+      </p>
+      <p style="color:var(--muted); margin:0;">
+        Nouvelle adresse&nbsp;: <code>https://opendidac.heig-vd.in/</code><br />
+        Connectez-vous avec votre <strong>SWITCH edu-ID</strong> comme d'habitude. Toutes vos données ont été migrées.
+      </p>
+
+      <div class="note">
+        <h2>🔴 Étudiant·e·s utilisant l'application Desktop</h2>
+        <p>Les anciennes versions pointent vers cette adresse et ne fonctionnent plus.</p>
+        <p>Téléchargez la dernière version sur <a href="https://opendidac.heig-vd.in/downloads">opendidac.heig-vd.in/downloads</a> avant votre prochaine évaluation.</p>
+      </div>
+
+      <p class="foot">Pensez à mettre à jour vos favoris et tout lien partagé. — Équipe OpenDidac / HEIG-VD</p>
+    </div>
+  </div>
+</body>
+</html>

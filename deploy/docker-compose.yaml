@@ -32,6 +32,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/migration.html:/usr/share/nginx/html/migration.html
       - ./ssl:/etc/nginx/ssl
     depends_on:
       - web
