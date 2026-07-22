@@ -19,7 +19,7 @@ import { Box, Stack, TextField, Typography } from '@mui/material'
 import InlineMonacoEditor from '../../../input/InlineMonacoEditor'
 import { useTheme, type Theme } from '@mui/material/styles'
 import { languageBasedOnPathExtension } from '@/core/utils'
-import { useCtrlState } from '@/hooks/useCtrlState'
+import { useSeededState } from '@/hooks/useSeededState'
 
 type FileModel = {
   id: string
@@ -46,13 +46,10 @@ const FileEditor: React.FC<FileEditorProps> = ({
 }) => {
   const theme: Theme = useTheme()
 
-  const { renderedValue: path, setValueControlled: setPath } = useCtrlState(
-    file?.path ?? '',
-    file?.id ?? file?.path ?? 'no-file',
-  )
+  const contentKey = file?.id ?? file?.path ?? 'no-file'
 
-  const { renderedValue: content, setValueUncontrolled: setContent } =
-    useCtrlState(file?.content ?? '', file?.id ?? file?.path ?? 'no-file')
+  // Live local state: `language` below derives from the path while typing.
+  const [path, setPath] = useSeededState(file?.path ?? '', contentKey)
 
   const language = useMemo(
     () => languageBasedOnPathExtension(path) || 'text',
@@ -100,12 +97,12 @@ const FileEditor: React.FC<FileEditorProps> = ({
       </Stack>
 
       <InlineMonacoEditor
-        code={content}
+        contentKey={`file-content:${contentKey}`}
+        defaultValue={file?.content ?? ''}
         language={language}
         readOnly={readonlyContent}
         minHeight={100}
         onChange={(next: string) => {
-          setContent(next)
           if (file) onChange({ ...file, content: next })
         }}
       />
