@@ -37,12 +37,15 @@ const defaultOptions = {
 
 const InlineMonacoEditor = ({
   code,
+  contentKey,
+  defaultValue,
   language = 'javascript',
   readOnly = false,
   onChange,
   minHeight = 100,
   editorOptions = {},
 }) => {
+  const seeded = contentKey != null
   const [editor, setEditor] = useState(null)
   const [contentHeight, setContentHeight] = useState(100)
   const editorMount = (editor, _monaco) => {
@@ -56,7 +59,7 @@ const InlineMonacoEditor = ({
       editor.setScrollPosition({ scrollTop: 0 })
       setContentHeight(newContentHeight)
     }
-  }, [code, editor, minHeight])
+  }, [code, contentKey, editor, minHeight])
 
   const onContentChange = useCallback(
     (newContent) => {
@@ -79,7 +82,14 @@ const InlineMonacoEditor = ({
         height={contentHeight}
         width="100%"
         language={language}
-        value={code}
+        {...(seeded
+          ? {
+              path: String(contentKey),
+              defaultValue: defaultValue ?? '',
+              saveViewState: true,
+              keepCurrentModel: true,
+            }
+          : { value: code })}
         options={{ ...defaultOptions, ...editorOptions, readOnly }}
         onChange={onContentChange}
         onMount={editorMount}
