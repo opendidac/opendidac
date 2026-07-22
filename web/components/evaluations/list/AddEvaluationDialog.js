@@ -22,14 +22,12 @@ import DialogFeedback from '@/components/feedback/DialogFeedback'
 import { useEffect, useState } from 'react'
 import CardSelector from '@/components/input/CardSelector'
 import {
-  EvaluationPhase,
   QuestionSource,
   QuestionStatus,
   UserOnEvaluationAccessMode,
 } from '@prisma/client'
 import useSWR from 'swr'
 import { fetcher } from '@/core/utils'
-import { phaseGT } from '@/core/phase'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 
 const Presets = [
@@ -213,29 +211,24 @@ const EvaluationSummary = ({ groupScope, evaluationId }) => {
   // Check if evaluation exists
   if (!evaluation) return null
 
-  const afterComposition = phaseGT(
-    evaluation.phase,
-    EvaluationPhase.COMPOSITION,
-  )
-
   const hasQuestions = Boolean(composition?.length)
 
-  // After composition the evaluation holds copies (source = EVAL) linked to
-  // their bank original via sourceQuestion. Distinguish three states:
-  // active original, archived original (still in the bank), and untraceable
-  // (original deleted, or the evaluation predates question linking).
-  const evalQuestions = afterComposition
-    ? (composition ?? []).filter(
-        (q) => q.question?.source === QuestionSource.EVAL,
-      )
-    : []
+  // Draft evaluations reference bank questions directly (source = BANK,
+  // own status); after composition they hold copies (source = EVAL) linked
+  // to their bank original via sourceQuestion. Distinguish three states:
+  // active, archived (still in the bank), and untraceable (original
+  // deleted, or the evaluation predates question linking).
+  const questionsInComposition = composition ?? []
 
-  const countArchivedQuestions = evalQuestions.filter(
-    (q) => q.question.sourceQuestion?.status === QuestionStatus.ARCHIVED,
+  const countArchivedQuestions = questionsInComposition.filter((q) =>
+    q.question?.source === QuestionSource.EVAL
+      ? q.question.sourceQuestion?.status === QuestionStatus.ARCHIVED
+      : q.question?.status === QuestionStatus.ARCHIVED,
   ).length
 
-  const countUntraceableQuestions = evalQuestions.filter(
-    (q) => !q.question.sourceQuestion,
+  const countUntraceableQuestions = questionsInComposition.filter(
+    (q) =>
+      q.question?.source === QuestionSource.EVAL && !q.question.sourceQuestion,
   ).length
 
   const hasAccessList =

@@ -67,6 +67,7 @@ const get = async (
           question: {
             select: {
               ...SELECT_FOR_PROFESSOR_LISTING,
+              source: true,
               // Unfiltered on purpose: consumers must distinguish an
               // archived source (still in the bank) from a deleted one
               // (sourceQuestion null) instead of conflating them.
