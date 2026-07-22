@@ -21,7 +21,6 @@ import FileEditor from '@/components/question/type_specific/code/FileEditor'
 import StudentPermissionIcon from '@/components/feedback/StudentPermissionIcon'
 import { StudentPermission } from '@prisma/client'
 
-import { useDebouncedCallback } from 'use-debounce'
 import { useSnackbar } from '@/context/SnackbarContext'
 
 const AnswerCodeWriting = ({
@@ -60,8 +59,6 @@ const AnswerCodeWriting = ({
     [evaluationId, questionId, onAnswerChanged, showSnackbar],
   )
 
-  const debouncedOnChange = useDebouncedCallback(onFileChange, 500)
-
   const codeCheckEnabled = question?.code?.codeWriting?.codeCheckEnabled ?? true
 
   return (
@@ -89,9 +86,9 @@ const AnswerCodeWriting = ({
           />
         }
       >
-        {answer?.code.codeWriting?.files?.map((answerToFile, index) => (
+        {answer?.code.codeWriting?.files?.map((answerToFile) => (
           <FileEditor
-            key={index}
+            key={answerToFile.file.id}
             file={answerToFile.file}
             readonlyPath
             readonlyContent={
@@ -102,9 +99,11 @@ const AnswerCodeWriting = ({
                 permission={answerToFile.studentPermission}
               />
             }
-            onChange={(file) => {
+            onChange={() => {
               setLockCodeCheck(true)
-              debouncedOnChange(file)
+            }}
+            onSave={(file) => {
+              onFileChange(file)
             }}
           />
         ))}

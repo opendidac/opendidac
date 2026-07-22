@@ -26,7 +26,6 @@ import CodeCheck from '../CodeCheck'
 import Loading from '@/components/feedback/Loading'
 import { fetcher } from '@/core/utils'
 import ScrollContainer from '@/components/layout/ScrollContainer'
-import { useDebouncedCallback } from 'use-debounce'
 import BottomCollapsiblePanel from '@/components/layout/utils/BottomCollapsiblePanel'
 
 const environments = languages.environments
@@ -84,8 +83,6 @@ const SolutionFilesManager = ({
     [groupScope, questionId, mutate, onUpdate],
   )
 
-  const debouncedOnFileChange = useDebouncedCallback(onFileUpdate, 500)
-
   const onDeleteFile = useCallback(
     async (codeToSolutionFile) => {
       await del('solution', groupScope, questionId, codeToSolutionFile)
@@ -121,13 +118,15 @@ const SolutionFilesManager = ({
         >
           <Button onClick={onAddFile}>Add File</Button>
           <ScrollContainer ref={filesRef} pb={24}>
-            {codeToSolutionFiles.map((codeToSolutionFile, index) => (
+            {codeToSolutionFiles.map((codeToSolutionFile) => (
               <FileEditor
-                key={index}
+                key={codeToSolutionFile.file.id}
                 file={codeToSolutionFile.file}
-                onChange={(file) => {
+                onChange={() => {
                   setLockCodeCheck(true)
-                  debouncedOnFileChange({
+                }}
+                onSave={(file) => {
+                  onFileUpdate({
                     ...codeToSolutionFile,
                     file,
                   })

@@ -150,6 +150,14 @@ const PageGrading = () => {
     500,
   )
 
+  // Persist a pending grading save when leaving the page; the stored
+  // grading argument keeps it targeted at the right student/question.
+  useEffect(() => {
+    return () => {
+      debouncedSaveGrading.flush()
+    }
+  }, [debouncedSaveGrading])
+
   const onChangeGrading = useCallback(
     (grading) => {
       const newEvaluationToQuestions = [...evaluationToQuestions]
