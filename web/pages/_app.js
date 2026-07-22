@@ -130,8 +130,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
 
 const Meta = () => (
   <Head>
-    <title>HEIG-VD - EVAL</title>
-    <meta name="description" content="HEIG-VD - Eval Platform" />
+    <title>OpenDidac</title>
+    <meta
+      name="description"
+      content="OpenDidac - Educational evaluation platform"
+    />
     <link rel="icon" href="/favicon.ico" />
   </Head>
 )
