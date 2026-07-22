@@ -17,7 +17,8 @@
 import { useSnackbar } from '@/context/SnackbarContext'
 import { Alert, IconButton, TextField, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useSeededState } from '@/hooks/useSeededState'
 import { useDebouncedCallback } from 'use-debounce'
 import SettingsSchedule from './settings/SettingsSchedule'
 import StatusDisplay from '@/components/feedback/StatusDisplay'
@@ -25,20 +26,14 @@ import StatusDisplay from '@/components/feedback/StatusDisplay'
 const EvaluationSettings = ({ groupScope, evaluation, onSettingsChanged }) => {
   const { show: showSnackbar } = useSnackbar()
 
-  const [label, setLabel] = useState(
-    evaluation && evaluation.label ? evaluation.label : '',
-  )
+  // Live mirrors reset only per evaluation: every save triggers a parent
+  // refetch, which must not clobber what the user is typing.
+  const [label, setLabel] = useSeededState(evaluation?.label ?? '', evaluation.id)
 
-  const [conditions, setConditions] = useState(
-    evaluation && evaluation.conditions ? evaluation.conditions : '',
+  const [conditions, setConditions] = useSeededState(
+    evaluation?.conditions ?? '',
+    evaluation.id,
   )
-
-  useEffect(() => {
-    if (evaluation) {
-      setLabel(evaluation.label)
-      setConditions(evaluation.conditions)
-    }
-  }, [evaluation, setLabel])
 
   const handleSave = useCallback(
     async (updatedProperties) => {
@@ -111,8 +106,10 @@ const EvaluationSettings = ({ groupScope, evaluation, onSettingsChanged }) => {
 
       <ConditionSettings
         groupScope={groupScope}
+        evaluationId={evaluation.id}
         conditions={conditions}
         onChange={(conditions) => {
+          setConditions(conditions)
           debounceSave({ conditions })
         }}
       />
@@ -159,7 +156,7 @@ import EvaluationTitleBar from '../layout/EvaluationTitleBar'
 import ConsultationSettings from '../../grading/ConsultationSettings'
 import SecuritySettings from '../../security/SecuritySettings'
 
-const ConditionSettings = ({ groupScope, conditions, onChange }) => {
+const ConditionSettings = ({ groupScope, evaluationId, conditions, onChange }) => {
   const [conditionsEditing, setConditionsEditing] = useState(false)
 
   return (
@@ -208,6 +205,7 @@ const ConditionSettings = ({ groupScope, conditions, onChange }) => {
       </Stack>
       <UpdateConditionsDialog
         groupScope={groupScope}
+        evaluationId={evaluationId}
         conditions={conditions}
         open={conditionsEditing}
         onClose={() => setConditionsEditing(false)}
@@ -221,6 +219,7 @@ const ConditionSettings = ({ groupScope, conditions, onChange }) => {
 
 const UpdateConditionsDialog = ({
   groupScope,
+  evaluationId,
   conditions,
   open,
   onClose,
@@ -237,7 +236,8 @@ const UpdateConditionsDialog = ({
             id={`conditions`}
             title="Conditions"
             groupScope={groupScope}
-            rawContent={conditions}
+            contentKey={`eval-conditions:${evaluationId}`}
+            defaultValue={conditions}
             onChange={(value) => {
               onConditionsChanged(value)
             }}

@@ -21,7 +21,8 @@ import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import InfoIcon from '@mui/icons-material/Info'
 import { useTheme } from '@emotion/react'
 import { useSnackbar } from '@/context/SnackbarContext'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
+import { useSeededState } from '@/hooks/useSeededState'
 import { useDebouncedCallback } from 'use-debounce'
 import { Box } from '@mui/system'
 
@@ -35,11 +36,11 @@ const Addendum = ({
   const theme = useTheme()
 
   const { show: showSnackbar } = useSnackbar()
-  const [addendum, setAddendum] = useState(evaluationToQuestion?.addendum || '')
-
-  useEffect(() => {
-    setAddendum(evaluationToQuestion?.addendum || '')
-  }, [evaluationToQuestion])
+  // Live mirror for the readOnly viewer; reset only when the entity changes.
+  const [addendum, setAddendum] = useSeededState(
+    evaluationToQuestion?.addendum || '',
+    `${evaluationId}:${evaluationToQuestion?.questionId}`,
+  )
 
   const debounceAddendumChange = useDebouncedCallback(
     useCallback(
@@ -114,7 +115,8 @@ const Addendum = ({
         <MarkdownEditor
           groupScope={groupScope}
           readOnly={readOnly}
-          rawContent={addendum}
+          contentKey={`addendum:${evaluationId}:${evaluationToQuestion?.questionId}`}
+          defaultValue={evaluationToQuestion?.addendum || ''}
           onChange={handleAddendumChange}
         />
       )}
