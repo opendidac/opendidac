@@ -19,43 +19,57 @@ import { Button } from '@mui/material'
 import Image from 'next/image'
 import { useCallback } from 'react'
 
-const COLUMN_SEPARATOR = ','
-const LINE_SEPARATOR = '\r'
+// Semicolon-separated, CRLF-terminated, all cells quoted: opens correctly
+// on double-click in European-locale Excel (which expects ';' as the list
+// separator) without coercing dot-decimal points like 1.33 into 133.
+const COLUMN_SEPARATOR = ';'
+const LINE_SEPARATOR = '\r\n'
+
+// Quote every cell and escape embedded quotes (RFC 4180).
+const cell = (value) => `"${String(value).replace(/"/g, '""')}"`
 
 const ExportCSV = ({ evaluation, results, attendance }) => {
   const exportAsCSV = useCallback(() => {
     const participants = attendance?.registered?.map((r) => r.user) ?? []
 
-    let csv = `Name${COLUMN_SEPARATOR}Email${COLUMN_SEPARATOR}Success Rate${COLUMN_SEPARATOR}Total Points${COLUMN_SEPARATOR}Obtained Points${COLUMN_SEPARATOR}`
-    results.forEach((jstq) => (csv += `Q${jstq.order + 1}${COLUMN_SEPARATOR}`))
-    csv += LINE_SEPARATOR
+    const header = [
+      'Name',
+      'Email',
+      'Success Rate',
+      'Total Points',
+      'Obtained Points',
+      ...results.map((jstq) => `Q${jstq.order + 1}`),
+    ]
+
+    const lines = [header.map(cell).join(COLUMN_SEPARATOR)]
 
     participants.forEach((participant) => {
-      let obtainedPoints = getObtainedPoints(results, participant)
+      const obtainedPoints = getObtainedPoints(results, participant)
 
-      let totalPoints = results.reduce((acc, jstq) => acc + jstq.points, 0)
-      let participantSuccessRate =
+      const totalPoints = results.reduce((acc, jstq) => acc + jstq.points, 0)
+      const participantSuccessRate =
         totalPoints > 0 ? Math.round((obtainedPoints / totalPoints) * 100) : 0
 
-      csv += `${participant.name}${COLUMN_SEPARATOR}${
-        participant.email
-      }${COLUMN_SEPARATOR}${`${participantSuccessRate} %`}${COLUMN_SEPARATOR}${totalPoints}${COLUMN_SEPARATOR}${obtainedPoints}${COLUMN_SEPARATOR}`
+      const row = [
+        participant.name,
+        participant.email,
+        `${participantSuccessRate} %`,
+        totalPoints,
+        obtainedPoints,
+        ...results.map((jstq) => {
+          const studentAnswer = jstq.question.studentAnswer.find(
+            (sa) => sa.user.email === participant.email,
+          )
+          return studentAnswer?.studentGrading
+            ? studentAnswer.studentGrading.pointsObtained
+            : '-'
+        }),
+      ]
 
-      results.forEach((jstq) => {
-        const studentAnswer = jstq.question.studentAnswer.find(
-          (sa) => sa.user.email === participant.email,
-        )
-
-        let pointsObtained = '-'
-        if (studentAnswer?.studentGrading) {
-          pointsObtained = studentAnswer.studentGrading.pointsObtained
-        }
-
-        csv += `"${pointsObtained}"${COLUMN_SEPARATOR}`
-      })
-
-      csv += LINE_SEPARATOR
+      lines.push(row.map(cell).join(COLUMN_SEPARATOR))
     })
+
+    const csv = lines.join(LINE_SEPARATOR) + LINE_SEPARATOR
 
     let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     let url = URL.createObjectURL(blob)
