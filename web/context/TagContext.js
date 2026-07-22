@@ -15,7 +15,7 @@
  */
 
 import React, { createContext, useContext, useCallback, useEffect } from 'react'
-import useSWR from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
 import { Role } from '@prisma/client'
 import { useSession } from 'next-auth/react'
 import { fetcher } from '../core/utils'
@@ -35,6 +35,8 @@ export const TagsProvider = ({ children }) => {
   const { groupScope } = router.query
 
   const { data: session } = useSession()
+
+  const { mutate: globalMutate } = useSWRConfig()
 
   const {
     data: tags,
@@ -56,7 +58,7 @@ export const TagsProvider = ({ children }) => {
 
   const upsert = useCallback(
     async (questionId, tags) => {
-      return await fetch(`/api/${groupScope}/questions/${questionId}/tags`, {
+      await fetch(`/api/${groupScope}/questions/${questionId}/tags`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -66,12 +68,17 @@ export const TagsProvider = ({ children }) => {
           tags,
         }),
       })
-        .then((res) => res.json())
-        .then(async (updated) => {
-          await mutate(updated)
-        })
+      // Revalidate every tag-related key: the group tag list (this context)
+      // and all filter-side TagsSelector keys (same path with query params).
+      // Never write the PUT response into the cache - it is a raw Prisma
+      // transaction result, not a tag list.
+      await globalMutate(
+        (key) =>
+          typeof key === 'string' &&
+          key.startsWith(`/api/${groupScope}/questions/tags`),
+      )
     },
-    [groupScope, mutate],
+    [groupScope, globalMutate],
   )
 
   return (
