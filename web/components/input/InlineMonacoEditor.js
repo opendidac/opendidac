@@ -39,6 +39,10 @@ const InlineMonacoEditor = ({
   code = '',
   contentKey,
   defaultValue,
+  // Set to false when an external store (context, SWR) is the source of
+  // truth for the content: the model is disposed on unmount so a later
+  // remount always reseeds from defaultValue instead of a cached model.
+  keepModel = true,
   language = 'javascript',
   readOnly = false,
   onChange,
@@ -87,7 +91,7 @@ const InlineMonacoEditor = ({
               path: String(contentKey),
               defaultValue: defaultValue ?? '',
               saveViewState: true,
-              keepCurrentModel: true,
+              keepCurrentModel: keepModel,
             }
           : { value: code })}
         options={{ ...defaultOptions, ...editorOptions, readOnly }}

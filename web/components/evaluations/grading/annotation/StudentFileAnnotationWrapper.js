@@ -123,8 +123,10 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
   // The contentKey deliberately excludes annotation.id: the annotation record
   // is created on the first keystroke, and a key change at that moment would
   // reset the cursor. The isLoading gate below guarantees the seed is correct
-  // at mount; keepCurrentModel preserves typed content across view toggles.
-  const contentKey = `annotation:${original.id ?? original.path}:${discardVersion}`
+  // at mount. The editor uses keepModel={false} — the AnnotationContext is the
+  // source of truth, so the model is disposed on every unmount (view toggles,
+  // participant switches, discard remounts) and always reseeds fresh.
+  const contentKey = `annotation:${original.id ?? original.path}`
 
   const onChange = (content) => {
     change(content)
@@ -172,8 +174,10 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
         leftPanel={
           viewMode === 'ANNOTATED' || viewMode === 'ORIGINAL' ? (
             <InlineMonacoEditor
+              key={discardVersion}
               contentKey={contentKey}
               defaultValue={annotation?.content ?? original.content}
+              keepModel={false}
               readOnly={readOnly}
               onChange={onChange}
               language={language}
