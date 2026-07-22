@@ -32,9 +32,9 @@ const Essay = ({ id = 'essay', groupScope, solution, template, onChange }) => {
         id={id}
         title={'Solution Answer'}
         groupScope={groupScope}
-        rawContent={solution}
+        contentKey={`essay-solution:${id}`}
+        defaultValue={solution}
         onChange={(newContent) => {
-          if (newContent === solution) return
           onChange('solution', newContent === '' ? undefined : newContent)
         }}
       />
@@ -42,9 +42,9 @@ const Essay = ({ id = 'essay', groupScope, solution, template, onChange }) => {
         id={id}
         title={'Student Starting Template'}
         groupScope={groupScope}
-        rawContent={template}
+        contentKey={`essay-template:${id}`}
+        defaultValue={template}
         onChange={(newContent) => {
-          if (newContent === template) return
           onChange('template', newContent === '' ? undefined : newContent)
         }}
       />

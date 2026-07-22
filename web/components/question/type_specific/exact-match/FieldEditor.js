@@ -17,7 +17,7 @@
 import { IconButton, Stack, Typography } from '@mui/material'
 import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined'
-import { useEffect, useState } from 'react'
+import { useSeededState } from '@/hooks/useSeededState'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import DragHandleSVG from '@/components/layout/utils/DragHandleSVG'
 import { useReorderable } from '@/components/layout/utils/ReorderableList'
@@ -33,8 +33,13 @@ const FieldEditor = ({
   mayDelete,
   previewMode,
 }) => {
-  const [regex, setRegex] = useState(field.matchRegex || '')
-  const [statement, setStatement] = useState(field.statement || '')
+  // Live local mirrors: the preview renders `statement`, the regex field
+  // needs its live value for the error indicator. Reset only per field.
+  const [regex, setRegex] = useSeededState(field.matchRegex || '', field.id)
+  const [statement, setStatement] = useSeededState(
+    field.statement || '',
+    field.id,
+  )
 
   const {
     handleDragStart,
@@ -44,11 +49,6 @@ const FieldEditor = ({
     isDragging,
     getDragStyles,
   } = useReorderable()
-
-  useEffect(() => {
-    setRegex(field.matchRegex || '')
-    setStatement(field.statement || '')
-  }, [field.matchRegex, field.statement])
 
   const theme = useTheme()
 
@@ -102,9 +102,9 @@ const FieldEditor = ({
               <MarkdownEditor
                 id={field.id}
                 groupScope={groupScope}
-                rawContent={statement}
+                contentKey={`exact-field-statement:${field.id}`}
+                defaultValue={field.statement || ''}
                 onChange={(newStatement) => {
-                  if (newStatement === statement) return
                   setStatement(newStatement)
                   onChange({
                     ...field,

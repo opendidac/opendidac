@@ -203,7 +203,7 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
         >
           {snippets?.map((snippet, index) => (
             <SnippetEditor
-              key={index}
+              key={snippet.id}
               index={index}
               snippet={snippet}
               language={language}

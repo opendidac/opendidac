@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Stack, Typography, IconButton } from '@mui/material'
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
@@ -29,16 +29,8 @@ const SnippetEditor = ({
   onOutputChange,
   onDelete,
 }) => {
-  const [code, setCode] = useState(snippet.snippet || '')
-  const [output, setOutput] = useState(snippet.output || '')
-
-  useEffect(() => {
-    setCode(snippet.snippet || '')
-    setOutput(snippet.output || '')
-  }, [snippet])
-
   return (
-    <Stack direction={'column'} key={index} spacing={1}>
+    <Stack direction={'column'} spacing={1}>
       <Stack
         direction={'row'}
         spacing={1}
@@ -52,28 +44,24 @@ const SnippetEditor = ({
         </IconButton>
       </Stack>
 
-      {/* Code editor */}
+      {/* Code editor: seeded island, the parent mirrors changes */}
       <InlineMonacoEditor
-        key={`code-${index}`}
+        contentKey={`snippet-code:${snippet.id}`}
+        defaultValue={snippet.snippet || ''}
         language={language}
         minHeight={60}
-        code={code}
         onChange={(newCode) => {
-          setCode(newCode)
-          setOutput('')
           onSnippetChange(newCode)
         }}
       />
 
-      {/* Output editor */}
-
+      {/* Output editor: stays controlled — run results and code-edit
+          clearing are pushed in programmatically via the parent state,
+          which mirrors manual edits synchronously (no jump risk). */}
       <OutputEditor
-        output={output}
+        output={snippet.output || ''}
         isOutputEditable={isOutputEditable}
-        onOutputChange={(newOutput) => {
-          setOutput(newOutput)
-          onOutputChange(newOutput)
-        }}
+        onOutputChange={onOutputChange}
       />
     </Stack>
   )

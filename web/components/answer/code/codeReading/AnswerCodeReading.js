@@ -142,9 +142,10 @@ const AnswerCodeReading = ({
         <ScrollContainer>
           {outputs.map((output, index) => (
             <AnswerCodeReadingOutput
-              key={index}
+              key={output.codeReadingSnippet.id}
               language={question.code.language}
               snippet={output.codeReadingSnippet.snippet}
+              snippetId={output.codeReadingSnippet.id}
               output={output.output}
               status={
                 <AnswerCodeReadingOutputStatus

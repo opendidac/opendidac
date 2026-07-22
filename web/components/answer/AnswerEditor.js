@@ -381,7 +381,8 @@ const AnswerEssay = ({ answer, evaluationId, questionId, onAnswerChanged }) => {
     answer?.essay && (
       <MarkdownEditor
         id={`answer-editor-${questionId}`}
-        rawContent={answer.essay.content}
+        contentKey={`answer-essay:${evaluationId}:${questionId}`}
+        defaultValue={answer.essay.content}
         onChange={(newContent) => {
           debouncedOnChange(newContent)
         }}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Box, Stack, Typography } from '@mui/material'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 import outputEditorOptions from '@/components/question/type_specific/code/codeReading/outputEditorOptions.json'
@@ -22,16 +22,11 @@ import outputEditorOptions from '@/components/question/type_specific/code/codeRe
 const AnswerCodeReadingOutput = ({
   language,
   snippet,
+  snippetId,
   output: initial,
   status,
   onOutputChange,
 }) => {
-  const [output, setOutput] = useState(initial || '')
-
-  useEffect(() => {
-    setOutput(initial || '')
-  }, [initial])
-
   return (
     <Box>
       {/* Read-only snippet preview */}
@@ -56,13 +51,12 @@ const AnswerCodeReadingOutput = ({
         </Stack>
 
         <InlineMonacoEditor
+          contentKey={`answer-cro-output:${snippetId}`}
+          defaultValue={initial || ''}
           language="plaintext"
           minHeight={60}
-          readOnly={false}
-          code={output}
           editorOptions={outputEditorOptions}
           onChange={(val) => {
-            setOutput(val ?? '')
             onOutputChange?.(val ?? '')
           }}
         />
