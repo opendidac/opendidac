@@ -194,6 +194,12 @@ export const AnnotationProvider = ({
 
           // Update the annotation with the new ID from the server
           setAnnotation((current) => {
+            if (!current) {
+              // Discarded while the POST was in flight: remove the freshly
+              // created record instead of resurrecting it.
+              discardAnnotation(groupScope, newAnnotation.id)
+              return current
+            }
             const withId = {
               ...current,
               id: newAnnotation.id,
@@ -238,6 +244,9 @@ export const AnnotationProvider = ({
     if (readOnly) {
       return
     }
+    // Drop any pending debounced save so it cannot fire after the DELETE
+    // and resurrect the annotation on the server.
+    debouncedUpdateAnnotation.cancel()
     const annotationId = annotation.id
     setAnnotation(null)
     setState(AnnotationState.NOT_ANNOTATED.value)
@@ -245,7 +254,7 @@ export const AnnotationProvider = ({
     // Write the deletion into the SWR cache: otherwise a later remount of
     // this entity is served the stale cached annotation before revalidation.
     mutate(null, { revalidate: false })
-  }, [groupScope, annotation, readOnly, mutate])
+  }, [groupScope, annotation, readOnly, mutate, debouncedUpdateAnnotation])
 
   return (
     <AnnotationContext.Provider
