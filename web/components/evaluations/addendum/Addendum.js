@@ -84,7 +84,7 @@ const Addendum = ({
       setAddendum(value)
       debounceAddendumChange(value)
     },
-    [debounceAddendumChange],
+    [debounceAddendumChange, setAddendum],
   )
 
   // Return null if in readonly mode and no addendum
