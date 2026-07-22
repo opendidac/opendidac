@@ -16,7 +16,8 @@
 
 import { useSnackbar } from '@/context/SnackbarContext'
 import { Stack } from '@mui/system'
-import { Button, Typography } from '@mui/material'
+import { Typography } from '@mui/material'
+import { LoadingButton } from '@mui/lab'
 import { getNextPhase, getPhaseDetails } from '../phases'
 import SkipNextIcon from '@mui/icons-material/SkipNext'
 import StatusDisplay from '@/components/feedback/StatusDisplay'
@@ -162,16 +163,17 @@ const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
     <>
       <Stack direction="row" spacing={2} justifyContent="center">
         {phaseDetails && phaseDetails.nextPhaseButton ? (
-          <Button
+          <LoadingButton
             variant="text"
             color="info"
             onClick={onButtonClick}
-            disabled={changing}
+            loading={changing}
+            loadingPosition="start"
             endIcon={<SkipNextIcon />}
             startIcon={<phaseDetails.nextPhaseButton.icon />}
           >
             {phaseDetails.nextPhaseButton.label}
-          </Button>
+          </LoadingButton>
         ) : (
           <Stack
             direction="column"
