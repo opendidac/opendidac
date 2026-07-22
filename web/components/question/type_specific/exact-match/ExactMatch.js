@@ -36,6 +36,7 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
     data: loadedFields,
     isLoading: isLoadingFields,
     error: loadingError,
+    mutate,
   } = useSWR(
     `/api/${groupScope}/questions/${questionId}/exact-match/fields`,
     groupScope && questionId ? fetcher : null,
@@ -48,9 +49,13 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
   const setFields = useCallback(
     (newFields) => {
       setFieldsState(newFields)
+      // Mirror local truth into the SWR cache: a remount of this question
+      // must seed the field editors with the latest edits, not the
+      // pre-edit cached fields.
+      mutate(newFields, { revalidate: false })
       onFieldsChange(newFields)
     },
-    [setFieldsState, onFieldsChange],
+    [setFieldsState, mutate, onFieldsChange],
   )
 
   useEffect(() => {
@@ -97,7 +102,7 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
 
   const debouncedAddField = useDebouncedCallback(onAddField, 300)
 
-  const onFieldChange = useCallback(
+  const saveField = useCallback(
     async (newField) => {
       try {
         await fetch(
@@ -113,20 +118,46 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
             }),
           },
         )
-        const updatedFields = fields.map((field) =>
-          field.id === newField.id ? newField : field,
-        )
-        setFields(updatedFields)
-
         showSnackbar('Field saved successfully', 'success')
       } catch (error) {
         console.error('Failed to save field change', error)
         showSnackbar('Failed to save field change', 'error')
       }
     },
-    [fields, groupScope, questionId, setFields, showSnackbar],
+    [groupScope, questionId, showSnackbar],
   )
-  const debouncedFieldChange = useDebouncedCallback(onFieldChange, 300)
+  // Pending saves are kept per field id: a shared debouncer alone would
+  // drop field A's save when field B is edited within the debounce window.
+  const pendingSaves = React.useRef(new Map())
+
+  const flushPendingSaves = useCallback(async () => {
+    const toSave = [...pendingSaves.current.values()]
+    pendingSaves.current.clear()
+    await Promise.all(toSave.map(saveField))
+  }, [saveField])
+
+  const debouncedFlushSaves = useDebouncedCallback(flushPendingSaves, 300)
+
+  // Persist pending edits when leaving the question: unmount cancels
+  // pending debounced calls, silently losing the last edit otherwise.
+  useEffect(() => {
+    return () => {
+      debouncedFlushSaves.flush()
+    }
+  }, [debouncedFlushSaves])
+
+  // Local state and SWR cache update immediately; only the PUT is debounced.
+  const onFieldChange = useCallback(
+    (newField) => {
+      const updatedFields = fields.map((field) =>
+        field.id === newField.id ? newField : field,
+      )
+      setFields(updatedFields)
+      pendingSaves.current.set(newField.id, newField)
+      debouncedFlushSaves()
+    },
+    [fields, setFields, debouncedFlushSaves],
+  )
 
   const onDelete = useCallback(
     async (id) => {
@@ -247,7 +278,7 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
                 index={index}
                 groupScope={groupScope}
                 field={field}
-                onChange={debouncedFieldChange}
+                onChange={onFieldChange}
                 onDelete={debouncedDelete}
                 mayDelete={fields.length > 1}
                 previewMode={previewMode}
