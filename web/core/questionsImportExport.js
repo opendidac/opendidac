@@ -232,11 +232,14 @@ export const serializeQuestion = (q) => {
       data = {}
   }
 
+  const tags = (q.questionToTag || []).map((qt) => qt.label).filter(Boolean)
+
   const payload = stripEmpty({
     type: q.type,
     title: q.title,
     content: q.content ?? null,
     scratchpad: q.scratchpad ?? null,
+    tags,
     data,
   })
 
@@ -245,6 +248,7 @@ export const serializeQuestion = (q) => {
     title: payload.title,
     ...(payload.content ? { content: payload.content } : {}),
     ...(payload.scratchpad ? { scratchpad: payload.scratchpad } : {}),
+    ...(payload.tags?.length ? { tags: payload.tags } : {}),
     data: payload.data || {},
   }
 }
@@ -416,7 +420,7 @@ const buildExactMatchCreate = (data) => ({
  * @returns {{ createData: object, post: object }}
  */
 export const buildImportPrismaQuery = (questionJson, group) => {
-  const { type, title, content, scratchpad, data } = questionJson
+  const { type, title, content, scratchpad, tags, data } = questionJson
   const connectGroup = group?.id
     ? { connect: { id: group.id } }
     : group?.label
@@ -469,10 +473,14 @@ export const buildImportPrismaQuery = (questionJson, group) => {
    *
    * - codeWriting.files: create File rows and link via CodeToTemplateFile / CodeToSolutionFile
    * - database.solutionQueries: connect solution entries to authoring queries by `order`
+   * - tags: upsert Tag rows in the target group and link via QuestionToTag
    */
   const post = {
     codeFiles: undefined,
     dbSolution: undefined,
+    tags: Array.isArray(tags)
+      ? tags.filter((t) => typeof t === 'string' && t.trim().length > 0)
+      : undefined,
   }
 
   if (
@@ -534,7 +542,7 @@ export const runImportCreate = async (prisma, createData) => {
   // Return the created question with minimal fields needed by post steps
   const created = await prisma.question.create({
     ...createData,
-    select: { id: true, type: true },
+    select: { id: true, type: true, groupId: true },
   })
   return created
 }
@@ -642,6 +650,26 @@ export const runImportPost = async (prisma, createdQuestion, postPlan) => {
           questionId: createdQuestion.id,
           queryId: newQuery.id,
           outputId: newOutput?.id ?? null,
+        },
+      })
+    }
+  }
+
+  // 3) Tags: upsert each tag in the target group, then link the question
+  if (postPlan.tags?.length) {
+    for (const label of postPlan.tags) {
+      await prisma.tag.upsert({
+        where: {
+          groupId_label: { groupId: createdQuestion.groupId, label },
+        },
+        update: {},
+        create: { groupId: createdQuestion.groupId, label },
+      })
+      await prisma.questionToTag.create({
+        data: {
+          questionId: createdQuestion.id,
+          groupId: createdQuestion.groupId,
+          label,
         },
       })
     }

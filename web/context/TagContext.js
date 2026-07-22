@@ -24,6 +24,7 @@ import { useRouter } from 'next/router'
 const TagsContext = createContext({
   tags: [],
   upsert: async () => {},
+  refresh: async () => {},
 })
 export const useTags = () => useContext(TagsContext)
 
@@ -56,6 +57,18 @@ export const TagsProvider = ({ children }) => {
     }
   }, [session, mutate])
 
+  // Revalidate every tag-related key: the group tag list (this context)
+  // and all filter-side TagsSelector keys (same path with query params).
+  // Use after any operation that may create or delete tags server-side
+  // (tag edits, question imports, ...).
+  const refresh = useCallback(async () => {
+    await globalMutate(
+      (key) =>
+        typeof key === 'string' &&
+        key.startsWith(`/api/${groupScope}/questions/tags`),
+    )
+  }, [groupScope, globalMutate])
+
   const upsert = useCallback(
     async (questionId, tags) => {
       await fetch(`/api/${groupScope}/questions/${questionId}/tags`, {
@@ -68,17 +81,11 @@ export const TagsProvider = ({ children }) => {
           tags,
         }),
       })
-      // Revalidate every tag-related key: the group tag list (this context)
-      // and all filter-side TagsSelector keys (same path with query params).
       // Never write the PUT response into the cache - it is a raw Prisma
       // transaction result, not a tag list.
-      await globalMutate(
-        (key) =>
-          typeof key === 'string' &&
-          key.startsWith(`/api/${groupScope}/questions/tags`),
-      )
+      await refresh()
     },
-    [groupScope, globalMutate],
+    [groupScope, refresh],
   )
 
   return (
@@ -86,6 +93,7 @@ export const TagsProvider = ({ children }) => {
       value={{
         tags: tags || [],
         upsert,
+        refresh,
       }}
     >
       {children}

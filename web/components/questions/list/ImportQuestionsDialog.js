@@ -32,6 +32,7 @@ import {
   Upload as UploadIcon,
 } from '@mui/icons-material'
 import { useState, useRef } from 'react'
+import { useTags } from '@/context/TagContext'
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -56,6 +57,7 @@ const ImportQuestionsDialog = ({
   const [parseError, setParseError] = useState(null)
   const [importing, setImporting] = useState(false)
   const fileInputRef = useRef(null)
+  const { refresh: refreshTags } = useTags()
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0]
@@ -118,7 +120,8 @@ const ImportQuestionsDialog = ({
 
       const result = await response.json()
 
-      // Success
+      // Success - imported questions may have created new tags
+      await refreshTags()
       onImportSuccess?.(result)
       handleClose()
     } catch (error) {
