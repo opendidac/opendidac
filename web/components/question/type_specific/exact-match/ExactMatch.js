@@ -126,37 +126,16 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
     },
     [groupScope, questionId, showSnackbar],
   )
-  // Pending saves are kept per field id: a shared debouncer alone would
-  // drop field A's save when field B is edited within the debounce window.
-  const pendingSaves = React.useRef(new Map())
-
-  const flushPendingSaves = useCallback(async () => {
-    const toSave = [...pendingSaves.current.values()]
-    pendingSaves.current.clear()
-    await Promise.all(toSave.map(saveField))
-  }, [saveField])
-
-  const debouncedFlushSaves = useDebouncedCallback(flushPendingSaves, 300)
-
-  // Persist pending edits when leaving the question: unmount cancels
-  // pending debounced calls, silently losing the last edit otherwise.
-  useEffect(() => {
-    return () => {
-      debouncedFlushSaves.flush()
-    }
-  }, [debouncedFlushSaves])
-
-  // Local state and SWR cache update immediately; only the PUT is debounced.
+  // Local state and SWR cache update immediately on change; each
+  // FieldEditor owns its debounced save (same pattern as MultipleChoice).
   const onFieldChange = useCallback(
     (newField) => {
       const updatedFields = fields.map((field) =>
         field.id === newField.id ? newField : field,
       )
       setFields(updatedFields)
-      pendingSaves.current.set(newField.id, newField)
-      debouncedFlushSaves()
     },
-    [fields, setFields, debouncedFlushSaves],
+    [fields, setFields],
   )
 
   const onDelete = useCallback(
@@ -279,6 +258,7 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
                 groupScope={groupScope}
                 field={field}
                 onChange={onFieldChange}
+                onSave={saveField}
                 onDelete={debouncedDelete}
                 mayDelete={fields.length > 1}
                 previewMode={previewMode}

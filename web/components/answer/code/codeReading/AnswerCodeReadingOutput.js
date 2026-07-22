@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Box, Stack, Typography } from '@mui/material'
+import { useDebouncedCallback } from 'use-debounce'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 import outputEditorOptions from '@/components/question/type_specific/code/codeReading/outputEditorOptions.json'
 
@@ -27,6 +28,18 @@ const AnswerCodeReadingOutput = ({
   status,
   onOutputChange,
 }) => {
+  // Each output owns its debounced save (same pattern as MultipleChoice
+  // options): a debouncer shared across the list would drop snippet A's
+  // guess when snippet B is edited within the debounce window.
+  const debouncedOutputChange = useDebouncedCallback(onOutputChange, 500)
+
+  // Persist the pending guess when the question unmounts (navigation).
+  useEffect(() => {
+    return () => {
+      debouncedOutputChange.flush()
+    }
+  }, [debouncedOutputChange])
+
   return (
     <Box>
       {/* Read-only snippet preview */}
@@ -57,7 +70,7 @@ const AnswerCodeReadingOutput = ({
           minHeight={60}
           editorOptions={outputEditorOptions}
           onChange={(val) => {
-            onOutputChange?.(val ?? '')
+            debouncedOutputChange(val ?? '')
           }}
         />
 

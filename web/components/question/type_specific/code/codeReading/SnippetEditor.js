@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Stack, Typography, IconButton } from '@mui/material'
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined'
+import { useDebouncedCallback } from 'use-debounce'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 import outputEditorOptions from '@/components/question/type_specific/code/codeReading/outputEditorOptions.json'
 
@@ -27,8 +28,21 @@ const SnippetEditor = ({
   isOutputEditable,
   onSnippetChange,
   onOutputChange,
+  onSave,
   onDelete,
 }) => {
+  // Each snippet owns its debounced save (same pattern as MultipleChoice
+  // options): a debouncer shared across the list would drop snippet A's
+  // save when snippet B is edited within the debounce window.
+  const debouncedSave = useDebouncedCallback(onSave, 500)
+
+  // Persist pending edits when the snippet unmounts (navigation).
+  useEffect(() => {
+    return () => {
+      debouncedSave.flush()
+    }
+  }, [debouncedSave])
+
   return (
     <Stack direction={'column'} spacing={1}>
       <Stack
@@ -52,6 +66,7 @@ const SnippetEditor = ({
         minHeight={60}
         onChange={(newCode) => {
           onSnippetChange(newCode)
+          debouncedSave(snippet.id, { ...snippet, snippet: newCode, output: null })
         }}
       />
 
@@ -61,7 +76,10 @@ const SnippetEditor = ({
       <OutputEditor
         output={snippet.output || ''}
         isOutputEditable={isOutputEditable}
-        onOutputChange={onOutputChange}
+        onOutputChange={(newOutput) => {
+          onOutputChange(newOutput)
+          debouncedSave(snippet.id, { ...snippet, output: newOutput })
+        }}
       />
     </Stack>
   )

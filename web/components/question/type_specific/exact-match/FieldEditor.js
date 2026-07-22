@@ -17,6 +17,8 @@
 import { IconButton, Stack, Typography } from '@mui/material'
 import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined'
+import { useEffect } from 'react'
+import { useDebouncedCallback } from 'use-debounce'
 import { useSeededState } from '@/hooks/useSeededState'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import DragHandleSVG from '@/components/layout/utils/DragHandleSVG'
@@ -29,10 +31,22 @@ const FieldEditor = ({
   groupScope,
   field,
   onChange,
+  onSave,
   onDelete,
   mayDelete,
   previewMode,
 }) => {
+  // Each field owns its debounced save (same pattern as MultipleChoice
+  // options): a debouncer shared across the list would drop field A's
+  // save when field B is edited within the debounce window.
+  const debouncedSave = useDebouncedCallback(onSave, 300)
+
+  // Persist pending edits when the field unmounts (navigation).
+  useEffect(() => {
+    return () => {
+      debouncedSave.flush()
+    }
+  }, [debouncedSave])
   // Live local mirrors: the preview renders `statement`, the regex field
   // needs its live value for the error indicator. Reset only per field.
   const [regex, setRegex] = useSeededState(field.matchRegex || '', field.id)
@@ -106,10 +120,12 @@ const FieldEditor = ({
                 defaultValue={field.statement || ''}
                 onChange={(newStatement) => {
                   setStatement(newStatement)
-                  onChange({
+                  const newField = {
                     ...field,
                     statement: newStatement,
-                  })
+                  }
+                  onChange(newField)
+                  debouncedSave(newField)
                 }}
               />
             </Stack>
@@ -128,10 +144,12 @@ const FieldEditor = ({
             const newRegex = e.target.value
             if (newRegex === regex) return
             setRegex(newRegex)
-            onChange({
+            const newField = {
               ...field,
               matchRegex: newRegex,
-            })
+            }
+            onChange(newField)
+            debouncedSave(newField)
           }}
         />
       </Stack>
