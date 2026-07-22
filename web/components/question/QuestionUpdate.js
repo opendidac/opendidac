@@ -19,7 +19,7 @@ import { useCallback, useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Stack, TextField, Button, Typography, Tooltip } from '@mui/material'
 import MarkdownEditor from '../input/markdown/MarkdownEditor'
-import { useCtrlState } from '@/hooks/useCtrlState'
+import SeededTextField from '@/components/input/SeededTextField'
 
 import LayoutSplitScreen from '../layout/LayoutSplitScreen'
 import QuestionTypeSpecific from './QuestionTypeSpecific'
@@ -57,19 +57,6 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
     useState(false)
   const [deleteQuestionDialogOpen, setDeleteQuestionDialogOpen] =
     useState(false)
-
-  const { renderedValue: title, setValueControlled: setTitle } = useCtrlState(
-    question?.title || '',
-    question &&
-      questionId &&
-      `question-${questionId}-title-${question ? 'loaded' : 'loading'}`,
-  )
-
-  const { renderedValue: content, setValueUncontrolled: setContent } =
-    useCtrlState(
-      question?.content || '',
-      `question-${questionId}-content-${question?.id ?? 'loading'}`,
-    )
 
   const saveQuestion = useCallback(
     async (question) => {
@@ -199,16 +186,15 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
             >
               <Stack spacing={2} sx={{ pl: 2, pt: 1, height: '100%' }}>
                 <Stack direction="row" alignItems="flex-start" spacing={1}>
-                  <TextField
+                  <SeededTextField
                     id={`question-${question.id}-title`}
                     label="Title"
                     variant="outlined"
                     fullWidth
                     focused
-                    value={title}
-                    onChange={(e) => {
-                      const value = e.target.value
-                      setTitle(value)
+                    contentKey={`question-title:${question.id}`}
+                    defaultValue={question.title || ''}
+                    onChange={(value) => {
                       onPropertyChange(question, 'title', value)
                     }}
                   />
@@ -224,9 +210,9 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
                   groupScope={groupScope}
                   withUpload
                   title="Problem Statement"
-                  rawContent={content}
+                  contentKey={`question-content:${question.id}`}
+                  defaultValue={question.content || ''}
                   onChange={(newContent) => {
-                    setContent(newContent)
                     onPropertyChange(question, 'content', newContent)
                   }}
                 />
