@@ -22,13 +22,12 @@ import DialogFeedback from '@/components/feedback/DialogFeedback'
 import { useEffect, useState } from 'react'
 import CardSelector from '@/components/input/CardSelector'
 import {
-  EvaluationPhase,
   QuestionSource,
+  QuestionStatus,
   UserOnEvaluationAccessMode,
 } from '@prisma/client'
 import useSWR from 'swr'
 import { fetcher } from '@/core/utils'
-import { phaseGT } from '@/core/phase'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 
 const Presets = [
@@ -212,18 +211,24 @@ const EvaluationSummary = ({ groupScope, evaluationId }) => {
   // Check if evaluation exists
   if (!evaluation) return null
 
-  const afterComposition = phaseGT(
-    evaluation.phase,
-    EvaluationPhase.COMPOSITION,
-  )
-
   const hasQuestions = Boolean(composition?.length)
 
-  const countMissingQuestions = composition?.filter(
+  // Draft evaluations reference bank questions directly (source = BANK,
+  // own status); after composition they hold copies (source = EVAL) linked
+  // to their bank original via sourceQuestion. Distinguish three states:
+  // active, archived (still in the bank), and untraceable (original
+  // deleted, or the evaluation predates question linking).
+  const questionsInComposition = composition ?? []
+
+  const countArchivedQuestions = questionsInComposition.filter((q) =>
+    q.question?.source === QuestionSource.EVAL
+      ? q.question.sourceQuestion?.status === QuestionStatus.ARCHIVED
+      : q.question?.status === QuestionStatus.ARCHIVED,
+  ).length
+
+  const countUntraceableQuestions = questionsInComposition.filter(
     (q) =>
-      afterComposition &&
-      q.question?.source === QuestionSource.EVAL &&
-      !q.question.sourceQuestion,
+      q.question?.source === QuestionSource.EVAL && !q.question.sourceQuestion,
   ).length
 
   const hasAccessList =
@@ -249,14 +254,22 @@ const EvaluationSummary = ({ groupScope, evaluationId }) => {
         </Typography>
       )}
 
-      {countMissingQuestions > 0 && (
+      {countArchivedQuestions > 0 && (
         <Typography variant="body2" color={'error'}>
-          <b>{countMissingQuestions} questions</b> used in this evaluation no
-          longer exist in the question bank
+          <b>{countArchivedQuestions} questions</b> are archived in the question
+          bank — they will not be included when starting over
         </Typography>
       )}
 
-      {countMissingQuestions === 0 && (
+      {countUntraceableQuestions > 0 && (
+        <Typography variant="body2" color={'error'}>
+          <b>{countUntraceableQuestions} questions</b> could not be matched to a
+          question in the bank (deleted, or the evaluation predates question
+          linking) — they will not be included when starting over
+        </Typography>
+      )}
+
+      {countArchivedQuestions === 0 && countUntraceableQuestions === 0 && (
         <Typography variant="body2" color={'info'}>
           All questions are still available in the question bank
         </Typography>
