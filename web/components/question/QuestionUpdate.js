@@ -17,7 +17,7 @@
 import useSWR from 'swr'
 import { useCallback, useState, useEffect } from 'react'
 import Image from 'next/image'
-import { Stack, TextField, Button, Typography, Tooltip } from '@mui/material'
+import { Stack, Button, Typography, Tooltip } from '@mui/material'
 import MarkdownEditor from '../input/markdown/MarkdownEditor'
 import SeededTextField from '@/components/input/SeededTextField'
 
