@@ -328,20 +328,23 @@ const PageGrading = () => {
     [evaluationToQuestion, ready],
   )
 
+  // questionId comes from the save itself — the selection may have moved
+  // on by the time the debounced PUT resolves.
   const onAddendumChanged = useCallback(
-    (value) => {
-      const newEvaluationToQuestions = evaluationToQuestions.map((q) => {
-        if (q.questionId === evaluationToQuestion.questionId) {
-          return {
-            ...q,
-            addendum: value,
+    (questionId, value) => {
+      setEvaluationToQuestions((prev) =>
+        prev.map((q) => {
+          if (q.questionId === questionId) {
+            return {
+              ...q,
+              addendum: value,
+            }
           }
-        }
-        return q
-      })
-      setEvaluationToQuestions(newEvaluationToQuestions)
+          return q
+        }),
+      )
     },
-    [evaluationToQuestion, evaluationToQuestions],
+    [],
   )
 
   return (

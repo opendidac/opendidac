@@ -66,8 +66,10 @@ const Addendum = ({
           if (!response.ok) {
             throw new Error('Failed to update addendum')
           }
-          // Call parent callback only after successful API update
-          onAddendumChanged?.(addendum)
+          // Call parent callback only after successful API update; the
+          // questionId tells the parent WHICH question was saved — by now
+          // the selection may have moved on.
+          onAddendumChanged?.(questionId, addendum)
         } catch (error) {
           showSnackbar('Failed to save addendum', 'error')
         }
