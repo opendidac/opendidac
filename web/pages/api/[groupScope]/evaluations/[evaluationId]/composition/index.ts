@@ -15,7 +15,7 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { QuestionStatus, Role, Prisma } from '@prisma/client'
+import { Role, Prisma } from '@prisma/client'
 import {
   withAuthorization,
   withGroupScope,
@@ -67,10 +67,13 @@ const get = async (
           question: {
             select: {
               ...SELECT_FOR_PROFESSOR_LISTING,
+              // Unfiltered on purpose: consumers must distinguish an
+              // archived source (still in the bank) from a deleted one
+              // (sourceQuestion null) instead of conflating them.
               sourceQuestion: {
-                // Only Active
-                where: {
-                  status: QuestionStatus.ACTIVE,
+                select: {
+                  id: true,
+                  status: true,
                 },
               },
             },
