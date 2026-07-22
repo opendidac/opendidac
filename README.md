@@ -37,7 +37,7 @@ OpenDidac simplifies evaluation management through four distinct phases:
 4. **Finished Phase**: Students receive their grades and feedback, while educators have access to comprehensive results, with options to update grades and download reports in CSV and PDF formats.
 
 ## Tech Stack
-- Frontend: Next.js 14
+- Frontend: Next.js 16 (React 19)
 - Backend: Prisma ORM
 - Database: PostgreSQL
 
@@ -92,9 +92,9 @@ Finally, you will need to configure Next.js to be able to connect to Keycloak us
 You may now create a `.env.local` file in the `web` directory with the following content:
 
 ```bash
-NEXTAUTH_KEYCLOAK_CLIENT_ID=eval-client
+NEXTAUTH_KEYCLOAK_CLIENT_ID=OpenDidac-client
 NEXTAUTH_KEYCLOAK_CLIENT_SECRET=<client secret>
-NEXTAUTH_KEYCLOAK_ISSUER_BASE_URL=http://localhost:8080/realms/eval
+NEXTAUTH_KEYCLOAK_ISSUER_BASE_URL=http://localhost:8080/realms/OpenDidac
 ```
 
 ### OpenDidac Environment Variables
