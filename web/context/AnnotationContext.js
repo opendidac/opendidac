@@ -225,7 +225,10 @@ export const AnnotationProvider = ({
     setAnnotation(null)
     setState(AnnotationState.NOT_ANNOTATED.value)
     await discardAnnotation(groupScope, annotationId)
-  }, [groupScope, annotation, readOnly])
+    // Write the deletion into the SWR cache: otherwise a later remount of
+    // this entity is served the stale cached annotation before revalidation.
+    mutate(null, { revalidate: false })
+  }, [groupScope, annotation, readOnly, mutate])
 
   return (
     <AnnotationContext.Provider
