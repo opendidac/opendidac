@@ -36,7 +36,7 @@ const defaultOptions = {
 }
 
 const InlineMonacoEditor = ({
-  code,
+  code = '',
   contentKey,
   defaultValue,
   language = 'javascript',

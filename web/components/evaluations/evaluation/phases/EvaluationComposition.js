@@ -51,7 +51,7 @@ import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import { useSnackbar } from '@/context/SnackbarContext'
 import DialogFeedback from '@/components/feedback/DialogFeedback'
 import { computeCoefficient } from '@/core/grading/coefficient'
-import { useCtrlState } from '@/hooks/useCtrlState'
+import { useSeededState } from '@/hooks/useSeededState'
 
 // Edit modes for composition items:
 // - 'full': all fields editable (COMPOSITION phase, not purged)
@@ -154,11 +154,15 @@ const CompositionGrid = ({
   onCompositionChanged,
 }) => {
   const canEditFully = editMode === EDIT_MODE.FULL
-  const {
-    renderedValue: questions,
-    setValueControlled: setQuestions,
-    getValue: getQuestions,
-  } = useCtrlState(composition ?? [], `${evaluationId}-composition`)
+  const [questions, setQuestions] = useSeededState(
+    composition ?? [],
+    `${evaluationId}-composition`,
+  )
+
+  // Latest questions for event handlers that must read post-update state
+  // (drag-end fires after onChangeOrder's setState).
+  const questionsRef = useRef(questions)
+  questionsRef.current = questions
 
   const { show: showSnackbar } = useSnackbar()
 
@@ -356,7 +360,7 @@ const CompositionGrid = ({
             editMode={editMode}
             indicator={getIndicator(eToQ.question.id)}
             onHandleDragEnd={async () => {
-              await saveReOrder(getQuestions())
+              await saveReOrder(questionsRef.current)
             }}
             showCoef={useCoefs}
             onChangeCompositionItem={onChangeCompositionItem}
@@ -404,13 +408,12 @@ const CompositionItem = ({
 
   const key = `${evaluationId}-${questionId}`
 
-  const { renderedValue: points, setValueControlled: setPoints } = useCtrlState(
-    evaluationToQuestion.points,
+  const [points, setPoints] = useSeededState(evaluationToQuestion.points, key)
+
+  const [gradingPts, setGradingPts] = useSeededState(
+    evaluationToQuestion.gradingPoints,
     key,
   )
-
-  const { renderedValue: gradingPts, setValueControlled: setGradingPts } =
-    useCtrlState(evaluationToQuestion.gradingPoints, key)
 
   const saveCompositionItem = useCallback(
     async (questionId, property, value) => {
