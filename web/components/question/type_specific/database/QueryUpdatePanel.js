@@ -247,10 +247,7 @@ const QuerySettingsTab = ({ query, onChange }) => {
     query.studentPermission,
     query.id,
   )
-  const [lintActive, setLintActive] = useSeededState(
-    query.lintActive,
-    query.id,
-  )
+  const [lintActive, setLintActive] = useSeededState(query.lintActive, query.id)
 
   return (
     <Stack spacing={3} width={'100%'}>

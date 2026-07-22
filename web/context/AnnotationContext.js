@@ -113,7 +113,9 @@ export const AnnotationProvider = ({
   )
 
   const [annotation, setAnnotation] = useState(immutableAnnotation ?? null)
-  const [state, setState] = useState(stateBasedOnAnnotation(immutableAnnotation))
+  const [state, setState] = useState(
+    stateBasedOnAnnotation(immutableAnnotation),
+  )
 
   const postInProgress = useRef(false)
 

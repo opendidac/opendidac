@@ -66,7 +66,11 @@ const SnippetEditor = ({
         minHeight={60}
         onChange={(newCode) => {
           onSnippetChange(newCode)
-          debouncedSave(snippet.id, { ...snippet, snippet: newCode, output: null })
+          debouncedSave(snippet.id, {
+            ...snippet,
+            snippet: newCode,
+            output: null,
+          })
         }}
       />
 

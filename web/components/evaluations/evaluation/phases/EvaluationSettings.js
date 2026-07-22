@@ -28,7 +28,10 @@ const EvaluationSettings = ({ groupScope, evaluation, onSettingsChanged }) => {
 
   // Live mirrors reset only per evaluation: every save triggers a parent
   // refetch, which must not clobber what the user is typing.
-  const [label, setLabel] = useSeededState(evaluation?.label ?? '', evaluation.id)
+  const [label, setLabel] = useSeededState(
+    evaluation?.label ?? '',
+    evaluation.id,
+  )
 
   const [conditions, setConditions] = useSeededState(
     evaluation?.conditions ?? '',
@@ -156,7 +159,12 @@ import EvaluationTitleBar from '../layout/EvaluationTitleBar'
 import ConsultationSettings from '../../grading/ConsultationSettings'
 import SecuritySettings from '../../security/SecuritySettings'
 
-const ConditionSettings = ({ groupScope, evaluationId, conditions, onChange }) => {
+const ConditionSettings = ({
+  groupScope,
+  evaluationId,
+  conditions,
+  onChange,
+}) => {
   const [conditionsEditing, setConditionsEditing] = useState(false)
 
   return (

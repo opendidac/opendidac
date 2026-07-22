@@ -330,22 +330,19 @@ const PageGrading = () => {
 
   // questionId comes from the save itself — the selection may have moved
   // on by the time the debounced PUT resolves.
-  const onAddendumChanged = useCallback(
-    (questionId, value) => {
-      setEvaluationToQuestions((prev) =>
-        prev.map((q) => {
-          if (q.questionId === questionId) {
-            return {
-              ...q,
-              addendum: value,
-            }
+  const onAddendumChanged = useCallback((questionId, value) => {
+    setEvaluationToQuestions((prev) =>
+      prev.map((q) => {
+        if (q.questionId === questionId) {
+          return {
+            ...q,
+            addendum: value,
           }
-          return q
-        }),
-      )
-    },
-    [],
-  )
+        }
+        return q
+      }),
+    )
+  }, [])
 
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>
