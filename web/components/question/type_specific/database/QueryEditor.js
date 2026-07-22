@@ -17,7 +17,6 @@
 import { Chip, Stack, Typography } from '@mui/material'
 import React from 'react'
 import InlineMonacoEditor from '../../../input/InlineMonacoEditor'
-import { useCtrlState } from '@/hooks/useCtrlState'
 
 const QueryEditor = ({
   readOnly = false,
@@ -26,11 +25,6 @@ const QueryEditor = ({
   onChange,
   headerLeft,
 }) => {
-  const { renderedValue, setValueUncontrolled, getValue } = useCtrlState(
-    query.content,
-    query.id,
-  )
-
   return (
     <Stack>
       <Stack
@@ -82,12 +76,11 @@ const QueryEditor = ({
       </Stack>
       {!hidden && (
         <InlineMonacoEditor
-          code={renderedValue}
+          contentKey={`sql-query:${query.id}`}
+          defaultValue={query.content}
           language={'sql'}
           readOnly={readOnly}
           onChange={(sql) => {
-            if (sql === getValue()) return
-            setValueUncontrolled(sql)
             onChange({
               ...query,
               content: sql,
