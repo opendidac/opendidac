@@ -144,6 +144,15 @@ export const AnnotationProvider = ({
     1000,
   )
 
+  // Persist the last edits when the provider unmounts (participant or file
+  // switch): unmount cancels pending debounced calls, losing up to 1s of
+  // typing on a fast switch.
+  useEffect(() => {
+    return () => {
+      debouncedUpdateAnnotation.flush()
+    }
+  }, [debouncedUpdateAnnotation])
+
   const change = useCallback(
     async (content) => {
       if (readOnly) {
@@ -182,11 +191,13 @@ export const AnnotationProvider = ({
           setAnnotation((current) => {
             // Compare the current content with the server response
             if (current.content !== newAnnotation.content) {
-              // Send a PUT request to update the server with the latest content
-              debouncedUpdateAnnotation(groupScope, {
+              // Catch up immediately with the content typed while the POST
+              // was in flight — a debounce here would be cancelled if the
+              // user switches participant right away.
+              updateAnnotation(groupScope, {
                 ...current,
                 id: newAnnotation.id,
-              })
+              }).then(() => mutate())
             }
             return {
               ...current,
