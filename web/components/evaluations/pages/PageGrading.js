@@ -150,6 +150,14 @@ const PageGrading = () => {
     500,
   )
 
+  // Persist a pending grading save when leaving the page; the stored
+  // grading argument keeps it targeted at the right student/question.
+  useEffect(() => {
+    return () => {
+      debouncedSaveGrading.flush()
+    }
+  }, [debouncedSaveGrading])
+
   const onChangeGrading = useCallback(
     (grading) => {
       const newEvaluationToQuestions = [...evaluationToQuestions]
@@ -328,21 +336,21 @@ const PageGrading = () => {
     [evaluationToQuestion, ready],
   )
 
-  const onAddendumChanged = useCallback(
-    (value) => {
-      const newEvaluationToQuestions = evaluationToQuestions.map((q) => {
-        if (q.questionId === evaluationToQuestion.questionId) {
+  // questionId comes from the save itself — the selection may have moved
+  // on by the time the debounced PUT resolves.
+  const onAddendumChanged = useCallback((questionId, value) => {
+    setEvaluationToQuestions((prev) =>
+      prev.map((q) => {
+        if (q.questionId === questionId) {
           return {
             ...q,
             addendum: value,
           }
         }
         return q
-      })
-      setEvaluationToQuestions(newEvaluationToQuestions)
-    },
-    [evaluationToQuestion, evaluationToQuestions],
-  )
+      }),
+    )
+  }, [])
 
   return (
     <Authorization allowRoles={[Role.PROFESSOR]}>

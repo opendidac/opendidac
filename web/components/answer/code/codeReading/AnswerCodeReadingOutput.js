@@ -14,23 +14,31 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Box, Stack, Typography } from '@mui/material'
+import { useDebouncedCallback } from 'use-debounce'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 import outputEditorOptions from '@/components/question/type_specific/code/codeReading/outputEditorOptions.json'
 
 const AnswerCodeReadingOutput = ({
   language,
   snippet,
+  snippetId,
   output: initial,
   status,
   onOutputChange,
 }) => {
-  const [output, setOutput] = useState(initial || '')
+  // Each output owns its debounced save (same pattern as MultipleChoice
+  // options): a debouncer shared across the list would drop snippet A's
+  // guess when snippet B is edited within the debounce window.
+  const debouncedOutputChange = useDebouncedCallback(onOutputChange, 500)
 
+  // Persist the pending guess when the question unmounts (navigation).
   useEffect(() => {
-    setOutput(initial || '')
-  }, [initial])
+    return () => {
+      debouncedOutputChange.flush()
+    }
+  }, [debouncedOutputChange])
 
   return (
     <Box>
@@ -56,14 +64,13 @@ const AnswerCodeReadingOutput = ({
         </Stack>
 
         <InlineMonacoEditor
+          contentKey={`answer-cro-output:${snippetId}`}
+          defaultValue={initial || ''}
           language="plaintext"
           minHeight={60}
-          readOnly={false}
-          code={output}
           editorOptions={outputEditorOptions}
           onChange={(val) => {
-            setOutput(val ?? '')
-            onOutputChange?.(val ?? '')
+            debouncedOutputChange(val ?? '')
           }}
         />
 

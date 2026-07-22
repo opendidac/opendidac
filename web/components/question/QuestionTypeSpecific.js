@@ -76,6 +76,7 @@ const QuestionTypeSpecific = ({
         if (question.web) {
           return (
             <Web
+              id={question.id}
               web={question.web}
               onChange={(newWeb) => onTypeSpecificChange(question.type, newWeb)}
             />
@@ -87,6 +88,7 @@ const QuestionTypeSpecific = ({
         if (question.essay) {
           return (
             <Essay
+              id={question.id}
               title={'Solution Answer'}
               groupScope={groupScope}
               solution={question.essay.solution}

@@ -147,19 +147,18 @@ const PageProfConsult = () => {
 
   const readOnly = evaluation?.phase === EvaluationPhase.IN_PROGRESS
 
-  const onAddendumChanged = useCallback(
-    (value) => {
-      setEvaluationToQuestions(
-        evaluationToQuestions.map((q) => {
-          if (q.questionId === selected.questionId) {
-            return { ...q, addendum: value }
-          }
-          return q
-        }),
-      )
-    },
-    [evaluationToQuestions, selected],
-  )
+  // questionId comes from the save itself — the selection may have moved
+  // on by the time the debounced PUT resolves.
+  const onAddendumChanged = useCallback((questionId, value) => {
+    setEvaluationToQuestions((prev) =>
+      prev.map((q) => {
+        if (q.questionId === questionId) {
+          return { ...q, addendum: value }
+        }
+        return q
+      }),
+    )
+  }, [])
 
   const student = useMemo(
     () => selected?.question.studentAnswer[0].user,

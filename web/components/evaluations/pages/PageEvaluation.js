@@ -34,7 +34,7 @@ import EvaluationComposition from '../evaluation/phases/EvaluationComposition'
 import EvaluationAttendance from '../evaluation/phases/EvaluationAttendance'
 import EvaluationInProgress from '../evaluation/phases/EvaluationInProgress'
 import EvaluationResults from '../evaluation/phases/EvaluationResults'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Role, EvaluationPhase } from '@prisma/client'
 import ArchivalStatusStamp from '../../admin/archiving/ArchivalStatusStamp'
 
@@ -69,8 +69,14 @@ const EvaluationPage = () => {
     fetcher,
   )
 
+  // Follow the phase menu only when the phase VALUE actually changes.
+  // Plain [phase] deps fire on every revalidation (e.g. window focus) and
+  // would yank the user away from a prior-phase page they navigated to.
+  const prevPhaseRef = useRef(null)
   useEffect(() => {
-    if (phase) {
+    if (!phase) return
+    if (prevPhaseRef.current !== phase.phase) {
+      prevPhaseRef.current = phase.phase
       setActiveMenu(getPhaseDetails(phase.phase).menu)
     }
   }, [phase])
@@ -232,7 +238,12 @@ const EvaluationPage = () => {
                         <EvaluationActionMenu
                           groupScope={groupScope}
                           evaluation={evaluation}
-                          onPhaseChange={() => {
+                          onPhaseChange={(newPhase) => {
+                            // Navigate deterministically to the new phase's
+                            // menu — do not depend on the refetch timing.
+                            const menu =
+                              newPhase && getPhaseDetails(newPhase)?.menu
+                            if (menu) setActiveMenu(menu)
                             mutate()
                             mutatePhase()
                           }}

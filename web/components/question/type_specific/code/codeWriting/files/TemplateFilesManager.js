@@ -33,7 +33,6 @@ import CodeCheck from '../CodeCheck'
 import Loading from '../../../../../feedback/Loading'
 import { fetcher } from '../../../../../../core/utils'
 import ScrollContainer from '../../../../../layout/ScrollContainer'
-import { useDebouncedCallback } from 'use-debounce'
 import BottomCollapsiblePanel from '../../../../../layout/utils/BottomCollapsiblePanel'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 
@@ -62,8 +61,6 @@ const TemplateFilesManager = ({ groupScope, questionId, onUpdate }) => {
     [groupScope, questionId, mutate, onUpdate],
   )
 
-  const debouncedOnFileChange = useDebouncedCallback(onFileUpdate, 500)
-
   const onPullSolution = useCallback(async () => {
     await pull(groupScope, questionId)
       .then(async (data) => await mutate(data))
@@ -90,14 +87,16 @@ const TemplateFilesManager = ({ groupScope, questionId, onUpdate }) => {
         >
           <Button onClick={onPullSolution}>Pull Solution Files</Button>
           <ScrollContainer pb={24}>
-            {codeToTemplateFiles.map((codeToTemplateFile, index) => (
+            {codeToTemplateFiles.map((codeToTemplateFile) => (
               <FileEditor
-                key={index}
+                key={codeToTemplateFile.file.id}
                 file={codeToTemplateFile.file}
                 readonlyPath
-                onChange={(file) => {
+                onChange={() => {
                   setLockCodeCheck(true)
-                  debouncedOnFileChange({
+                }}
+                onSave={(file) => {
+                  onFileUpdate({
                     ...codeToTemplateFile,
                     file,
                   })

@@ -18,7 +18,7 @@ import { Stack, Typography } from '@mui/material'
 import Image from 'next/image'
 import InlineMonacoEditor from '../../../input/InlineMonacoEditor'
 import { useTheme } from '@emotion/react'
-import { useCtrlState } from '@/hooks/useCtrlState'
+import { useEffect, useRef } from 'react'
 
 const WebEditor = ({
   id = 'web',
@@ -27,40 +27,22 @@ const WebEditor = ({
   web: initial,
   onChange,
 }) => {
-  const {
-    renderedValue: html,
-    setValueUncontrolled: setHtml,
-    getValue: getHtml,
-  } = useCtrlState(initial?.html || '', `${id}-html`)
+  // Only fields the user touched; untouched fields fall back to the latest
+  // server value when assembling the onChange payload.
+  const edits = useRef({})
 
-  const {
-    renderedValue: css,
-    setValueUncontrolled: setCss,
-    getValue: getCss,
-  } = useCtrlState(initial?.css || '', `${id}-css`)
-
-  const {
-    renderedValue: js,
-    setValueUncontrolled: setJs,
-    getValue: getJs,
-  } = useCtrlState(initial?.js || '', `${id}-js`)
+  useEffect(() => {
+    edits.current = {}
+  }, [id])
 
   const handleChange = (field, value) => {
-    if (field === 'html') {
-      setHtml(value)
-    } else if (field === 'css') {
-      setCss(value)
-    } else if (field === 'js') {
-      setJs(value)
-    }
-
+    edits.current[field] = value
     if (onChange) {
-      const newWeb = {
-        html: field === 'html' ? value : getHtml(),
-        css: field === 'css' ? value : getCss(),
-        js: field === 'js' ? value : getJs(),
-      }
-      onChange(newWeb)
+      onChange({
+        html: edits.current.html ?? initial?.html ?? '',
+        css: edits.current.css ?? initial?.css ?? '',
+        js: edits.current.js ?? initial?.js ?? '',
+      })
     }
   }
 
@@ -75,21 +57,21 @@ const WebEditor = ({
       <WebEditorInput
         id={`${id}-html`}
         language={'html'}
-        code={html}
+        code={initial?.html || ''}
         readOnly={readOnly}
         onChange={(code) => handleChange('html', code)}
       />
       <WebEditorInput
         id={`${id}-css`}
         language={'css'}
-        code={css}
+        code={initial?.css || ''}
         readOnly={readOnly}
         onChange={(code) => handleChange('css', code)}
       />
       <WebEditorInput
         id={`${id}-js`}
         language={'javascript'}
-        code={js}
+        code={initial?.js || ''}
         readOnly={readOnly}
         onChange={(code) => handleChange('js', code)}
       />
@@ -97,19 +79,15 @@ const WebEditor = ({
   )
 }
 
-const WebEditorInput = ({
-  id,
-  language,
-  code: initial,
-  readOnly,
-  onChange,
-}) => {
+const WebEditorInput = ({ id, language, code, readOnly, onChange }) => {
   const theme = useTheme()
 
-  const { renderedValue: code, setValueUncontrolled: setCode } = useCtrlState(
-    initial || '',
-    id,
-  )
+  // Read-only instances (consult, compare) must mirror the incoming props
+  // live — no one types in them, so controlled mode is jump-safe and avoids
+  // stale seeded models when data arrives after mount.
+  const modeProps = readOnly
+    ? { code }
+    : { contentKey: `web:${id}`, defaultValue: code }
 
   return (
     <Stack spacing={1} position={'relative'}>
@@ -133,15 +111,10 @@ const WebEditorInput = ({
         <Typography variant="button">{language}</Typography>
       </Stack>
       <InlineMonacoEditor
-        width="100%"
-        options={{ readOnly }}
+        {...modeProps}
         language={language}
-        code={code}
         readOnly={readOnly}
-        onChange={(content) => {
-          setCode(content)
-          onChange(content)
-        }}
+        onChange={onChange}
       />
     </Stack>
   )

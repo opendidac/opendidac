@@ -16,7 +16,7 @@
 
 import { useCallback } from 'react'
 import { TextField, Typography } from '@mui/material'
-import { useCtrlState } from '@/hooks/useCtrlState'
+import { useSeededState } from '@/hooks/useSeededState'
 
 const QuestionTitleField = ({
   id,
@@ -25,8 +25,8 @@ const QuestionTitleField = ({
   readOnly = false,
   onChangeTitle,
 }) => {
-  const { renderedValue: localTitle, setValueControlled: setLocalTitle } =
-    useCtrlState(currentTitle, id)
+  // Live local state: isTitleChanged below compares against originalTitle.
+  const [localTitle, setLocalTitle] = useSeededState(currentTitle, id)
 
   const handleTitleChange = useCallback(
     (value) => {

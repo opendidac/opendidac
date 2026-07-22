@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-import { EvaluationPhase, Role, UserOnEvaluationStatus } from '@prisma/client'
+import {
+  EvaluationPhase,
+  Role,
+  StudentAnswerStatus,
+  UserOnEvaluationStatus,
+} from '@prisma/client'
 
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
@@ -50,7 +55,7 @@ const put = async (req, res, ctx) => {
     return
   }
 
-  await prisma.studentAnswerMultipleChoice.update({
+  const updatedMultiChoice = await prisma.studentAnswerMultipleChoice.update({
     where: {
       userEmail_questionId: {
         userEmail: studentEmail,
@@ -60,14 +65,31 @@ const put = async (req, res, ctx) => {
     data: {
       comment: comment,
     },
+    select: {
+      options: {
+        select: {
+          id: true,
+        },
+      },
+    },
   })
 
-  const updatedStudentAnswer = await prisma.studentAnswer.findUnique({
+  // A non-empty comment counts as progress; without it the status falls
+  // back to the selected options.
+  const status =
+    comment?.trim() || updatedMultiChoice.options.length > 0
+      ? StudentAnswerStatus.IN_PROGRESS
+      : StudentAnswerStatus.MISSING
+
+  const updatedStudentAnswer = await prisma.studentAnswer.update({
     where: {
       userEmail_questionId: {
         userEmail: studentEmail,
         questionId: questionId,
       },
+    },
+    data: {
+      status,
     },
     select: {
       status: true,

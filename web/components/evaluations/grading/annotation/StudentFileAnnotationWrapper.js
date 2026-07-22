@@ -23,8 +23,7 @@ import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 import ResizePanel from '@/components/layout/utils/ResizePanel'
 import { useTheme } from '@emotion/react'
 import { Box, Button, Stack, Typography } from '@mui/material'
-import { useEffect, useEffectEvent, useRef, useState } from 'react'
-import { useCtrlState } from '@/hooks/useCtrlState'
+import { useEffect, useState } from 'react'
 
 const { useAnnotation } = require('@/context/AnnotationContext')
 
@@ -107,7 +106,8 @@ const AnnotateToolbar = ({
 const StudentFileAnnotationWrapper = ({ file: original }) => {
   const theme = useTheme()
 
-  const { readOnly, state, annotation, change, discard } = useAnnotation()
+  const { readOnly, state, annotation, change, discard, isLoading } =
+    useAnnotation()
 
   const hasAnnotation = annotation?.content !== undefined
   const defaultViewMode = readOnly && hasAnnotation ? 'DIFF' : 'ANNOTATED'
@@ -120,43 +120,15 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
 
   const [discardVersion, setDiscardVersion] = useState(0)
 
-  const {
-    renderedValue: editorInitialContent,
-    setValueUncontrolled,
-    setValueControlled,
-    syncRenderedValue,
-  } = useCtrlState(
-    annotation?.content ?? original.content,
-    `${original.id ?? original.path}:${discardVersion}`,
-  )
-
-  // Snapshot: pull server content into the editor only when the annotation ID
-  // or file changes. setValueControlled bails if ref.current already equals
-  // the value (user just typed it), so no cursor jump in the same session.
-  const captureAnnotation = useEffectEvent(() => {
-    if (annotation?.content) {
-      setValueControlled(annotation.content)
-    }
-  })
-  useEffect(() => {
-    captureAnnotation()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [annotation?.id, original.path])
-
-  // When leaving DIFF mode Monaco remounts — push ref.current into renderedValue
-  // so the editor initialises with the latest typed content. No cursor jump risk
-  // because Monaco is still unmounted at this point.
-  const prevViewMode = useRef(viewMode)
-  useEffect(() => {
-    const prev = prevViewMode.current
-    prevViewMode.current = viewMode
-    if (prev === 'DIFF' && viewMode !== 'DIFF') {
-      syncRenderedValue()
-    }
-  }, [viewMode, syncRenderedValue])
+  // The contentKey deliberately excludes annotation.id: the annotation record
+  // is created on the first keystroke, and a key change at that moment would
+  // reset the cursor. The isLoading gate below guarantees the seed is correct
+  // at mount. The editor uses keepModel={false} — the AnnotationContext is the
+  // source of truth, so the model is disposed on every unmount (view toggles,
+  // participant switches, discard remounts) and always reseeds fresh.
+  const contentKey = `annotation:${original.id ?? original.path}`
 
   const onChange = (content) => {
-    setValueUncontrolled(content)
     change(content)
   }
 
@@ -171,6 +143,8 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
   }
 
   const language = languageBasedOnPathExtension(file?.path)
+
+  if (isLoading) return null
 
   return (
     <Stack position={'relative'}>
@@ -201,7 +175,9 @@ const StudentFileAnnotationWrapper = ({ file: original }) => {
           viewMode === 'ANNOTATED' || viewMode === 'ORIGINAL' ? (
             <InlineMonacoEditor
               key={discardVersion}
-              code={editorInitialContent}
+              contentKey={contentKey}
+              defaultValue={annotation?.content ?? original.content}
+              keepModel={false}
               readOnly={readOnly}
               onChange={onChange}
               language={language}

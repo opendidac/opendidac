@@ -21,7 +21,8 @@ import UserHelpPopper from '@/components/feedback/UserHelpPopper'
 import InfoIcon from '@mui/icons-material/Info'
 import { useTheme } from '@emotion/react'
 import { useSnackbar } from '@/context/SnackbarContext'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
+import { useSeededState } from '@/hooks/useSeededState'
 import { useDebouncedCallback } from 'use-debounce'
 import { Box } from '@mui/system'
 
@@ -35,20 +36,24 @@ const Addendum = ({
   const theme = useTheme()
 
   const { show: showSnackbar } = useSnackbar()
-  const [addendum, setAddendum] = useState(evaluationToQuestion?.addendum || '')
+  // Live mirror for the readOnly viewer; reset only when the entity changes.
+  const [addendum, setAddendum] = useSeededState(
+    evaluationToQuestion?.addendum || '',
+    `${evaluationId}:${evaluationToQuestion?.questionId}`,
+  )
 
-  useEffect(() => {
-    setAddendum(evaluationToQuestion?.addendum || '')
-  }, [evaluationToQuestion])
-
+  // The target questionId travels as an argument, captured at call time:
+  // this component stays mounted across question switches, and a pending
+  // debounced save reading the id from the closure would save question A's
+  // addendum onto question B.
   const debounceAddendumChange = useDebouncedCallback(
     useCallback(
-      async (addendum) => {
-        if (!evaluationToQuestion) return
+      async (questionId, addendum) => {
+        if (!questionId) return
 
         try {
           const response = await fetch(
-            `/api/${groupScope}/evaluations/${evaluationId}/questions/${evaluationToQuestion.questionId}/`,
+            `/api/${groupScope}/evaluations/${evaluationId}/questions/${questionId}/`,
             {
               method: 'PUT',
               headers: {
@@ -61,29 +66,33 @@ const Addendum = ({
           if (!response.ok) {
             throw new Error('Failed to update addendum')
           }
-          // Call parent callback only after successful API update
-          onAddendumChanged?.(addendum)
+          // Call parent callback only after successful API update; the
+          // questionId tells the parent WHICH question was saved — by now
+          // the selection may have moved on.
+          onAddendumChanged?.(questionId, addendum)
         } catch (error) {
           showSnackbar('Failed to save addendum', 'error')
         }
       },
-      [
-        groupScope,
-        evaluationId,
-        showSnackbar,
-        evaluationToQuestion,
-        onAddendumChanged,
-      ],
+      [groupScope, evaluationId, showSnackbar, onAddendumChanged],
     ),
     500,
   )
 
+  // Persist a pending save when the component unmounts; the stored args
+  // keep it targeted at the right question.
+  useEffect(() => {
+    return () => {
+      debounceAddendumChange.flush()
+    }
+  }, [debounceAddendumChange])
+
   const handleAddendumChange = useCallback(
     (value) => {
       setAddendum(value)
-      debounceAddendumChange(value)
+      debounceAddendumChange(evaluationToQuestion?.questionId, value)
     },
-    [debounceAddendumChange],
+    [debounceAddendumChange, setAddendum, evaluationToQuestion?.questionId],
   )
 
   // Return null if in readonly mode and no addendum
@@ -114,7 +123,8 @@ const Addendum = ({
         <MarkdownEditor
           groupScope={groupScope}
           readOnly={readOnly}
-          rawContent={addendum}
+          contentKey={`addendum:${evaluationId}:${evaluationToQuestion?.questionId}`}
+          defaultValue={evaluationToQuestion?.addendum || ''}
           onChange={handleAddendumChange}
         />
       )}

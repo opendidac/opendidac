@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Stack, Typography, IconButton } from '@mui/material'
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined'
+import { useDebouncedCallback } from 'use-debounce'
 import InlineMonacoEditor from '@/components/input/InlineMonacoEditor'
 import outputEditorOptions from '@/components/question/type_specific/code/codeReading/outputEditorOptions.json'
 
@@ -27,18 +28,23 @@ const SnippetEditor = ({
   isOutputEditable,
   onSnippetChange,
   onOutputChange,
+  onSave,
   onDelete,
 }) => {
-  const [code, setCode] = useState(snippet.snippet || '')
-  const [output, setOutput] = useState(snippet.output || '')
+  // Each snippet owns its debounced save (same pattern as MultipleChoice
+  // options): a debouncer shared across the list would drop snippet A's
+  // save when snippet B is edited within the debounce window.
+  const debouncedSave = useDebouncedCallback(onSave, 500)
 
+  // Persist pending edits when the snippet unmounts (navigation).
   useEffect(() => {
-    setCode(snippet.snippet || '')
-    setOutput(snippet.output || '')
-  }, [snippet])
+    return () => {
+      debouncedSave.flush()
+    }
+  }, [debouncedSave])
 
   return (
-    <Stack direction={'column'} key={index} spacing={1}>
+    <Stack direction={'column'} spacing={1}>
       <Stack
         direction={'row'}
         spacing={1}
@@ -52,27 +58,31 @@ const SnippetEditor = ({
         </IconButton>
       </Stack>
 
-      {/* Code editor */}
+      {/* Code editor: seeded island, the parent mirrors changes */}
       <InlineMonacoEditor
-        key={`code-${index}`}
+        contentKey={`snippet-code:${snippet.id}`}
+        defaultValue={snippet.snippet || ''}
         language={language}
         minHeight={60}
-        code={code}
         onChange={(newCode) => {
-          setCode(newCode)
-          setOutput('')
           onSnippetChange(newCode)
+          debouncedSave(snippet.id, {
+            ...snippet,
+            snippet: newCode,
+            output: null,
+          })
         }}
       />
 
-      {/* Output editor */}
-
+      {/* Output editor: stays controlled — run results and code-edit
+          clearing are pushed in programmatically via the parent state,
+          which mirrors manual edits synchronously (no jump risk). */}
       <OutputEditor
-        output={output}
+        output={snippet.output || ''}
         isOutputEditable={isOutputEditable}
         onOutputChange={(newOutput) => {
-          setOutput(newOutput)
           onOutputChange(newOutput)
+          debouncedSave(snippet.id, { ...snippet, output: newOutput })
         }}
       />
     </Stack>

@@ -87,7 +87,8 @@ const StudentQueryConsole = ({
       <DialogContent>
         <Stack width={'600px'}>
           <InlineMonacoEditor
-            code={sql}
+            contentKey={`student-console:${evaluationId}:${questionId}`}
+            defaultValue={sql}
             language={'sql'}
             onChange={(sql) => {
               setSql(sql)

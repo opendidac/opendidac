@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { Box, Stack, TextField, Typography } from '@mui/material'
+import { useDebouncedCallback } from 'use-debounce'
 import InlineMonacoEditor from '../../../input/InlineMonacoEditor'
 import { useTheme, type Theme } from '@mui/material/styles'
 import { languageBasedOnPathExtension } from '@/core/utils'
-import { useCtrlState } from '@/hooks/useCtrlState'
+import { useSeededState } from '@/hooks/useSeededState'
 
 type FileModel = {
   id: string
@@ -32,6 +33,7 @@ type FileEditorProps = {
   readonlyPath?: boolean
   readonlyContent?: boolean
   onChange?: (file: FileModel) => void
+  onSave?: (file: FileModel) => void
   secondaryActions?: React.ReactNode
   leftCorner?: React.ReactNode
 }
@@ -41,18 +43,45 @@ const FileEditor: React.FC<FileEditorProps> = ({
   readonlyPath = false,
   readonlyContent = false,
   onChange = () => {},
+  onSave,
   secondaryActions,
   leftCorner,
 }) => {
   const theme: Theme = useTheme()
 
-  const { renderedValue: path, setValueControlled: setPath } = useCtrlState(
-    file?.path ?? '',
-    file?.id ?? file?.path ?? 'no-file',
-  )
+  const contentKey = file?.id ?? file?.path ?? 'no-file'
 
-  const { renderedValue: content, setValueUncontrolled: setContent } =
-    useCtrlState(file?.content ?? '', file?.id ?? file?.path ?? 'no-file')
+  // Live local state: `language` below derives from the path while typing.
+  const [path, setPath] = useSeededState(file?.path ?? '', contentKey)
+
+  // Only fields the user touched: keeps save payloads consistent when path
+  // and content are edited in quick succession before a refetch lands.
+  const edits = useRef<{ path?: string; content?: string }>({})
+  useEffect(() => {
+    edits.current = {}
+  }, [contentKey])
+
+  const buildFile = (): FileModel | null =>
+    file
+      ? {
+          ...file,
+          path: edits.current.path ?? file.path,
+          content: edits.current.content ?? file.content,
+        }
+      : null
+
+  // Each file owns its debounced save, flushed on unmount: a debouncer
+  // shared across a file list drops file A's save when file B is edited
+  // within the debounce window.
+  const debouncedSave = useDebouncedCallback((f: FileModel) => {
+    onSave?.(f)
+  }, 500)
+
+  useEffect(() => {
+    return () => {
+      debouncedSave.flush()
+    }
+  }, [debouncedSave])
 
   const language = useMemo(
     () => languageBasedOnPathExtension(path) || 'text',
@@ -90,7 +119,12 @@ const FileEditor: React.FC<FileEditorProps> = ({
                 onChange={(e) => {
                   const next = e.target.value
                   setPath(next)
-                  if (file) onChange({ ...file, path: next })
+                  edits.current.path = next
+                  const newFile = buildFile()
+                  if (newFile) {
+                    onChange(newFile)
+                    debouncedSave(newFile)
+                  }
                 }}
               />
             )) || <Typography variant="body1">{path}</Typography>}
@@ -100,13 +134,18 @@ const FileEditor: React.FC<FileEditorProps> = ({
       </Stack>
 
       <InlineMonacoEditor
-        code={content}
+        contentKey={`file-content:${contentKey}`}
+        defaultValue={file?.content ?? ''}
         language={language}
         readOnly={readonlyContent}
         minHeight={100}
         onChange={(next: string) => {
-          setContent(next)
-          if (file) onChange({ ...file, content: next })
+          edits.current.content = next
+          const newFile = buildFile()
+          if (newFile) {
+            onChange(newFile)
+            debouncedSave(newFile)
+          }
         }}
       />
     </Stack>

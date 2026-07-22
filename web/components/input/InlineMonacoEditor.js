@@ -36,13 +36,20 @@ const defaultOptions = {
 }
 
 const InlineMonacoEditor = ({
-  code,
+  code = '',
+  contentKey,
+  defaultValue,
+  // Set to false when an external store (context, SWR) is the source of
+  // truth for the content: the model is disposed on unmount so a later
+  // remount always reseeds from defaultValue instead of a cached model.
+  keepModel = true,
   language = 'javascript',
   readOnly = false,
   onChange,
   minHeight = 100,
   editorOptions = {},
 }) => {
+  const seeded = contentKey != null
   const [editor, setEditor] = useState(null)
   const [contentHeight, setContentHeight] = useState(100)
   const editorMount = (editor, _monaco) => {
@@ -56,7 +63,7 @@ const InlineMonacoEditor = ({
       editor.setScrollPosition({ scrollTop: 0 })
       setContentHeight(newContentHeight)
     }
-  }, [code, editor, minHeight])
+  }, [code, contentKey, editor, minHeight])
 
   const onContentChange = useCallback(
     (newContent) => {
@@ -79,7 +86,14 @@ const InlineMonacoEditor = ({
         height={contentHeight}
         width="100%"
         language={language}
-        value={code}
+        {...(seeded
+          ? {
+              path: String(contentKey),
+              defaultValue: defaultValue ?? '',
+              saveViewState: true,
+              keepCurrentModel: keepModel,
+            }
+          : { value: code })}
         options={{ ...defaultOptions, ...editorOptions, readOnly }}
         onChange={onContentChange}
         onMount={editorMount}

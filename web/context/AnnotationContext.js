@@ -112,10 +112,16 @@ export const AnnotationProvider = ({
     doFetch && fetcher,
   )
 
-  const [annotation, setAnnotation] = useState(null)
-  const [state, setState] = useState(stateBasedOnAnnotation(contextAnnotation))
+  const [annotation, setAnnotation] = useState(immutableAnnotation ?? null)
+  const [state, setState] = useState(
+    stateBasedOnAnnotation(immutableAnnotation),
+  )
 
   const postInProgress = useRef(false)
+
+  // Grading mode fetches the annotation after mount; consumers must not
+  // seed editors until it resolves. Consultation mode is synchronous.
+  const isLoading = !readOnly && contextAnnotation === undefined
 
   useEffect(() => {
     if (!doFetch) {
@@ -132,13 +138,24 @@ export const AnnotationProvider = ({
     }
   }, [contextAnnotation, doFetch])
 
+  // No revalidation after the PUT: the SWR cache is kept in sync with local
+  // truth on every change (see `change`), and a refetch here can regress the
+  // cache to older server content while newer keystrokes are still pending.
   const debouncedUpdateAnnotation = useDebouncedCallback(
     async (groupScope, annotation) => {
       await updateAnnotation(groupScope, annotation)
-      mutate()
     },
     1000,
   )
+
+  // Persist the last edits when the provider unmounts (participant or file
+  // switch): unmount cancels pending debounced calls, losing up to 1s of
+  // typing on a fast switch.
+  useEffect(() => {
+    return () => {
+      debouncedUpdateAnnotation.flush()
+    }
+  }, [debouncedUpdateAnnotation])
 
   const change = useCallback(
     async (content) => {
@@ -153,6 +170,10 @@ export const AnnotationProvider = ({
       }
 
       setAnnotation(updated)
+      // Mirror local truth into the SWR cache so a remount of this entity
+      // (participant switch round-trip) seeds from the latest content even
+      // before the server catches up.
+      mutate(updated, { revalidate: false })
 
       if (state === AnnotationState.NOT_ANNOTATED.value) {
         setState(AnnotationState.ANNOTATED.value)
@@ -173,21 +194,29 @@ export const AnnotationProvider = ({
             updated,
           )
 
-          mutate()
           // Update the annotation with the new ID from the server
           setAnnotation((current) => {
-            // Compare the current content with the server response
-            if (current.content !== newAnnotation.content) {
-              // Send a PUT request to update the server with the latest content
-              debouncedUpdateAnnotation(groupScope, {
-                ...current,
-                id: newAnnotation.id,
-              })
+            if (!current) {
+              // Discarded while the POST was in flight: remove the freshly
+              // created record instead of resurrecting it.
+              discardAnnotation(groupScope, newAnnotation.id)
+              return current
             }
-            return {
+            const withId = {
               ...current,
               id: newAnnotation.id,
             }
+            // Cache the id without refetching: a refetch would serve the
+            // first-keystroke content and clobber what was typed since.
+            mutate(withId, { revalidate: false })
+            // Compare the current content with the server response
+            if (current.content !== newAnnotation.content) {
+              // Catch up immediately with the content typed while the POST
+              // was in flight — a debounce here would be cancelled if the
+              // user switches participant right away.
+              updateAnnotation(groupScope, withId)
+            }
+            return withId
           })
         } finally {
           postInProgress.current = false // Release the POST lock
@@ -217,11 +246,17 @@ export const AnnotationProvider = ({
     if (readOnly) {
       return
     }
+    // Drop any pending debounced save so it cannot fire after the DELETE
+    // and resurrect the annotation on the server.
+    debouncedUpdateAnnotation.cancel()
     const annotationId = annotation.id
     setAnnotation(null)
     setState(AnnotationState.NOT_ANNOTATED.value)
     await discardAnnotation(groupScope, annotationId)
-  }, [groupScope, annotation, readOnly])
+    // Write the deletion into the SWR cache: otherwise a later remount of
+    // this entity is served the stale cached annotation before revalidation.
+    mutate(null, { revalidate: false })
+  }, [groupScope, annotation, readOnly, mutate, debouncedUpdateAnnotation])
 
   return (
     <AnnotationContext.Provider
@@ -231,6 +266,7 @@ export const AnnotationProvider = ({
         annotation,
         change,
         discard,
+        isLoading,
       }}
     >
       <AnnotationHighlight readOnly={readOnly} state={state}>

@@ -36,6 +36,7 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
     data: loadedFields,
     isLoading: isLoadingFields,
     error: loadingError,
+    mutate,
   } = useSWR(
     `/api/${groupScope}/questions/${questionId}/exact-match/fields`,
     groupScope && questionId ? fetcher : null,
@@ -48,9 +49,13 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
   const setFields = useCallback(
     (newFields) => {
       setFieldsState(newFields)
+      // Mirror local truth into the SWR cache: a remount of this question
+      // must seed the field editors with the latest edits, not the
+      // pre-edit cached fields.
+      mutate(newFields, { revalidate: false })
       onFieldsChange(newFields)
     },
-    [setFieldsState, onFieldsChange],
+    [setFieldsState, mutate, onFieldsChange],
   )
 
   useEffect(() => {
@@ -97,7 +102,7 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
 
   const debouncedAddField = useDebouncedCallback(onAddField, 300)
 
-  const onFieldChange = useCallback(
+  const saveField = useCallback(
     async (newField) => {
       try {
         await fetch(
@@ -113,20 +118,25 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
             }),
           },
         )
-        const updatedFields = fields.map((field) =>
-          field.id === newField.id ? newField : field,
-        )
-        setFields(updatedFields)
-
         showSnackbar('Field saved successfully', 'success')
       } catch (error) {
         console.error('Failed to save field change', error)
         showSnackbar('Failed to save field change', 'error')
       }
     },
-    [fields, groupScope, questionId, setFields, showSnackbar],
+    [groupScope, questionId, showSnackbar],
   )
-  const debouncedFieldChange = useDebouncedCallback(onFieldChange, 300)
+  // Local state and SWR cache update immediately on change; each
+  // FieldEditor owns its debounced save (same pattern as MultipleChoice).
+  const onFieldChange = useCallback(
+    (newField) => {
+      const updatedFields = fields.map((field) =>
+        field.id === newField.id ? newField : field,
+      )
+      setFields(updatedFields)
+    },
+    [fields, setFields],
+  )
 
   const onDelete = useCallback(
     async (id) => {
@@ -247,7 +257,8 @@ const ExactMatch = ({ groupScope, questionId, onFieldsChange }) => {
                 index={index}
                 groupScope={groupScope}
                 field={field}
-                onChange={debouncedFieldChange}
+                onChange={onFieldChange}
+                onSave={saveField}
                 onDelete={debouncedDelete}
                 mayDelete={fields.length > 1}
                 previewMode={previewMode}

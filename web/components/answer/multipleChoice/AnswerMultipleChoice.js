@@ -20,6 +20,7 @@ import { TextField, Typography, Stack } from '@mui/material'
 import StatusDisplay from '@/components/feedback/StatusDisplay'
 import ScrollContainer from '@/components/layout/ScrollContainer'
 import { useDebouncedCallback } from 'use-debounce'
+import { useSeededState } from '@/hooks/useSeededState'
 import { useSnackbar } from '@/context/SnackbarContext'
 
 const AnswerMultipleChoice = ({
@@ -31,7 +32,12 @@ const AnswerMultipleChoice = ({
 }) => {
   const { showTopCenter: showSnackbar } = useSnackbar()
   const [options, setOptions] = useState(undefined)
-  const [comment, setComment] = useState(answer?.multipleChoice?.comment || '')
+  // Seeded per question: this component stays mounted when switching
+  // between two multiple-choice questions, and the comment must follow.
+  const [comment, setComment] = useSeededState(
+    answer?.multipleChoice?.comment || '',
+    questionId,
+  )
 
   const radio = useMemo(
     () =>
@@ -125,12 +131,15 @@ const AnswerMultipleChoice = ({
     ],
   )
 
+  // The target questionId travels as an argument, captured at call time:
+  // a pending debounced save reading it from the closure would save
+  // question A's comment onto question B after a fast switch.
   const saveComment = useDebouncedCallback(
     useCallback(
-      async (value) => {
+      async (targetQuestionId, value) => {
         try {
           const response = await fetch(
-            `/api/users/evaluations/${evaluationId}/questions/${questionId}/answers/multi-choice`,
+            `/api/users/evaluations/${evaluationId}/questions/${targetQuestionId}/answers/multi-choice`,
             {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -147,17 +156,24 @@ const AnswerMultipleChoice = ({
           )
         }
       },
-      [evaluationId, questionId, onAnswerChanged, showSnackbar],
+      [evaluationId, onAnswerChanged, showSnackbar],
     ),
     500,
   )
 
+  // Persist a pending comment when leaving the question.
+  useEffect(() => {
+    return () => {
+      saveComment.flush()
+    }
+  }, [saveComment])
+
   const onCommentChange = useCallback(
     (value) => {
       setComment(value)
-      saveComment(value)
+      saveComment(questionId, value)
     },
-    [saveComment],
+    [saveComment, setComment, questionId],
   )
 
   const selectedCount =

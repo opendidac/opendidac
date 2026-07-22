@@ -21,7 +21,6 @@ import SnippetEditor from './SnippetEditor'
 import RunSnippets from './RunSnippets'
 import Loading from '@/components/feedback/Loading'
 import { Alert, AlertTitle, Button, Stack, Typography } from '@mui/material'
-import { useDebouncedCallback } from 'use-debounce'
 import SnippetStatuBar from './SnippetStatuBar'
 import BottomCollapsiblePanel from '@/components/layout/utils/BottomCollapsiblePanel'
 import UserHelpPopper from '@/components/feedback/UserHelpPopper'
@@ -92,8 +91,6 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
     },
     [groupScope, questionId, onUpdate],
   )
-
-  const debouncedUpdateSnippet = useDebouncedCallback(onUpdateSnippet, 500)
 
   const onDeleteSnippet = useCallback(
     async (snippetId) => {
@@ -203,7 +200,7 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
         >
           {snippets?.map((snippet, index) => (
             <SnippetEditor
-              key={index}
+              key={snippet.id}
               index={index}
               snippet={snippet}
               language={language}
@@ -220,11 +217,6 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
                     i === index ? { ...s, snippet: code, output: null } : s,
                   ),
                 )
-                debouncedUpdateSnippet(snippet.id, {
-                  ...snippet,
-                  snippet: code,
-                  output: null,
-                })
               }}
               onOutputChange={(output) => {
                 const updatedStatuses = statuses.map((s, i) => {
@@ -236,11 +228,8 @@ const Snippets = ({ groupScope, questionId, language, onUpdate }) => {
                 setSnippets((prev) =>
                   prev.map((s, i) => (i === index ? { ...s, output } : s)),
                 )
-                debouncedUpdateSnippet(snippet.id, {
-                  ...snippet,
-                  output,
-                })
               }}
+              onSave={onUpdateSnippet}
               onDelete={onDeleteSnippet}
             />
           ))}

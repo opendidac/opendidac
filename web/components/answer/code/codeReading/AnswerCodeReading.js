@@ -18,7 +18,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { Stack, Button } from '@mui/material'
 import ScrollContainer from '@/components/layout/ScrollContainer'
 import { useTheme } from '@emotion/react'
-import { useDebouncedCallback } from 'use-debounce'
 import SnippetStatuBar from '@/components/question/type_specific/code/codeReading/SnippetStatuBar'
 import AnswerCodeReadingOutput from './AnswerCodeReadingOutput'
 import AnswerCodeReadingOutputStatus from './AnswerCodeReadingOutputStatus'
@@ -131,8 +130,6 @@ const AnswerCodeReading = ({
     }
   }, [evaluationId, questionId, outputs, setOutputs, showSnackbar])
 
-  const debouncedOnOutputChange = useDebouncedCallback(onOutputChange, 500)
-
   return (
     <Stack spacing={0} pt={1} height={'100%'}>
       {studentOutputTest && (
@@ -142,9 +139,10 @@ const AnswerCodeReading = ({
         <ScrollContainer>
           {outputs.map((output, index) => (
             <AnswerCodeReadingOutput
-              key={index}
+              key={output.codeReadingSnippet.id}
               language={question.code.language}
               snippet={output.codeReadingSnippet.snippet}
+              snippetId={output.codeReadingSnippet.id}
               output={output.output}
               status={
                 <AnswerCodeReadingOutputStatus
@@ -153,7 +151,7 @@ const AnswerCodeReading = ({
                 />
               }
               onOutputChange={(newOutput) => {
-                debouncedOnOutputChange(output.codeReadingSnippet.id, newOutput)
+                onOutputChange(output.codeReadingSnippet.id, newOutput)
               }}
             />
           ))}

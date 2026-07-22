@@ -18,6 +18,7 @@ import { Box, Stack, TextField, Typography } from '@mui/material'
 
 import { useSnackbar } from '@/context/SnackbarContext'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSeededState } from '@/hooks/useSeededState'
 import MDEditor, { commands } from '@uiw/react-md-editor'
 import StatusDisplay from '../../feedback/StatusDisplay'
 import Overlay from '../../ui/Overlay'
@@ -125,6 +126,8 @@ const MarkdownEditor = ({
   readOnly = false,
   withUpload = false,
   rawContent = '',
+  contentKey,
+  defaultValue,
   onChange,
   onHeightChange,
 }) => {
@@ -160,7 +163,8 @@ const MarkdownEditor = ({
             commands={readOnly ? [] : mainCommands}
             extraCommands={extraCommands}
             withUpload={!readOnly && withUpload}
-            content={rawContent}
+            contentKey={contentKey}
+            content={contentKey != null ? (defaultValue ?? '') : rawContent}
             onChange={onChange}
             onHeightChange={onHeightChange}
             onError={(error) => showSnackbar(error, 'error')}
@@ -200,19 +204,19 @@ const ContentEditor = ({
   commands,
   extraCommands,
   content: initial,
+  contentKey,
   onChange,
   onHeightChange,
   onError,
 }) => {
   const ref = useRef(null)
 
-  const [content, setContent] = useState(initial)
+  // Seeded mode: reset only when contentKey changes. Legacy mode
+  // (contentKey undefined): key falls back to the content itself, which
+  // reproduces the old "resync whenever the prop changes" behavior.
+  const [content, setContent] = useSeededState(initial, contentKey ?? initial)
 
   const [uploadStatus, setUploadStatus] = useState('NOT_STARTED')
-
-  useEffect(() => {
-    setContent(initial)
-  }, [initial])
 
   useEffect(() => {
     if (onHeightChange && ref.current && ref.current.container) {
@@ -234,7 +238,7 @@ const ContentEditor = ({
       setContent(value)
       onChange(value)
     },
-    [onChange],
+    [onChange, setContent],
   )
 
   const insertTextAtCursor = useCallback(

@@ -17,9 +17,9 @@
 import useSWR from 'swr'
 import { useCallback, useState, useEffect } from 'react'
 import Image from 'next/image'
-import { Stack, TextField, Button, Typography, Tooltip } from '@mui/material'
+import { Stack, Button, Typography, Tooltip } from '@mui/material'
 import MarkdownEditor from '../input/markdown/MarkdownEditor'
-import { useCtrlState } from '@/hooks/useCtrlState'
+import SeededTextField from '@/components/input/SeededTextField'
 
 import LayoutSplitScreen from '../layout/LayoutSplitScreen'
 import QuestionTypeSpecific from './QuestionTypeSpecific'
@@ -57,19 +57,6 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
     useState(false)
   const [deleteQuestionDialogOpen, setDeleteQuestionDialogOpen] =
     useState(false)
-
-  const { renderedValue: title, setValueControlled: setTitle } = useCtrlState(
-    question?.title || '',
-    question &&
-      questionId &&
-      `question-${questionId}-title-${question ? 'loaded' : 'loading'}`,
-  )
-
-  const { renderedValue: content, setValueUncontrolled: setContent } =
-    useCtrlState(
-      question?.content || '',
-      `question-${questionId}-content-${question?.id ?? 'loading'}`,
-    )
 
   const saveQuestion = useCallback(
     async (question) => {
@@ -158,10 +145,17 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
     [saveQuestion],
   )
 
+  // The question travels as an argument, captured at call time: this
+  // component stays mounted across question selection, and a pending
+  // debounced save reading the question from the closure would save the
+  // wrong (newly selected) question.
   const debounceChange = useDebouncedCallback(
-    useCallback(async () => {
-      await onChangeQuestion(question)
-    }, [question, onChangeQuestion]),
+    useCallback(
+      async (questionToSave) => {
+        await onChangeQuestion(questionToSave)
+      },
+      [onChangeQuestion],
+    ),
     500,
   )
 
@@ -177,7 +171,7 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
       // instantly update the question object in memory
       question[property] = value
       // debounce the change to the api
-      await debounceChange()
+      await debounceChange(question)
     },
     [debounceChange],
   )
@@ -199,16 +193,15 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
             >
               <Stack spacing={2} sx={{ pl: 2, pt: 1, height: '100%' }}>
                 <Stack direction="row" alignItems="flex-start" spacing={1}>
-                  <TextField
+                  <SeededTextField
                     id={`question-${question.id}-title`}
                     label="Title"
                     variant="outlined"
                     fullWidth
                     focused
-                    value={title}
-                    onChange={(e) => {
-                      const value = e.target.value
-                      setTitle(value)
+                    contentKey={`question-title:${question.id}`}
+                    defaultValue={question.title || ''}
+                    onChange={(value) => {
                       onPropertyChange(question, 'title', value)
                     }}
                   />
@@ -224,9 +217,9 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
                   groupScope={groupScope}
                   withUpload
                   title="Problem Statement"
-                  rawContent={content}
+                  contentKey={`question-content:${question.id}`}
+                  defaultValue={question.content || ''}
                   onChange={(newContent) => {
-                    setContent(newContent)
                     onPropertyChange(question, 'content', newContent)
                   }}
                 />
