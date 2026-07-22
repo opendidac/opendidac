@@ -145,10 +145,17 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
     [saveQuestion],
   )
 
+  // The question travels as an argument, captured at call time: this
+  // component stays mounted across question selection, and a pending
+  // debounced save reading the question from the closure would save the
+  // wrong (newly selected) question.
   const debounceChange = useDebouncedCallback(
-    useCallback(async () => {
-      await onChangeQuestion(question)
-    }, [question, onChangeQuestion]),
+    useCallback(
+      async (questionToSave) => {
+        await onChangeQuestion(questionToSave)
+      },
+      [onChangeQuestion],
+    ),
     500,
   )
 
@@ -164,7 +171,7 @@ const QuestionUpdate = ({ groupScope, questionId, onUpdate, onDelete }) => {
       // instantly update the question object in memory
       question[property] = value
       // debounce the change to the api
-      await debounceChange()
+      await debounceChange(question)
     },
     [debounceChange],
   )
