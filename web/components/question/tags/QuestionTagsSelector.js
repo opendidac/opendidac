@@ -39,7 +39,9 @@ const QuestionTagsSelector = ({ groupScope, questionId, size, onChange }) => {
   const onTagsChange = useCallback(
     async (newTags) => {
       await upsert(questionId, newTags)
-      await mutate(newTags)
+      // Revalidate: the GET shape is questionToTag rows ({ tag, label }),
+      // not the plain label strings we hold here.
+      await mutate()
       onChange && onChange(newTags)
     },
     [questionId, mutate, upsert, onChange],
