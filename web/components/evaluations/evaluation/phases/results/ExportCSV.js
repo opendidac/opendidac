@@ -28,6 +28,11 @@ const LINE_SEPARATOR = '\r\n'
 // Quote every cell and escape embedded quotes (RFC 4180).
 const cell = (value) => `"${String(value).replace(/"/g, '""')}"`
 
+// Numeric cells use a comma decimal separator: with a dot, French-locale
+// Excel reads 22.5 as the date "22 mai" and 1.33 as garbage.
+const numberCell = (value) =>
+  cell(typeof value === 'number' ? String(value).replace('.', ',') : value)
+
 const ExportCSV = ({ evaluation, results, attendance }) => {
   const exportAsCSV = useCallback(() => {
     const participants = attendance?.registered?.map((r) => r.user) ?? []
@@ -51,25 +56,28 @@ const ExportCSV = ({ evaluation, results, attendance }) => {
         totalPoints > 0 ? Math.round((obtainedPoints / totalPoints) * 100) : 0
 
       const row = [
-        participant.name,
-        participant.email,
-        `${participantSuccessRate} %`,
-        totalPoints,
-        obtainedPoints,
+        cell(participant.name),
+        cell(participant.email),
+        cell(`${participantSuccessRate} %`),
+        numberCell(totalPoints),
+        numberCell(obtainedPoints),
         ...results.map((jstq) => {
           const studentAnswer = jstq.question.studentAnswer.find(
             (sa) => sa.user.email === participant.email,
           )
-          return studentAnswer?.studentGrading
-            ? studentAnswer.studentGrading.pointsObtained
-            : '-'
+          return numberCell(
+            studentAnswer?.studentGrading
+              ? studentAnswer.studentGrading.pointsObtained
+              : '-',
+          )
         }),
       ]
 
-      lines.push(row.map(cell).join(COLUMN_SEPARATOR))
+      lines.push(row.join(COLUMN_SEPARATOR))
     })
 
-    const csv = lines.join(LINE_SEPARATOR) + LINE_SEPARATOR
+    // BOM: without it Excel decodes the file as ANSI and breaks accents.
+    const csv = '\uFEFF' + lines.join(LINE_SEPARATOR) + LINE_SEPARATOR
 
     let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     let url = URL.createObjectURL(blob)
