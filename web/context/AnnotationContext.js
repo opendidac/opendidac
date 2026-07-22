@@ -112,10 +112,14 @@ export const AnnotationProvider = ({
     doFetch && fetcher,
   )
 
-  const [annotation, setAnnotation] = useState(null)
-  const [state, setState] = useState(stateBasedOnAnnotation(contextAnnotation))
+  const [annotation, setAnnotation] = useState(immutableAnnotation ?? null)
+  const [state, setState] = useState(stateBasedOnAnnotation(immutableAnnotation))
 
   const postInProgress = useRef(false)
+
+  // Grading mode fetches the annotation after mount; consumers must not
+  // seed editors until it resolves. Consultation mode is synchronous.
+  const isLoading = !readOnly && contextAnnotation === undefined
 
   useEffect(() => {
     if (!doFetch) {
@@ -231,6 +235,7 @@ export const AnnotationProvider = ({
         annotation,
         change,
         discard,
+        isLoading,
       }}
     >
       <AnnotationHighlight readOnly={readOnly} state={state}>
