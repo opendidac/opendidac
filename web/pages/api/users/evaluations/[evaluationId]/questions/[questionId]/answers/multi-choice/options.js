@@ -156,6 +156,7 @@ const addOrRemoveOption = async (req, res, ctx) => {
         },
       },
       select: {
+        comment: true,
         options: {
           select: {
             id: true,
@@ -165,7 +166,9 @@ const addOrRemoveOption = async (req, res, ctx) => {
       },
     })
 
-    if (studentAnswer.options.length === 1) {
+    // Removing the last option only clears the status when no comment
+    // counts as remaining progress.
+    if (studentAnswer.options.length === 1 && !studentAnswer.comment?.trim()) {
       status = StudentAnswerStatus.MISSING
     }
   }
