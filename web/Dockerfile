@@ -32,7 +32,8 @@ RUN apt-get update && \
 
 # Install Node.js dependencies
 RUN npm cache clean --force
-RUN npm install -g npm@latest
+# npm major pinned: npm@12+ requires Node >=22, the image runs Node 20
+RUN npm install -g npm@11
 RUN rm -rf node_modules package-lock.json
 RUN npm install
 
