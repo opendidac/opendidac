@@ -82,6 +82,13 @@ const WebEditor = ({
 const WebEditorInput = ({ id, language, code, readOnly, onChange }) => {
   const theme = useTheme()
 
+  // Read-only instances (consult, compare) must mirror the incoming props
+  // live — no one types in them, so controlled mode is jump-safe and avoids
+  // stale seeded models when data arrives after mount.
+  const modeProps = readOnly
+    ? { code }
+    : { contentKey: `web:${id}`, defaultValue: code }
+
   return (
     <Stack spacing={1} position={'relative'}>
       <Stack
@@ -104,8 +111,7 @@ const WebEditorInput = ({ id, language, code, readOnly, onChange }) => {
         <Typography variant="button">{language}</Typography>
       </Stack>
       <InlineMonacoEditor
-        contentKey={`web:${id}`}
-        defaultValue={code}
+        {...modeProps}
         language={language}
         readOnly={readOnly}
         onChange={onChange}

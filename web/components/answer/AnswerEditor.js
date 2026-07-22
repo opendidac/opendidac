@@ -441,7 +441,7 @@ const AnswerWeb = ({ answer, evaluationId, questionId, onAnswerChanged }) => {
           <ScrollContainer>
             <Stack spacing={0} pt={0} position={'relative'} pb={24}>
               <WebEditor
-                id={'web-answer-editor'}
+                id={`web-answer-${questionId}`}
                 web={web}
                 onChange={(web) => {
                   setWeb(web)

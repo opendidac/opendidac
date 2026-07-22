@@ -76,6 +76,7 @@ const QuestionTypeSpecific = ({
         if (question.web) {
           return (
             <Web
+              id={question.id}
               web={question.web}
               onChange={(newWeb) => onTypeSpecificChange(question.type, newWeb)}
             />
