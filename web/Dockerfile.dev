@@ -25,7 +25,8 @@ WORKDIR /app
 # Install Node.js dependencies
 COPY package*.json ./
 RUN npm cache clean --force
-RUN npm install -g npm@latest
+# npm major pinned: newer npm majors do not support the image's Node version
+RUN npm install -g npm@9
 RUN npm install --loglevel verbose
 
 # Copy the app's source code
