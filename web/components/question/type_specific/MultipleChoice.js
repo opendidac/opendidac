@@ -30,7 +30,7 @@ import { useReorderable } from '@/components/layout/utils/ReorderableList'
 import MarkdownEditor from '@/components/input/markdown/MarkdownEditor'
 import MarkdownViewer from '@/components/input/markdown/MarkdownViewer'
 import { useTheme } from '@emotion/react'
-import { useCtrlState } from '@/hooks/useCtrlState'
+import { useSeededState } from '@/hooks/useSeededState'
 import { useState, useEffect } from 'react'
 
 const MultipleChoice = ({
@@ -112,7 +112,7 @@ const MultipleChoice = ({
           <ReorderableList onChangeOrder={onReorder}>
             {options?.map((option, index) => (
               <MultipleChoiceOptionUpdate
-                key={index}
+                key={option.id}
                 groupScope={groupScope}
                 questionId={questionId}
                 index={index}
@@ -154,11 +154,9 @@ const MultipleChoiceOptionUpdate = ({
 }) => {
   const theme = useTheme()
 
-  const {
-    renderedValue: text,
-    setValueUncontrolled: setText,
-    getValue: getText,
-  } = useCtrlState(
+  // Live local copy of the option text: preview mode renders it, and the
+  // correct-toggle needs the latest text when saving.
+  const [text, setText] = useSeededState(
     option?.text || '',
     `${questionId}-multiple-choice-option-text-${option.id}`,
   )
@@ -246,7 +244,7 @@ const MultipleChoiceOptionUpdate = ({
         size="small"
         onChange={(e) => {
           e.stopPropagation()
-          onChangeOption(option.id, getText(), !isCorrect)
+          onChangeOption(option.id, text, !isCorrect)
         }}
         disabled={isDragging}
         sx={
@@ -265,7 +263,8 @@ const MultipleChoiceOptionUpdate = ({
           <Stack minHeight={250} bgcolor={theme.palette.background.paper} p={1}>
             <MarkdownEditor
               title={`Option ${option.order + 1} (markdown)`}
-              rawContent={text}
+              contentKey={`mc-option:${questionId}:${option.id}`}
+              defaultValue={option?.text || ''}
               onChange={(value) => {
                 onChangeOption(option.id, value, isCorrect)
               }}
