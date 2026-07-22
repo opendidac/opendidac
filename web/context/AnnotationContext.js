@@ -136,10 +136,12 @@ export const AnnotationProvider = ({
     }
   }, [contextAnnotation, doFetch])
 
+  // No revalidation after the PUT: the SWR cache is kept in sync with local
+  // truth on every change (see `change`), and a refetch here can regress the
+  // cache to older server content while newer keystrokes are still pending.
   const debouncedUpdateAnnotation = useDebouncedCallback(
     async (groupScope, annotation) => {
       await updateAnnotation(groupScope, annotation)
-      mutate()
     },
     1000,
   )
@@ -166,6 +168,10 @@ export const AnnotationProvider = ({
       }
 
       setAnnotation(updated)
+      // Mirror local truth into the SWR cache so a remount of this entity
+      // (participant switch round-trip) seeds from the latest content even
+      // before the server catches up.
+      mutate(updated, { revalidate: false })
 
       if (state === AnnotationState.NOT_ANNOTATED.value) {
         setState(AnnotationState.ANNOTATED.value)
@@ -186,23 +192,23 @@ export const AnnotationProvider = ({
             updated,
           )
 
-          mutate()
           // Update the annotation with the new ID from the server
           setAnnotation((current) => {
+            const withId = {
+              ...current,
+              id: newAnnotation.id,
+            }
+            // Cache the id without refetching: a refetch would serve the
+            // first-keystroke content and clobber what was typed since.
+            mutate(withId, { revalidate: false })
             // Compare the current content with the server response
             if (current.content !== newAnnotation.content) {
               // Catch up immediately with the content typed while the POST
               // was in flight — a debounce here would be cancelled if the
               // user switches participant right away.
-              updateAnnotation(groupScope, {
-                ...current,
-                id: newAnnotation.id,
-              }).then(() => mutate())
+              updateAnnotation(groupScope, withId)
             }
-            return {
-              ...current,
-              id: newAnnotation.id,
-            }
+            return withId
           })
         } finally {
           postInProgress.current = false // Release the POST lock
