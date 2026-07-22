@@ -20,7 +20,6 @@ import {
   Stack,
   Tab,
   Tabs,
-  TextField,
   Typography,
   FormGroup,
   FormControlLabel,
@@ -36,6 +35,8 @@ import InlineMonacoEditor from '../../../input/InlineMonacoEditor'
 import DialogFeedback from '../../../feedback/DialogFeedback'
 import BottomPanelHeader from '../../../layout/utils/BottomPanelHeader'
 import BottomPanelContent from '../../../layout/utils/BottomPanelContent'
+import SeededTextField from '../../../input/SeededTextField'
+import { useSeededState } from '@/hooks/useSeededState'
 
 const QueryUpdatePanel = ({ query, output, onChange, onDelete }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -157,13 +158,14 @@ const InputDatabaseQueryOutputTest = {
 }
 
 const QueryOutputTab = ({ query, queryOutput, onChange }) => {
-  const [enableOutputTest, setEnableOutputTest] = useState(query.testQuery)
-  const [activeTests, setActiveTests] = useState(query.queryOutputTests)
-
-  useEffect(() => {
-    setEnableOutputTest(query.testQuery)
-    setActiveTests(query.queryOutputTests)
-  }, [query.id, query.testQuery, query.queryOutputTests])
+  const [enableOutputTest, setEnableOutputTest] = useSeededState(
+    query.testQuery,
+    query.id,
+  )
+  const [activeTests, setActiveTests] = useSeededState(
+    query.queryOutputTests,
+    query.id,
+  )
 
   return (
     <Stack spacing={3} width={'100%'} pb={1}>
@@ -241,28 +243,14 @@ const OutputTestToggle = ({ toggled, label, testKey, onToggle }) => {
 }
 
 const QuerySettingsTab = ({ query, onChange }) => {
-  const [studentPermission, setStudentPermission] = useState(
+  const [studentPermission, setStudentPermission] = useSeededState(
     query.studentPermission,
-  )
-  const [title, setTitle] = useState(query.title)
-  const [description, setDescription] = useState(query.description)
-  const [lintActive, setLintActive] = useState(query.lintActive)
-  const [lintRules, setLintRules] = useState(query.lintRules)
-
-  useEffect(() => {
-    setStudentPermission(query.studentPermission)
-    setTitle(query.title || '')
-    setDescription(query.description || '')
-    setLintActive(query.lintActive)
-    setLintRules(query.lintRules || '')
-  }, [
     query.id,
-    query.studentPermission,
-    query.title,
-    query.description,
+  )
+  const [lintActive, setLintActive] = useSeededState(
     query.lintActive,
-    query.lintRules,
-  ])
+    query.id,
+  )
 
   return (
     <Stack spacing={3} width={'100%'}>
@@ -285,27 +273,27 @@ const QuerySettingsTab = ({ query, onChange }) => {
           <MenuItem value={StudentPermission.VIEW}>View</MenuItem>
           <MenuItem value={StudentPermission.HIDDEN}>Hidden</MenuItem>
         </DropDown>
-        <TextField
+        <SeededTextField
           label={'Title'}
-          value={title}
+          contentKey={`query-settings-title:${query.id}`}
+          defaultValue={query.title || ''}
           fullWidth
-          onChange={(ev) => {
-            setTitle(ev.target.value)
+          onChange={(value) => {
             onChange({
               ...query,
-              title: ev.target.value,
+              title: value,
             })
           }}
         />
       </Stack>
-      <TextField
+      <SeededTextField
         label={'Description'}
-        value={description}
-        onChange={(ev) => {
-          setDescription(ev.target.value)
+        contentKey={`query-settings-description:${query.id}`}
+        defaultValue={query.description || ''}
+        onChange={(value) => {
           onChange({
             ...query,
-            description: ev.target.value,
+            description: value,
           })
         }}
       />
@@ -327,19 +315,19 @@ const QuerySettingsTab = ({ query, onChange }) => {
             }
             label="Linter active"
           />
-          <TextField
+          <SeededTextField
             label={'Custom Lint Rules'}
-            value={lintRules}
+            contentKey={`query-settings-lint-rules:${query.id}`}
+            defaultValue={query.lintRules || ''}
             multiline
             fullWidth
             minRows={3}
             maxRows={10}
             disabled={!lintActive}
-            onChange={(ev) => {
-              setLintRules(ev.target.value)
+            onChange={(value) => {
               onChange({
                 ...query,
-                lintRules: ev.target.value,
+                lintRules: value,
               })
             }}
           />
@@ -350,20 +338,13 @@ const QuerySettingsTab = ({ query, onChange }) => {
 }
 
 const QueryTemplateTab = ({ query, onChange }) => {
-  const [template, setTemplate] = useState(query.template)
-
-  useEffect(() => {
-    setTemplate(query.template)
-  }, [query.id, query.template])
-
   return (
     <InlineMonacoEditor
-      code={template}
+      contentKey={`sql-template:${query.id}`}
+      defaultValue={query.template}
       language={'sql'}
       readOnly={false}
       onChange={(sql) => {
-        if (sql === query.template) return
-        setTemplate(sql)
         onChange({
           ...query,
           template: sql,
