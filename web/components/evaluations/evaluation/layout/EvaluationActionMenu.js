@@ -113,12 +113,14 @@ const dialogConfigurations = {
 const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
   const { show: showSnackbar } = useSnackbar()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [changing, setChanging] = useState(false)
 
   const nextPhase = getNextPhase(evaluation.phase)
   const phaseDetails = getPhaseDetails(evaluation.phase)
   const dialogConfig = dialogConfigurations[evaluation.phase]
 
   const onButtonClick = async () => {
+    if (changing) return
     if (dialogConfig && dialogConfig.nextPhase === nextPhase) {
       setDialogOpen(true)
     } else {
@@ -127,19 +129,28 @@ const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
   }
 
   const changePhase = async () => {
-    await fetch(`/api/${groupScope}/evaluations/${evaluation.id}/phase`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ phase: nextPhase }),
-    }).then((response) => {
+    // Lock the button until the refreshed evaluation arrives: a slow
+    // refetch otherwise lets a second hasty click skip a phase.
+    setChanging(true)
+    try {
+      const response = await fetch(
+        `/api/${groupScope}/evaluations/${evaluation.id}/phase`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({ phase: nextPhase }),
+        },
+      )
       if (response.ok) {
-        onPhaseChange?.()
+        onPhaseChange?.(nextPhase)
         showSnackbar('Phase changed', 'success')
       }
-    })
+    } finally {
+      setChanging(false)
+    }
   }
 
   const onDialogConfirm = async () => {
@@ -155,6 +166,7 @@ const EvaluationActionMenu = ({ groupScope, evaluation, onPhaseChange }) => {
             variant="text"
             color="info"
             onClick={onButtonClick}
+            disabled={changing}
             endIcon={<SkipNextIcon />}
             startIcon={<phaseDetails.nextPhaseButton.icon />}
           >

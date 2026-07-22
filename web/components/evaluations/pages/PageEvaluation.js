@@ -232,7 +232,12 @@ const EvaluationPage = () => {
                         <EvaluationActionMenu
                           groupScope={groupScope}
                           evaluation={evaluation}
-                          onPhaseChange={() => {
+                          onPhaseChange={(newPhase) => {
+                            // Navigate deterministically to the new phase's
+                            // menu — do not depend on the refetch timing.
+                            const menu =
+                              newPhase && getPhaseDetails(newPhase)?.menu
+                            if (menu) setActiveMenu(menu)
                             mutate()
                             mutatePhase()
                           }}
