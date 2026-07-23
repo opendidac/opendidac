@@ -15,6 +15,7 @@
  */
 
 import katex from 'katex'
+import DOMPurify from 'dompurify'
 import 'katex/dist/katex.min.css'
 
 const KatexBloc = ({ code }) => {
@@ -23,7 +24,9 @@ const KatexBloc = ({ code }) => {
       throwOnError: false,
       displayMode: true,
     })
-    return <span dangerouslySetInnerHTML={{ __html: html }} />
+    return (
+      <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />
+    )
   } catch (error) {
     return <span>{error.message}</span>
   }
