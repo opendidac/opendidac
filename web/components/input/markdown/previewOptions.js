@@ -17,6 +17,7 @@
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import { getCodeString } from 'rehype-rewrite'
 import katex from 'katex'
+import DOMPurify from 'dompurify'
 import 'katex/dist/katex.min.css'
 import CodeBlock from './CodeBlock' // Use existing component for handling code blocks
 import MermaidBloc from './MermaidBloc' // Use existing component for handling Mermaid diagrams
@@ -50,7 +51,11 @@ export const previewOptions = {
               throwOnError: false,
             },
           )
-          return <code dangerouslySetInnerHTML={{ __html: html }} />
+          return (
+            <code
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
+            />
+          )
         }
         return <code>{txt}</code> // Inline code
       } else {
@@ -60,7 +65,11 @@ export const previewOptions = {
           const html = katex.renderToString(code, {
             throwOnError: false,
           })
-          return <code dangerouslySetInnerHTML={{ __html: html }} />
+          return (
+            <code
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
+            />
+          )
         } else if (language === 'mermaid') {
           return <MermaidBloc code={code} />
         } else if (language === 'graphviz') {
