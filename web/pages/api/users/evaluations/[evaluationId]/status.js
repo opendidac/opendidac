@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getUser } from '@/core/auth/auth'
+import { getSessionToken, getUser } from '@/core/auth/auth'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import { withRestrictions } from '@/middleware/withRestrictions'
@@ -28,19 +28,11 @@ import { EvaluationPhase, Role, UserOnEvaluationStatus } from '@prisma/client'
 // This function handles session tracking and session change detection for a user in an evaluation
 async function trackSessionChanges(
   prisma,
-  userId,
+  sessionToken,
   studentEmail,
   evaluationId,
   userOnEvaluation,
 ) {
-  // Fetch the current session of the user
-  const currentSession = await prisma.session.findFirst({
-    where: { userId: userId },
-    select: { sessionToken: true },
-  })
-
-  const sessionToken = currentSession?.sessionToken
-
   // If there's no session token, we can't track session changes
   if (!sessionToken) {
     return
@@ -81,7 +73,7 @@ async function trackSessionChanges(
 const get = async (req, res, ctx) => {
   const { prisma, evaluation } = ctx
   const user = await getUser(req, res)
-  const { email: studentEmail, id: userId } = user
+  const { email: studentEmail } = user
   const { evaluationId } = req.query
 
   // Fetch user's participation in the evaluation
@@ -107,7 +99,7 @@ const get = async (req, res, ctx) => {
     // Call the session tracking function
     await trackSessionChanges(
       prisma,
-      userId,
+      getSessionToken(req),
       studentEmail,
       evaluationId,
       userOnEvaluation,

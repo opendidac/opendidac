@@ -214,7 +214,9 @@ export const authOptions = {
     },
 
     async signIn({ user, account }) {
-      await handleSingleSessionPerUser(user)
+      if (isStudentOnly(user)) {
+        await handleSingleSessionPerUser(user)
+      }
 
       if (
         account.provider === 'keycloak' ||
@@ -232,6 +234,13 @@ export const authOptions = {
       return false
     },
   },
+}
+
+// Staff accounts may stay signed in on several devices
+const MULTI_SESSION_ROLES = [Role.PROFESSOR, Role.SUPER_ADMIN, Role.ARCHIVIST]
+
+function isStudentOnly(user) {
+  return !user.roles?.some((role) => MULTI_SESSION_ROLES.includes(role))
 }
 
 async function handleSingleSessionPerUser(user) {
