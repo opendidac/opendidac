@@ -38,7 +38,6 @@ const get = async (req, res, ctx) => {
           registeredAt: true,
           finishedAt: true,
           status: true,
-          originalSessionToken: true,
           hasSessionChanged: true,
           sessionChangeDetectedAt: true,
         },

@@ -30,14 +30,6 @@ export async function getSession(req: any, res: any): Promise<Session | null> {
  * Temporary helper to extract session.user.
  * Will be replaced by direct session access inside withApiContext.
  */
-// next-auth prefixes the cookie with __Secure- when NEXTAUTH_URL is https
-export function getSessionToken(req: any): string | undefined {
-  return (
-    req.cookies?.['__Secure-next-auth.session-token'] ??
-    req.cookies?.['next-auth.session-token']
-  )
-}
-
 export async function getUser(
   req: any,
   res: any,

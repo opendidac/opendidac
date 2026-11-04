@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getSessionToken, getUser } from '@/core/auth/auth'
+import { getUser } from '@/core/auth/auth'
 import { withAuthorization } from '@/middleware/withAuthorization'
 import { withApiContext } from '@/middleware/withApiContext'
 import { withRestrictions } from '@/middleware/withRestrictions'
@@ -24,50 +24,6 @@ import {
   withStudentStatus,
 } from '@/middleware/withStudentEvaluation'
 import { EvaluationPhase, Role, UserOnEvaluationStatus } from '@prisma/client'
-
-// This function handles session tracking and session change detection for a user in an evaluation
-async function trackSessionChanges(
-  prisma,
-  sessionToken,
-  studentEmail,
-  evaluationId,
-  userOnEvaluation,
-) {
-  // If there's no session token, we can't track session changes
-  if (!sessionToken) {
-    return
-  }
-
-  // If the originalSessionToken is not set, store the current session as the original token
-  if (!userOnEvaluation.originalSessionToken) {
-    await prisma.userOnEvaluation.update({
-      where: {
-        userEmail_evaluationId: {
-          userEmail: studentEmail,
-          evaluationId: evaluationId,
-        },
-      },
-      data: {
-        originalSessionToken: sessionToken, // Store the current session token as the original one
-      },
-    })
-  } else if (sessionToken !== userOnEvaluation.originalSessionToken) {
-    // If the current session token differs from the original one, detect a session change
-    await prisma.userOnEvaluation.update({
-      where: {
-        userEmail_evaluationId: {
-          userEmail: studentEmail,
-          evaluationId: evaluationId,
-        },
-      },
-      data: {
-        hasSessionChanged: true, // Mark that a session change has occurred
-        sessionChangeDetectedAt: new Date(), // Log the time of session change
-        originalSessionToken: sessionToken, // Update the original session token to the current one
-      },
-    })
-  }
-}
 
 // The main endpoint for getting student status
 const get = async (req, res, ctx) => {
@@ -86,24 +42,12 @@ const get = async (req, res, ctx) => {
     },
     select: {
       status: true,
-      originalSessionToken: true,
     },
   })
 
   if (!userOnEvaluation) {
     res.status(404).json({ message: 'User not found in evaluation' })
     return
-  }
-  // Check if the evaluation is in the "IN_PROGRESS" phase
-  if (evaluation.phase === EvaluationPhase.IN_PROGRESS) {
-    // Call the session tracking function
-    await trackSessionChanges(
-      prisma,
-      getSessionToken(req),
-      studentEmail,
-      evaluationId,
-      userOnEvaluation,
-    )
   }
 
   // Return only the evaluation fields needed by students (exclude sensitive admin fields)
