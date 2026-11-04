@@ -16,7 +16,7 @@
 
 import NextAuth from 'next-auth'
 import { PrismaAdapter } from '@auth/prisma-adapter'
-import { Role } from '@prisma/client'
+import { EvaluationPhase, Role, UserOnEvaluationStatus } from '@prisma/client'
 import { getPrismaClient } from '@/core/hooks/usePrisma'
 import { getSSEClients, invalidateSSEClients } from '@/core/auth/sseClients'
 
@@ -214,7 +214,9 @@ export const authOptions = {
     },
 
     async signIn({ user, account }) {
-      await handleSingleSessionPerUser(user)
+      if (!canHoldSeveralSessions(user)) {
+        await handleSingleSessionPerUser(user)
+      }
 
       if (
         account.provider === 'keycloak' ||
@@ -232,6 +234,42 @@ export const authOptions = {
       return false
     },
   },
+  events: {
+    async signIn({ user }) {
+      await flagSignInDuringEvaluations(user)
+    },
+  },
+}
+
+// A sign-in while an evaluation is running means the student may have
+// switched device, so the professor sees it in the attendance view.
+async function flagSignInDuringEvaluations(user) {
+  // Prisma ignores an undefined filter, which would flag every student
+  if (!user?.email) return
+  try {
+    await prisma.userOnEvaluation.updateMany({
+      where: {
+        userEmail: user.email,
+        status: UserOnEvaluationStatus.IN_PROGRESS,
+        evaluation: { phase: EvaluationPhase.IN_PROGRESS },
+      },
+      data: {
+        hasSessionChanged: true,
+        sessionChangeDetectedAt: new Date(),
+      },
+    })
+  } catch (error) {
+    // Never block a sign-in because the flag could not be written
+    console.error('Failed to flag sign-in during evaluations:', error)
+  }
+}
+
+// Staff accounts may stay signed in on several devices. Any other account,
+// including one without roles, keeps a single session.
+const MULTI_SESSION_ROLES = [Role.PROFESSOR, Role.SUPER_ADMIN, Role.ARCHIVIST]
+
+function canHoldSeveralSessions(user) {
+  return !!user.roles?.some((role) => MULTI_SESSION_ROLES.includes(role))
 }
 
 async function handleSingleSessionPerUser(user) {
