@@ -1,4 +1,13 @@
 name: eval
+
+# Docker drops whole files, so (max-file - 1) x max-size is always kept:
+# at least 30 days at the growth measured on PROD-SI (#690).
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 20m
+    max-file: "3"
+
 services:
   web:
     build:
@@ -14,6 +23,7 @@ services:
       - sandbox
     networks:
       - app-network
+    logging: *default-logging
 
   db:
     image: postgres:15.0
@@ -24,6 +34,9 @@ services:
       - pgdata:/var/lib/postgresql/data
     networks:
       - app-network
+    logging: *default-logging
+    # Leave Postgres time to checkpoint on shutdown instead of the 10 s default
+    stop_grace_period: 1m
 
   nginx:
     image: nginx:1.30
@@ -37,6 +50,12 @@ services:
       - web
     networks:
       - app-network
+    # The access log grows ~12.5 MB/day on average; 900 MB covers 30 days up to 25 MB/day
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+        max-file: "10"
 
   sandbox:
     image: docker:28.2.2-dind
@@ -48,6 +67,7 @@ services:
       - DOCKER_TLS_CERTDIR=
     networks:
       - app-network
+    logging: *default-logging
 
 volumes:
   pgdata:
