@@ -106,12 +106,8 @@ runs:
         docker compose build
       shell: bash
 
-    - name: Start Docker Compose Services
-      run: |
-        cd $HOME/eval/deploy
-        docker compose up -d
-      shell: bash
-
+    # Taken while the current version still runs, so a failed dump stops the
+    # deploy before anything changes rather than migrating without a rollback point
     - name: Create Database Dump
       run: |
         mkdir -p $HOME/db_dumps
@@ -124,22 +120,48 @@ runs:
 
         if [ -z "$container_db_id" ]; then
           echo "Database container is not running! Skipping backup step."
-          exit 0  # Continue execution even if this step fails
+          exit 0  # First deploy: there is nothing to back up
         fi
 
-        # Try to dump the database
-        if ! docker exec $container_db_id pg_dump -U ${{ inputs.POSTGRES_USER }} -d ${{ inputs.POSTGRES_DB }} -F c > $backup_filename; then
-          echo "Database dump failed. This might be the first run."
-          exit 0  # Continue even if dumping fails
+        # Dump under a temporary name so a failed dump never counts as a
+        # rollback point in the retention below
+        if ! docker exec $container_db_id pg_dump -U ${{ inputs.POSTGRES_USER }} -d ${{ inputs.POSTGRES_DB }} -F c > $backup_filename.partial; then
+          rm -f -- $backup_filename.partial
+          echo "Database dump failed: stopping the deploy, the current version keeps running."
+          exit 1
         fi
+        mv -- $backup_filename.partial $backup_filename
 
         echo "Database dump completed successfully."
-      shell: bash
-      continue-on-error: true  # Ensures the workflow continues
 
+        # Only reached after a successful dump. Dumps older than 30 days go,
+        # but the 5 most recent always stay: they are the rollback points.
+        # The timestamp in the name sorts the glob oldest first.
+        shopt -s nullglob
+        dumps=(pg_workflow_backup_[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]_*.sql)
+        for (( i = 0; i < ${#dumps[@]} - 5; i++ )); do
+          if [[ -n "$(find "${dumps[i]}" -mtime +30)" ]]; then
+            rm -- "${dumps[i]}"
+            echo "Deleted old dump: ${dumps[i]}"
+          fi
+        done
+      shell: bash
+
+    - name: Start Docker Compose Services
+      run: |
+        cd $HOME/eval/deploy
+        docker compose up -d
+      shell: bash
 
     - name: Run Prisma Migrations
       run: |
+        # The previous step may have just recreated the db container
+        container_db_id=$(docker ps -qf "name=eval-db-")
+        for (( attempt = 0; attempt < 60; attempt++ )); do
+          docker exec $container_db_id pg_isready -U ${{ inputs.POSTGRES_USER }} -d ${{ inputs.POSTGRES_DB }} > /dev/null 2>&1 && break
+          sleep 1
+        done
+
         container_id=$(docker ps -qf "name=eval-web-")
         docker exec $container_id npx prisma migrate deploy
       shell: bash
